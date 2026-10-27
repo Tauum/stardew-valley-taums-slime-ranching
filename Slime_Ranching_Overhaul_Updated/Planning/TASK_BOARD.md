@@ -72,6 +72,7 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [x] Add a placeable Mutagenic Pool with configurable-duration attempts, a per-slime pity counter, and safe failure; Shadow Clone is currently data/visual-only. Verify the schema migration and reload lifecycle in game.
 - [x] Make Mutagenic Pool cost, duration, pity step, and chance bounds configurable with runtime clamping.
 - [x] Show the active pool assignment, locked chance, and day progress in a status card.
+- [x] Add a single-player test command that gives the Mutagenic Pool without spending shop gold.
 - [x] Cache mutated-slime candidates for the Shadow Clone renderer and rotate the four-echo draw budget fairly.
 - [ ] Extend the temporary Shadow Clone visual echo into bounded companion behavior; no clones may breed, produce resources, or recursively clone.
 - [x] Chromatic Crystals as breeder consumables, **not furniture**; obtainment recipes and unlock progression remain open.

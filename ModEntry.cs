@@ -46,6 +46,7 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("slime_ranching_give_guidebook", "Give the Slime Ranching Field Guide. Usage: slime_ranching_give_guidebook <exact save folder name>.", this.OnGiveGuidebookCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_breeder", "Give one Slime Breeder for testing. Usage: slime_ranching_give_breeder <exact save folder name>.", this.OnGiveBreederCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_incubator", "Give one Slime Incubator for testing. Usage: slime_ranching_give_incubator <exact save folder name>.", this.OnGiveIncubatorCommand);
+        helper.ConsoleCommands.Add("slime_ranching_give_mutagenic_pool", "Give one Mutagenic Pool for testing. Usage: slime_ranching_give_mutagenic_pool <exact save folder name>.", this.OnGiveMutagenicPoolCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_test_eggs", "Create two external-genome test eggs. Usage: slime_ranching_give_test_eggs <exact save folder name>.", this.OnGiveTestEggsCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_color_eggs", "Create seven color test eggs. Usage: slime_ranching_give_color_eggs <exact save folder name>.", this.OnGiveColorEggsCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_crystals", "Give one of each Chromatic Crystal for breeder testing. Usage: slime_ranching_give_crystals <exact save folder name>.", this.OnGiveCrystalsCommand);
@@ -1012,6 +1013,31 @@ public sealed class ModEntry : Mod
         }
 
         this.Monitor.Log("Added one Slime Incubator. Place it inside the Slime Daycare and use it with a genome-specific Ranch Slime Egg in your inventory.", LogLevel.Info);
+    }
+
+    private void OnGiveMutagenicPoolCommand(string command, string[] args)
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
+        {
+            this.Monitor.Log("Load a single-player save with available external slime state before requesting a Mutagenic Pool.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 1 || args[0] != saveName)
+        {
+            this.Monitor.Log($"To give a Mutagenic Pool to the currently loaded save, use: slime_ranching_give_mutagenic_pool {saveName}", LogLevel.Warn);
+            return;
+        }
+
+        Item pool = ItemRegistry.Create(MutagenicPoolContent.QualifiedItemId);
+        if (!Game1.player.couldInventoryAcceptThisItem(pool) || !Game1.player.addItemToInventoryBool(pool))
+        {
+            this.Monitor.Log("Make room in your inventory for the Mutagenic Pool, then try again.", LogLevel.Warn);
+            return;
+        }
+
+        this.Monitor.Log("Added one Mutagenic Pool. Place it inside the Slime Daycare and use it with vanilla Slime in your inventory.", LogLevel.Info);
     }
 
     private void OnInspectCommand(string command, string[] args)

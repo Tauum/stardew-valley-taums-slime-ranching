@@ -99,7 +99,7 @@ The probabilities are provisional and listed in `Features/SIZE_AND_MATURITY.md`.
 
 Use the disposable `TaumTest_322865388` save. Back up the installed mod's `data` folder before changing builds; genome, attempt, and pity state lives in that mod-folder registry. The 500 vanilla Slime cost is consumed from player inventory and committed by Stardew's normal save.
 
-1. Buy the Mutagenic Pool from Marnie (provisional default 15,000g) and place it inside the Slime Daycare.
+1. Buy the Mutagenic Pool from Marnie (provisional default 15,000g), or run `slime_ranching_give_mutagenic_pool TaumTest_322865388` for a test copy. Place it inside the Slime Daycare.
 2. Add at least 500 vanilla Slime `(O)766` to inventory. Open the Pool and scroll the resident list if needed. Confirm juvenile, busy/reserved, and already-mutated slimes are unavailable.
 3. Select a mature slime and start an attempt. Confirm 500 Slime is removed, the job shows a fixed chance and ready day, and that slime can't be assigned to a breeder or second Pool.
    - The status panel should identify the assigned slime, show the locked chance and day-based progress, and name the ready day. The idle panel should show the selected slime's pity and next chance.
