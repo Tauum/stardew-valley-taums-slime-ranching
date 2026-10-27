@@ -32,7 +32,7 @@ internal sealed class EnrichmentInteractionService
 
         float deltaSeconds = (float)time.ElapsedGameTime.TotalSeconds;
         this.elapsedSeconds += deltaSeconds;
-        this.UpdateActiveBounces(deltaSeconds);
+        this.UpdateActiveInteractions(deltaSeconds);
         if (++this.assignmentTicks < AssignmentIntervalTicks)
             return;
         this.assignmentTicks = 0;
@@ -61,7 +61,7 @@ internal sealed class EnrichmentInteractionService
             BuildingContent.IsSlimeDaycare(building.buildingType.Value)
             && ReferenceEquals(building.GetIndoors(), house));
 
-    private void UpdateActiveBounces(double elapsedSeconds)
+    private void UpdateActiveInteractions(double elapsedSeconds)
     {
         List<long>? completed = null;
         foreach (KeyValuePair<long, Interaction> entry in this.active)
@@ -129,7 +129,8 @@ internal sealed class EnrichmentInteractionService
                 || obj.QualifiedItemId == FurnitureContent.SlimePlaygroundQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.SlimeSlideQualifiedId
             || obj.QualifiedItemId == FurnitureContent.SlimeBedQualifiedId
-            || obj.QualifiedItemId == FurnitureContent.SlimeTunnelQualifiedId)
+            || obj.QualifiedItemId == FurnitureContent.SlimeTunnelQualifiedId
+            || obj.QualifiedItemId == FurnitureContent.HeatedSlimeStoneQualifiedId)
             .Select(obj => new FurnitureSpot(obj.TileLocation, obj.QualifiedItemId))
             .Where(spot => !occupiedTiles.Contains(spot.Tile))
             .ToList();
@@ -191,6 +192,7 @@ internal sealed class EnrichmentInteractionService
                 var id when id == FurnitureContent.SlimeSlideQualifiedId => (2.2f, 8f, 3f, 30f, false),
                 var id when id == FurnitureContent.SlimeBedQualifiedId => (4f, 0f, 7f, 0f, true),
                 var id when id == FurnitureContent.SlimeTunnelQualifiedId => (2.8f, 5f, 2f, 42f, false),
+                var id when id == FurnitureContent.HeatedSlimeStoneQualifiedId => (4.4f, 0f, 6f, 0f, true),
                 _ => registry.GetGenomeSize(animal.myID.Value)?.ToLowerInvariant() switch
                 {
                     "tiny" => (1.8f, 36f, 2f, 0f, false),

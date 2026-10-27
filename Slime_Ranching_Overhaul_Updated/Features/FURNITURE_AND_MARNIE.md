@@ -35,6 +35,8 @@ The growth amount, favorite-food bonus, accepted item set, and shop progression 
 
 The Slime Tunnel is a decorative crawl-through interaction. Nearby idle Ranch Slimes make a low pass through its clear arch. The animation is transient, gets cleaned up when leaving the Daycare, and does not modify animal position, age, friendship, or genome. Marnie's default test price is 2,500g and is configurable. Ranching jobs reserve animals first, so assigned slimes do not start furniture interactions.
 
+The Heated Slime Stone is a decorative warm resting spot. Nearby idle Ranch Slimes settle beside it for a few seconds, then return to their original pose. It has an ember-glow pixel sprite and a configurable 1,800g test price. It does not change friendship, temperature, health, or maturity; winter-specific comfort mechanics remain undecided.
+
 ## Interaction architecture
 Furniture exposes a target position, eligible sizes, interaction duration, maximum concurrent users, animation, cooldown and optional happiness delta. A hutch-level scheduler periodically assigns idle slimes to available furniture. Use visual offsets for bouncing rather than moving collision boxes vertically. Reserve targets to avoid multiple slimes deadlocking. Skip or simplify offscreen animations.
 

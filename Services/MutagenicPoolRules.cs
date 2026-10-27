@@ -44,6 +44,7 @@ internal sealed class MutagenicPoolRules
         config.CompostTroughGrowthDays = Math.Clamp(config.CompostTroughGrowthDays, 1, 3);
         config.CompostTroughLikedFoodBonusDays = Math.Clamp(config.CompostTroughLikedFoodBonusDays, 0, 2);
         config.SlimeTunnelShopPrice = Math.Clamp(config.SlimeTunnelShopPrice, 0, 999_999);
+        config.HeatedSlimeStoneShopPrice = Math.Clamp(config.HeatedSlimeStoneShopPrice, 0, 999_999);
         config.ConverterShopPrice = Math.Clamp(config.ConverterShopPrice, 0, 999_999);
         config.BreederShopPrice = Math.Clamp(config.BreederShopPrice, 0, 999_999);
         config.IncubatorShopPrice = Math.Clamp(config.IncubatorShopPrice, 0, 999_999);

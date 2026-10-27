@@ -50,6 +50,16 @@ The one-day base growth, one-day favorite bonus, once-per-day limit, 3,500g pric
 
 The animation is local visual state; it does not persist and must clean up on room change/title return. The 2,500g stock price is configurable and provisional.
 
+## Heated Slime Stone resting interaction
+
+1. Run `slime_ranching_give_heated_stone TaumTest_322865388` and place the stone inside the Slime Daycare.
+2. Let an idle Ranch Slime approach the warm stone. Confirm it settles briefly, returns upright, and stays on its original floor tile.
+3. Place the stone alongside a tunnel, bed, and trampoline. Confirm the occupied spot is not assigned to a second slime until its first interaction ends.
+4. Start a breeder or Mutagenic Pool job with a slime near the stone; confirm assigned slimes remain stationary and do not start an enrichment animation.
+5. Leave the Daycare during the resting pose and return. Confirm draw offsets reset and no age, friendship, health, or genome state changed.
+
+The stone is visual-only. Its 1,800g price is configurable; winter comfort or friendship effects are undecided.
+
 ## Vanilla slime isolation
 
 1. Load the disposable test save and note the vanilla GreenSlime count in its Slime Hutch.

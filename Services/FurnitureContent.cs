@@ -23,6 +23,8 @@ internal static class FurnitureContent
     public const string CompostTroughQualifiedId = "(BC)" + CompostTroughItemId;
     public const string SlimeTunnelItemId = "Taum.SlimeRanching_SlimeTunnel";
     public const string SlimeTunnelQualifiedId = "(BC)" + SlimeTunnelItemId;
+    public const string HeatedSlimeStoneItemId = "Taum.SlimeRanching_HeatedSlimeStone";
+    public const string HeatedSlimeStoneQualifiedId = "(BC)" + HeatedSlimeStoneItemId;
     private const string TrampolineTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeTrampoline";
     private const string CushionTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeCushion";
     private const string PlaygroundTexture = "Mods/Taum.SlimeRanching/Furniture/SlimePlayground";
@@ -30,6 +32,7 @@ internal static class FurnitureContent
     private const string BedTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeBed";
     private const string CompostTroughTexture = "Mods/Taum.SlimeRanching/Furniture/CompostTrough";
     private const string TunnelTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeTunnel";
+    private const string HeatedStoneTexture = "Mods/Taum.SlimeRanching/Furniture/HeatedSlimeStone";
 
     public static void LoadAssets(AssetRequestedEventArgs e)
     {
@@ -47,6 +50,8 @@ internal static class FurnitureContent
             e.LoadFrom(() => CreateCompostTroughTexture(Game1.graphics.GraphicsDevice), AssetLoadPriority.Exclusive);
         else if (e.NameWithoutLocale.IsEquivalentTo(TunnelTexture))
             e.LoadFrom(() => CreateTunnelTexture(Game1.graphics.GraphicsDevice), AssetLoadPriority.Exclusive);
+        else if (e.NameWithoutLocale.IsEquivalentTo(HeatedStoneTexture))
+            e.LoadFrom(() => CreateHeatedStoneTexture(Game1.graphics.GraphicsDevice), AssetLoadPriority.Exclusive);
     }
 
     public static void EditAsset(AssetRequestedEventArgs e)
@@ -132,6 +137,17 @@ internal static class FurnitureContent
                 CanBePlacedOutdoors = false,
                 Fragility = 0,
                 Texture = TunnelTexture,
+                SpriteIndex = 0
+            });
+            craftables.TryAdd(HeatedSlimeStoneItemId, new BigCraftableData
+            {
+                Name = "Heated Slime Stone",
+                DisplayName = "Heated Slime Stone",
+                Description = "A warm stone where Ranch Slimes can huddle and rest.",
+                CanBePlacedIndoors = true,
+                CanBePlacedOutdoors = false,
+                Fragility = 0,
+                Texture = HeatedStoneTexture,
                 SpriteIndex = 0
             });
         });
@@ -371,6 +387,37 @@ internal static class FurnitureContent
         SetPixel(pixels, width, 5, 10, new Color(239, 246, 255, 190));
         SetPixel(pixels, width, 6, 11, new Color(239, 246, 255, 190));
         for (int x = 3; x <= 12; x++) SetPixel(pixels, width, x, 20, new Color(67, 43, 56));
+        texture.SetData(pixels);
+        return texture;
+    }
+
+    private static Texture2D CreateHeatedStoneTexture(GraphicsDevice graphicsDevice)
+    {
+        const int width = 16;
+        const int height = 32;
+        var texture = new Texture2D(graphicsDevice, width, height);
+        var pixels = new Color[width * height];
+        Color outline = new(66, 48, 47);
+        Color stone = new(103, 91, 91);
+        Color lightStone = new(150, 126, 111);
+        Color ember = new(219, 98, 58);
+        Color glow = new(246, 172, 78);
+        SetPixel(pixels, width, 7, 6, ember);
+        SetPixel(pixels, width, 8, 5, glow);
+        SetPixel(pixels, width, 9, 6, ember);
+        for (int x = 4; x <= 11; x++)
+        {
+            SetPixel(pixels, width, x, 9, outline);
+            SetPixel(pixels, width, x, 15, outline);
+        }
+        for (int y = 10; y <= 14; y++)
+        {
+            SetPixel(pixels, width, 3, y, outline);
+            SetPixel(pixels, width, 12, y, outline);
+            for (int x = 4; x <= 11; x++)
+                SetPixel(pixels, width, x, y, y is 10 or 14 ? lightStone : stone);
+        }
+        for (int x = 5; x <= 10; x++) SetPixel(pixels, width, x, 16, new Color(67, 43, 56));
         texture.SetData(pixels);
         return texture;
     }

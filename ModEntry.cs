@@ -52,6 +52,7 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("slime_ranching_give_gel_refinery", "Give one Gel Refinery for testing. Usage: slime_ranching_give_gel_refinery <exact save folder name>.", this.OnGiveGelRefineryCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_compost_trough", "Give one Compost Trough for testing. Usage: slime_ranching_give_compost_trough <exact save folder name>.", this.OnGiveCompostTroughCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_tunnel", "Give one Slime Tunnel for testing. Usage: slime_ranching_give_tunnel <exact save folder name>.", this.OnGiveTunnelCommand);
+        helper.ConsoleCommands.Add("slime_ranching_give_heated_stone", "Give one Heated Slime Stone for testing. Usage: slime_ranching_give_heated_stone <exact save folder name>.", this.OnGiveHeatedStoneCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_test_eggs", "Create two external-genome test eggs. Usage: slime_ranching_give_test_eggs <exact save folder name>.", this.OnGiveTestEggsCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_color_eggs", "Create seven color test eggs. Usage: slime_ranching_give_color_eggs <exact save folder name>.", this.OnGiveColorEggsCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_crystals", "Give one of each Chromatic Crystal for breeder testing. Usage: slime_ranching_give_crystals <exact save folder name>.", this.OnGiveCrystalsCommand);
@@ -108,6 +109,7 @@ public sealed class ModEntry : Mod
         this.AddShopPriceOption(api, "Gel Refinery", "Price of the Gel Refinery.", () => this.config.GelRefineryShopPrice, value => this.config.GelRefineryShopPrice = value);
         this.AddShopPriceOption(api, "Compost Trough", "Price of the juvenile-feeding Compost Trough.", () => this.config.CompostTroughShopPrice, value => this.config.CompostTroughShopPrice = value);
         this.AddShopPriceOption(api, "Slime Tunnel", "Price of the decorative crawl-through tunnel.", () => this.config.SlimeTunnelShopPrice, value => this.config.SlimeTunnelShopPrice = value);
+        this.AddShopPriceOption(api, "Heated Slime Stone", "Price of the warm resting stone.", () => this.config.HeatedSlimeStoneShopPrice, value => this.config.HeatedSlimeStoneShopPrice = value);
         api.AddSectionTitle(this.ModManifest, () => "Compost Trough");
         api.AddParagraph(this.ModManifest, () => "Growth advances are provisional. A favorite-food item grants the base days plus the favorite-food bonus.");
         api.AddNumberOption(this.ModManifest,
@@ -1291,6 +1293,31 @@ public sealed class ModEntry : Mod
         }
 
         this.Monitor.Log("Added one Slime Tunnel. Place it in the Slime Daycare for nearby idle Ranch Slimes to crawl through.", LogLevel.Info);
+    }
+
+    private void OnGiveHeatedStoneCommand(string command, string[] args)
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
+        {
+            this.Monitor.Log("Load a single-player save with available external slime state before requesting a Heated Slime Stone.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 1 || args[0] != saveName)
+        {
+            this.Monitor.Log($"To give a Heated Slime Stone to the currently loaded save, use: slime_ranching_give_heated_stone {saveName}", LogLevel.Warn);
+            return;
+        }
+
+        Item stone = ItemRegistry.Create(FurnitureContent.HeatedSlimeStoneQualifiedId);
+        if (!Game1.player.couldInventoryAcceptThisItem(stone) || !Game1.player.addItemToInventoryBool(stone))
+        {
+            this.Monitor.Log("Make room in your inventory for the Heated Slime Stone, then try again.", LogLevel.Warn);
+            return;
+        }
+
+        this.Monitor.Log("Added one Heated Slime Stone. Place it in the Slime Daycare for nearby idle Ranch Slimes to rest beside it.", LogLevel.Info);
     }
 
     private bool StartRefineryBatch(string machineKey)

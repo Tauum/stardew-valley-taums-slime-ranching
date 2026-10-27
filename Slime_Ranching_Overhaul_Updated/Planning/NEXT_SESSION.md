@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-10-27  
 **Test save:** `TaumTest_322865388` (disposable copy)  
-**Current branch:** `feature/compost-trough-growth`, chained after `feature/gel-refinery-first-recipe` (commit `dea1491`). The Gel Refinery first recipe is committed. The Compost Trough is implemented on this branch and builds; the next step is review/commit, followed by in-game verification on the disposable test save.
+**Current branch:** `feature/heated-slime-stone`, chained after `tooling/inspect-machine-details` (`fe2ee94`). The Gel Refinery, Compost Trough, Slime Tunnel, and detailed machine inspection are committed. The Heated Slime Stone implementation is on this branch and builds; verify its visual interaction, then commit and continue with the next planned item.
 
 ## Current state
 
@@ -48,6 +48,8 @@
 - Migration advances older registries sequentially through schema 9, 10, and 11. Verify schema 10-to-11 and schema 8 multi-step backup behavior on copied mod data.
 - A Slime Tunnel furniture item is now in Marnie's shop and can be test-granted with `slime_ranching_give_tunnel <save>`. Nearby idle slimes do a short low crawl-through. Furniture reservations now exclude slimes reserved by active ranching jobs. Build passes; verify crawl placement and offset cleanup in game.
 - `slime_ranching_inspect` now shows the external registry schema on disk versus the current target schema and prints per-machine job dates/details. Use it during refinery, incubator, breeder, and mutation reload checks.
+- Heated Slime Stone is a configurable Marnie item with an ember sprite and short resting interaction for idle slimes. It has no friendship, warmth, or maturity effect yet; use `slime_ranching_give_heated_stone <save>` to test. Verify draw-offset cleanup in game.
+- `slime_ranching_inspect` now shows the external registry schema on disk versus the current target schema and prints per-machine job dates/details. Use it during refinery, incubator, breeder, and mutation reload checks.
 - The interaction scheduler is now named `EnrichmentInteractionService`. It handles all five implemented furniture types, caches occupied target tiles once per assignment pass, and computes each playground candidate distance once during sorting. Build passes with only the existing analyzer/compiler version warning; compare behavior/performance with a crowded Daycare in game.
 - Breeder size inheritance now uses Tiny/Small/Normal/Large/Giant categories. The weights specified in the design notes are implemented; provisional defaults cover Tiny+Tiny, Normal+Normal, adjacent pairs, and wider gaps. Unknown legacy labels are treated as Normal only when rolling offspring. Small and Large also have distinct trampoline arcs.
 - Ranch Slime sprites now use separate color/size assets in 24x32 frame cells. Normal opaque art remains the original 16x24 pixels; Tiny/Small shrink and Large/Giant enlarge with nearest-neighbor sampling, centered and bottom-aligned. Check floors, petting, breeder previews, furniture animations, and clipping in-game.
@@ -84,6 +86,7 @@
 16. Check Marnie's Slime Bed stock and the brief rest animation. Leave the Daycare mid-animation and confirm the slime's position resets without affecting age or breeding status.
 17. Follow the Gel Refinery recipe and persistence checklist in `Technical/TESTING.md`; review its first recipe economics and add later recipes only after deciding fuel/progression rules.
 18. Follow the Compost Trough test checklist in `Technical/TESTING.md`; especially verify favorite-food bonus, one feed per day, busy/mature restrictions, age persistence, and the 10-to-11 migration.
+19. Follow the tunnel and Heated Slime Stone checks in `Technical/TESTING.md`; verify exact position restoration and that job-reserved slimes skip furniture animations.
 
 ## Relevant files
 
