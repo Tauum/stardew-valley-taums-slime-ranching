@@ -11,10 +11,8 @@ namespace taums_slime_ranching.Services;
 internal static class BuildingContent
 {
     private const int PixelsPerTile = 16;
-    private const int DaycareFootprintWidth = 8;
-    private const int DaycareFootprintHeight = 5;
-    private const int DaycareTextureWidth = DaycareFootprintWidth * PixelsPerTile;
-    private const int DaycareTextureHeight = DaycareFootprintHeight * PixelsPerTile;
+    private const int DaycareTextureWidth = 128;
+    private const int DaycareTextureHeight = 80;
     private const int DesignCellWidth = 384;
     private const string ExteriorTextureAssetPrefix = "Mods/Taum.SlimeRanching/Buildings/SlimeDaycare/";
     private static readonly int[] DesignRowBounds = { 0, 341, 683, 1024 };
@@ -36,7 +34,7 @@ internal static class BuildingContent
     public const string SlimeDaycareUpgrade1Id = "Taum.SlimeRanching_SlimeDaycare_Upgrade1";
     public const string SlimeDaycareUpgrade2Id = "Taum.SlimeRanching_SlimeDaycare_Upgrade2";
 
-    private const string VanillaBarnBuildingId = "Barn";
+    private const string VanillaDeluxeBarnBuildingId = "Deluxe Barn";
     private static readonly HashSet<string> SlimeDaycareIds = new(StringComparer.Ordinal)
     {
         SlimeDaycareBuildingId,
@@ -91,11 +89,11 @@ internal static class BuildingContent
         e.Edit(asset =>
         {
             var buildings = asset.AsDictionary<string, BuildingData>().Data;
-            if (!buildings.TryGetValue(VanillaBarnBuildingId, out BuildingData? barn))
+            if (!buildings.TryGetValue(VanillaDeluxeBarnBuildingId, out BuildingData? deluxeBarn))
                 return;
 
             var options = new JsonSerializerOptions { IncludeFields = true };
-            BuildingData daycare = Clone(barn, options);
+            BuildingData daycare = Clone(deluxeBarn, options);
             daycare.Name = "Slime Daycare";
             daycare.NameForGeneralType = "Slime Daycare";
             daycare.Description = "A safe animal house for friendly Ranch Slimes.";
@@ -107,13 +105,6 @@ internal static class BuildingContent
             daycare.BuildCost = 0;
             daycare.BuildMaterials = new();
             daycare.MaxOccupants = 12;
-            string selectedTexture = GetExteriorTextureName(config.SlimeDaycareExteriorDesign);
-            daycare.Texture = selectedTexture;
-            daycare.Size = new Point(DaycareFootprintWidth, DaycareFootprintHeight);
-            daycare.SourceRect = new Rectangle(0, 0, daycare.Size.X * PixelsPerTile, DaycareTextureHeight);
-            // Keep the clickable entrance centered on the resized building's front edge.
-            daycare.HumanDoor = new Point(DaycareFootprintWidth / 2, DaycareFootprintHeight - 1);
-            daycare.DrawOffset = new Vector2(3f, 8f);
             // Explicitly allow this custom animal's House ID. Some animal
             // placement paths only consult ValidOccupantTypes for modded types.
             daycare.ValidOccupantTypes = new List<string> { SlimeDaycareBuildingId };
@@ -126,9 +117,6 @@ internal static class BuildingContent
             upgrade1.Description = "An expanded interior with room for more Ranch Slimes.";
             upgrade1.BuildingToUpgrade = SlimeDaycareBuildingId;
             upgrade1.MaxOccupants = 20;
-            upgrade1.Size = daycare.Size;
-            upgrade1.SourceRect = new Rectangle(0, 0, upgrade1.Size.X * PixelsPerTile, DaycareTextureHeight);
-            upgrade1.Texture = selectedTexture;
             upgrade1.ValidOccupantTypes = new List<string> { SlimeDaycareBuildingId };
             buildings[SlimeDaycareUpgrade1Id] = upgrade1;
 
@@ -138,9 +126,6 @@ internal static class BuildingContent
             upgrade2.Description = "The largest interior, with room for even more Ranch Slimes.";
             upgrade2.BuildingToUpgrade = SlimeDaycareUpgrade1Id;
             upgrade2.MaxOccupants = 30;
-            upgrade2.Size = daycare.Size;
-            upgrade2.SourceRect = new Rectangle(0, 0, upgrade2.Size.X * PixelsPerTile, DaycareTextureHeight);
-            upgrade2.Texture = selectedTexture;
             upgrade2.ValidOccupantTypes = new List<string> { SlimeDaycareBuildingId, SlimeDaycareUpgrade1Id };
             buildings[SlimeDaycareUpgrade2Id] = upgrade2;
         });
