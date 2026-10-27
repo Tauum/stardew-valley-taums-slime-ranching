@@ -12,6 +12,7 @@ This guide covers the current early prototype. The Slime Breeder can reserve two
 - Marnie also sells a Slime Bed. Nearby Ranch Slimes can settle briefly into a resting pose; it has no gameplay effect yet.
 - Marnie sells a Mutagenic Pool. It assigns one mature Ranch Slime for a nonlethal mutation attempt; defaults are 500 vanilla Slime, one day, 5% base chance, +2 percentage points per failure, and 30% cap. Use the GMCM settings page or `config.json` to tune it. Success adds the Shadow Clone trait; a temporary visual echo appears in the Daycare, but its planned abilities are not implemented. GMCM can disable the echo without removing the mutation.
 - Marnie sells a Gel Refinery. Its first provisional recipe uses 1 Broken Glasses and 10 vanilla Slime to make 1 Refined Quartz over one in-game day. Fuel, time, and price can be tuned in GMCM or `config.json`; use `slime_ranching_give_gel_refinery <save name>` for testing. See the recipe section below and verify on a copied save.
+- Marnie sells a Compost Trough. It can feed juvenile Ranch Slimes eligible monster drops, fishing trash, or algae once per day. A favorite item advances growth more; the growth values are configurable and provisional. Use `slime_ranching_give_compost_trough <save name>` to test it.
 - Chromatic Crystals can focus a breeder cycle on a base offspring color. They are currently test-only items; use the SMAPI command `slime_ranching_give_crystals <save name>` while on a disposable save.
 - Ranch Slime offspring and genome-specific egg icons use a tint selected from the external genome color. The seven base colors and six hybrid recipes are supported; hybrid sprites still use the nearest base tint rather than continuous RGB blending.
 
@@ -80,6 +81,10 @@ The attempt, roll, mutation trait, and pity count are stored under `<installed m
 
 Place the refinery inside the Slime Daycare and use it with 1 Broken Glasses (`(O)170`) and the configured amount of vanilla Slime (`(O)766`) in your inventory. The current recipe produces one Refined Quartz (`(O)338`) after the configured number of in-game days. The output stays reserved in the machine until you collect it; a full inventory does not consume or discard the batch. These recipe and economy values are early prototypes. The running batch is in the external mod registry, while Stardew's regular save stores inventory changes.
 
+## Compost Trough
+
+Place it inside the Slime Daycare, select a juvenile and one eligible item from the two lists, then click **Feed Selected Slime**. Accepted food includes the genome favorite pool of monster drops/fishing trash, plus Seaweed, Green Algae, and White Algae. Each juvenile can eat once per in-game day. The default base growth is one day, with one extra day for its favorite food; it can never advance past maturity. Mature or currently reserved slimes cannot be fed. These are test values and can be tuned in GMCM or `config.json`.
+
 ## Field Guide book
 
 The in-game **Slime Ranching Field Guide** is a short introduction to the current features. For testing, request it from the SMAPI console with the exact save folder name:
@@ -96,7 +101,7 @@ Select the book and press the action button to open it. It is a custom item refe
 - **Breeding:** The breeder, parent selection, two-day cycle, and fixed-genome egg output work. Five-size inheritance and the specified color-wheel recipes are implemented provisionally; review their outcomes and exceptional traits in game.
 - **Egg details:** Hover over a genome-specific Ranch Slime Egg to view its stored species, color, size, rarity, mutation, generation, parent IDs, and favorite food.
 - **Genetics and slime identity:** The registry model can hold genome data. Ranch Slime genomes are keyed to native FarmAnimal IDs; this still needs save/reload verification. Existing GreenSlime monsters are only captured in the first-seen snapshot; they aren't changed or adopted.
-- **Food likes:** Favorite food is stored and shown on genome eggs, but feeding a Ranch Slime has no gameplay effect yet.
+- **Food likes:** Favorite food is stored, inherited, shown in the breeder, and used by the Compost Trough's provisional extra growth bonus.
 - **Furniture:** Trampoline, cushion, playground, slide, and bed animations are active prototypes in the Daycare, with no happiness or breeding effects yet.
 - **Mutations:** The Mutagenic Pool can roll the Shadow Clone trait with per-slime pity. Its temporary Daycare echo is visual only; cloned abilities are not implemented.
 - **Production and companions:** Slime-produced goods and custom companion AI are not active gameplay features yet.

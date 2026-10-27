@@ -17,5 +17,8 @@
   "ShowShadowCloneVisualEchoes": true,
   "GelRefineryShopPrice": 12000,
   "GelRefinerySlimeFuelCost": 10,
-  "GelRefineryDurationDays": 1
+  "GelRefineryDurationDays": 1,
+  "CompostTroughShopPrice": 3500,
+  "CompostTroughGrowthDays": 1,
+  "CompostTroughLikedFoodBonusDays": 1
 }

@@ -107,6 +107,27 @@ internal sealed class SlimeRegistry
             ? Math.Clamp(record.AgeDays, 0, FarmAnimalContent.RanchSlimeDaysToMature)
             : Math.Clamp(fallbackAgeDays, 0, FarmAnimalContent.RanchSlimeDaysToMature);
 
+    public bool FeedJuvenileAtCompostTrough(long farmAnimalId, string foodItemId, int currentDay,
+        int growthDays, int likedFoodBonusDays, out int newAgeDays, out bool isFavoriteFood)
+    {
+        newAgeDays = 0;
+        isFavoriteFood = false;
+        if (!CompostTroughRules.IsEligibleFood(foodItemId)
+            || growthDays is < 1 or > 3 || likedFoodBonusDays is < 0 or > 2
+            || !this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record)
+            || !record.AgeClockInitialized || record.AgeDays >= FarmAnimalContent.RanchSlimeDaysToMature
+            || record.LastCompostFeedDay >= currentDay || this.IsReserved(farmAnimalId))
+            return false;
+
+        isFavoriteFood = string.Equals(record.Genome.LikedFoodItemId, foodItemId, StringComparison.Ordinal);
+        int daysAdvanced = growthDays + (isFavoriteFood ? likedFoodBonusDays : 0);
+        record.AgeDays = Math.Min(FarmAnimalContent.RanchSlimeDaysToMature, record.AgeDays + daysAdvanced);
+        record.AgeLastUpdatedDay = Math.Max(record.AgeLastUpdatedDay, currentDay);
+        record.LastCompostFeedDay = currentDay;
+        newAgeDays = record.AgeDays;
+        return true;
+    }
+
     /// <summary>Sync the mod-owned age clock and mirror its value into the native animal field Stardew uses for maturity.</summary>
     public bool SynchronizeMaturity(IEnumerable<FarmAnimal> animals, int currentDay)
     {
@@ -673,6 +694,8 @@ internal sealed class SlimeRegistry
         int assignedFoodLikes = 0;
         foreach (SlimeRecord record in data?.Slimes ?? Enumerable.Empty<SlimeRecord>())
         {
+            if (record is not null)
+                record.LastCompostFeedDay = Math.Clamp(record.LastCompostFeedDay, -1, Math.Max(0, record.AgeLastUpdatedDay));
             bool alreadyLikedFood = FoodLikeCatalog.IsEligible(record?.Genome?.LikedFoodItemId);
             if (!this.TryAdd(record))
             {

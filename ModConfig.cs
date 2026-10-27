@@ -21,4 +21,7 @@ public sealed class ModConfig
     public int GelRefineryShopPrice { get; set; } = 12000;
     public int GelRefinerySlimeFuelCost { get; set; } = 10;
     public int GelRefineryDurationDays { get; set; } = 1;
+    public int CompostTroughShopPrice { get; set; } = 3500;
+    public int CompostTroughGrowthDays { get; set; } = 1;
+    public int CompostTroughLikedFoodBonusDays { get; set; } = 1;
 }

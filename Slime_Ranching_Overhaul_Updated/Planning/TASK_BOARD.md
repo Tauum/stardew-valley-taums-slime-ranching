@@ -63,12 +63,17 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [x] Add a Slime Slide with a low hop and horizontal glide animation; share furniture reservation and cleanup.
 - [x] Add a low-frequency proximity assignment and temporary bounce offset for Ranch Slimes near a trampoline; tiny, normal, and giant genome sizes now use different arc heights, compression, and durations. Approach/pathing and sprite impact poses remain.
 - [x] Add a short in-memory per-slime cooldown after trampoline use so nearby residents can take turns.
-- [ ] Use each slime's stored liked food when the Compost Trough is implemented; decide its bonus and consume only eligible items.
+- [x] Use each slime's stored liked food in the Compost Trough and consume only eligible items; review the provisional extra growth-day bonus.
 - [x] Add Slime Bed rest animation with transient draw-offset cleanup.
 - [x] Generalize the trampoline scheduler into an enrichment scheduler and cache occupied target tiles and group-pair distances per assignment pass.
-- [ ] Tunnel, ball pit, heated stone, Gel Pond, compost trough; persistent gameplay effects and QA.
+- [ ] Tunnel, ball pit, heated stone, Gel Pond; persistent gameplay effects and QA.
 
 ## Stage 5 — machines
+- [x] Implement the Compost Trough's one-item-per-juvenile-per-day feeding flow, liked-food bonus, external maturity update, and configurable Marnie price/growth settings.
+- [x] Add a schema 10-to-11 migration for the external Compost Trough daily-feeding clock.
+- [x] Add `slime_ranching_give_compost_trough` for testing without a shop purchase.
+- [ ] Verify favorite versus regular food growth, daily limit, no consumption for mature/busy slimes, and reload persistence in game.
+- [ ] Review Compost Trough growth values, accepted algae/trash/drop items, daily cap, and shop progression.
 - [x] Add a placeable Mutagenic Pool with configurable-duration attempts, a per-slime pity counter, and safe failure; Shadow Clone is currently data/visual-only. Verify the schema migration and reload lifecycle in game.
 - [x] Make Mutagenic Pool cost, duration, pity step, and chance bounds configurable with runtime clamping.
 - [x] Show the active pool assignment, locked chance, and day progress in a status card.

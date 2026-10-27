@@ -28,6 +28,18 @@ While a single-player save is loaded, run `slime_ranching_backup_external_data <
 
 The recipe, fuel, duration, and shop price are provisional. A failed external write during collection is a cross-file recovery edge case to review before release; the current workflow expects the normal Stardew save event to persist inventory and external state together.
 
+## Compost Trough growth prototype (provisional)
+
+1. On the disposable `TaumTest_322865388` save, run `slime_ranching_give_compost_trough TaumTest_322865388` and place it inside the Slime Daycare.
+2. Ensure there is at least one juvenile Ranch Slime. Feed it an eligible item from fishing trash, algae, or monster drops; confirm one item is consumed and maturity advances by the configured base amount (default 1 day).
+3. Check the selected slime's favorite with `slime_ranching_inspect <animal ID>`. Feed a matching item and confirm the UI marks it `[FAVORITE]` and advances by the base amount plus bonus (default 1 additional day), capped at three days.
+4. Try feeding that slime again on the same in-game day; it should not be selectable. Sleep, then confirm one feeding is available the following day.
+5. Try a mature Ranch Slime, a slime reserved by another ranching machine, and an ineligible item. Each should be unavailable and no item should be consumed.
+6. Feed a juvenile, sleep to save, and reload. Confirm its age and last-feeding day persist in `slime-registry-v1.json`; confirm the matching native animal remains consistent.
+7. With a schema 10 registry, load/save and confirm schema 11 plus `.before-compost-trough-v11.bak`; inspect an older schema 8 registry migrating sequentially through 9 and 10 without dropping prior machine records.
+
+The one-day base growth, one-day favorite bonus, once-per-day limit, 3,500g price, and accepted algae set are provisional. Adjust `CompostTroughGrowthDays`, `CompostTroughLikedFoodBonusDays`, and `CompostTroughShopPrice` in config/GMCM before deciding balance.
+
 ## Vanilla slime isolation
 
 1. Load the disposable test save and note the vanilla GreenSlime count in its Slime Hutch.

@@ -50,6 +50,7 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("slime_ranching_give_incubator", "Give one Slime Incubator for testing. Usage: slime_ranching_give_incubator <exact save folder name>.", this.OnGiveIncubatorCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_mutagenic_pool", "Give one Mutagenic Pool for testing. Usage: slime_ranching_give_mutagenic_pool <exact save folder name>.", this.OnGiveMutagenicPoolCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_gel_refinery", "Give one Gel Refinery for testing. Usage: slime_ranching_give_gel_refinery <exact save folder name>.", this.OnGiveGelRefineryCommand);
+        helper.ConsoleCommands.Add("slime_ranching_give_compost_trough", "Give one Compost Trough for testing. Usage: slime_ranching_give_compost_trough <exact save folder name>.", this.OnGiveCompostTroughCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_test_eggs", "Create two external-genome test eggs. Usage: slime_ranching_give_test_eggs <exact save folder name>.", this.OnGiveTestEggsCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_color_eggs", "Create seven color test eggs. Usage: slime_ranching_give_color_eggs <exact save folder name>.", this.OnGiveColorEggsCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_crystals", "Give one of each Chromatic Crystal for breeder testing. Usage: slime_ranching_give_crystals <exact save folder name>.", this.OnGiveCrystalsCommand);
@@ -104,6 +105,19 @@ public sealed class ModEntry : Mod
         this.AddShopPriceOption(api, "Slime Slide", "Price of the slide enrichment furniture.", () => this.config.SlimeSlideShopPrice, value => this.config.SlimeSlideShopPrice = value);
         this.AddShopPriceOption(api, "Slime Bed", "Price of the bed enrichment furniture.", () => this.config.SlimeBedShopPrice, value => this.config.SlimeBedShopPrice = value);
         this.AddShopPriceOption(api, "Gel Refinery", "Price of the Gel Refinery.", () => this.config.GelRefineryShopPrice, value => this.config.GelRefineryShopPrice = value);
+        this.AddShopPriceOption(api, "Compost Trough", "Price of the juvenile-feeding Compost Trough.", () => this.config.CompostTroughShopPrice, value => this.config.CompostTroughShopPrice = value);
+        api.AddSectionTitle(this.ModManifest, () => "Compost Trough");
+        api.AddParagraph(this.ModManifest, () => "Growth advances are provisional. A favorite-food item grants the base days plus the favorite-food bonus.");
+        api.AddNumberOption(this.ModManifest,
+            () => this.config.CompostTroughGrowthDays,
+            value => this.config.CompostTroughGrowthDays = value,
+            () => "Growth days per feeding",
+            () => "Base maturity days advanced by one accepted item.", 1, 3, 1);
+        api.AddNumberOption(this.ModManifest,
+            () => this.config.CompostTroughLikedFoodBonusDays,
+            value => this.config.CompostTroughLikedFoodBonusDays = value,
+            () => "Favorite-food bonus",
+            () => "Extra maturity days when the item matches this slime's stored favorite food.", 0, 2, 1);
         api.AddSectionTitle(this.ModManifest, () => "Gel Refinery");
         api.AddParagraph(this.ModManifest, () => "The first recipe is provisional: Broken Glasses and vanilla Slime fuel become Refined Quartz.");
         api.AddNumberOption(this.ModManifest,
@@ -681,6 +695,29 @@ public sealed class ModEntry : Mod
         }
 
         if (Context.IsWorldReady && Game1.activeClickableMenu is null && e.Button.IsActionButton()
+            && Game1.currentLocation.Objects.TryGetValue(e.Cursor.GrabTile, out StardewValley.Object? trough)
+            && trough.QualifiedItemId == FurnitureContent.CompostTroughQualifiedId)
+        {
+            if (!this.stateReady || !Context.IsMainPlayer || Context.IsMultiplayer)
+            {
+                this.Monitor.Log("The Compost Trough requires an available external registry in single-player.", LogLevel.Warn);
+                return;
+            }
+
+            StardewValley.Buildings.Building? daycare = Game1.getFarm().buildings.FirstOrDefault(building =>
+                BuildingContent.IsSlimeDaycare(building.buildingType.Value) && building.GetIndoors() == Game1.currentLocation);
+            if (daycare?.GetIndoors() is not StardewValley.AnimalHouse)
+            {
+                this.Monitor.Log("The Compost Trough only works inside the Slime Daycare.", LogLevel.Warn);
+                return;
+            }
+
+            this.Helper.Input.Suppress(e.Button);
+            Game1.activeClickableMenu = new CompostTroughMenu(this.registry!, this.FeedJuvenileAtCompostTrough);
+            return;
+        }
+
+        if (Context.IsWorldReady && Game1.activeClickableMenu is null && e.Button.IsActionButton()
             && Game1.currentLocation.Objects.TryGetValue(e.Cursor.GrabTile, out StardewValley.Object? placedObject)
             && placedObject.QualifiedItemId == ConverterContent.BreederQualifiedId)
         {
@@ -1204,6 +1241,31 @@ public sealed class ModEntry : Mod
         this.Monitor.Log("Added one Gel Refinery. Place it inside the Slime Daycare; its provisional recipe needs Broken Glasses and vanilla Slime.", LogLevel.Info);
     }
 
+    private void OnGiveCompostTroughCommand(string command, string[] args)
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
+        {
+            this.Monitor.Log("Load a single-player save with available external slime state before requesting a Compost Trough.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 1 || args[0] != saveName)
+        {
+            this.Monitor.Log($"To give a Compost Trough to the currently loaded save, use: slime_ranching_give_compost_trough {saveName}", LogLevel.Warn);
+            return;
+        }
+
+        Item trough = ItemRegistry.Create(FurnitureContent.CompostTroughQualifiedId);
+        if (!Game1.player.couldInventoryAcceptThisItem(trough) || !Game1.player.addItemToInventoryBool(trough))
+        {
+            this.Monitor.Log("Make room in your inventory for the Compost Trough, then try again.", LogLevel.Warn);
+            return;
+        }
+
+        this.Monitor.Log("Added one Compost Trough. Place it inside the Slime Daycare; feed it eligible trash, algae, or monster drops.", LogLevel.Info);
+    }
+
     private bool StartRefineryBatch(string machineKey)
     {
         GelRefineryRules rules = GelRefineryRules.FromConfig(this.config);
@@ -1234,6 +1296,29 @@ public sealed class ModEntry : Mod
 
         this.registry.RemoveRefineryJob(machineKey);
         return true;
+    }
+
+    private (bool Success, bool Favorite, int NewAge) FeedJuvenileAtCompostTrough(long animalId, int inventoryIndex)
+    {
+        if (inventoryIndex < 0 || inventoryIndex >= Game1.player.Items.Count
+            || Game1.player.Items[inventoryIndex] is not Item item
+            || !CompostTroughRules.IsEligibleFood(item.QualifiedItemId))
+            return (false, false, 0);
+
+        bool success = this.registry!.FeedJuvenileAtCompostTrough(animalId, item.QualifiedItemId, Game1.Date.TotalDays,
+            this.config.CompostTroughGrowthDays, this.config.CompostTroughLikedFoodBonusDays,
+            out int newAgeDays, out bool favorite);
+        if (!success)
+            return (false, false, 0);
+
+        item.Stack--;
+        if (item.Stack <= 0)
+            Game1.player.Items[inventoryIndex] = null;
+
+        FarmAnimal? animal = GetFarmAnimals().FirstOrDefault(candidate => candidate.myID.Value == animalId);
+        if (animal is not null)
+            animal.age.Value = newAgeDays;
+        return (true, favorite, newAgeDays);
     }
 
     private static int CountInventoryItem(string qualifiedItemId) => Game1.player.Items

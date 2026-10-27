@@ -24,6 +24,7 @@
 13. **Resource production:** How drops are collected, production interval, caps and exceptional outputs.
 14. **Companion capacity:** One bound active slime at a time? Recommend one initially.
 15. **Maturity:** Ranch Slimes currently mature after three in-game days, matching the hatching-as-juvenile goal. Maturity progression is now tracked in the external registry and mirrored to Stardew's native animal age field. Review duration, migration, and visual growth steps in game.
+16. **Compost Trough:** Current test behavior consumes one eligible trash, algae, or monster-drop item per juvenile per day, advancing one maturity day; matching its favorite adds one more day. Growth amount, liked-food bonus, accepted items, and Marnie unlock/price are provisional; check the three-day maturity cap and feel before finalizing.
 
 ## Decision log
 | Date | Decision | Status |
@@ -41,6 +42,7 @@
 | 2026-10-27 | Ranch Slime juveniles mature after three in-game days and cannot breed while growing | Provisional implementation; verify visual growth and balance |
 | 2026-10-27 | Mutagenic Pool assigns one mature Ranch Slime for a nonlethal Shadow Clone mutation roll with per-slime pity | Prototype implemented; default one-day duration and all costs/odds/shop price are configurable and provisional |
 | 2026-10-27 | Gel Refinery first recipe recycles Broken Glasses into Refined Quartz using Slime as fuel | Provisional vertical slice implemented; one-day duration and 10-Slime fuel defaults, 12,000g machine price; review balance and expand recipes |
+| 2026-10-27 | Compost Trough advances a juvenile's maturity when fed an eligible item once per day; favorite food gives a bonus | Provisional implementation; +1 growth day normally, +1 favorite bonus, configurable; verify and review values |
 
 ## Current decisions locked
 Full custom breeder; external-only mod state; custom companion AI; single-player first; GPT-assisted sprite production. The breeder egg ID to external genome link is prototyped but still needs transfer/reload verification. Remaining design decisions include Pink recipe rules, exceptional acquisition, time-change safeguards, precise mutation and shop balancing.

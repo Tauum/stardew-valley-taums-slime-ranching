@@ -19,11 +19,14 @@ internal static class FurnitureContent
     public const string SlimeSlideQualifiedId = "(BC)" + SlimeSlideItemId;
     public const string SlimeBedItemId = "Taum.SlimeRanching_SlimeBed";
     public const string SlimeBedQualifiedId = "(BC)" + SlimeBedItemId;
+    public const string CompostTroughItemId = "Taum.SlimeRanching_CompostTrough";
+    public const string CompostTroughQualifiedId = "(BC)" + CompostTroughItemId;
     private const string TrampolineTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeTrampoline";
     private const string CushionTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeCushion";
     private const string PlaygroundTexture = "Mods/Taum.SlimeRanching/Furniture/SlimePlayground";
     private const string SlideTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeSlide";
     private const string BedTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeBed";
+    private const string CompostTroughTexture = "Mods/Taum.SlimeRanching/Furniture/CompostTrough";
 
     public static void LoadAssets(AssetRequestedEventArgs e)
     {
@@ -37,6 +40,8 @@ internal static class FurnitureContent
             e.LoadFrom(() => CreateSlideTexture(Game1.graphics.GraphicsDevice), AssetLoadPriority.Exclusive);
         else if (e.NameWithoutLocale.IsEquivalentTo(BedTexture))
             e.LoadFrom(() => CreateBedTexture(Game1.graphics.GraphicsDevice), AssetLoadPriority.Exclusive);
+        else if (e.NameWithoutLocale.IsEquivalentTo(CompostTroughTexture))
+            e.LoadFrom(() => CreateCompostTroughTexture(Game1.graphics.GraphicsDevice), AssetLoadPriority.Exclusive);
     }
 
     public static void EditAsset(AssetRequestedEventArgs e)
@@ -100,6 +105,17 @@ internal static class FurnitureContent
                 CanBePlacedOutdoors = false,
                 Fragility = 0,
                 Texture = BedTexture,
+                SpriteIndex = 0
+            });
+            craftables.TryAdd(CompostTroughItemId, new BigCraftableData
+            {
+                Name = "Compost Trough",
+                DisplayName = "Compost Trough",
+                Description = "Feed eligible scraps to a juvenile Ranch Slime to help it grow.",
+                CanBePlacedIndoors = true,
+                CanBePlacedOutdoors = false,
+                Fragility = 0,
+                Texture = CompostTroughTexture,
                 SpriteIndex = 0
             });
         });
@@ -267,6 +283,41 @@ internal static class FurnitureContent
             SetPixel(pixels, width, 11, y, wood);
         }
         for (int x = 2; x <= 13; x++) SetPixel(pixels, width, x, 19, new Color(67, 43, 56));
+        texture.SetData(pixels);
+        return texture;
+    }
+
+    private static Texture2D CreateCompostTroughTexture(GraphicsDevice graphicsDevice)
+    {
+        const int width = 16;
+        const int height = 32;
+        var texture = new Texture2D(graphicsDevice, width, height);
+        var pixels = new Color[width * height];
+        Color outline = new(72, 50, 39);
+        Color wood = new(145, 96, 58);
+        Color lightWood = new(188, 134, 80);
+        Color compost = new(92, 116, 54);
+        for (int x = 3; x <= 12; x++)
+        {
+            pixels[10 * width + x] = outline;
+            pixels[15 * width + x] = outline;
+        }
+        for (int y = 11; y <= 14; y++)
+        {
+            pixels[y * width + 2] = outline;
+            pixels[y * width + 13] = outline;
+            for (int x = 3; x <= 12; x++)
+                pixels[y * width + x] = (y == 11 || x is 3 or 12) ? lightWood : wood;
+        }
+        for (int x = 4; x <= 11; x++) pixels[12 * width + x] = compost;
+        pixels[11 * width + 5] = new Color(140, 153, 76);
+        pixels[11 * width + 9] = new Color(140, 153, 76);
+        for (int x = 4; x <= 11; x++) pixels[16 * width + x] = outline;
+        for (int y = 17; y <= 19; y++)
+        {
+            pixels[y * width + 4] = outline;
+            pixels[y * width + 11] = outline;
+        }
         texture.SetData(pixels);
         return texture;
     }

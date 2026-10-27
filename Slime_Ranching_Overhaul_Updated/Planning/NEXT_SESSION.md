@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-10-27  
 **Test save:** `TaumTest_322865388` (disposable copy)  
-**Current branch:** `feature/gel-refinery-first-recipe`, chained after `feature/configure-shadow-clone-echo`. The first Gel Refinery recipe, external job state, Marnie stock, GMCM settings, ready notice, and testing command are implemented. The project builds; in-game use and persistence checks remain.
+**Current branch:** `feature/compost-trough-growth`, chained after `feature/gel-refinery-first-recipe` (commit `dea1491`). The Gel Refinery first recipe is committed. The Compost Trough is implemented on this branch and builds; the next step is review/commit, followed by in-game verification on the disposable test save.
 
 ## Current state
 
@@ -44,6 +44,8 @@
 - GMCM's **Show Shadow Clone echoes** switch controls only the transient renderer; it does not edit the slime's genome or the saved mutation.
 - The Gel Refinery now recycles 1 Broken Glasses + 10 vanilla Slime into 1 Refined Quartz over one in-game day by default. Job state is in external schema 10, the ready notice is persisted, collection refuses a full inventory, and `slime_ranching_give_gel_refinery <save>` grants a test machine. Machine price defaults to 12,000g; fuel, duration, and price are configurable. All values are provisional.
 - Gel Refinery history migration now explicitly advances schema 8 to 9 before schema 9 to 10, so older saves cannot skip creation of `RefineryJobs`. Verify the schema 9-to-10 backup on a copy.
+- Compost Trough accepts the existing favorite-food item pool, plus Seaweed, Green Algae, and White Algae. It consumes one item per juvenile per day; default growth is +1 day and matching favorite food adds +1 more, capped at the three-day maturity limit. It excludes mature and busy slimes. Its daily limit lives in the external per-slime record (schema 11); `slime_ranching_give_compost_trough <save>` grants a test item. Price/growth are configurable; all values are provisional.
+- Migration advances older registries sequentially through schema 9, 10, and 11. Verify schema 10-to-11 and schema 8 multi-step backup behavior on copied mod data.
 - The interaction scheduler is now named `EnrichmentInteractionService`. It handles all five implemented furniture types, caches occupied target tiles once per assignment pass, and computes each playground candidate distance once during sorting. Build passes with only the existing analyzer/compiler version warning; compare behavior/performance with a crowded Daycare in game.
 - Breeder size inheritance now uses Tiny/Small/Normal/Large/Giant categories. The weights specified in the design notes are implemented; provisional defaults cover Tiny+Tiny, Normal+Normal, adjacent pairs, and wider gaps. Unknown legacy labels are treated as Normal only when rolling offspring. Small and Large also have distinct trampoline arcs.
 - Ranch Slime sprites now use separate color/size assets in 24x32 frame cells. Normal opaque art remains the original 16x24 pixels; Tiny/Small shrink and Large/Giant enlarge with nearest-neighbor sampling, centered and bottom-aligned. Check floors, petting, breeder previews, furniture animations, and clipping in-game.
@@ -79,6 +81,7 @@
 15. Check the Slime Slide animation alongside other furniture, then leave the room mid-glide and confirm position resets.
 16. Check Marnie's Slime Bed stock and the brief rest animation. Leave the Daycare mid-animation and confirm the slime's position resets without affecting age or breeding status.
 17. Follow the Gel Refinery recipe and persistence checklist in `Technical/TESTING.md`; review its first recipe economics and add later recipes only after deciding fuel/progression rules.
+18. Follow the Compost Trough test checklist in `Technical/TESTING.md`; especially verify favorite-food bonus, one feed per day, busy/mature restrictions, age persistence, and the 10-to-11 migration.
 
 ## Relevant files
 
@@ -86,6 +89,7 @@
 - `Planning/ACCEPTANCE_CHECKLIST.md` — release-gate status.
 - `Technical/TESTING.md` — manual smoke and feature checks.
 - `Services/BuildingContent.cs` — Daycare size, texture frames, and upgrade path.
+- `UI/CompostTroughMenu.cs` and `Services/CompostTroughRules.cs` — juvenile selection, eligible foods, and favorite-food growth behavior.
 - `ModEntry.cs` — heart animation and placement.
 - `assets/Buildings/SlimeDaycare*GameTexture.png` — current resized in-game building images.
 
