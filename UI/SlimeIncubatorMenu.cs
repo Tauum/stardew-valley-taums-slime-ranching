@@ -19,6 +19,7 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
     private readonly Func<int, bool> startIncubation;
     private readonly Func<bool> takeHatchedSlime;
     private readonly Texture2D incubatorTexture;
+    private readonly FarmAnimal? hatchedAnimal;
     private readonly List<(int InventoryIndex, string Name, int Stack)> candidates;
     private readonly int listTop;
     private readonly int listBottom;
@@ -35,6 +36,9 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
         this.startIncubation = startIncubation;
         this.takeHatchedSlime = takeHatchedSlime;
         this.incubatorTexture = incubatorTexture;
+        if (registry.GetIncubation(machineKey)?.HatchAnimalId is long animalId
+            && Game1.currentLocation is StardewValley.AnimalHouse animalHouse)
+            this.hatchedAnimal = animalHouse.animals.Values.FirstOrDefault(animal => animal.myID.Value == animalId);
         this.listTop = this.yPositionOnScreen + 166;
         this.listBottom = this.listTop + 184;
         this.actionButton = new Rectangle(this.xPositionOnScreen + 660, this.yPositionOnScreen + this.height - 88, 204, 58);
@@ -139,8 +143,10 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
             {
                 DrawPanel(b, new Rectangle(panel.X + 18, panel.Y + 62, panel.Width - 36, 236), new Color(198, 215, 245), new Color(235, 204, 255));
                 DrawCentered(b, "A new slime has hatched!", Game1.dialogueFont, new Rectangle(panel.X + 32, panel.Y + 82, panel.Width - 64, 50), new Color(42, 50, 88));
-                DrawCentered(b, "♥   ♥   ♥", Game1.dialogueFont, new Rectangle(panel.X + 72, panel.Y + 140, panel.Width - 144, 58), new Color(238, 91, 157));
-                DrawCentered(b, eggName, Game1.smallFont, new Rectangle(panel.X + 24, panel.Y + 208, panel.Width - 48, 36), new Color(42, 50, 88));
+                if (this.hatchedAnimal is not null)
+                    b.Draw(this.hatchedAnimal.Sprite.Texture, new Rectangle(panel.Center.X - 44, panel.Y + 132, 88, 82), this.hatchedAnimal.Sprite.SourceRect, Color.White);
+                DrawCentered(b, "♥   ♥   ♥", Game1.dialogueFont, new Rectangle(panel.X + 72, panel.Y + 211, panel.Width - 144, 38), new Color(238, 91, 157));
+                DrawCentered(b, eggName, Game1.smallFont, new Rectangle(panel.X + 24, panel.Y + 252, panel.Width - 48, 34), new Color(42, 50, 88));
                 DrawPanel(b, this.actionButton, new Color(46, 153, 78), new Color(145, 239, 134));
                 DrawCentered(b, "TAKE SLIME", Game1.smallFont, this.actionButton, Color.White);
             }
