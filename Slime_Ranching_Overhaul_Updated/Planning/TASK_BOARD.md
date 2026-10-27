@@ -81,6 +81,7 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [x] Show the active pool assignment, locked chance, and day progress in a status card.
 - [x] Add a single-player test command that gives the Mutagenic Pool without spending shop gold.
 - [x] Extend `slime_ranching_inspect` to report Daycare mutation and machine-job counts.
+- [x] Report the on-disk external-registry schema and per-machine job details from `slime_ranching_inspect`.
 - [x] Add `slime_ranching_inspect <animal ID>` to log one managed slime's external genome and lifecycle state.
 - [x] Add a command to archive the current save's registry and first-seen files as a timestamped ZIP under the mod folder.
 - [x] Add optional Generic Mod Config Menu sliders for Mutagenic Pool balance; the mod remains usable without GMCM.

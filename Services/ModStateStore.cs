@@ -16,12 +16,15 @@ internal sealed class ModStateStore
     private bool schemaMigrated;
     private string schemaBackupSuffix = ".before-compost-trough-v11.bak";
 
+    public int? LoadedSchemaVersion { get; private set; }
+
     public ModStateStore(string modDirectory) => this.modDirectory = modDirectory;
 
     public SlimeSaveData? Load()
     {
         this.legacyFoodLikeMoved = false;
         this.schemaMigrated = false;
+        this.LoadedSchemaVersion = null;
         this.schemaBackupSuffix = ".before-compost-trough-v11.bak";
         this.registryPath = Path.Combine(GetSaveDirectory(this.modDirectory), RegistryFileName);
         if (!File.Exists(this.registryPath))
@@ -29,6 +32,9 @@ internal sealed class ModStateStore
 
         using var stream = File.OpenRead(this.registryPath);
         JsonNode? root = JsonNode.Parse(stream);
+        if (root is JsonObject initialRoot && initialRoot["SchemaVersion"] is JsonValue schemaNode
+            && schemaNode.TryGetValue(out int initialSchemaVersion))
+            this.LoadedSchemaVersion = initialSchemaVersion;
         if (root is JsonObject rootObject && rootObject["SchemaVersion"]?.GetValue<int>() == 1)
         {
             rootObject["SchemaVersion"] = 2;
@@ -148,6 +154,7 @@ internal sealed class ModStateStore
         }
 
         File.Move(pendingPath, path, overwrite: true);
+        this.LoadedSchemaVersion = data.SchemaVersion;
         this.legacyFoodLikeMoved = false;
         this.schemaMigrated = false;
     }

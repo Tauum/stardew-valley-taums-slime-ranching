@@ -1434,6 +1434,9 @@ public sealed class ModEntry : Mod
             return;
         }
 
+        string schemaVersion = this.stateStore!.LoadedSchemaVersion?.ToString() ?? "not written yet";
+        this.Monitor.Log($"External registry schema on disk: {schemaVersion}; target for this build: {SlimeSaveData.CurrentSchemaVersion}.", LogLevel.Info);
+
         if (args.Length == 1)
         {
             long animalId = long.Parse(args[0]);
@@ -1477,6 +1480,25 @@ public sealed class ModEntry : Mod
             int mutatedResidents = residents.Count(animal => loadedRegistry.GetMutationTrait(animal.myID.Value) is not null);
             this.Monitor.Log($"This animal house contains {residents.Length} Ranch Slime(s), including {mutatedResidents} with mutation traits. The external genome registry contains {loadedRegistry.Count} Ranch Slime record(s).", LogLevel.Info);
             this.Monitor.Log($"Jobs in this room: {activeCycles} breeder cycle(s), {readyEggs} ready egg(s), {activeIncubations} incubation(s), {activeMutations} Mutagenic Pool attempt(s), {activeRefineryBatches} Gel Refinery batch(es).", LogLevel.Info);
+
+            foreach (BreedingPairRecord pair in roomBreedingPairs)
+            {
+                string status = pair.OutputEggItemId is not null
+                    ? $"egg ready ({pair.OutputEggItemId})"
+                    : pair.CycleReadyOnDay > Game1.Date.TotalDays
+                        ? $"cycle ready day {pair.CycleReadyOnDay}"
+                        : pair.CycleReadyOnDay > 0 ? "cycle ready to collect" : "parents reserved; no active cycle";
+                this.Monitor.Log($"Breeder [{pair.MachineKey}]: parents {pair.ParentAId}/{pair.ParentBId}; {status}.", LogLevel.Info);
+            }
+
+            foreach (IncubationRecord job in loadedRegistry.Incubations.Where(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal)))
+                this.Monitor.Log($"Incubator [{job.MachineKey}]: egg {job.EggItemId}; ready day {job.ReadyOnDay}; reserved hatch ID {job.HatchAnimalId?.ToString() ?? "none"}.", LogLevel.Info);
+
+            foreach (MutagenicAttemptRecord job in loadedRegistry.MutagenicAttempts.Where(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal)))
+                this.Monitor.Log($"Mutagenic Pool [{job.MachineKey}]: slime {job.SlimeId}; chance {job.ChanceAtStart:P0}; ready day {job.ReadyOnDay}.", LogLevel.Info);
+
+            foreach (RefineryJobRecord job in loadedRegistry.RefineryJobs.Where(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal)))
+                this.Monitor.Log($"Gel Refinery [{job.MachineKey}]: {job.InputCount} Broken Glasses + {job.SlimeFuelCount} Slime -> {job.OutputCount} Refined Quartz; ready day {job.ReadyOnDay}; notice sent {job.ReadyNotificationSent}.", LogLevel.Info);
             return;
         }
 
