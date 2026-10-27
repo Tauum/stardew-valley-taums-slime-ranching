@@ -15,6 +15,7 @@ internal sealed class SlimeRegistry
     private readonly Dictionary<string, SlimeEggRecord> eggs = new(StringComparer.Ordinal);
     private readonly Dictionary<string, IncubationRecord> incubations = new(StringComparer.Ordinal);
     private readonly Dictionary<string, MutagenicAttemptRecord> mutagenicAttempts = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, RefineryJobRecord> refineryJobs = new(StringComparer.Ordinal);
 
     public SlimeRegistry(IMonitor monitor) => this.monitor = monitor;
 
@@ -23,6 +24,7 @@ internal sealed class SlimeRegistry
     public IReadOnlyCollection<IncubationRecord> Incubations => this.incubations.Values;
     public IReadOnlyCollection<BreedingPairRecord> BreedingPairs => this.breedingPairs.Values;
     public IReadOnlyCollection<MutagenicAttemptRecord> MutagenicAttempts => this.mutagenicAttempts.Values;
+    public IReadOnlyCollection<RefineryJobRecord> RefineryJobs => this.refineryJobs.Values;
 
     public IReadOnlyCollection<long> RanchSlimeFarmAnimalIds => this.farmAnimalRecords.Keys;
     public IReadOnlyCollection<long> ReservedFarmAnimalIds => this.breedingPairs.Values
@@ -162,6 +164,31 @@ internal sealed class SlimeRegistry
         };
         return true;
     }
+
+    public RefineryJobRecord? GetRefineryJob(string machineKey) =>
+        this.refineryJobs.TryGetValue(machineKey, out RefineryJobRecord? job) ? job : null;
+
+    public bool StartRefineryJob(string machineKey, int currentDay, int durationDays, int slimeFuelCount)
+    {
+        if (string.IsNullOrWhiteSpace(machineKey) || this.refineryJobs.ContainsKey(machineKey)
+            || durationDays is < 1 or > 28 || slimeFuelCount is < 1 or > 999_999)
+            return false;
+
+        this.refineryJobs.Add(machineKey, new RefineryJobRecord
+        {
+            MachineKey = machineKey,
+            InputItemId = "(O)170",
+            InputCount = 1,
+            SlimeFuelCount = slimeFuelCount,
+            OutputItemId = "(O)338",
+            OutputCount = 1,
+            StartedOnDay = currentDay,
+            ReadyOnDay = currentDay + durationDays
+        });
+        return true;
+    }
+
+    public bool RemoveRefineryJob(string machineKey) => this.refineryJobs.Remove(machineKey);
 
     public bool AssignHatchAnimalId(string machineKey, long animalId)
     {
@@ -639,6 +666,7 @@ internal sealed class SlimeRegistry
         this.eggs.Clear();
         this.incubations.Clear();
         this.mutagenicAttempts.Clear();
+        this.refineryJobs.Clear();
         if (data is not null && data.SchemaVersion != SlimeSaveData.CurrentSchemaVersion)
             throw new InvalidOperationException($"Unsupported slime data schema {data.SchemaVersion}; expected {SlimeSaveData.CurrentSchemaVersion}.");
 
@@ -708,6 +736,20 @@ internal sealed class SlimeRegistry
             this.mutagenicAttempts.Add(attempt.MachineKey, attempt);
         }
 
+        foreach (RefineryJobRecord job in data?.RefineryJobs ?? Enumerable.Empty<RefineryJobRecord>())
+        {
+            if (job is null || string.IsNullOrWhiteSpace(job.MachineKey)
+                || job.StartedOnDay < 0 || job.ReadyOnDay < job.StartedOnDay
+                || job.InputItemId != "(O)170" || job.InputCount != 1 || job.SlimeFuelCount is < 1 or > 999_999
+                || job.OutputItemId != "(O)338" || job.OutputCount != 1
+                || this.refineryJobs.ContainsKey(job.MachineKey))
+            {
+                this.monitor.Log("Skipped a malformed or duplicate external Gel Refinery job.", LogLevel.Warn);
+                continue;
+            }
+            this.refineryJobs.Add(job.MachineKey, job);
+        }
+
         if (logSummary)
             this.monitor.Log($"Loaded {this.records.Count} external Ranch Slime record(s); assigned {assignedFoodLikes} missing or invalid food like(s). Existing vanilla GreenSlime monsters are not managed.", LogLevel.Info);
     }
@@ -718,7 +760,8 @@ internal sealed class SlimeRegistry
         BreedingPairs = this.breedingPairs.Values.OrderBy(pair => pair.MachineKey, StringComparer.Ordinal).ToList(),
         Eggs = this.eggs.Values.OrderBy(egg => egg.ItemId, StringComparer.Ordinal).ToList(),
         Incubations = this.incubations.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList(),
-        MutagenicAttempts = this.mutagenicAttempts.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList()
+        MutagenicAttempts = this.mutagenicAttempts.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList(),
+        RefineryJobs = this.refineryJobs.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList()
     };
 
     public SlimeEggRecord CreateEgg(SlimeGenome genome)

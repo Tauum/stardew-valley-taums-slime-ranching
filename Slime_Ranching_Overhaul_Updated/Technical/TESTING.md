@@ -16,6 +16,18 @@ The `TaumTest_322865388` copy passed the basic load, save, reload, and hutch ins
 
 While a single-player save is loaded, run `slime_ranching_backup_external_data <exact save folder name>`. Confirm the log gives a path under `<installed mod folder>/data/backups/`, then open the ZIP and confirm it contains the save's `slime-registry-v1.json` (if created) and `first-seen/` snapshot files. The command does not copy the vanilla Stardew save; back that up separately.
 
+## Gel Refinery first recipe (provisional)
+
+1. Use the disposable `TaumTest_322865388` save and run `slime_ranching_give_gel_refinery TaumTest_322865388`.
+2. Place the Gel Refinery inside the Slime Daycare and use the action button. Confirm the menu reports Broken Glasses and Slime available in inventory.
+3. Bring at least 1 Broken Glasses (`(O)170`) and 10 vanilla Slime (`(O)766`), or change `GelRefinerySlimeFuelCost` before launch. Start a batch and confirm exactly those input amounts are removed and the machine shows its day progress.
+4. Sleep for the configured duration (default 1 day). Confirm one ready notice appears, survives save/reload without repeating, and the machine offers its reserved Refined Quartz.
+5. Fill the inventory and attempt collection; confirm the output stays in the machine. Make a slot and collect; confirm one Refined Quartz (`(O)338`) is added and the machine becomes idle.
+6. Save/reload once with a running batch and once with a ready uncollected batch. Confirm each external job retains its original dates and cannot duplicate its output.
+7. With an untouched schema 9 external registry, load once and confirm it migrates to schema 10, preserves existing records, and creates `.before-gel-refinery-v10.bak` on the next external write.
+
+The recipe, fuel, duration, and shop price are provisional. A failed external write during collection is a cross-file recovery edge case to review before release; the current workflow expects the normal Stardew save event to persist inventory and external state together.
+
 ## Vanilla slime isolation
 
 1. Load the disposable test save and note the vanilla GreenSlime count in its Slime Hutch.

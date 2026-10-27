@@ -37,6 +37,9 @@ internal sealed class MutagenicPoolRules
         config.MutagenicPoolChancePerFailure = rules.PityIncrease;
         config.MutagenicPoolMaximumChance = rules.MaximumChance;
         config.MutagenicPoolDurationDays = rules.DurationDays;
+        config.GelRefineryShopPrice = Math.Clamp(config.GelRefineryShopPrice, 0, 999_999);
+        config.GelRefinerySlimeFuelCost = Math.Clamp(config.GelRefinerySlimeFuelCost, 1, 999_999);
+        config.GelRefineryDurationDays = Math.Clamp(config.GelRefineryDurationDays, 1, 28);
         config.ConverterShopPrice = Math.Clamp(config.ConverterShopPrice, 0, 999_999);
         config.BreederShopPrice = Math.Clamp(config.BreederShopPrice, 0, 999_999);
         config.IncubatorShopPrice = Math.Clamp(config.IncubatorShopPrice, 0, 999_999);

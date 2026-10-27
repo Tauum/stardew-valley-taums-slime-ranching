@@ -14,5 +14,8 @@
   "MutagenicPoolChancePerFailure": 0.02,
   "MutagenicPoolMaximumChance": 0.3,
   "MutagenicPoolDurationDays": 1,
-  "ShowShadowCloneVisualEchoes": true
+  "ShowShadowCloneVisualEchoes": true,
+  "GelRefineryShopPrice": 12000,
+  "GelRefinerySlimeFuelCost": 10,
+  "GelRefineryDurationDays": 1
 }

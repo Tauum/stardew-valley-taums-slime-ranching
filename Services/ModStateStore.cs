@@ -14,7 +14,7 @@ internal sealed class ModStateStore
     private string? registryPath;
     private bool legacyFoodLikeMoved;
     private bool schemaMigrated;
-    private string schemaBackupSuffix = ".before-mutagenic-pool-v9.bak";
+    private string schemaBackupSuffix = ".before-gel-refinery-v10.bak";
 
     public ModStateStore(string modDirectory) => this.modDirectory = modDirectory;
 
@@ -22,7 +22,7 @@ internal sealed class ModStateStore
     {
         this.legacyFoodLikeMoved = false;
         this.schemaMigrated = false;
-        this.schemaBackupSuffix = ".before-mutagenic-pool-v9.bak";
+        this.schemaBackupSuffix = ".before-gel-refinery-v10.bak";
         this.registryPath = Path.Combine(GetSaveDirectory(this.modDirectory), RegistryFileName);
         if (!File.Exists(this.registryPath))
             return null;
@@ -80,9 +80,17 @@ internal sealed class ModStateStore
 
         if (root is JsonObject schemaEight && schemaEight["SchemaVersion"]?.GetValue<int>() == 8)
         {
-            schemaEight["SchemaVersion"] = SlimeSaveData.CurrentSchemaVersion;
+            schemaEight["SchemaVersion"] = 9;
             schemaEight["MutagenicAttempts"] = new JsonArray();
             this.schemaBackupSuffix = ".before-mutagenic-pool-v9.bak";
+            this.schemaMigrated = true;
+        }
+
+        if (root is JsonObject schemaNine && schemaNine["SchemaVersion"]?.GetValue<int>() == 9)
+        {
+            schemaNine["SchemaVersion"] = SlimeSaveData.CurrentSchemaVersion;
+            schemaNine["RefineryJobs"] = new JsonArray();
+            this.schemaBackupSuffix = ".before-gel-refinery-v10.bak";
             this.schemaMigrated = true;
         }
 

@@ -18,4 +18,7 @@ public sealed class ModConfig
     public double MutagenicPoolMaximumChance { get; set; } = 0.30;
     public int MutagenicPoolDurationDays { get; set; } = 1;
     public bool ShowShadowCloneVisualEchoes { get; set; } = true;
+    public int GelRefineryShopPrice { get; set; } = 12000;
+    public int GelRefinerySlimeFuelCost { get; set; } = 10;
+    public int GelRefineryDurationDays { get; set; } = 1;
 }

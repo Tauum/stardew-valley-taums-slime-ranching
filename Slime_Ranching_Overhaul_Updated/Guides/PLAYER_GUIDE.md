@@ -11,6 +11,7 @@ This guide covers the current early prototype. The Slime Breeder can reserve two
 - Marnie also sells a Slime Slide. Nearby Ranch Slimes can do a small hop and horizontal glide down it; the effect is decorative.
 - Marnie also sells a Slime Bed. Nearby Ranch Slimes can settle briefly into a resting pose; it has no gameplay effect yet.
 - Marnie sells a Mutagenic Pool. It assigns one mature Ranch Slime for a nonlethal mutation attempt; defaults are 500 vanilla Slime, one day, 5% base chance, +2 percentage points per failure, and 30% cap. Use the GMCM settings page or `config.json` to tune it. Success adds the Shadow Clone trait; a temporary visual echo appears in the Daycare, but its planned abilities are not implemented. GMCM can disable the echo without removing the mutation.
+- Marnie sells a Gel Refinery. Its first provisional recipe uses 1 Broken Glasses and 10 vanilla Slime to make 1 Refined Quartz over one in-game day. Fuel, time, and price can be tuned in GMCM or `config.json`; use `slime_ranching_give_gel_refinery <save name>` for testing. See the recipe section below and verify on a copied save.
 - Chromatic Crystals can focus a breeder cycle on a base offspring color. They are currently test-only items; use the SMAPI command `slime_ranching_give_crystals <save name>` while on a disposable save.
 - Ranch Slime offspring and genome-specific egg icons use a tint selected from the external genome color. The seven base colors and six hybrid recipes are supported; hybrid sprites still use the nearest base tint rather than continuous RGB blending.
 
@@ -74,6 +75,10 @@ slime_ranching_inspect <Ranch Slime animal ID>
 Buy the Pool from Marnie or request a test item with `slime_ranching_give_mutagenic_pool <exact save folder name>`. Place it inside the Slime Daycare, bring the configured amount of vanilla Slime in your inventory, and select one mature, unreserved Ranch Slime. Sleep to save the inventory cost and external attempt. The Pool records its chance and roll when started, so reloading doesn't reroll it. Failure never harms the slime; its next attempt gets the configured pity increase. Success sets the Shadow Clone trait and resets pity.
 
 The attempt, roll, mutation trait, and pity count are stored under `<installed mod folder>/data/saves/<save folder name>/`. Vanilla inventory changes use Stardew's normal save. Use a copied test save, and keep the mod installed while its custom Pool item remains in the save. The visual echo is decorative; it is not another animal and produces no items or offspring.
+
+## Gel Refinery
+
+Place the refinery inside the Slime Daycare and use it with 1 Broken Glasses (`(O)170`) and the configured amount of vanilla Slime (`(O)766`) in your inventory. The current recipe produces one Refined Quartz (`(O)338`) after the configured number of in-game days. The output stays reserved in the machine until you collect it; a full inventory does not consume or discard the batch. These recipe and economy values are early prototypes. The running batch is in the external mod registry, while Stardew's regular save stores inventory changes.
 
 ## Field Guide book
 

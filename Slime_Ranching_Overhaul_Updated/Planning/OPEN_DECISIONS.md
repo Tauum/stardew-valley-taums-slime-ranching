@@ -20,7 +20,7 @@
 9. **Breeder:** How to obtain the basic machine; cycle-time tuning; whether parents remain in world while shown in machine. A one-day rest after egg collection is implemented provisionally; review the duration after playtesting.
 10. **Eggs:** A prototype now uses a dedicated Daycare incubator, a two-day timer, and automatic hatching into the Daycare when space exists. Its menu displays the active egg's genome label and day-based progress. Inserting a converter Common Egg creates a fresh Green (`#00FF00`), Normal, Common, Generation 1 genome; breeder eggs keep their stored genome. Duplicate copies of one breeder genome egg ID can hatch only once. Confirm persistence/transfer behavior, the duration, and duplicate-item handling through playtesting. Keep managed eggs out of the vanilla incubator. The concept image's liquid modes and stability meter have no defined mechanics yet; do not imply effects until designed.
 11. **White/Black:** Behavior at sleep, festivals and multiplayer; whether time powers stack (recommend never).
-12. **Gel Refinery:** Conversion recipes, slime fuel costs, progression unlock and cosmetic transmutation feasibility.
+12. **Gel Refinery:** The first test recipe is provisionally 1 Broken Glasses + 10 vanilla Slime -> 1 Refined Quartz, processed over 1 in-game day; machine price defaults to 12,000g. Fuel, duration, and shop price are configurable. Review whether recycling should be profitable, then choose progression unlocks and later recipes. Cosmetic transmutation remains a separate feasibility question.
 13. **Resource production:** How drops are collected, production interval, caps and exceptional outputs.
 14. **Companion capacity:** One bound active slime at a time? Recommend one initially.
 15. **Maturity:** Ranch Slimes currently mature after three in-game days, matching the hatching-as-juvenile goal. Maturity progression is now tracked in the external registry and mirrored to Stardew's native animal age field. Review duration, migration, and visual growth steps in game.
@@ -40,6 +40,7 @@
 | 2026-10-27 | Common converter eggs receive a fresh base Common genome when inserted into the incubator | Prototype implemented; verify common egg flow |
 | 2026-10-27 | Ranch Slime juveniles mature after three in-game days and cannot breed while growing | Provisional implementation; verify visual growth and balance |
 | 2026-10-27 | Mutagenic Pool assigns one mature Ranch Slime for a nonlethal Shadow Clone mutation roll with per-slime pity | Prototype implemented; default one-day duration and all costs/odds/shop price are configurable and provisional |
+| 2026-10-27 | Gel Refinery first recipe recycles Broken Glasses into Refined Quartz using Slime as fuel | Provisional vertical slice implemented; one-day duration and 10-Slime fuel defaults, 12,000g machine price; review balance and expand recipes |
 
 ## Current decisions locked
 Full custom breeder; external-only mod state; custom companion AI; single-player first; GPT-assisted sprite production. The breeder egg ID to external genome link is prototyped but still needs transfer/reload verification. Remaining design decisions include Pink recipe rules, exceptional acquisition, time-change safeguards, precise mutation and shop balancing.

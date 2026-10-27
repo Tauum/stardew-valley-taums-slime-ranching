@@ -49,6 +49,7 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("slime_ranching_give_breeder", "Give one Slime Breeder for testing. Usage: slime_ranching_give_breeder <exact save folder name>.", this.OnGiveBreederCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_incubator", "Give one Slime Incubator for testing. Usage: slime_ranching_give_incubator <exact save folder name>.", this.OnGiveIncubatorCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_mutagenic_pool", "Give one Mutagenic Pool for testing. Usage: slime_ranching_give_mutagenic_pool <exact save folder name>.", this.OnGiveMutagenicPoolCommand);
+        helper.ConsoleCommands.Add("slime_ranching_give_gel_refinery", "Give one Gel Refinery for testing. Usage: slime_ranching_give_gel_refinery <exact save folder name>.", this.OnGiveGelRefineryCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_test_eggs", "Create two external-genome test eggs. Usage: slime_ranching_give_test_eggs <exact save folder name>.", this.OnGiveTestEggsCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_color_eggs", "Create seven color test eggs. Usage: slime_ranching_give_color_eggs <exact save folder name>.", this.OnGiveColorEggsCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_crystals", "Give one of each Chromatic Crystal for breeder testing. Usage: slime_ranching_give_crystals <exact save folder name>.", this.OnGiveCrystalsCommand);
@@ -102,6 +103,20 @@ public sealed class ModEntry : Mod
         this.AddShopPriceOption(api, "Slime Playground", "Price of the playground enrichment furniture.", () => this.config.SlimePlaygroundShopPrice, value => this.config.SlimePlaygroundShopPrice = value);
         this.AddShopPriceOption(api, "Slime Slide", "Price of the slide enrichment furniture.", () => this.config.SlimeSlideShopPrice, value => this.config.SlimeSlideShopPrice = value);
         this.AddShopPriceOption(api, "Slime Bed", "Price of the bed enrichment furniture.", () => this.config.SlimeBedShopPrice, value => this.config.SlimeBedShopPrice = value);
+        this.AddShopPriceOption(api, "Gel Refinery", "Price of the Gel Refinery.", () => this.config.GelRefineryShopPrice, value => this.config.GelRefineryShopPrice = value);
+        api.AddSectionTitle(this.ModManifest, () => "Gel Refinery");
+        api.AddParagraph(this.ModManifest, () => "The first recipe is provisional: Broken Glasses and vanilla Slime fuel become Refined Quartz.");
+        api.AddNumberOption(this.ModManifest,
+            () => this.config.GelRefinerySlimeFuelCost,
+            value => this.config.GelRefinerySlimeFuelCost = value,
+            () => "Slime fuel per batch",
+            () => "Vanilla Slime consumed for one Broken Glasses to Refined Quartz batch.", 1, 999_999, 1);
+        api.AddNumberOption(this.ModManifest,
+            () => (float)this.config.GelRefineryDurationDays,
+            value => this.config.GelRefineryDurationDays = (int)MathF.Round(value),
+            () => "Processing days",
+            () => "Whole in-game days per batch (1–28).", 1f, 28f, 1f,
+            value => $"{MathF.Round(value):0} day(s)");
         api.AddSectionTitle(this.ModManifest, () => "Mutagenic Pool");
         api.AddParagraph(this.ModManifest, () => "Balance values are provisional. Changes apply when you save these settings; active attempts keep their stored chance and ready day.");
         api.AddBoolOption(this.ModManifest,
@@ -199,11 +214,21 @@ public sealed class ModEntry : Mod
             }
         }
 
+        List<RefineryJobRecord> refineryReady = new();
+        foreach (RefineryJobRecord job in this.registry.RefineryJobs)
+        {
+            if (Game1.Date.TotalDays >= job.ReadyOnDay && !job.ReadyNotificationSent)
+            {
+                job.ReadyNotificationSent = true;
+                refineryReady.Add(job);
+            }
+        }
+
         this.ProcessReadyIncubations();
         maturityChanged |= this.registry.SynchronizeMaturity(GetFarmAnimals(), Game1.Date.TotalDays);
         this.pendingMutagenicNotifications.AddRange(this.registry.ResolveReadyMutagenicAttempts(Game1.Date.TotalDays));
 
-        if (readyToNotify.Count == 0 && this.pendingMutagenicNotifications.Count == 0)
+        if (readyToNotify.Count == 0 && refineryReady.Count == 0 && this.pendingMutagenicNotifications.Count == 0)
         {
             if (maturityChanged && !this.SaveExternalStateNow())
                 this.Monitor.Log("Could not save the Ranch Slime maturity clock to the mod-folder registry; it will retry at the next save.", LogLevel.Error);
@@ -214,6 +239,8 @@ public sealed class ModEntry : Mod
         {
             foreach (var ready in readyToNotify)
                 ready.Pair.ReadyNotificationSent = false;
+            foreach (RefineryJobRecord job in refineryReady)
+                job.ReadyNotificationSent = false;
             this.Monitor.Log("A completed breeding or mutation result could not be saved; notifications will retry after the next external-state save.", LogLevel.Error);
             return;
         }
@@ -234,6 +261,12 @@ public sealed class ModEntry : Mod
             this.Monitor.Log($"Mutagenic Pool attempt for Ranch Slime {result.SlimeId}: {(result.Success ? "success" : "safe failure")} at {result.Chance:P0}.", LogLevel.Info);
         }
         this.pendingMutagenicNotifications.Clear();
+
+        foreach (RefineryJobRecord job in refineryReady)
+        {
+            Game1.addHUDMessage(new HUDMessage("A Gel Refinery batch is ready to collect!", HUDMessage.newQuest_type));
+            this.Monitor.Log($"Gel Refinery batch at {job.MachineKey} is ready: {job.OutputCount} Refined Quartz.", LogLevel.Info);
+        }
     }
 
     private void OnReturnedToTitle(object? sender, ReturnedToTitleEventArgs e)
@@ -588,6 +621,8 @@ public sealed class ModEntry : Mod
         FarmAnimalContent.EditAsset(e);
         FurnitureContent.LoadAssets(e);
         FurnitureContent.EditAsset(e);
+        GelRefineryContent.LoadAssets(e);
+        GelRefineryContent.EditAsset(e);
         MutagenicPoolContent.LoadAssets(e);
         MutagenicPoolContent.EditAsset(e);
         BuildingContent.EditAsset(e, this.Helper);
@@ -617,6 +652,31 @@ public sealed class ModEntry : Mod
             this.Helper.Input.Suppress(e.Button);
             string key = $"{Game1.currentLocation.NameOrUniqueName}:{(int)incubator.TileLocation.X},{(int)incubator.TileLocation.Y}";
             Game1.activeClickableMenu = new SlimeIncubatorMenu(this.registry!, key, index => this.StartIncubation(key, index));
+            return;
+        }
+
+        if (Context.IsWorldReady && Game1.activeClickableMenu is null && e.Button.IsActionButton()
+            && Game1.currentLocation.Objects.TryGetValue(e.Cursor.GrabTile, out StardewValley.Object? refinery)
+            && refinery.QualifiedItemId == GelRefineryContent.QualifiedItemId)
+        {
+            if (!this.stateReady || !Context.IsMainPlayer || Context.IsMultiplayer)
+            {
+                this.Monitor.Log("The Gel Refinery requires an available external registry in single-player.", LogLevel.Warn);
+                return;
+            }
+
+            StardewValley.Buildings.Building? daycare = Game1.getFarm().buildings.FirstOrDefault(building =>
+                BuildingContent.IsSlimeDaycare(building.buildingType.Value) && building.GetIndoors() == Game1.currentLocation);
+            if (daycare?.GetIndoors() is not StardewValley.AnimalHouse)
+            {
+                this.Monitor.Log("The Gel Refinery only works inside the Slime Daycare.", LogLevel.Warn);
+                return;
+            }
+
+            this.Helper.Input.Suppress(e.Button);
+            string machineKey = $"{Game1.currentLocation.NameOrUniqueName}:{(int)refinery.TileLocation.X},{(int)refinery.TileLocation.Y}";
+            Game1.activeClickableMenu = new GelRefineryMenu(this.registry!, machineKey, GelRefineryRules.FromConfig(this.config),
+                () => this.StartRefineryBatch(machineKey), () => this.CollectRefineryBatch(machineKey));
             return;
         }
 
@@ -1119,6 +1179,96 @@ public sealed class ModEntry : Mod
         this.Monitor.Log("Added one Mutagenic Pool. Place it inside the Slime Daycare and use it with vanilla Slime in your inventory.", LogLevel.Info);
     }
 
+    private void OnGiveGelRefineryCommand(string command, string[] args)
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
+        {
+            this.Monitor.Log("Load a single-player save with available external slime state before requesting a Gel Refinery.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 1 || args[0] != saveName)
+        {
+            this.Monitor.Log($"To give a Gel Refinery to the currently loaded save, use: slime_ranching_give_gel_refinery {saveName}", LogLevel.Warn);
+            return;
+        }
+
+        Item refinery = ItemRegistry.Create(GelRefineryContent.QualifiedItemId);
+        if (!Game1.player.couldInventoryAcceptThisItem(refinery) || !Game1.player.addItemToInventoryBool(refinery))
+        {
+            this.Monitor.Log("Make room in your inventory for the Gel Refinery, then try again.", LogLevel.Warn);
+            return;
+        }
+
+        this.Monitor.Log("Added one Gel Refinery. Place it inside the Slime Daycare; its provisional recipe needs Broken Glasses and vanilla Slime.", LogLevel.Info);
+    }
+
+    private bool StartRefineryBatch(string machineKey)
+    {
+        GelRefineryRules rules = GelRefineryRules.FromConfig(this.config);
+        if (this.registry!.GetRefineryJob(machineKey) is not null
+            || CountInventoryItem("(O)170") < 1 || CountInventoryItem("(O)766") < rules.FuelCost)
+            return false;
+
+        List<(int Slot, Item Item, int OldStack)> removed = ConsumeInventoryItems("(O)170", 1)
+            .Concat(ConsumeInventoryItems("(O)766", rules.FuelCost)).ToList();
+        if (!this.registry.StartRefineryJob(machineKey, Game1.Date.TotalDays, rules.DurationDays, rules.FuelCost))
+        {
+            RestoreInventoryItems(removed);
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool CollectRefineryBatch(string machineKey)
+    {
+        RefineryJobRecord? job = this.registry!.GetRefineryJob(machineKey);
+        if (job is null || Game1.Date.TotalDays < job.ReadyOnDay)
+            return false;
+
+        Item output = ItemRegistry.Create(job.OutputItemId);
+        if (!Game1.player.couldInventoryAcceptThisItem(output) || !Game1.player.addItemToInventoryBool(output))
+            return false;
+
+        this.registry.RemoveRefineryJob(machineKey);
+        return true;
+    }
+
+    private static int CountInventoryItem(string qualifiedItemId) => Game1.player.Items
+        .Where(item => item is not null && item.QualifiedItemId == qualifiedItemId)
+        .Sum(item => item!.Stack);
+
+    private static List<(int Slot, Item Item, int OldStack)> ConsumeInventoryItems(string qualifiedItemId, int amount)
+    {
+        var removed = new List<(int Slot, Item Item, int OldStack)>();
+        for (int i = 0; i < Game1.player.Items.Count && amount > 0; i++)
+        {
+            Item? item = Game1.player.Items[i];
+            if (item is null || item.QualifiedItemId != qualifiedItemId)
+                continue;
+
+            int oldStack = item.Stack;
+            int consumed = Math.Min(amount, oldStack);
+            removed.Add((i, item, oldStack));
+            item.Stack -= consumed;
+            amount -= consumed;
+            if (item.Stack <= 0)
+                Game1.player.Items[i] = null;
+        }
+        return removed;
+    }
+
+    private static void RestoreInventoryItems(IEnumerable<(int Slot, Item Item, int OldStack)> removed)
+    {
+        foreach ((int slot, Item item, int oldStack) in removed)
+        {
+            item.Stack = oldStack;
+            Game1.player.Items[slot] = item;
+        }
+    }
+
     private void OnBackupExternalDataCommand(string command, string[] args)
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
@@ -1211,9 +1361,10 @@ public sealed class ModEntry : Mod
             int readyEggs = roomBreedingPairs.Count(pair => pair.OutputEggItemId is not null);
             int activeIncubations = loadedRegistry.Incubations.Count(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal));
             int activeMutations = loadedRegistry.MutagenicAttempts.Count(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal));
+            int activeRefineryBatches = loadedRegistry.RefineryJobs.Count(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal));
             int mutatedResidents = residents.Count(animal => loadedRegistry.GetMutationTrait(animal.myID.Value) is not null);
             this.Monitor.Log($"This animal house contains {residents.Length} Ranch Slime(s), including {mutatedResidents} with mutation traits. The external genome registry contains {loadedRegistry.Count} Ranch Slime record(s).", LogLevel.Info);
-            this.Monitor.Log($"Jobs in this room: {activeCycles} breeder cycle(s), {readyEggs} ready egg(s), {activeIncubations} incubation(s), {activeMutations} Mutagenic Pool attempt(s).", LogLevel.Info);
+            this.Monitor.Log($"Jobs in this room: {activeCycles} breeder cycle(s), {readyEggs} ready egg(s), {activeIncubations} incubation(s), {activeMutations} Mutagenic Pool attempt(s), {activeRefineryBatches} Gel Refinery batch(es).", LogLevel.Info);
             return;
         }
 

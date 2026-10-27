@@ -80,9 +80,13 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [x] Expose all ranching machine and enrichment furniture prices in the optional GMCM page.
 - [x] Cache mutated-slime candidates for the Shadow Clone renderer and rotate the four-echo draw budget fairly.
 - [x] Add an optional GMCM toggle for the Shadow Clone visual prototype.
+- [x] Add the Gel Refinery's first provisional recipe: 1 Broken Glasses + configurable vanilla Slime fuel -> 1 Refined Quartz, with external job progress, a ready notice, and inventory-safe collection.
+- [x] Add Marnie stock/configuration, optional GMCM fuel/time settings, schema 9-to-10 migration, and `slime_ranching_give_gel_refinery` for testing.
+- [ ] Verify refinery job persistence across sleep/reload, exactly-once input/output handling, full-inventory collection retry, and the schema 9-to-10 backup on a disposable save.
+- [ ] Decide whether the first recipe, fuel amount, processing duration, shop price, and later recipe unlocks are balanced; current values are explicitly provisional.
 - [ ] Extend the temporary Shadow Clone visual echo into bounded companion behavior; no clones may breed, produce resources, or recursively clone.
 - [x] Chromatic Crystals as breeder consumables, **not furniture**; obtainment recipes and unlock progression remain open.
-- [ ] Gel Refinery stored Slime and vanilla-item conversion recipes.
+- [ ] Expand the Gel Refinery with reviewed recipes, progression gates, and anti-arbitrage checks; only its first recycling recipe is implemented.
 
 ## Stage 6 — custom companion AI
 - [ ] Slime Core bind/unbind, ownership, transfer and anti-duplication rules.
