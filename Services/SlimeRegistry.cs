@@ -357,6 +357,7 @@ internal sealed class SlimeRegistry
 
     public bool IsReserved(long farmAnimalId, string? exceptMachineKey = null) =>
         (this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? slime) && slime.IsCompanion)
+        || this.incubations.Values.Any(incubation => incubation.HatchAnimalId == farmAnimalId)
         || this.breedingPairs.Values.Any(pair => pair.OutputEggItemId is null && pair.MachineKey != exceptMachineKey
             && (pair.ParentAId == farmAnimalId || pair.ParentBId == farmAnimalId))
         || this.mutagenicAttempts.Values.Any(attempt => attempt.MachineKey != exceptMachineKey && attempt.SlimeId == farmAnimalId);
@@ -478,7 +479,10 @@ internal sealed class SlimeRegistry
         return true;
     }
 
-    public SlimeEggRecord? GetOrCreateBreedingEgg(string machineKey, int currentDay, out bool created)
+    public SlimeEggRecord? GetOrCreateBreedingEgg(string machineKey, int currentDay, out bool created) =>
+        this.GetOrCreateBreedingEgg(machineKey, currentDay, null, null, out created);
+
+    public SlimeEggRecord? GetOrCreateBreedingEgg(string machineKey, int currentDay, string? parentAName, string? parentBName, out bool created)
     {
         created = false;
         if (!this.breedingPairs.TryGetValue(machineKey, out BreedingPairRecord? pair)
@@ -488,7 +492,13 @@ internal sealed class SlimeRegistry
         if (pair.OutputEggItemId is not null)
         {
             ApplyBreedingRest(pair, pair.CycleReadyOnDay);
-            return this.eggs.TryGetValue(pair.OutputEggItemId, out SlimeEggRecord? existing) ? existing : null;
+            if (!this.eggs.TryGetValue(pair.OutputEggItemId, out SlimeEggRecord? existing))
+                return null;
+            if (!string.IsNullOrWhiteSpace(parentAName) && string.IsNullOrWhiteSpace(existing.Genome.ParentAName))
+                existing.Genome.ParentAName = parentAName;
+            if (!string.IsNullOrWhiteSpace(parentBName) && string.IsNullOrWhiteSpace(existing.Genome.ParentBName))
+                existing.Genome.ParentBName = parentBName;
+            return existing;
         }
 
         if (!this.farmAnimalRecords.TryGetValue(pair.ParentAId, out SlimeRecord? parentA)
@@ -504,6 +514,8 @@ internal sealed class SlimeRegistry
             Id = Guid.NewGuid(),
             ParentA = a.Id,
             ParentB = b.Id,
+            ParentAName = string.IsNullOrWhiteSpace(parentAName) ? "Unknown" : parentAName,
+            ParentBName = string.IsNullOrWhiteSpace(parentBName) ? "Unknown" : parentBName,
             Generation = Math.Max(a.Generation, b.Generation) + 1,
             PrimarySpecies = primarySpecies,
             SecondarySpecies = secondarySpecies,

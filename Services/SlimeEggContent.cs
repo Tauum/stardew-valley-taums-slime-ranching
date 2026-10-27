@@ -55,12 +55,11 @@ internal static class SlimeEggContent
                     continue;
 
                 SlimeGenome genome = egg.Genome;
-                string color = DisplayOrUnknown(genome.VisualColor);
-                string texture = EggTexturePrefix + FarmAnimalContent.GetTextureName(genome.VisualColor).Split('_').Last();
+                string texture = EggTexturePrefix + FarmAnimalContent.GetClosestVariantName(genome.VisualColor);
                 objects[egg.ItemId] = new ObjectData
                 {
-                    Name = $"{DisplayOrUnknown(genome.PrimarySpecies)} Egg ({color})",
-                    DisplayName = $"{DisplayOrUnknown(genome.PrimarySpecies)} Egg ({color})",
+                    Name = $"{DisplayOrUnknown(genome.PrimarySpecies)} Egg",
+                    DisplayName = $"{DisplayOrUnknown(genome.PrimarySpecies)} Egg",
                     Description = CreateDescription(genome, egg.HatchedAnimalId),
                     Type = "Basic",
                     Price = 0,
@@ -122,19 +121,20 @@ internal static class SlimeEggContent
 
     private static string CreateDescription(SlimeGenome genome, long? hatchedAnimalId)
     {
-        string parents = genome.ParentA is Guid parentA && genome.ParentB is Guid parentB
-            ? $"Parents: {parentA.ToString("N")[..8]} / {parentB.ToString("N")[..8]}"
+        string parents = genome.ParentA is Guid && genome.ParentB is Guid
+            ? $"Parents: {DisplayOrUnknown(genome.ParentAName)} / {DisplayOrUnknown(genome.ParentBName)}"
             : "Parents: Unknown";
         string mutation = string.IsNullOrWhiteSpace(genome.MutationTrait) ? "None" : genome.MutationTrait;
         string likedFood = GetFoodName(genome.LikedFoodItemId);
 
-        string hatchStatus = hatchedAnimalId is long animalId
-            ? $"\nHatched as FarmAnimal {animalId}."
-            : "\nPlace in a Slime Incubator to hatch.";
-        return $"A unique Ranch Slime Egg.\n"
+        string hatchStatus = hatchedAnimalId is long
+            ? "\nThis egg has already hatched."
+            : "";
+        return $"- Place in a Slime Incubator to hatch.\n"
+            + $"A unique Ranch Slime Egg.\n"
             + $"Species: {DisplayOrUnknown(genome.PrimarySpecies)}"
             + (string.IsNullOrWhiteSpace(genome.SecondarySpecies) ? "" : $" / {genome.SecondarySpecies}") + "\n"
-            + $"Color: {DisplayOrUnknown(genome.VisualColor)}\n"
+            + $"Color: {FarmAnimalContent.GetClosestVariantName(genome.VisualColor)}\n"
             + $"Genetic size: {DisplayOrUnknown(genome.Size)}\n"
             + $"Rarity: {DisplayOrUnknown(genome.RarityTier)}{(genome.IsShiny ? " (Shiny)" : "")}\n"
             + $"Mutation: {mutation}\n"

@@ -6,6 +6,8 @@ public sealed class SlimeGenome
     public Guid Id { get; set; }
     public Guid? ParentA { get; set; }
     public Guid? ParentB { get; set; }
+    public string? ParentAName { get; set; }
+    public string? ParentBName { get; set; }
     public int Generation { get; set; }
     public string PrimarySpecies { get; set; } = "Green Slime";
     public string? SecondarySpecies { get; set; }

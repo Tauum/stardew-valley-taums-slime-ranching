@@ -66,7 +66,8 @@ internal sealed class SlimeBreederMenu : IClickableMenu
             foreach (long parentId in new[] { pair.ParentAId, pair.ParentBId })
             {
                 FarmAnimal? parent = interior?.animals.Values.FirstOrDefault(animal => animal.myID.Value == parentId);
-                if (parent is not null && this.candidates.All(animal => animal.myID.Value != parentId))
+                if (parent is not null && !registry.IsReserved(parentId, machineKey)
+                    && this.candidates.All(animal => animal.myID.Value != parentId))
                     this.candidates.Add(parent);
             }
         }
@@ -573,7 +574,10 @@ internal sealed class SlimeBreederMenu : IClickableMenu
 
         try
         {
-            SlimeEggRecord? egg = this.registry.GetOrCreateBreedingEgg(this.machineKey, Game1.Date.TotalDays, out _);
+            string? parentAName = this.candidates.FirstOrDefault(animal => animal.myID.Value == pair.ParentAId)?.Name;
+            string? parentBName = this.candidates.FirstOrDefault(animal => animal.myID.Value == pair.ParentBId)?.Name;
+            SlimeEggRecord? egg = this.registry.GetOrCreateBreedingEgg(
+                this.machineKey, Game1.Date.TotalDays, parentAName, parentBName, out _);
             if (egg is null || !this.saveExternalState())
             {
                 this.statusMessage = "Could not save the fixed offspring genome; try again.";
