@@ -11,6 +11,7 @@ For the next-session handoff and current visual state, see [`NEXT_SESSION.md`](N
 - [ ] Verify petting, movement, and that the native ID keeps the same external genome link across save/reload.
 - [x] Implement idempotent first-install detection and first-seen snapshot of legacy hutch slimes in the mod folder.
 - [x] Keep vanilla Slime Hutch and monster slimes untouched; modded Ranch Slimes and other mod systems use the separate Slime Daycare.
+- [x] Reconcile missing Ranch Slime animal IDs on load/save, preserve orphaned genome records, and cancel only unfinished cycles without an egg.
 - [ ] Add backup/reinstall reconciliation and recovery tests.
 
 The first-seen load/save/hutch-inspection smoke check passed on the disposable `TaumTest_322865388` copy: seven vanilla hutch slimes stayed unmanaged and the external registry reloaded. A Ranch Slime spawn and egg tooltip were also observed. This does not prove full FarmAnimal/genome stability or recovery after reinstall.

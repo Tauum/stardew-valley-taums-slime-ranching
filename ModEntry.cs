@@ -55,7 +55,11 @@ public sealed class ModEntry : Mod
             int registeredRanchSlimes = this.registry.RegisterRanchSlimes(GetFarmAnimals());
             if (registeredRanchSlimes > 0)
                 this.Monitor.Log($"Registered {registeredRanchSlimes} Ranch Slime farm animal(s) in the external genome registry.", LogLevel.Info);
+            (int detachedAnimals, int cancelledCycles) = this.registry.ReconcileRanchSlimes(GetFarmAnimals());
             this.stateReady = true;
+            this.LogRegistryReconciliation(detachedAnimals, cancelledCycles);
+            if ((detachedAnimals > 0 || cancelledCycles > 0) && !this.SaveExternalStateNow())
+                this.Monitor.Log("Reconciled Ranch Slime records remain in memory but could not yet be written to the mod-folder registry.", LogLevel.Error);
         }
         catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException or System.Text.Json.JsonException or NotSupportedException)
         {
@@ -73,6 +77,8 @@ public sealed class ModEntry : Mod
             int registeredRanchSlimes = this.registry!.RegisterRanchSlimes(GetFarmAnimals());
             if (registeredRanchSlimes > 0)
                 this.Monitor.Log($"Added {registeredRanchSlimes} Ranch Slime genome record(s) to the external registry.", LogLevel.Info);
+            (int detachedAnimals, int cancelledCycles) = this.registry.ReconcileRanchSlimes(GetFarmAnimals());
+            this.LogRegistryReconciliation(detachedAnimals, cancelledCycles);
             this.stateStore!.Save(this.registry!.Capture());
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
@@ -279,6 +285,16 @@ public sealed class ModEntry : Mod
             this.Monitor.Log($"Could not save the breeder pair to external mod state: {exception.Message}", LogLevel.Error);
             return false;
         }
+    }
+
+    private void LogRegistryReconciliation(int detachedAnimals, int cancelledCycles)
+    {
+        if (detachedAnimals == 0 && cancelledCycles == 0)
+            return;
+
+        this.Monitor.Log(
+            $"Reconciled external Ranch Slime state: detached {detachedAnimals} missing animal link(s) while preserving their genomes; cancelled {cancelledCycles} cycle(s) without a saved egg.",
+            LogLevel.Info);
     }
 
     private Item CreateEggItem(Guid genomeId)

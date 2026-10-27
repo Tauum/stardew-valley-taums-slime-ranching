@@ -99,6 +99,13 @@ For migration, put `LikedFoodItemId` on the record outside `Genome` in a test co
 2. Select two residents and complete a cycle. After collecting the egg, confirm the pair shows `RESTING 1d` and can't be selected immediately.
 3. Save and reload. Confirm the parents remain resting, then become eligible on the next in-game day. The one-day duration is provisional and will be reviewed after playtesting.
 
+## Removed-animal reconciliation
+
+1. On a disposable save, start a breeding cycle and remove one parent through the game's animal controls or a test-only method.
+2. Save and reload. The external registry should preserve the removed slime's genome as an unlinked archive and clear the unfinished cycle.
+3. Repeat with a cycle whose egg is already ready. The ready egg should remain collectable even if a parent has since been removed.
+4. Confirm vanilla Hutch Green Slimes are not counted, detached, or changed by this reconciliation.
+
 ## Unit tests
 - Recipe table is symmetric where intended and never creates undefined hybrids.
 - Crystal override always yields pure base color and preserves unrelated genetic rolls.

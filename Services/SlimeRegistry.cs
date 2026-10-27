@@ -170,6 +170,42 @@ internal sealed class SlimeRegistry
         return added;
     }
 
+    /// <summary>Detach removed animals while keeping their genome archive; abandon only cycles with no saved egg.</summary>
+    public (int DetachedAnimals, int CancelledCycles) ReconcileRanchSlimes(IEnumerable<FarmAnimal> animals)
+    {
+        HashSet<long> liveIds = animals
+            .Where(animal => animal.type.Value == FarmAnimalContent.RanchSlimeTypeId)
+            .Select(animal => animal.myID.Value)
+            .ToHashSet();
+
+        SlimeRecord[] missing = this.farmAnimalRecords
+            .Where(pair => !liveIds.Contains(pair.Key))
+            .Select(pair => pair.Value)
+            .ToArray();
+        foreach (SlimeRecord record in missing)
+        {
+            if (record.FarmAnimalId is long id)
+                this.farmAnimalRecords.Remove(id);
+            record.FarmAnimalId = null;
+            record.FarmAnimalTypeId = null;
+        }
+
+        string[] abandonedCycles = this.breedingPairs.Values
+            .Where(pair =>
+            {
+                bool missingParent = !this.farmAnimalRecords.ContainsKey(pair.ParentAId)
+                    || !this.farmAnimalRecords.ContainsKey(pair.ParentBId);
+                bool missingEgg = pair.OutputEggItemId is not null && !this.eggs.ContainsKey(pair.OutputEggItemId);
+                return missingParent && (pair.OutputEggItemId is null || missingEgg);
+            })
+            .Select(pair => pair.MachineKey)
+            .ToArray();
+        foreach (string machineKey in abandonedCycles)
+            this.breedingPairs.Remove(machineKey);
+
+        return (missing.Length, abandonedCycles.Length);
+    }
+
     public void Load(SlimeSaveData? data, bool logSummary)
     {
         this.records.Clear();

@@ -9,11 +9,13 @@
 - [x] A genome-specific Ranch Slime Egg spawned and its tooltip showed species, color, size, rarity, mutation, generation, parent IDs, and favorite food.
 - [x] Parents receive a one-day, externally persisted rest period after egg collection; in-game verification remains pending.
 - [x] Breeder candidate list scrolls so Daycares with more than four slimes can access every resident; in-game verification remains pending.
+- [x] Missing Ranch Slime IDs are detached on load/save without deleting their genome archive; unfinished cycles without an egg are cleared.
 - [x] Converter can be issued with its SMAPI command. Actual conversion still needs a documented end-to-end check.
 
 ## Sprint 1: core alpha
 - [ ] Verify Ranch Slime petting, movement, native ID stability, and genome link over save/reload.
 - [ ] Verify mod-folder backup and reinstall/recovery behavior.
+- [ ] Remove a Ranch Slime with a disposable test setup; confirm its genome archive remains, unfinished cycle is cancelled, and an already produced egg remains collectable.
 - [ ] Verify the current Daycare art in-game: full roof, Base foundation corner aligned to the blue footprint, and all three upgrade tiers.
 - [ ] Verify the revised chimney hearts in-game: 30 screen pixels higher than the original position, 20% larger, and a 4-second float cycle.
 
