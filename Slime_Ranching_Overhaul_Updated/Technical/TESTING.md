@@ -66,6 +66,7 @@ These command-created genomes are test fixtures only. The user confirmed an egg 
 1. Use a disposable save with a built Slime Daycare. Run `slime_ranching_give_test_eggs TaumTest_322865388` and `slime_ranching_give_incubator TaumTest_322865388`.
 2. Place the Slime Incubator inside the Daycare and use it. Select one of the genome-specific eggs from your inventory. Confirm exactly one item is consumed; sleep to persist both the game inventory and an `Incubations` entry with its egg ID and two-day ready date.
 3. Reload while the egg is incubating. Confirm the menu reports the remaining days and the egg is not available to a second incubator.
+   - The active-job panel should show species, rarity, generation, elapsed/total days, and a progress bar: 0% at insertion, 50% after one sleep, 100% when ready.
 4. Sleep through the remaining time. At the start of the ready day, confirm a Ranch Slime appears in the Daycare and the HUD reports the hatch. Inspect `SlimeRecord.Genome` in the external registry; it should match the egg genome exactly.
 5. Save and reload after hatching. Confirm the animal ID links back to that genome and any copied item with the same egg ID can't hatch another slime.
 6. Confirm the new animal is visibly young, ages each day, and remains unavailable in the breeder for three days. Save/reload during growth; it should keep its age and become selectable on maturity.

@@ -88,11 +88,42 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
         if (active is not null)
         {
             int daysLeft = Math.Max(0, active.ReadyOnDay - Game1.Date.TotalDays);
+            int duration = Math.Max(1, active.ReadyOnDay - active.StartedOnDay);
+            int elapsed = Math.Clamp(Game1.Date.TotalDays - active.StartedOnDay, 0, duration);
+            float progress = (float)elapsed / duration;
+            int panelX = this.xPositionOnScreen + 36;
+            int panelY = this.listTop + 8;
+            int panelWidth = this.width - 72;
+            int panelHeight = 190;
+            Rectangle panel = new(panelX, panelY, panelWidth, panelHeight);
+            b.Draw(Game1.staminaRect, panel, new Color(238, 224, 190));
+
+            string eggName = "Ranch Slime Egg";
+            if (this.registry.TryGetEgg(active.EggItemId, out SlimeEggRecord egg))
+                eggName = $"{egg.Genome.PrimarySpecies} Egg  •  {egg.Genome.RarityTier}  •  Gen {egg.Genome.Generation}";
+            b.DrawString(Game1.dialogueFont, eggName,
+                new Vector2(panelX + 18, panelY + 16), Game1.textColor);
+
             string state = active.HatchAnimalId is not null
-                ? "Hatch in progress; checking its saved animal ID."
-                : daysLeft > 0 ? $"Incubating: {daysLeft} day(s) remaining." : "Ready; it will hatch when the next day begins.";
-            b.DrawString(Game1.dialogueFont, state,
-                new Vector2(this.xPositionOnScreen + 40, this.listTop + 24), Game1.textColor);
+                ? "Hatch reserved; confirming the saved animal."
+                : daysLeft > 0 ? $"Incubating  •  {daysLeft} day(s) remaining"
+                : "Ready to hatch  •  waiting for Daycare space";
+            b.DrawString(Game1.smallFont, state,
+                new Vector2(panelX + 18, panelY + 55), Game1.textColor);
+
+            int barX = panelX + 18;
+            int barY = panelY + 94;
+            int barWidth = panelWidth - 36;
+            Rectangle barBack = new(barX, barY, barWidth, 24);
+            b.Draw(Game1.staminaRect, barBack, new Color(91, 75, 58));
+            if (progress > 0)
+                b.Draw(Game1.staminaRect, new Rectangle(barX + 3, barY + 3,
+                    Math.Max(1, (int)((barWidth - 6) * progress)), 18), new Color(112, 158, 89));
+
+            string progressText = $"{elapsed} / {duration} days  ({(int)(progress * 100)}%)";
+            Vector2 progressSize = Game1.smallFont.MeasureString(progressText);
+            b.DrawString(Game1.smallFont, progressText,
+                new Vector2(panelX + (panelWidth - progressSize.X) / 2, barY + 31), Game1.textColor);
         }
         else if (this.candidates.Count == 0)
         {
