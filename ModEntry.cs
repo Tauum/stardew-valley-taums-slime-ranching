@@ -1127,6 +1127,31 @@ public sealed class ModEntry : Mod
         }
 
         SlimeRegistry loadedRegistry = this.registry!;
+        if (args.Length > 1 || (args.Length == 1 && !long.TryParse(args[0], out _)))
+        {
+            this.Monitor.Log("Usage: slime_ranching_inspect [Ranch Slime animal ID]", LogLevel.Warn);
+            return;
+        }
+
+        if (args.Length == 1)
+        {
+            long animalId = long.Parse(args[0]);
+            if (!loadedRegistry.TryGetSlimeRecord(animalId, out SlimeRecord record))
+            {
+                this.Monitor.Log($"FarmAnimal ID {animalId} has no active Ranch Slime genome record in this save.", LogLevel.Warn);
+                return;
+            }
+
+            SlimeGenome genome = record.Genome;
+            string species = genome.SecondarySpecies is null ? genome.PrimarySpecies : $"{genome.PrimarySpecies} / {genome.SecondarySpecies}";
+            string mutation = genome.MutationTrait ?? "none";
+            string likedFood = FoodLikeCatalog.GetDisplayName(genome.LikedFoodItemId);
+            int age = record.AgeClockInitialized ? record.AgeDays : GetFarmAnimals().FirstOrDefault(animal => animal.myID.Value == animalId)?.age.Value ?? 0;
+            this.Monitor.Log($"Ranch Slime {animalId}: genome {genome.Id:N}, {species}, color {genome.VisualColor}, size {genome.Size}, shiny {genome.IsShiny}, rarity {genome.RarityTier}, mutation {mutation}.", LogLevel.Info);
+            this.Monitor.Log($"Generation {genome.Generation}; abilities [{string.Join(", ", genome.AbilityIds)}]; likes {likedFood}; age {age}/{FarmAnimalContent.RanchSlimeDaysToMature} days; pity {loadedRegistry.GetMutagenicPoolFailures(animalId)}; reserved {loadedRegistry.IsReserved(animalId)}.", LogLevel.Info);
+            return;
+        }
+
         if (Game1.currentLocation is SlimeHutch hutch)
         {
             int slimeCount = hutch.characters.OfType<GreenSlime>().Count();

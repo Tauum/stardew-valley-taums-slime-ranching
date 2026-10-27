@@ -34,6 +34,9 @@ internal sealed class SlimeRegistry
     public BreedingPairRecord? GetBreedingPair(string machineKey) =>
         this.breedingPairs.TryGetValue(machineKey, out BreedingPairRecord? pair) ? pair : null;
 
+    public bool TryGetSlimeRecord(long farmAnimalId, out SlimeRecord record) =>
+        this.farmAnimalRecords.TryGetValue(farmAnimalId, out record!);
+
     public IncubationRecord? GetIncubation(string machineKey) =>
         this.incubations.TryGetValue(machineKey, out IncubationRecord? record) ? record : null;
 
