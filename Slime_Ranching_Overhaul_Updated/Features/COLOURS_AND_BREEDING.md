@@ -12,7 +12,7 @@
 | Violet | Prospector: periodically grants bonus ore |
 | Pink | Healer: gradually heals player |
 
-## Conventional tertiary hybrids (proposed recipes)
+## Implemented conventional tertiary hybrids
 
 | Parents | Offspring | Both abilities |
 |---|---|---|
@@ -23,7 +23,7 @@
 | Blue + Violet | Blue-Violet | Irrigator + Prospector |
 | Red + Violet | Red-Violet | Fighter + Prospector |
 
-**Important unresolved color-wheel question:** Traditional primary pair recipes (Red+Yellow=Orange, Yellow+Blue=Green, Blue+Red=Violet) should likely produce those *pure secondary species*, not hybrids. Pink is outside the wheel and requires explicit recipes. No arbitrary combination automatically creates a hybrid. Decide behavior for undefined pairings (no breeding, one parent species, or other). These are design decisions, not implementation facts.
+The three primary recipes produce pure secondary species: Red+Yellow=Orange, Yellow+Blue=Green, Blue+Red=Purple/Violet. The six tabled tertiary combinations produce hybrids. Other pairings currently inherit one randomly selected parent's complete species/color identity; Pink has no special recipe yet. This fallback and the displayed Violet/Purple naming need review. Hybrid genome colors store the midpoint RGB, while the current sprite renderer selects the nearest of seven base tints.
 
 ## Crystals
 A consumable Chromatic Crystal inserted into the breeder overrides parent species to one of the seven pure base colors, never a hybrid, Golden, Prismatic, Black or White. Size and rarity rolls are separate. Exact acquisition recipes TBD.

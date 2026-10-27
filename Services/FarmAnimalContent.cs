@@ -64,6 +64,14 @@ internal static class FarmAnimalContent
 
     public static Color GetVisualTint(string? visualColor) => GetClosestVariant(visualColor).Tint;
 
+    public static string GetClosestVariantName(string? visualColor) => GetClosestVariant(visualColor).Name;
+
+    public static string GetReferenceHex(string variantName)
+    {
+        var variant = ColorVariants.FirstOrDefault(value => value.Name.Equals(variantName, StringComparison.OrdinalIgnoreCase));
+        return variant.Name is null ? "#00FF00" : $"#{variant.Reference.R:X2}{variant.Reference.G:X2}{variant.Reference.B:X2}";
+    }
+
     public static Color GetTintForVariantName(string name) =>
         ColorVariants.FirstOrDefault(variant => variant.Name == name).Tint;
 

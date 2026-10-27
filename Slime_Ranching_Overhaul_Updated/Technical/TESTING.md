@@ -62,6 +62,16 @@ The pair, cycle dates, and resulting egg genome are stored in the mod-folder reg
 
 Crystal items currently use vanilla mineral icons and are available only through the testing command; Marnie stock, crafting recipes, unlock levels, and pricing are intentionally undecided. The crystal affects offspring traits only; it does not change the parent genomes.
 
+## Color-wheel breeding prototype
+
+1. Use `slime_ranching_give_color_eggs <save name>` and incubate colored eggs to produce mature base-color parents. The size and shiny setup commands can be used independently.
+2. Breed Red+Yellow, Yellow+Blue, and Blue+Red. Expect pure Orange, Green, and Purple/Violet offspring, respectively, with no secondary species.
+3. Breed the six tabled tertiary pairs in `Features/COLOURS_AND_BREEDING.md`. Expect the corresponding two base species in the offspring genome, and inspect its stored midpoint RGB plus rendered nearest-base tint.
+4. Try a pairing not listed in the recipe table and one involving Pink. The current prototype selects one parent's full species/color identity for the offspring; verify that behavior and review whether it should instead block the cycle.
+5. Save/reload with a ready egg and confirm its species, secondary species, and color remain fixed; incubation must not reroll the result.
+
+Primary-pair naming (`Purple` versus `Violet`), fallback behavior, Pink recipes, and exact hybrid sprite blending remain open review items.
+
 ## Five-size inheritance prototype
 
 1. Run `slime_ranching_spawn_ranch_slime <save name>` twice and note each FarmAnimal ID from the console log. Set their external test sizes with `slime_ranching_set_size <save name> <animal ID> <Tiny|Small|Normal|Large|Giant>`. For example, set both to `Small` for a Small+Small pair.

@@ -46,7 +46,7 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [ ] Add crash/reload recovery checks and actual in-world enclosure animation beyond the current menu preview.
 
 ## Stage 3 — genetics
-- [ ] Fixed color-wheel recipe table and tests; record unresolved Pink recipes explicitly.
+- [x] Implement fixed primary recipes and six listed tertiary hybrid recipes; keep Pink recipes explicitly unresolved.
 - [x] Separate size genetics from maturity; breed across five size categories using provisional weighted outcomes.
 - [x] Scale Ranch Slime sprite art by genetic size inside a shared frame canvas.
 - [ ] Validate size-specific animal placement, hitboxes, petting targets, and breeder previews in game.

@@ -271,15 +271,16 @@ internal sealed class SlimeRegistry
         bool chooseA() => Game1.random.Next(2) == 0;
         SlimeGenome a = parentA.Genome;
         SlimeGenome b = parentB.Genome;
+        (string primarySpecies, string? secondarySpecies, string visualColor) = RollOffspringSpecies(a, b);
         var offspring = new SlimeGenome
         {
             Id = Guid.NewGuid(),
             ParentA = a.Id,
             ParentB = b.Id,
             Generation = Math.Max(a.Generation, b.Generation) + 1,
-            PrimarySpecies = chooseA() ? a.PrimarySpecies : b.PrimarySpecies,
-            SecondarySpecies = chooseA() ? a.SecondarySpecies : b.SecondarySpecies,
-            VisualColor = chooseA() ? a.VisualColor : b.VisualColor,
+            PrimarySpecies = primarySpecies,
+            SecondarySpecies = secondarySpecies,
+            VisualColor = visualColor,
             Size = RollOffspringSize(a.Size, b.Size),
             IsShiny = chooseA() ? a.IsShiny : b.IsShiny,
             RarityTier = chooseA() ? a.RarityTier : b.RarityTier,
@@ -302,6 +303,80 @@ internal sealed class SlimeRegistry
         pair.OutputEggItemId = egg.ItemId;
         created = true;
         return egg;
+    }
+
+    private static (string PrimarySpecies, string? SecondarySpecies, string VisualColor) RollOffspringSpecies(SlimeGenome a, SlimeGenome b)
+    {
+        string? colorA = GetBaseSpeciesColor(a);
+        string? colorB = GetBaseSpeciesColor(b);
+        if (colorA is not null && colorB is not null)
+        {
+            string first = colorA;
+            string second = colorB;
+            if (TryGetPrimaryRecipe(first, second, out string secondaryColor))
+                return ($"{secondaryColor} Slime", null, FarmAnimalContent.GetReferenceHex(secondaryColor));
+
+            if (TryGetHybridRecipe(first, second, out string hybridPrimary, out string hybridSecondary))
+            {
+                Microsoft.Xna.Framework.Color firstColor = ParseGenomeColor(FarmAnimalContent.GetReferenceHex(hybridPrimary));
+                Microsoft.Xna.Framework.Color secondColor = ParseGenomeColor(FarmAnimalContent.GetReferenceHex(hybridSecondary));
+                string blended = $"#{(firstColor.R + secondColor.R) / 2:X2}{(firstColor.G + secondColor.G) / 2:X2}{(firstColor.B + secondColor.B) / 2:X2}";
+                return ($"{hybridPrimary} Slime", $"{hybridSecondary} Slime", blended);
+            }
+        }
+
+        // For undefined pairings (including Pink), retain one parent's complete species/color identity.
+        SlimeGenome inherited = Game1.random.Next(2) == 0 ? a : b;
+        return (inherited.PrimarySpecies, inherited.SecondarySpecies, inherited.VisualColor);
+    }
+
+    private static string? GetBaseSpeciesColor(SlimeGenome genome)
+    {
+        if (!string.IsNullOrWhiteSpace(genome.SecondarySpecies))
+            return null;
+
+        string species = genome.PrimarySpecies;
+        string[] colors = { "Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Violet", "Pink" };
+        string? named = colors.FirstOrDefault(color => species.StartsWith(color, StringComparison.OrdinalIgnoreCase));
+        if (named is not null)
+            return named.Equals("Violet", StringComparison.OrdinalIgnoreCase) ? "Purple" : named;
+
+        return FarmAnimalContent.GetClosestVariantName(genome.VisualColor);
+    }
+
+    private static bool TryGetPrimaryRecipe(string first, string second, out string result)
+    {
+        result = (first, second) switch
+        {
+            ("Red", "Yellow") or ("Yellow", "Red") => "Orange",
+            ("Yellow", "Blue") or ("Blue", "Yellow") => "Green",
+            ("Blue", "Red") or ("Red", "Blue") => "Purple",
+            _ => ""
+        };
+        return result.Length > 0;
+    }
+
+    private static bool TryGetHybridRecipe(string first, string second, out string primary, out string secondary)
+    {
+        (primary, secondary) = (first, second) switch
+        {
+            ("Red", "Orange") or ("Orange", "Red") => ("Red", "Orange"),
+            ("Yellow", "Orange") or ("Orange", "Yellow") => ("Yellow", "Orange"),
+            ("Yellow", "Green") or ("Green", "Yellow") => ("Yellow", "Green"),
+            ("Blue", "Green") or ("Green", "Blue") => ("Blue", "Green"),
+            ("Blue", "Purple") or ("Purple", "Blue") => ("Blue", "Purple"),
+            ("Red", "Purple") or ("Purple", "Red") => ("Red", "Purple"),
+            _ => ("", "")
+        };
+        return primary.Length > 0;
+    }
+
+    private static Microsoft.Xna.Framework.Color ParseGenomeColor(string hex)
+    {
+        byte red = Convert.ToByte(hex.Substring(1, 2), 16);
+        byte green = Convert.ToByte(hex.Substring(3, 2), 16);
+        byte blue = Convert.ToByte(hex.Substring(5, 2), 16);
+        return new Microsoft.Xna.Framework.Color(red, green, blue);
     }
 
     private static string RollOffspringSize(string parentA, string parentB)

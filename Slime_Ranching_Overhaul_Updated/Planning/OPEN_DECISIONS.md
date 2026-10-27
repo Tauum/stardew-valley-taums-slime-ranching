@@ -7,9 +7,9 @@
 **Shiny visual prototype:** `IsShiny` now brightens Ranch Slime sprite pixels by a subtle fixed amount. Decide whether shiny is cosmetic-only or should have separate gameplay effects; avoid coupling it to rarity or size.
 
 1. **Pink recipes:** Pink is outside the standard wheel. Which pairings produce Pink or Pink hybrids?
-2. **Undefined breeding pairs:** Block the combination, return one parent's color, or offer a rare result?
-3. **Primary pair recipes:** Red+Yellow→Orange, Yellow+Blue→Green, Blue+Red→Violet suggested but not explicitly confirmed.
-4. **Hybrid scope:** Only six tertiary combinations initially, or secret hybrids later?
+2. **Undefined breeding pairs:** Current prototype inherits one random parent's complete species/color identity. Decide whether to keep that fallback or block undefined combinations.
+3. **Primary pair naming:** Primary recipes now produce Orange, Green, and Purple (also called Violet in the design). Confirm the preferred in-game name for Blue+Red's result.
+4. **Hybrid scope:** The six listed tertiary combinations are implemented. Decide whether secret hybrids should follow later.
    - Seven base genome colors currently map to the nearest Red/Orange/Yellow/Green/Blue/Purple/Pink sprite tint. Exact RGB blending for hybrids or arbitrary colors is still undecided.
 5. **Exceptional acquisition:** Can Golden/Prismatic/Black/White appear from breeding, exploration, mutation, or all three? At what rates?
 6. **Shiny inheritance:** Random roll, inherited boost, or both? Exact probability?

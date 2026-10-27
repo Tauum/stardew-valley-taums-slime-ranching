@@ -11,7 +11,7 @@ This guide covers the current early prototype. The Slime Breeder can reserve two
 - Marnie also sells a Slime Slide. Nearby Ranch Slimes can do a small hop and horizontal glide down it; the effect is decorative.
 - Marnie also sells a Slime Bed. Nearby Ranch Slimes can settle briefly into a resting pose; it has no gameplay effect yet.
 - Chromatic Crystals can focus a breeder cycle on a base offspring color. They are currently test-only items; use the SMAPI command `slime_ranching_give_crystals <save name>` while on a disposable save.
-- Ranch Slime offspring and genome-specific egg icons use a tint selected from the external genome color. The current prototype supports seven base tints; hybrid color blending is not implemented.
+- Ranch Slime offspring and genome-specific egg icons use a tint selected from the external genome color. The seven base colors and six hybrid recipes are supported; hybrid sprites still use the nearest base tint rather than continuous RGB blending.
 
 ## Slime Egg Converter
 
@@ -75,7 +75,7 @@ Select the book and press the action button to open it. It is a custom item refe
 ## Features still under development
 
 - **Hatching:** Common and genome-specific Ranch Slime Eggs hatch in the custom incubator; vanilla eggs are unaffected.
-- **Breeding:** The breeder, parent selection, two-day cycle, and fixed-genome egg output work. Size inheritance now uses five weighted categories; color inheritance and exceptional traits remain provisional and need balancing and in-game verification.
+- **Breeding:** The breeder, parent selection, two-day cycle, and fixed-genome egg output work. Five-size inheritance and the specified color-wheel recipes are implemented provisionally; review their outcomes and exceptional traits in game.
 - **Egg details:** Hover over a genome-specific Ranch Slime Egg to view its stored species, color, size, rarity, mutation, generation, parent IDs, and favorite food.
 - **Genetics and slime identity:** The registry model can hold genome data. Ranch Slime genomes are keyed to native FarmAnimal IDs; this still needs save/reload verification. Existing GreenSlime monsters are only captured in the first-seen snapshot; they aren't changed or adopted.
 - **Food likes:** Favorite food is stored and shown on genome eggs, but feeding a Ranch Slime has no gameplay effect yet.
