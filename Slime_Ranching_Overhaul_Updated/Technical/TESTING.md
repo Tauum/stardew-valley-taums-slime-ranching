@@ -90,8 +90,8 @@ The incubator runs inside the Daycare only, consumes Common or genome-specific R
 ## Marnie's ranching machine stock
 
 1. Open Marnie's Ranch shop (or use `shop AnimalShop` in the SMAPI console).
-2. Confirm the Converter, Breeder, Incubator, and Slime Trampoline each appear at their configured prices (defaults: 2,500g, 10,000g, 5,000g, and 2,500g).
-3. Buy a machine and verify its item can be placed and used as described above. Place the trampoline indoors and outdoors; it should be accepted indoors only. Confirm buying one of each does not affect vanilla animal stock. Slime interaction is not implemented yet.
+2. Confirm the Converter, Breeder, Incubator, Slime Trampoline, and Slime Cushion appear at their configured prices (defaults: 2,500g, 10,000g, 5,000g, 2,500g, and 1,500g).
+3. Buy a machine and verify its item can be placed and used as described above. Place the trampoline and cushion indoors and outdoors; both should be accepted indoors only. Confirm buying one of each does not affect vanilla animal stock.
 4. Reopen the shop on the same day: each purchased item should be out of stock for that player. Check again after sleeping; stock should reset.
 
 These prices are provisional. This stock is only the core ranching machines; custom enrichment furniture is not implemented yet.
@@ -105,6 +105,14 @@ These prices are provisional. This stock is only the core ranching machines; cus
 5. If test animals with Tiny, Normal, and Giant genomes are available, compare their arcs: Tiny should hop higher and finish sooner, Giant should compress more and bounce lower/slower, and Normal should fall between them.
 
 The current prototype assigns only already-nearby slimes; it does not path them to the trampoline. Genome size selects the bounce profile. The bounce is a visual offset and is not persisted in external state.
+
+## Slime Cushion enrichment
+
+1. Buy a Slime Cushion from Marnie or use a test copy with one placed inside the Daycare.
+2. Let a Ranch Slime wander within about two tiles. It should make a short, low squish-and-spring animation at the cushion; a trampoline nearby may also be used by another available slime.
+3. Place two cushions and several slimes. Confirm each object is used by at most one slime at a time, and the animations restore the original sprite offset when finished.
+4. Leave/re-enter the Daycare during an animation and return to title during one. Confirm no slime remains visually displaced.
+5. Confirm a regular Barn and wild/vanilla slimes do not run this behavior. The animation and cooldown are transient and do not change breeding, happiness, or save data.
 
 ## Genome-driven slime colors
 

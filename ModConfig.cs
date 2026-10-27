@@ -7,4 +7,5 @@ public sealed class ModConfig
     public int BreederShopPrice { get; set; } = 10000;
     public int IncubatorShopPrice { get; set; } = 5000;
     public int TrampolineShopPrice { get; set; } = 2500;
+    public int SlimeCushionShopPrice { get; set; } = 1500;
 }

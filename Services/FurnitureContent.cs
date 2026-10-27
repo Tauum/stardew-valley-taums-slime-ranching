@@ -11,12 +11,17 @@ internal static class FurnitureContent
 {
     public const string TrampolineItemId = "Taum.SlimeRanching_SlimeTrampoline";
     public const string TrampolineQualifiedId = "(BC)" + TrampolineItemId;
+    public const string SlimeCushionItemId = "Taum.SlimeRanching_SlimeCushion";
+    public const string SlimeCushionQualifiedId = "(BC)" + SlimeCushionItemId;
     private const string TrampolineTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeTrampoline";
+    private const string CushionTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeCushion";
 
     public static void LoadAssets(AssetRequestedEventArgs e)
     {
         if (e.NameWithoutLocale.IsEquivalentTo(TrampolineTexture))
             e.LoadFrom(() => CreateTrampolineTexture(Game1.graphics.GraphicsDevice), AssetLoadPriority.Exclusive);
+        else if (e.NameWithoutLocale.IsEquivalentTo(CushionTexture))
+            e.LoadFrom(() => CreateCushionTexture(Game1.graphics.GraphicsDevice), AssetLoadPriority.Exclusive);
     }
 
     public static void EditAsset(AssetRequestedEventArgs e)
@@ -31,11 +36,22 @@ internal static class FurnitureContent
             {
                 Name = "Slime Trampoline",
                 DisplayName = "Slime Trampoline",
-                Description = "A bouncy platform for Ranch Slimes. Slime interactions are coming next.",
+                Description = "A springy platform that nearby Ranch Slimes can bounce on.",
                 CanBePlacedIndoors = true,
                 CanBePlacedOutdoors = false,
                 Fragility = 0,
                 Texture = TrampolineTexture,
+                SpriteIndex = 0
+            });
+            craftables.TryAdd(SlimeCushionItemId, new BigCraftableData
+            {
+                Name = "Slime Cushion",
+                DisplayName = "Slime Cushion",
+                Description = "A soft spot where Ranch Slimes can settle into a gentle squish and spring back.",
+                CanBePlacedIndoors = true,
+                CanBePlacedOutdoors = false,
+                Fragility = 0,
+                Texture = CushionTexture,
                 SpriteIndex = 0
             });
         });
@@ -75,6 +91,33 @@ internal static class FurnitureContent
         for (int x = 3; x <= 12; x++)
             SetPixel(pixels, width, x, 15, new Color(67, 43, 56));
 
+        texture.SetData(pixels);
+        return texture;
+    }
+
+    private static Texture2D CreateCushionTexture(GraphicsDevice graphicsDevice)
+    {
+        const int width = 16;
+        const int height = 32;
+        var texture = new Texture2D(graphicsDevice, width, height);
+        var pixels = new Color[width * height];
+        Color outline = new(90, 45, 67);
+        Color dark = new(155, 69, 111);
+        Color fill = new(226, 126, 165);
+        Color light = new(247, 174, 194);
+
+        for (int x = 4; x <= 11; x++) SetPixel(pixels, width, x, 10, outline);
+        for (int y = 11; y <= 14; y++)
+        {
+            SetPixel(pixels, width, 3, y, outline);
+            SetPixel(pixels, width, 12, y, outline);
+            for (int x = 4; x <= 11; x++)
+                SetPixel(pixels, width, x, y, y == 11 ? light : fill);
+        }
+        for (int x = 4; x <= 11; x++) SetPixel(pixels, width, x, 15, dark);
+        SetPixel(pixels, width, 2, 12, dark);
+        SetPixel(pixels, width, 13, 12, dark);
+        for (int x = 5; x <= 10; x++) SetPixel(pixels, width, x, 16, new Color(67, 43, 56));
         texture.SetData(pixels);
         return texture;
     }

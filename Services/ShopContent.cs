@@ -24,6 +24,7 @@ internal static class ShopContent
             AddIfMissing(shop, "Breeder", ConverterContent.BreederQualifiedId, config.BreederShopPrice);
             AddIfMissing(shop, "Incubator", ConverterContent.IncubatorQualifiedId, config.IncubatorShopPrice);
             AddIfMissing(shop, "Trampoline", FurnitureContent.TrampolineQualifiedId, config.TrampolineShopPrice);
+            AddIfMissing(shop, "SlimeCushion", FurnitureContent.SlimeCushionQualifiedId, config.SlimeCushionShopPrice);
         });
     }
 

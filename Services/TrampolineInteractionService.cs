@@ -107,12 +107,13 @@ internal sealed class TrampolineInteractionService
             foreach (long id in expiredCooldowns)
                 this.cooldowns.Remove(id);
 
-        var trampolineTiles = house.Objects.Values
-            .Where(obj => obj.QualifiedItemId == FurnitureContent.TrampolineQualifiedId)
-            .Select(obj => obj.TileLocation)
-            .Where(tile => !this.active.Values.Any(bounce => bounce.TrampolineTile == tile))
+        var furnitureSpots = house.Objects.Values
+            .Where(obj => obj.QualifiedItemId == FurnitureContent.TrampolineQualifiedId
+                || obj.QualifiedItemId == FurnitureContent.SlimeCushionQualifiedId)
+            .Select(obj => new FurnitureSpot(obj.TileLocation, obj.QualifiedItemId))
+            .Where(spot => !this.active.Values.Any(bounce => bounce.TrampolineTile == spot.Tile))
             .ToList();
-        if (trampolineTiles.Count == 0)
+        if (furnitureSpots.Count == 0)
             return;
 
         foreach (FarmAnimal animal in house.animals.Values
@@ -123,9 +124,9 @@ internal sealed class TrampolineInteractionService
             Vector2 animalPosition = animal.Position;
             int nearestIndex = -1;
             float nearestDistance = InteractionRadiusPixels * InteractionRadiusPixels;
-            for (int i = 0; i < trampolineTiles.Count; i++)
+            for (int i = 0; i < furnitureSpots.Count; i++)
             {
-                Vector2 center = trampolineTiles[i] * 64f + new Vector2(32f, 32f);
+                Vector2 center = furnitureSpots[i].Tile * 64f + new Vector2(32f, 32f);
                 float distance = Vector2.DistanceSquared(animalPosition, center);
                 if (distance >= nearestDistance)
                     continue;
@@ -136,19 +137,23 @@ internal sealed class TrampolineInteractionService
             if (nearestIndex < 0)
                 continue;
 
-            Vector2 trampolineTile = trampolineTiles[nearestIndex];
-            trampolineTiles.RemoveAt(nearestIndex);
-            (float duration, float bounceHeight, float compressionHeight) = registry.GetGenomeSize(animal.myID.Value)?.ToLowerInvariant() switch
-            {
-                "tiny" => (1.8f, 36f, 2f),
-                "giant" => (3.2f, 21f, 9f),
-                _ => (2.4f, 28f, 4f)
-            };
-            this.active[animal.myID.Value] = new Bounce(animal, trampolineTile, animal.drawOffset,
+            FurnitureSpot spot = furnitureSpots[nearestIndex];
+            furnitureSpots.RemoveAt(nearestIndex);
+            (float duration, float bounceHeight, float compressionHeight) = spot.QualifiedItemId == FurnitureContent.SlimeCushionQualifiedId
+                ? (1.8f, 9f, 10f)
+                : registry.GetGenomeSize(animal.myID.Value)?.ToLowerInvariant() switch
+                {
+                    "tiny" => (1.8f, 36f, 2f),
+                    "giant" => (3.2f, 21f, 9f),
+                    _ => (2.4f, 28f, 4f)
+                };
+            this.active[animal.myID.Value] = new Bounce(animal, spot.Tile, animal.drawOffset,
                 duration, bounceHeight, compressionHeight);
             this.cooldowns[animal.myID.Value] = this.elapsedSeconds + duration + 3f;
         }
     }
+
+    private readonly record struct FurnitureSpot(Vector2 Tile, string QualifiedItemId);
 
     private sealed class Bounce
     {

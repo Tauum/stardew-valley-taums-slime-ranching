@@ -6,7 +6,8 @@ This guide covers the current early prototype. The Slime Breeder can reserve two
 
 - Test on a copied save. The converter itself leaves unused vanilla eggs alone, but its output is a custom mod item saved in the game save.
 - Back up `<installed mod folder>/data` before replacing or removing the mod. It contains the external slime registry and first-seen snapshots.
-- Marnie sells the Converter, Breeder, Incubator, and a placeable Slime Trampoline. Prices are configurable in `config.json` and provisional. The trampoline is decorative so far; slime interactions are still being developed. Testing commands can still provide machines directly.
+- Marnie sells the Converter, Breeder, Incubator, Slime Trampoline, and Slime Cushion. Prices are configurable in `config.json` and provisional. Nearby Ranch Slimes may bounce on trampolines or briefly squish on cushions; these animations are decorative and do not change happiness or breeding outcomes.
+- Chromatic Crystals can focus a breeder cycle on a base offspring color. They are currently test-only items; use the SMAPI command `slime_ranching_give_crystals <save name>` while on a disposable save.
 - Ranch Slime offspring and genome-specific egg icons use a tint selected from the external genome color. The current prototype supports seven base tints; hybrid color blending is not implemented.
 
 ## Slime Egg Converter

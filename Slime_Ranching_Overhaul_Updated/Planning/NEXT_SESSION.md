@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-10-27  
 **Test save:** `TaumTest_322865388` (disposable copy)  
-**Working tree:** `feature/chromatic-crystal-breeding`, chained after `perf/cache-source-sprite-pixels`; the current build also adds breeder color crystals. Build passes; latest changes are not tested in game.
+**Working tree:** `feature/slime-cushion-enrichment`, chained after `feature/chromatic-crystal-breeding`; this branch adds a cushion furniture item and a gentle squish animation to the previously implemented trampoline scheduler. Build passes; latest changes are not tested in game.
 
 ## Current state
 
@@ -25,6 +25,7 @@
 - Genome egg definitions scan mod-folder save registries once and cache the resulting item data. Cache refresh is tied to the existing object-data invalidations when eggs are created or hatch status changes, avoiding repeated recursive disk scans.
 - The vanilla Green Slime and Green Slime Egg source pixels are each decoded once per process and reused to build tint variants; verify visuals after load. The tint textures themselves remain normal SMAPI cached assets.
 - Chromatic Crystals now focus a breeder cycle on one of seven base colors. Choose the crystal in the breeder panel before starting; the selected item is consumed at cycle start, and offspring become a Common single-color slime with hybrid/shiny/rarity/mutation traits cleared. The external pair record stores the selected color (schema 8); `slime_ranching_give_crystals <save name>` creates one of each for testing. Recipes and progression unlocks are undecided.
+- Marnie also sells a Slime Cushion (configurable default 1,500g). Nearby Ranch Slimes can use it for a short gentle squish-and-spring animation. It shares the scheduler's one-user reservation and transient cleanup with trampolines; it grants no happiness or breeding bonus and changes no save data. This branch only passed compilation and needs in-game validation.
 - The user confirmed the egg spawn worked. Its tooltip showed Ranch Slime, green (`#00FF00`), Normal size, Common rarity, no mutation, Generation 1, two parent IDs, and favorite food `Broken CD`.
 - Egg hatching is implemented as a prototype. It was introduced in schema 6; the registry is currently schema 8. Verify egg identity through transfer/reload, then test incubation recovery and genome matching.
 - Building art uses direct nearest-neighbor resized copies of the original images in `assets/Buildings/*_GameTexture.png`. The original full-size source images are preserved. Current frames are Base 160 by 160, Upgrade 1 176 by 160, and Upgrade 2 192 by 160; building widths are 10, 11, and 12 tiles.
@@ -47,6 +48,7 @@
 10. Review provisional maturity, hatch duration, and duplicate-item behavior in `Planning/OPEN_DECISIONS.md`; update the acceptance checklist only after in-game confirmation.
 11. Test crystal breeding: run `slime_ranching_give_crystals TaumTest_322865388`, open the breeder, click the color selector until the desired color is shown, and start the cycle. Check one crystal was consumed, reload mid-cycle, collect the egg after two days, and confirm the egg tooltip and hatchling have that base color and Common/non-hybrid traits.
 12. Verify schema 8 migration creates `.before-chromatic-crystals-v8.bak` and preserves existing pair timers and eggs.
+13. Check Marnie's Slime Cushion stock and its indoor placement. Let nearby slimes use a cushion alongside a trampoline; confirm the cushion animation stays low and short, furniture does not get double-booked, and offsets reset when leaving the room.
 
 ## Relevant files
 
