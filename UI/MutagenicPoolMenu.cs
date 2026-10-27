@@ -12,9 +12,9 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
 {
     private const int RowHeight = 50;
     private const int SlimeItemId = 766;
-    private const int SlimeCost = 500;
     private readonly SlimeRegistry registry;
     private readonly string machineKey;
+    private readonly MutagenicPoolRules rules;
     private readonly List<FarmAnimal> candidates;
     private readonly Rectangle actionButton;
     private readonly Rectangle listBounds;
@@ -22,11 +22,12 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
     private string? statusMessage;
     private int firstVisibleIndex;
 
-    public MutagenicPoolMenu(SlimeRegistry registry, string machineKey)
+    public MutagenicPoolMenu(SlimeRegistry registry, string machineKey, MutagenicPoolRules rules)
         : base(Game1.uiViewport.Width / 2 - 360, Game1.uiViewport.Height / 2 - 270, 720, 540)
     {
         this.registry = registry;
         this.machineKey = machineKey;
+        this.rules = rules;
         StardewValley.Buildings.Building? daycare = Game1.getFarm().buildings.FirstOrDefault(building =>
             BuildingContent.IsSlimeDaycare(building.buildingType.Value) && building.GetIndoors() is StardewValley.AnimalHouse);
         StardewValley.AnimalHouse? interior = daycare?.GetIndoors() as StardewValley.AnimalHouse;
@@ -96,7 +97,7 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
         Utility.drawTextWithShadow(b, title, Game1.dialogueFont,
             new Vector2(this.xPositionOnScreen + (this.width - Game1.dialogueFont.MeasureString(title).X) / 2, this.yPositionOnScreen + 24),
             Game1.textColor);
-        b.DrawString(Game1.smallFont, $"Choose one mature Ranch Slime. Cost: {SlimeCost} vanilla Slime. Failure never harms the animal.",
+        b.DrawString(Game1.smallFont, $"Choose one mature Ranch Slime. Cost: {this.rules.SlimeCost} vanilla Slime. Failure never harms the animal.",
             new Vector2(this.xPositionOnScreen + 32, this.yPositionOnScreen + 76), Game1.textColor);
 
         MutagenicAttemptRecord? active = this.registry.GetMutagenicAttempt(this.machineKey);
@@ -121,15 +122,15 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
                     ? $"[MUTATED] {animal.Name}"
                 : active is not null || this.registry.IsReserved(animal.myID.Value, this.machineKey)
                         ? $"[BUSY] {animal.Name}"
-                        : $"{animal.Name}  |  pity {failures}  |  next {Math.Min(30, 5 + failures * 2)}%";
+                : $"{animal.Name}  |  pity {failures}  |  next {this.rules.GetChance(failures):P0}";
             b.DrawString(Game1.smallFont, label, new Vector2(row.X + 10, row.Y + 14), Game1.textColor);
         }
 
         b.Draw(Game1.staminaRect, this.actionButton, active is null ? new Color(200, 177, 220) : new Color(210, 210, 210));
-        b.DrawString(Game1.smallFont, active is null ? "Start 1-day Attempt" : $"Processing until day {active.ReadyOnDay}",
+        b.DrawString(Game1.smallFont, active is null ? $"Start {this.rules.DurationDays}-day Attempt" : $"Processing until day {active.ReadyOnDay}",
             new Vector2(this.actionButton.X + 16, this.actionButton.Y + 16), Game1.textColor);
         string message = this.statusMessage ?? (active is null
-            ? $"Slime in inventory: {CountSlimeItems()}/{SlimeCost}. Shadow Clone is the current pool trait."
+            ? $"Slime in inventory: {CountSlimeItems()}/{this.rules.SlimeCost}. Shadow Clone is the current pool trait."
             : $"Chance locked at {active.ChanceAtStart:P0}; sleep to resolve the attempt.");
         b.DrawString(Game1.smallFont, message, new Vector2(this.xPositionOnScreen + 326, this.actionButton.Y + 12), Game1.textColor);
         if (this.candidates.Count > visibleRows)
@@ -151,16 +152,16 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
             this.statusMessage = "Select an eligible mature Ranch Slime first.";
             return;
         }
-        if (CountSlimeItems() < SlimeCost)
+        if (CountSlimeItems() < this.rules.SlimeCost)
         {
-            this.statusMessage = $"Bring {SlimeCost} vanilla Slime to the Daycare.";
+            this.statusMessage = $"Bring {this.rules.SlimeCost} vanilla Slime to the Daycare.";
             return;
         }
 
-        List<(int Slot, Item Item, int OldStack)> removed = ConsumeSlimeItems(SlimeCost);
+        List<(int Slot, Item Item, int OldStack)> removed = ConsumeSlimeItems(this.rules.SlimeCost);
         FarmAnimal? animal = this.candidates.FirstOrDefault(candidate => candidate.myID.Value == slimeId);
         int age = animal is null ? 0 : this.registry.GetMaturityAgeDays(slimeId, animal.age.Value);
-        if (!this.registry.StartMutagenicAttempt(this.machineKey, slimeId, Game1.Date.TotalDays, age, Game1.random.NextDouble()))
+        if (!this.registry.StartMutagenicAttempt(this.machineKey, slimeId, Game1.Date.TotalDays, age, Game1.random.NextDouble(), this.rules))
         {
             RestoreItems(removed);
             this.statusMessage = "The selected slime is no longer eligible.";

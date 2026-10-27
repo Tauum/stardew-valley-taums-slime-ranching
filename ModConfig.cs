@@ -12,4 +12,9 @@ public sealed class ModConfig
     public int SlimeSlideShopPrice { get; set; } = 3000;
     public int SlimeBedShopPrice { get; set; } = 1800;
     public int MutagenicPoolShopPrice { get; set; } = 15000;
+    public int MutagenicPoolSlimeCost { get; set; } = 500;
+    public double MutagenicPoolBaseChance { get; set; } = 0.05;
+    public double MutagenicPoolChancePerFailure { get; set; } = 0.02;
+    public double MutagenicPoolMaximumChance { get; set; } = 0.30;
+    public int MutagenicPoolDurationDays { get; set; } = 1;
 }

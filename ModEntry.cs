@@ -568,7 +568,7 @@ public sealed class ModEntry : Mod
 
             this.Helper.Input.Suppress(e.Button);
             string machineKey = $"{Game1.currentLocation.NameOrUniqueName}:{(int)pool.TileLocation.X},{(int)pool.TileLocation.Y}";
-            Game1.activeClickableMenu = new MutagenicPoolMenu(this.registry!, machineKey);
+            Game1.activeClickableMenu = new MutagenicPoolMenu(this.registry!, machineKey, MutagenicPoolRules.FromConfig(this.config));
             return;
         }
 

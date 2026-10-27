@@ -104,9 +104,10 @@ Use the disposable `TaumTest_322865388` save. Back up the installed mod's `data`
 3. Select a mature slime and start an attempt. Confirm 500 Slime is removed, the job shows a fixed chance and ready day, and that slime can't be assigned to a breeder or second Pool.
 4. Sleep to save the inventory and external job; optionally reload before resolution. Confirm the attempt resumes with the same stored roll and chance. Sleep through its ready day.
 5. Confirm one result notice. Success sets `Genome.MutationTrait` to `Shadow Clone` and resets `MutagenicPoolFailures`; failure leaves the slime alive and increments only that slime's counter. Shadow Clone has no active behavior yet.
-6. Verify another attempt uses +2 percentage points per failure (5% base, 30% cap); a different slime has independent pity. Cost, odds, duration, and shop price are provisional.
-7. Inspect the external registry: `SchemaVersion` should be 9; `MutagenicAttempts` contains active attempt chance/roll; `SlimeRecord` contains `MutagenicPoolFailures` and the genome mutation trait.
-8. Copy an existing schema 8 registry, load it, and confirm `.before-mutagenic-pool-v9.bak` is created and existing egg, breeding, and incubation records are retained.
+6. Verify another attempt uses +2 percentage points per failure (5% base, 30% cap); a different slime has independent pity. Defaults are provisional and configurable in the installed mod's `config.json`: `MutagenicPoolSlimeCost`, `MutagenicPoolBaseChance`, `MutagenicPoolChancePerFailure`, `MutagenicPoolMaximumChance`, `MutagenicPoolDurationDays`, and `MutagenicPoolShopPrice`. Restart after editing.
+7. For quick safe-failure/success checks, set cost to 1, base and maximum chance to 0 for failure or 1 for success, and duration to 1. Restore defaults when done. Invalid costs, durations, and chances are clamped when opening the Pool.
+8. Inspect the external registry: `SchemaVersion` should be 9; `MutagenicAttempts` contains active attempt chance/roll; `SlimeRecord` contains `MutagenicPoolFailures` and the genome mutation trait.
+9. Copy an existing schema 8 registry, load it, and confirm `.before-mutagenic-pool-v9.bak` is created and existing egg, breeding, and incubation records are retained.
 
 ## Shadow Clone visual echo
 

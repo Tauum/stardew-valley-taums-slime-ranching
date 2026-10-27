@@ -246,7 +246,7 @@ internal sealed class SlimeRegistry
         this.mutagenicAttempts.TryGetValue(machineKey, out MutagenicAttemptRecord? attempt) ? attempt : null;
 
     public int GetMutagenicPoolFailures(long slimeId) =>
-        this.farmAnimalRecords.TryGetValue(slimeId, out SlimeRecord? record) ? record.MutagenicPoolFailures : 0;
+        this.farmAnimalRecords.TryGetValue(slimeId, out SlimeRecord? record) ? Math.Clamp(record.MutagenicPoolFailures, 0, 9_999) : 0;
 
     public string? GetMutationTrait(long slimeId) =>
         this.farmAnimalRecords.TryGetValue(slimeId, out SlimeRecord? record) ? record.Genome.MutationTrait : null;
@@ -262,7 +262,7 @@ internal sealed class SlimeRegistry
         return true;
     }
 
-    public bool StartMutagenicAttempt(string machineKey, long slimeId, int currentDay, int ageDays, double roll)
+    public bool StartMutagenicAttempt(string machineKey, long slimeId, int currentDay, int ageDays, double roll, MutagenicPoolRules rules)
     {
         if (string.IsNullOrWhiteSpace(machineKey) || this.mutagenicAttempts.ContainsKey(machineKey)
             || !this.farmAnimalRecords.TryGetValue(slimeId, out SlimeRecord? record)
@@ -271,14 +271,13 @@ internal sealed class SlimeRegistry
             || this.IsReserved(slimeId, machineKey))
             return false;
 
-        int failures = Math.Clamp(record.MutagenicPoolFailures, 0, 13);
-        double chance = Math.Min(0.30, 0.05 + 0.02 * failures);
+        double chance = rules.GetChance(record.MutagenicPoolFailures);
         this.mutagenicAttempts[machineKey] = new MutagenicAttemptRecord
         {
             MachineKey = machineKey,
             SlimeId = slimeId,
             StartedOnDay = currentDay,
-            ReadyOnDay = currentDay + 1,
+            ReadyOnDay = currentDay + rules.DurationDays,
             ChanceAtStart = chance,
             Roll = Math.Clamp(roll, 0, 0.999999999)
         };
@@ -304,7 +303,7 @@ internal sealed class SlimeRegistry
                 slime.MutagenicPoolFailures = 0;
             }
             else
-                slime.MutagenicPoolFailures = Math.Min(13, slime.MutagenicPoolFailures + 1);
+                slime.MutagenicPoolFailures = Math.Min(9_999, Math.Clamp(slime.MutagenicPoolFailures, 0, 9_999) + 1);
             results.Add((attempt.SlimeId, success, attempt.ChanceAtStart));
             this.mutagenicAttempts.Remove(attempt.MachineKey);
         }
