@@ -145,7 +145,7 @@ Common and genome-specific Ranch Slime Eggs can now hatch in the custom Slime In
 3. Click two Ranch Slime rows. Confirm each row highlights and the selected slimes appear in the chamber preview.
 4. Click **Start 2-day Cycle**. This should reserve both selected parents automatically, stop their roaming, and start the timer. Confirm another breeder cannot offer them while reserved.
 5. Close and reopen the menu or reload; confirm the timer resumes from the saved day instead of restarting.
-6. Click **Cancel Cycle** and confirm the parents remain reserved. Click **Release Pair** and confirm they move again and return to the available list.
+6. Click **Cancel Cycle** and confirm both parents immediately resume roaming and return to the available list. There is no separate **Release Pair** button.
 7. Give and place another breeder. Walk into its base from all four sides and corners; the 5×2 base should block movement.
 8. Reserve a pair, start the cycle, then sleep until the ready notification appears. Confirm the egg remains in the breeder for manual **Collect Egg**, while both parents resume roaming and appear as resting in the available list. Leave the egg uncollected for a day and confirm it stays in the breeder and is not placed in a nearby chest.
 

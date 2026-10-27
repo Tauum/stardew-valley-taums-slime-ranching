@@ -479,10 +479,7 @@ internal sealed class SlimeRegistry
             || pair.CycleReadyOnDay <= 0 || pair.OutputEggItemId is not null)
             return false;
 
-        pair.CycleStartedOnDay = 0;
-        pair.CycleReadyOnDay = 0;
-        pair.ChromaticCrystalColor = null;
-        return true;
+        return this.breedingPairs.Remove(machineKey);
     }
 
     public SlimeEggRecord? GetOrCreateBreedingEgg(string machineKey, int currentDay, out bool created) =>

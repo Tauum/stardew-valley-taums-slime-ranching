@@ -24,7 +24,6 @@ internal sealed class SlimeBreederMenu : IClickableMenu
     private readonly int listBottom;
     private int firstVisibleCandidate;
     private readonly Rectangle actionButton;
-    private readonly Rectangle releaseButton;
     private readonly Rectangle crystalSelector;
     private string? selectedCrystalColor;
     private bool pairReserved;
@@ -73,8 +72,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
         }
         this.listTop = this.yPositionOnScreen + 198;
         this.listBottom = this.yPositionOnScreen + 448;
-        this.actionButton = new Rectangle(this.xPositionOnScreen + 765, this.yPositionOnScreen + this.height - 86, 190, 58);
-        this.releaseButton = new Rectangle(this.xPositionOnScreen + 555, this.yPositionOnScreen + this.height - 86, 190, 58);
+        this.actionButton = new Rectangle(this.xPositionOnScreen + 670, this.yPositionOnScreen + this.height - 86, 250, 58);
         this.crystalSelector = new Rectangle(this.xPositionOnScreen + 635, this.yPositionOnScreen + 466, 320, 62);
         if (pair?.ChromaticCrystalColor is string savedColor && ChromaticCrystalContent.IsColorName(savedColor))
             this.selectedCrystalColor = savedColor;
@@ -121,25 +119,6 @@ internal sealed class SlimeBreederMenu : IClickableMenu
             return;
         }
 
-        if (this.releaseButton.Contains(x, y))
-        {
-            BreedingPairRecord? pair = this.registry.GetBreedingPair(this.machineKey);
-            if (pair?.OutputEggItemId is not null)
-                this.statusMessage = "Collect the finished egg before clearing this breeder.";
-            else if (pair is not null && pair.CycleReadyOnDay > 0)
-                this.statusMessage = "Cancel the cycle before releasing the parents.";
-            else if (this.pairReserved)
-            {
-                this.registry.ReleasePair(this.machineKey);
-                this.selected.Clear();
-                this.pairReserved = false;
-                this.statusMessage = "Parents released back to the Daycare pool.";
-                this.saveExternalState();
-            }
-            Game1.playSound("smallSelect");
-            return;
-        }
-
         if (this.actionButton.Contains(x, y))
         {
             if (!this.pairReserved)
@@ -177,9 +156,22 @@ internal sealed class SlimeBreederMenu : IClickableMenu
                         this.CollectBreedingEgg(pair);
                     else
                     {
-                        this.registry.CancelBreedingCycle(this.machineKey);
-                        this.statusMessage = "Breeding cycle cancelled; parents remain reserved.";
-                        this.saveExternalState();
+                        if (this.registry.CancelBreedingCycle(this.machineKey))
+                        {
+                            if (this.saveExternalState())
+                            {
+                                this.selected.Clear();
+                                this.pairReserved = false;
+                                this.statusMessage = "Cycle cancelled; parents released to the Daycare.";
+                            }
+                            else
+                            {
+                                this.registry.RestoreBreedingCycle(pair, Game1.Date.TotalDays);
+                                this.statusMessage = "Could not save cancellation; the pair remains reserved and the cycle continues.";
+                            }
+                        }
+                        else
+                            this.statusMessage = "Could not cancel the breeding cycle.";
                     }
                 }
                 else
@@ -281,8 +273,6 @@ internal sealed class SlimeBreederMenu : IClickableMenu
             : pair?.CycleReadyOnDay > 0 ? "CANCEL CYCLE" : "♥  START BREEDING";
         DrawPanel(b, this.actionButton, ready ? new Color(79, 153, 91) : new Color(68, 147, 80), new Color(151, 238, 137));
         DrawCentered(b, buttonText, Game1.smallFont, this.actionButton, Color.White);
-        DrawPanel(b, this.releaseButton, new Color(81, 83, 134), new Color(156, 164, 225));
-        DrawCentered(b, "RELEASE PAIR", Game1.smallFont, this.releaseButton, Color.White);
         string status = this.statusMessage ?? GetCycleStatus(pair);
         b.DrawString(Game1.tinyFont, status, new Vector2(this.xPositionOnScreen + 34, this.yPositionOnScreen + this.height - 65), Color.White);
     }
