@@ -7,7 +7,7 @@
 - `GeneticsService`: fixed recipe resolution, size and rarity rolls; pure deterministic functions.
 - `BreedingService`: reservations, machine state, egg genome generation.
 - `EggIdentityService`: identify an egg through transfers without game-save metadata, then inspect/hatch it without reroll; feasibility must be proven first.
-- `TrampolineInteractionService`: low-frequency nearby-slime assignment, one-slime reservation, size-aware transient bounce animation; broader furniture interactions can build on this.
+- `EnrichmentInteractionService`: low-frequency assignment for trampolines, cushions, playgrounds, slides, and beds; reserves target tiles, supports group play, and restores temporary sprite offsets on cleanup. Occupied target tiles and playground distances are cached per assignment pass.
 - `MutationService`: pool rolls and pity counters.
 - `ProductionService`: item output and refinery conversions.
 - `CompanionService`: bound slime lifecycle, follower and ability activation.

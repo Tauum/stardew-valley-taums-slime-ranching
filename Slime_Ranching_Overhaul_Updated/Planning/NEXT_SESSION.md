@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-10-27  
 **Test save:** `TaumTest_322865388` (disposable copy)  
-**Working tree:** `feature/slime-bed-rest-animation`, chained after `feature/slime-slide-interaction`; this branch adds a placeable Slime Bed and a short resting pose to the shared enrichment scheduler. Build passes; latest changes are not tested in game.
+**Working tree:** `perf/enrichment-scheduler-target-index`, chained after `refactor/general-enrichment-scheduler`; this branch caches occupied target tiles and playground-pair distances during furniture assignment. The immediately preceding feature adds a placeable Slime Bed and short resting pose. Build passes; latest changes are not tested in game.
 
 ## Current state
 
@@ -29,6 +29,7 @@
 - Marnie also sells a Slime Playground (configurable default 6,000g). Two nearby idle Ranch Slimes are assigned together to one playground and perform synchronized hops; the reserved object cannot start another interaction during the animation. It currently has no friendship/happiness effect. Verify with multiple furniture items and after leaving the room mid-animation.
 - Marnie also sells a Slime Slide (configurable default 3,000g). Nearby idle slimes perform a low hop and glide horizontally across it. The travel direction is fixed and the animation has no gameplay effect; verify offset cleanup and competing furniture reservations.
 - Marnie also sells a Slime Bed (configurable default 1,800g). Nearby slimes lower briefly into a resting pose, then return to their normal offset. It does not change happiness, age, or breeding; verify interruption cleanup.
+- The interaction scheduler is now named `EnrichmentInteractionService`. It handles all five implemented furniture types, caches occupied target tiles once per assignment pass, and computes each playground candidate distance once during sorting. Build passes with only the existing analyzer/compiler version warning; compare behavior/performance with a crowded Daycare in game.
 - The user confirmed the egg spawn worked. Its tooltip showed Ranch Slime, green (`#00FF00`), Normal size, Common rarity, no mutation, Generation 1, two parent IDs, and favorite food `Broken CD`.
 - Egg hatching is implemented as a prototype. It was introduced in schema 6; the registry is currently schema 8. Verify egg identity through transfer/reload, then test incubation recovery and genome matching.
 - Building art uses direct nearest-neighbor resized copies of the original images in `assets/Buildings/*_GameTexture.png`. The original full-size source images are preserved. Current frames are Base 160 by 160, Upgrade 1 176 by 160, and Upgrade 2 192 by 160; building widths are 10, 11, and 12 tiles.

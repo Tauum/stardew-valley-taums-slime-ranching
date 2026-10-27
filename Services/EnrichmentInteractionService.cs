@@ -120,6 +120,9 @@ internal sealed class EnrichmentInteractionService
             foreach (long id in expiredCooldowns)
                 this.cooldowns.Remove(id);
 
+        HashSet<Vector2> occupiedTiles = this.active.Values
+            .Select(bounce => bounce.TrampolineTile)
+            .ToHashSet();
         var furnitureSpots = house.Objects.Values
             .Where(obj => obj.QualifiedItemId == FurnitureContent.TrampolineQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.SlimeCushionQualifiedId
@@ -127,7 +130,7 @@ internal sealed class EnrichmentInteractionService
                 || obj.QualifiedItemId == FurnitureContent.SlimeSlideQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.SlimeBedQualifiedId)
             .Select(obj => new FurnitureSpot(obj.TileLocation, obj.QualifiedItemId))
-            .Where(spot => !this.active.Values.Any(bounce => bounce.TrampolineTile == spot.Tile))
+            .Where(spot => !occupiedTiles.Contains(spot.Tile))
             .ToList();
         if (furnitureSpots.Count == 0)
             return;
@@ -143,9 +146,11 @@ internal sealed class EnrichmentInteractionService
         {
             Vector2 center = playground.Tile * 64f + new Vector2(32f, 32f);
             FarmAnimal[] pair = idleSlimes
-                .Where(animal => Vector2.DistanceSquared(animal.Position, center) < InteractionRadiusPixels * InteractionRadiusPixels)
-                .OrderBy(animal => Vector2.DistanceSquared(animal.Position, center))
+                .Select(animal => (Animal: animal, Distance: Vector2.DistanceSquared(animal.Position, center)))
+                .Where(candidate => candidate.Distance < InteractionRadiusPixels * InteractionRadiusPixels)
+                .OrderBy(candidate => candidate.Distance)
                 .Take(2)
+                .Select(candidate => candidate.Animal)
                 .ToArray();
             furnitureSpots.Remove(playground);
             if (pair.Length < 2)

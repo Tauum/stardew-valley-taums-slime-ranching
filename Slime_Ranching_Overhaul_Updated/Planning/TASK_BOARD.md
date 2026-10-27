@@ -60,6 +60,7 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [x] Add a short in-memory per-slime cooldown after trampoline use so nearby residents can take turns.
 - [ ] Use each slime's stored liked food when the Compost Trough is implemented; decide its bonus and consume only eligible items.
 - [x] Add Slime Bed rest animation with transient draw-offset cleanup.
+- [x] Generalize the trampoline scheduler into an enrichment scheduler and cache occupied target tiles and group-pair distances per assignment pass.
 - [ ] Tunnel, ball pit, heated stone, Gel Pond, compost trough; persistent gameplay effects and QA.
 
 ## Stage 5 — machines
