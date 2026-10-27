@@ -3,6 +3,7 @@ using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
+using StardewValley.Objects;
 using StardewValley.Tools;
 
 namespace taums_slime_ranching.Services;
@@ -17,6 +18,7 @@ internal static class IncubatorPlacementGeometry
     private const int SpriteHeight = 5 * TileSize;
     private const int AnchorOffsetX = -(Width / 2);
     private static Texture2D? texture;
+    private static Furniture? placementPreview;
 
     public static Texture2D Texture => texture ??= Game1.content.Load<Texture2D>("Mods/Taum.SlimeRanching/Machines/SlimeIncubator");
 
@@ -39,6 +41,10 @@ internal static class IncubatorPlacementGeometry
 
     public static void DrawPlacement(SpriteBatch batch, GameLocation location, Vector2 anchor)
     {
+        placementPreview ??= ItemRegistry.Create<Furniture>("(F)814");
+        placementPreview.TileLocation = anchor;
+        placementPreview.drawPlacementBounds(batch, location);
+
         Color fill = IsAreaClear(location, anchor) ? new Color(72, 190, 92, 80) : new Color(220, 70, 70, 90);
         Color edge = IsAreaClear(location, anchor) ? new Color(72, 220, 96, 190) : new Color(240, 80, 80, 210);
         for (int dy = 0; dy < Height; dy++)
@@ -69,11 +75,17 @@ internal static class IncubatorPlacementGeometry
 
     public static void DrawGhost(SpriteBatch batch, int x, int y, float alpha)
     {
-        Vector2 anchor = GetCenteredAnchor(x, y);
-        DrawWorld(batch, anchor, alpha);
+        Vector2 anchor = new((int)Math.Floor(x / (double)TileSize), (int)Math.Floor(y / (double)TileSize));
+        Vector2 worldTopLeft = new(anchor.X * TileSize, (anchor.Y + Height) * TileSize - SpriteHeight);
+        Vector2 screenTopLeft = Game1.GlobalToLocal(Game1.viewport, worldTopLeft);
+        Rectangle destination = new((int)screenTopLeft.X, (int)screenTopLeft.Y, SpriteWidth, SpriteHeight);
+        float depth = Math.Clamp(((anchor.Y + Height) * TileSize - 8) / 10000f, 0f, 0.999f);
+        batch.Draw(Texture, destination, new Rectangle(0, 0, Texture.Width, Texture.Height), Color.White * alpha,
+            0f, Vector2.Zero, SpriteEffects.None, depth);
     }
 
     public static bool IsIncubator(StardewValley.Object obj) => obj.QualifiedItemId == ConverterContent.IncubatorQualifiedId;
+    public static bool IsPlacementPreview(Furniture furniture) => ReferenceEquals(furniture, placementPreview);
 }
 
 [HarmonyPatch(typeof(StardewValley.Object), nameof(StardewValley.Object.drawPlacementBounds), new[] { typeof(SpriteBatch), typeof(GameLocation) })]
@@ -134,12 +146,12 @@ internal static class IncubatorDrawPatch
     }
 }
 
-[HarmonyPatch(typeof(StardewValley.Object), nameof(StardewValley.Object.draw), new[] { typeof(SpriteBatch), typeof(int), typeof(int), typeof(float) })]
-internal static class IncubatorPlacementGhostPatch
+[HarmonyPatch(typeof(Furniture), nameof(Furniture.draw), new[] { typeof(SpriteBatch), typeof(int), typeof(int), typeof(float) })]
+internal static class IncubatorFurniturePlacementGhostPatch
 {
-    private static bool Prefix(StardewValley.Object __instance, SpriteBatch spriteBatch, int x, int y, float alpha)
+    private static bool Prefix(Furniture __instance, SpriteBatch spriteBatch, int x, int y, float alpha)
     {
-        if (!IncubatorPlacementGeometry.IsIncubator(__instance))
+        if (!IncubatorPlacementGeometry.IsPlacementPreview(__instance))
             return true;
 
         IncubatorPlacementGeometry.DrawGhost(spriteBatch, x, y, alpha);
