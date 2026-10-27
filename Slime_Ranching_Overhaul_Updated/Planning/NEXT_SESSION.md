@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-10-27  
 **Test save:** `TaumTest_322865388` (disposable copy)  
-**Current branch:** `tooling/inspect-slime-genome`, chained after `feature/gmcm-shop-prices`. `slime_ranching_inspect <animal ID>` now prints one managed Ranch Slime's external genome, liked food, age, mutation pity, and reservation status. Build passes; confirm output on the disposable save.
+**Current branch:** `docs/mutagenic-pool-player-guide`, chained after `tooling/inspect-slime-genome`. Player guide and README now cover the Pool, mutation visual prototype, GMCM settings, and genome-inspection command; the manifest description reflects the current mod scope. No code changed on this documentation branch.
 
 ## Current state
 
