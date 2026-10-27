@@ -248,6 +248,17 @@ internal sealed class SlimeRegistry
     public string? GetMutationTrait(long slimeId) =>
         this.farmAnimalRecords.TryGetValue(slimeId, out SlimeRecord? record) ? record.Genome.MutationTrait : null;
 
+    public bool SetMutationTrait(long slimeId, string? mutationTrait)
+    {
+        if (!this.farmAnimalRecords.TryGetValue(slimeId, out SlimeRecord? record)
+            || (mutationTrait is not null && mutationTrait != "Shadow Clone")
+            || this.IsReserved(slimeId))
+            return false;
+
+        record.Genome.MutationTrait = mutationTrait;
+        return true;
+    }
+
     public bool StartMutagenicAttempt(string machineKey, long slimeId, int currentDay, int ageDays, double roll)
     {
         if (string.IsNullOrWhiteSpace(machineKey) || this.mutagenicAttempts.ContainsKey(machineKey)

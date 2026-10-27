@@ -69,7 +69,7 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 
 ## Stage 5 — machines
 - [x] Add a placeable Mutagenic Pool with one-day attempts, a per-slime pity counter, and safe failure; Shadow Clone is currently data-only. Verify the schema migration and reload lifecycle in game.
-- [ ] Implement Shadow Clone's bounded, non-recursive behavior and tune its ability effects.
+- [ ] Extend the temporary Shadow Clone visual echo into bounded companion behavior; no clones may breed, produce resources, or recursively clone.
 - [x] Chromatic Crystals as breeder consumables, **not furniture**; obtainment recipes and unlock progression remain open.
 - [ ] Gel Refinery stored Slime and vanilla-item conversion recipes.
 
@@ -93,6 +93,7 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [ ] Start an attempt with 500 vanilla Slime, sleep, and verify the success/failure message, stored trait or pity increment, and unchanged slime health/existence. Reload mid-cycle and ensure the stored roll does not change.
 - [ ] Verify the per-slime odds increase by 2 points per failure to 30%, reset after success, and remain independent between slimes; review these provisional values before release.
 - [ ] Verify schema 8 migrates to schema 9, creates `.before-mutagenic-pool-v9.bak`, and preserves existing genomes, eggs, breeding pairs, and incubations.
+- [ ] On the disposable save, run `slime_ranching_set_mutation TaumTest_322865388 <animal ID> ShadowClone`; confirm a faint temporary duplicate appears near the slime only inside the Daycare. Then use `none` and confirm it stops; reload with Shadow Clone enabled and check it returns.
 - [ ] Deploy current build to `TaumTest_322865388`; check the complete Base roof and confirm its foundation corner touches the blue footprint's bottom-left, then check both upgrades.
 - [ ] Check that hearts are 30 screen pixels higher than their original position, 20% larger, and float on a 4-second cycle.
 - [ ] Continue with breeder-ready notification, egg persistence, and incubator hatching checks.

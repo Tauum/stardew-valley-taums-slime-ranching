@@ -40,6 +40,7 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("slime_ranching_set_size", "Set a managed Ranch Slime's test genome size. Usage: slime_ranching_set_size <exact save folder name> <animal ID> <Tiny|Small|Normal|Large|Giant>.", this.OnSetSlimeSizeCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_color", "Set a managed Ranch Slime's test base color. Usage: slime_ranching_set_color <exact save folder name> <animal ID> <Red|Orange|Yellow|Green|Blue|Purple|Pink>.", this.OnSetSlimeColorCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_shiny", "Set a managed Ranch Slime's test shiny flag. Usage: slime_ranching_set_shiny <exact save folder name> <animal ID> <true|false>.", this.OnSetSlimeShinyCommand);
+        helper.ConsoleCommands.Add("slime_ranching_set_mutation", "Set a managed Ranch Slime's test mutation. Usage: slime_ranching_set_mutation <exact save folder name> <animal ID> <ShadowClone|none>.", this.OnSetSlimeMutationCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_converter", "Give one Slime Egg Converter for testing. Usage: slime_ranching_give_converter <exact save folder name>.", this.OnGiveConverterCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_guidebook", "Give the Slime Ranching Field Guide. Usage: slime_ranching_give_guidebook <exact save folder name>.", this.OnGiveGuidebookCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_breeder", "Give one Slime Breeder for testing. Usage: slime_ranching_give_breeder <exact save folder name>.", this.OnGiveBreederCommand);
@@ -186,7 +187,11 @@ public sealed class ModEntry : Mod
 
     private void OnRenderedWorld(object? sender, StardewModdingAPI.Events.RenderedWorldEventArgs e)
     {
-        if (!this.stateReady || !Context.IsMainPlayer || Game1.currentLocation != Game1.getFarm())
+        if (!this.stateReady || !Context.IsMainPlayer)
+            return;
+
+        ShadowCloneVisualService.Draw(Game1.currentLocation, e.SpriteBatch, this.registry!);
+        if (Game1.currentLocation != Game1.getFarm())
             return;
 
         BreedingPairRecord[] activeCycles = this.registry!.BreedingPairs
@@ -889,6 +894,39 @@ public sealed class ModEntry : Mod
 
         this.RefreshRanchSlimeAppearance(animalId);
         this.Monitor.Log($"Changed Ranch Slime {animalId} base color and species to {this.registry.GetGenomeColorState(animalId)?.PrimarySpecies} in the mod's external registry.", LogLevel.Info);
+    }
+
+    private void OnSetSlimeMutationCommand(string command, string[] args)
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
+        {
+            this.Monitor.Log("Load a single-player save with available external slime state before changing a test genome.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 3 || args[0] != saveName || !long.TryParse(args[1], out long animalId)
+            || (args[2] != "ShadowClone" && args[2] != "none"))
+        {
+            this.Monitor.Log($"Usage: slime_ranching_set_mutation {saveName} <animal ID> <ShadowClone|none>", LogLevel.Warn);
+            return;
+        }
+
+        string? oldTrait = this.registry!.GetMutationTrait(animalId);
+        if (!this.registry.SetMutationTrait(animalId, args[2] == "none" ? null : "Shadow Clone"))
+        {
+            this.Monitor.Log("That ID is not an unreserved managed Ranch Slime, or the requested test mutation is invalid.", LogLevel.Warn);
+            return;
+        }
+
+        if (!this.SaveExternalStateNow())
+        {
+            this.registry.SetMutationTrait(animalId, oldTrait);
+            this.Monitor.Log("Could not save external state; the original mutation trait was restored.", LogLevel.Error);
+            return;
+        }
+
+        this.Monitor.Log($"Changed Ranch Slime {animalId} mutation trait to {this.registry.GetMutationTrait(animalId) ?? "none"} in the mod's external registry.", LogLevel.Info);
     }
 
     private void RefreshRanchSlimeAppearance(long animalId)

@@ -101,6 +101,14 @@ Use the disposable `TaumTest_322865388` save. Back up the installed mod's `data`
 7. Inspect the external registry: `SchemaVersion` should be 9; `MutagenicAttempts` contains active attempt chance/roll; `SlimeRecord` contains `MutagenicPoolFailures` and the genome mutation trait.
 8. Copy an existing schema 8 registry, load it, and confirm `.before-mutagenic-pool-v9.bak` is created and existing egg, breeding, and incubation records are retained.
 
+## Shadow Clone visual echo
+
+1. On `TaumTest_322865388`, note a mature Ranch Slime ID and run `slime_ranching_set_mutation TaumTest_322865388 <animal ID> ShadowClone`.
+2. Enter the Slime Daycare and watch the slime for at least 12 seconds. A short translucent copy should appear beside it, drift upward, and fade; at most four echoes are drawn at once.
+3. Walk outside the Daycare. The echo should not appear around farm buildings or in vanilla Slime Huts. Re-enter and confirm the effect resumes.
+4. Run `slime_ranching_set_mutation TaumTest_322865388 <animal ID> none`, save, and confirm the echo stops. Set the trait again, reload, and verify the same genome still triggers the effect.
+5. Confirm the echo cannot be petted, selected, bred, or produce drops. It is a render-only prototype, not a second animal or an implemented inherited ability.
+
 ## External genome-specific egg identity (prototype)
 
 1. Deploy the current build to the disposable `TaumTest_322865388` save. Make room for two inventory items.
