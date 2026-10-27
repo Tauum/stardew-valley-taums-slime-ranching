@@ -58,7 +58,7 @@ internal static class BuildingContent
             daycare.SourceRect = new Rectangle(0, 0, daycare.Size.X * PixelsPerTile, DaycareTextureHeight);
             // Visually align the building body with the marked footprint without
             // translating/cropping its roof in the source texture.
-            daycare.DrawOffset = new Vector2(-5f, 8f);
+            daycare.DrawOffset = new Vector2(3f, 8f);
             daycare.ValidOccupantTypes = new List<string>();
             daycare.AllowAnimalPregnancy = false;
             buildings[SlimeDaycareBuildingId] = daycare;
