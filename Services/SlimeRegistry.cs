@@ -258,7 +258,7 @@ internal sealed class SlimeRegistry
             PrimarySpecies = chooseA() ? a.PrimarySpecies : b.PrimarySpecies,
             SecondarySpecies = chooseA() ? a.SecondarySpecies : b.SecondarySpecies,
             VisualColor = chooseA() ? a.VisualColor : b.VisualColor,
-            Size = chooseA() ? a.Size : b.Size,
+            Size = RollOffspringSize(a.Size, b.Size),
             IsShiny = chooseA() ? a.IsShiny : b.IsShiny,
             RarityTier = chooseA() ? a.RarityTier : b.RarityTier,
             MutationTrait = chooseA() ? a.MutationTrait : b.MutationTrait,
@@ -280,6 +280,56 @@ internal sealed class SlimeRegistry
         pair.OutputEggItemId = egg.ItemId;
         created = true;
         return egg;
+    }
+
+    private static string RollOffspringSize(string parentA, string parentB)
+    {
+        string[] sizes = { "Tiny", "Small", "Normal", "Large", "Giant" };
+        int a = Array.FindIndex(sizes, size => size.Equals(parentA, StringComparison.OrdinalIgnoreCase));
+        int b = Array.FindIndex(sizes, size => size.Equals(parentB, StringComparison.OrdinalIgnoreCase));
+        if (a < 0) a = 2;
+        if (b < 0) b = 2;
+
+        if (a == b)
+        {
+            return a switch
+            {
+                0 => RollWeighted(("Tiny", 75), ("Small", 20), ("Normal", 5)),
+                1 => RollWeighted(("Small", 75), ("Normal", 20), ("Tiny", 5)),
+                2 => RollWeighted(("Normal", 80), ("Small", 10), ("Large", 10)),
+                3 => RollWeighted(("Large", 75), ("Normal", 15), ("Giant", 10)),
+                _ => RollWeighted(("Giant", 85), ("Large", 15))
+            };
+        }
+
+        int lower = Math.Min(a, b);
+        int upper = Math.Max(a, b);
+        if (upper - lower == 1)
+            return Game1.random.Next(2) == 0 ? sizes[lower] : sizes[upper];
+        if (upper - lower == 2)
+            return RollWeighted((sizes[lower], 20), (sizes[lower + 1], 60), (sizes[upper], 20));
+
+        // Wider gaps keep both parental sizes possible, favoring the middle of the size range.
+        if (Game1.random.Next(4) == 0)
+            return sizes[lower];
+        if (Game1.random.Next(3) == 0)
+            return sizes[upper];
+        int middle = lower + (upper - lower) / 2;
+        if ((upper - lower) % 2 == 1 && Game1.random.Next(2) == 0)
+            middle++;
+        return sizes[middle];
+    }
+
+    private static string RollWeighted(params (string Size, int Weight)[] outcomes)
+    {
+        int roll = Game1.random.Next(outcomes.Sum(outcome => outcome.Weight));
+        foreach ((string size, int weight) in outcomes)
+        {
+            if (roll < weight)
+                return size;
+            roll -= weight;
+        }
+        return outcomes[^1].Size;
     }
 
     public bool FinishBreedingCycle(string machineKey, string eggItemId, int currentDay)

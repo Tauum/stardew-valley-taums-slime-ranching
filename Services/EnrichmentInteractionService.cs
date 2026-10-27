@@ -191,6 +191,8 @@ internal sealed class EnrichmentInteractionService
                 _ => registry.GetGenomeSize(animal.myID.Value)?.ToLowerInvariant() switch
                 {
                     "tiny" => (1.8f, 36f, 2f, 0f, false),
+                    "small" => (2.1f, 32f, 3f, 0f, false),
+                    "large" => (2.8f, 24f, 7f, 0f, false),
                     "giant" => (3.2f, 21f, 9f, 0f, false),
                     _ => (2.4f, 28f, 4f, 0f, false)
                 }

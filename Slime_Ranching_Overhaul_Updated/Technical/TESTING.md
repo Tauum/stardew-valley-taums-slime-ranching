@@ -62,6 +62,15 @@ The pair, cycle dates, and resulting egg genome are stored in the mod-folder reg
 
 Crystal items currently use vanilla mineral icons and are available only through the testing command; Marnie stock, crafting recipes, unlock levels, and pricing are intentionally undecided. The crystal affects offspring traits only; it does not change the parent genomes.
 
+## Five-size inheritance prototype
+
+1. Prepare two mature slimes with known sizes (inspect their external genome entries). Breed Small+Small, Large+Large, Small+Large, and Giant+Giant pairs and inspect each egg tooltip's Size value.
+2. Check that every outcome is one of Tiny, Small, Normal, Large, or Giant, and that size does not change the parents or maturity clock.
+3. Hatch size-varied eggs. Compare trampoline animation profiles: Tiny highest/fastest, Small above Normal, Large below Normal, and Giant lowest/slowest. Cushion, bed, slide, and playground interactions should remain independent of genetic size for now.
+4. Visual sprite scaling and collision/selection behavior are not implemented yet; review those separately before marking the five-size feature complete.
+
+The probabilities are provisional and listed in `Features/SIZE_AND_MATURITY.md`. A few manual samples only check that the categories and inheritance path work; they do not validate statistical balance.
+
 ## External genome-specific egg identity (prototype)
 
 1. Deploy the current build to the disposable `TaumTest_322865388` save. Make room for two inventory items.

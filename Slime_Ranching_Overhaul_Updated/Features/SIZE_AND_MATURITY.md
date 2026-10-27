@@ -10,6 +10,10 @@
 
 Use a configurable generalized weighted model for other pairs. Seeded tests should check distributions.
 
+## Implemented prototype inheritance
+
+Breeder offspring now roll among Tiny/Small/Normal/Large/Giant rather than copying one parent's size. The four specified examples above use those weights. Same-size Tiny parents provisionally roll 75% Tiny, 20% Small, 5% Normal; Normal parents roll 80% Normal, 10% Small, 10% Large. Adjacent mixed sizes split evenly; pairs two steps apart use 20% lower, 60% midpoint, 20% upper. Wider gaps use 25% for either endpoint and 50% for the middle category/categories. Unknown legacy size names are treated as Normal for this roll. Review these assumptions before balancing; visual sprite scaling is not implemented yet.
+
 ## Companion scaling
 - Tiny: highest movement speed and shortest activation cooldown; smallest amount/capacity.
 - Small: fast, slightly reduced amount.
