@@ -29,7 +29,7 @@ This is a new custom farm-animal type in a separate Slime Daycare animal-house b
 5. Reload and save again. Confirm the same `FarmAnimalId` retains the same `Genome.Id` and no duplicate record is added.
 6. Run `slime_ranching_inspect` in a Slime Hutch and confirm its vanilla slime count has not changed.
 
-The custom Common Slime Egg does not hatch into this animal yet. Incubator integration remains future work. Custom exterior art is present; its final in-game alignment is still being checked. The interior still uses the Barn map.
+Genome-specific Ranch Slime Eggs can now hatch in the custom Slime Incubator. The generic Common Slime Egg produced by the converter still has no genome and cannot hatch. Custom exterior art is present; its final in-game alignment is still being checked. The interior still uses the Barn map.
 
 ## Slime Daycare building art and upgrades
 
@@ -55,11 +55,23 @@ The pair, cycle dates, and resulting egg genome are stored in the mod-folder reg
 
 1. Deploy the current build to the disposable `TaumTest_322865388` save. Make room for two inventory items.
 2. Run `slime_ranching_give_test_eggs TaumTest_322865388` in the SMAPI console. The mod should add two Ranch Slime Eggs with different qualified item IDs.
-3. Inspect `<installed mod folder>/data/saves/TaumTest_322865388/slime-registry-v1.json`. It should now have two entries in `Eggs`; each has an `ItemId` and a genome with a unique `Id`, color, and liked food. Schema version should be 4. The game's save stores the inventory items; the inherited genome details live in this external registry.
+3. Inspect `<installed mod folder>/data/saves/TaumTest_322865388/slime-registry-v1.json`. It should now have two entries in `Eggs`; each has an `ItemId` and a genome with a unique `Id`, color, and liked food. Schema version should be 6. The game's save stores the inventory items; the inherited genome details live in this external registry.
 4. Save, quit to title, and reload the same save. Confirm both eggs are still named separately and recognized. Check the external registry IDs still match each egg's item ID. For the all-save content definitions, the mod reads registered egg IDs from the mod's per-save registry files when `Data/Objects` loads.
 5. Put one egg in a chest and repeat save/reload. Confirm both item identity and registry genome remain stable.
 
 These command-created genomes are test fixtures only. The user confirmed an egg spawned successfully and its tooltip displayed color, size, rarity, mutation, generation, parent IDs, and favorite food. Save/reload, chest transfer, and incubator hatching remain to be verified. The converter still produces the generic Common Slime Egg. Back up the installed mod's `data` folder before testing if you need to preserve its external registry.
+
+## Genome-specific egg incubation and hatching (prototype)
+
+1. Use a disposable save with a built Slime Daycare. Run `slime_ranching_give_test_eggs TaumTest_322865388` and `slime_ranching_give_incubator TaumTest_322865388`.
+2. Place the Slime Incubator inside the Daycare and use it. Select one of the genome-specific eggs from your inventory. Confirm exactly one item is consumed; sleep to persist both the game inventory and an `Incubations` entry with its egg ID and two-day ready date.
+3. Reload while the egg is incubating. Confirm the menu reports the remaining days and the egg is not available to a second incubator.
+4. Sleep through the remaining time. At the start of the ready day, confirm a Ranch Slime appears in the Daycare and the HUD reports the hatch. Inspect `SlimeRecord.Genome` in the external registry; it should match the egg genome exactly.
+5. Save and reload after hatching. Confirm the animal ID links back to that genome and any copied item with the same egg ID can't hatch another slime.
+6. Fill the Daycare before a hatch is ready. Confirm the egg stays in the incubator record and hatches after a resident is removed.
+7. Try the converter's generic Common Slime Egg. It must remain in inventory and cannot start incubation. Vanilla Slime Eggs and the vanilla Coop Incubator remain untouched.
+
+The incubator runs inside the Daycare only, consumes managed eggs from inventory, and targets a two-day cycle. It spawns the juvenile automatically when the next day begins. If the game and mod-folder state are saved at different moments, the external hatch record reserves the native animal ID and recovers against the next loaded game state. Duration and duplicate-item behavior are provisional and need playtesting.
 
 ## Breeder cycle egg output (prototype)
 
@@ -68,7 +80,7 @@ These command-created genomes are test fixtures only. The user confirmed an egg 
 3. Collect the egg. It should be a distinct Ranch Slime Egg with a new genome ID. Its genome should have `ParentA`, `ParentB`, and `Generation` fields; generation is one higher than the older parent. Current placeholder inheritance selects each parent's existing value independently and stores the result once.
 4. Verify the parents are available again. Save, quit to title, and reload. The egg item ID should still resolve to the same external genome in `Eggs`; it must not be rerolled. The two-day timer and egg are tracked in the mod-folder registry.
 
-This is the first fixed-output slice. It does not yet apply color-wheel recipes, species traits, cooldowns, physical chamber placement, or hatching. A completed cycle with a full inventory leaves the egg ready in the breeder.
+This is the first fixed-output slice. It does not yet apply color-wheel recipes, species traits, or physical chamber placement. A completed cycle with a full inventory leaves the egg ready in the breeder.
 
 ## Slime Egg Converter
 
@@ -78,7 +90,7 @@ The new converter is a distinct big craftable `(BC)Taum.SlimeRanching_EggConvert
 2. Leave a vanilla egg in inventory and another in a chest. Sleep and reload: both must retain their original colors and item IDs.
 3. The hutch's existing Slime Egg-Press has a Red Slime Egg ready. Collect it and verify it remains red. Insert it into the new converter. After ten in-game minutes, collect one mod Common Slime Egg.
 4. Try inserting a non-egg item and the produced mod Common Slime Egg; neither should be consumed. Check that the old Slime Egg-Press still accepts Slime and that slain slimes still use vanilla egg drops.
-5. Sleep and reload with the converter placed and a mod egg in inventory or chest. The machine and mod egg should still be recognized while the mod is installed. No genome or live slime management is implemented yet.
+5. Sleep and reload with the converter placed and a mod egg in inventory or chest. The machine and mod egg should still be recognized while the mod is installed. The generic converter egg has no genome record and is not incubatable.
 
 ## Field Guide book
 

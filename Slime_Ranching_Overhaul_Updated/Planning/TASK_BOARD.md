@@ -24,8 +24,10 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [ ] Verify ready notification, collect flow, cancellation/release, and cycle/egg persistence after save/reload.
 - [x] Add a one-day post-collection rest for both parents; the duration is provisional pending balance review.
 - [ ] Verify different genome eggs remain distinct through inventory, chests, shipping, and machine transfers.
-- [ ] Implement incubator hatching for managed eggs only and create a juvenile with the recorded genome.
-- [ ] Add parent cooldown, crash/reload recovery, and actual in-world enclosure animation beyond the current menu preview.
+- [x] Implement a separate incubator for genome-specific eggs; create a Ranch Slime with the stored genome and preserve vanilla egg behavior.
+- [ ] Verify incubation start, save/reload recovery, hatch, full-Daycare deferral, and duplicate-egg handling in game.
+- [x] Add parent cooldown after egg collection; duration remains provisional.
+- [ ] Add crash/reload recovery checks and actual in-world enclosure animation beyond the current menu preview.
 
 ## Stage 3 — genetics
 - [ ] Fixed color-wheel recipe table and tests; record unresolved Pink recipes explicitly.
@@ -60,7 +62,7 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 ## Next in-game verification
 - [ ] Deploy current build to `TaumTest_322865388`; check the complete Base roof and confirm its foundation corner touches the blue footprint's bottom-left, then check both upgrades.
 - [ ] Check that hearts are 30 screen pixels higher than their original position, 20% larger, and float on a 4-second cycle.
-- [ ] Continue with breeder-ready notification and egg persistence checks, then test incubator hatching.
+- [ ] Continue with breeder-ready notification, egg persistence, and incubator hatching checks.
 
 ## Reusable Rider prompt
 > Implement only the next unchecked task. Inspect existing code and Stardew/SMAPI API before choosing hooks. Do not affect non-managed slimes or write mod state into the game save. Keep external state versioned and recoverable. Include tests, a manual in-game verification checklist, and explain any uncertain API assumptions. Do not silently simplify the custom breeder or companion AI.

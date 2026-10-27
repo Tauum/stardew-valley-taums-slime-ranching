@@ -38,6 +38,7 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("slime_ranching_give_converter", "Give one Slime Egg Converter for testing. Usage: slime_ranching_give_converter <exact save folder name>.", this.OnGiveConverterCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_guidebook", "Give the Slime Ranching Field Guide. Usage: slime_ranching_give_guidebook <exact save folder name>.", this.OnGiveGuidebookCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_breeder", "Give one Slime Breeder for testing. Usage: slime_ranching_give_breeder <exact save folder name>.", this.OnGiveBreederCommand);
+        helper.ConsoleCommands.Add("slime_ranching_give_incubator", "Give one Slime Incubator for testing. Usage: slime_ranching_give_incubator <exact save folder name>.", this.OnGiveIncubatorCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_test_eggs", "Create two external-genome test eggs. Usage: slime_ranching_give_test_eggs <exact save folder name>.", this.OnGiveTestEggsCommand);
     }
 
@@ -52,13 +53,16 @@ public sealed class ModEntry : Mod
             string backupPath = FirstSeenSnapshot.EnsureCreated(this.Helper.DirectoryPath);
             this.Monitor.Log($"Mod-folder first-seen snapshot verified at {backupPath}.", LogLevel.Trace);
             this.registry!.Load(this.stateStore!.Load(), this.config.LogRegistrySummary);
+            int recoveredHatches = this.registry.RecoverPendingHatches(GetFarmAnimals());
+            if (recoveredHatches > 0)
+                this.Monitor.Log($"Recovered {recoveredHatches} saved Ranch Slime hatch(es) from the external incubator registry.", LogLevel.Info);
             int registeredRanchSlimes = this.registry.RegisterRanchSlimes(GetFarmAnimals());
             if (registeredRanchSlimes > 0)
                 this.Monitor.Log($"Registered {registeredRanchSlimes} Ranch Slime farm animal(s) in the external genome registry.", LogLevel.Info);
             (int detachedAnimals, int cancelledCycles) = this.registry.ReconcileRanchSlimes(GetFarmAnimals());
             this.stateReady = true;
             this.LogRegistryReconciliation(detachedAnimals, cancelledCycles);
-            if ((detachedAnimals > 0 || cancelledCycles > 0) && !this.SaveExternalStateNow())
+            if ((recoveredHatches > 0 || detachedAnimals > 0 || cancelledCycles > 0) && !this.SaveExternalStateNow())
                 this.Monitor.Log("Reconciled Ranch Slime records remain in memory but could not yet be written to the mod-folder registry.", LogLevel.Error);
         }
         catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException or System.Text.Json.JsonException or NotSupportedException)
@@ -99,6 +103,8 @@ public sealed class ModEntry : Mod
             if (created && egg is not null)
                 newlyReady.Add(egg);
         }
+
+        this.ProcessReadyIncubations();
 
         if (newlyReady.Count == 0)
             return;
@@ -287,6 +293,97 @@ public sealed class ModEntry : Mod
         }
     }
 
+    private bool StartIncubation(string machineKey, int inventoryIndex)
+    {
+        if (inventoryIndex < 0 || inventoryIndex >= Game1.player.Items.Count
+            || Game1.player.Items[inventoryIndex] is not Item item
+            || !item.QualifiedItemId.StartsWith("(O)Taum.SlimeRanching_Egg_", StringComparison.Ordinal))
+            return false;
+
+        string itemId = item.QualifiedItemId[3..];
+        if (!this.registry!.CanIncubate(itemId) || !this.registry.StartIncubation(machineKey, itemId, Game1.Date.TotalDays))
+            return false;
+
+        item.Stack--;
+        if (item.Stack <= 0)
+            Game1.player.Items[inventoryIndex] = null;
+        // Save the item removal and external incubation together at Stardew's normal Saving event.
+        // If the player exits without saving, both the egg and the incubation should roll back.
+        return true;
+    }
+
+    private void ProcessReadyIncubations()
+    {
+        if (this.registry is null || this.registry.Incubations.Count == 0)
+            return;
+
+        StardewValley.Buildings.Building? daycare = Game1.getFarm().buildings.FirstOrDefault(building =>
+            BuildingContent.IsSlimeDaycare(building.buildingType.Value)
+            && building.GetIndoors() is StardewValley.AnimalHouse);
+        if (daycare?.GetIndoors() is not StardewValley.AnimalHouse animalHouse)
+            return;
+
+        int recovered = this.registry.RecoverPendingHatches(GetFarmAnimals());
+        if (recovered > 0)
+        {
+            this.Monitor.Log($"Confirmed {recovered} previous Ranch Slime hatch(es) against live animal IDs.", LogLevel.Info);
+            if (!this.SaveExternalStateNow())
+                this.Monitor.Log("The confirmed hatch could not be finalized in the external registry; its reserved hatch record will be checked again on reload.", LogLevel.Error);
+            this.Helper.GameContent.InvalidateCache("Data/Objects");
+        }
+
+        foreach (IncubationRecord incubation in this.registry.Incubations
+                     .Where(record => record.ReadyOnDay <= Game1.Date.TotalDays).ToArray())
+        {
+            if (!this.registry.TryGetEgg(incubation.EggItemId, out SlimeEggRecord egg))
+                continue;
+            if (animalHouse.animalsThatLiveHere.Count >= animalHouse.animalLimit.Value)
+            {
+                this.Monitor.Log("A Ranch Slime Egg is ready, but the Slime Daycare is full; hatching will retry after space is available.", LogLevel.Trace);
+                continue;
+            }
+
+            long animalId = incubation.HatchAnimalId ?? this.Helper.Multiplayer.GetNewID();
+            if (incubation.HatchAnimalId is null)
+            {
+                if (!this.registry.AssignHatchAnimalId(incubation.MachineKey, animalId)
+                    || !this.SaveExternalStateNow())
+                {
+                    this.registry.ClearHatchAnimalId(incubation.MachineKey);
+                    this.Monitor.Log("Could not reserve an external native ID for a ready Ranch Slime hatch; it will retry tomorrow.", LogLevel.Error);
+                    continue;
+                }
+            }
+
+            if (GetFarmAnimals().Any(animal => animal.myID.Value == animalId))
+            {
+                this.registry.ClearHatchAnimalId(incubation.MachineKey);
+                this.SaveExternalStateNow();
+                this.Monitor.Log($"Could not hatch genome {egg.Genome.Id:N}: reserved FarmAnimal ID {animalId} is already in use. Cleared it so the incubator can retry with a new ID.", LogLevel.Error);
+                continue;
+            }
+
+            var animal = new FarmAnimal(FarmAnimalContent.RanchSlimeTypeId, animalId, Game1.player.UniqueMultiplayerID)
+            {
+                Name = egg.Genome.PrimarySpecies,
+                home = daycare,
+                homeInterior = animalHouse
+            };
+            animalHouse.adoptAnimal(animal);
+            if (!this.registry.RegisterIncubationHatch(incubation, animal))
+            {
+                this.Monitor.Log($"Hatched Ranch Slime {animalId}, but its genome could not be linked; external hatch recovery will retry on reload.", LogLevel.Error);
+                continue;
+            }
+
+            if (!this.SaveExternalStateNow())
+                this.Monitor.Log("The animal hatched, but its updated genome link could not yet be written. The reserved external hatch record will recover it after reload.", LogLevel.Error);
+            Game1.addHUDMessage(new HUDMessage($"A {animal.Name} hatched in the Slime Daycare!", HUDMessage.newQuest_type));
+            this.Monitor.Log($"A Ranch Slime hatched from genome egg {egg.Genome.Id:N} (FarmAnimal ID {animalId}).", LogLevel.Info);
+            this.Helper.GameContent.InvalidateCache("Data/Objects");
+        }
+    }
+
     private void LogRegistryReconciliation(int detachedAnimals, int cancelledCycles)
     {
         if (detachedAnimals == 0 && cancelledCycles == 0)
@@ -315,6 +412,25 @@ public sealed class ModEntry : Mod
 
     private void OnButtonPressed(object? sender, ButtonPressedEventArgs e)
     {
+        if (Context.IsWorldReady && Game1.activeClickableMenu is null && e.Button.IsActionButton()
+            && Game1.currentLocation.Objects.TryGetValue(e.Cursor.GrabTile, out StardewValley.Object? incubator)
+            && incubator.QualifiedItemId == ConverterContent.IncubatorQualifiedId)
+        {
+            StardewValley.Buildings.Building? daycare = Game1.getFarm().buildings.FirstOrDefault(building =>
+                BuildingContent.IsSlimeDaycare(building.buildingType.Value)
+                && building.GetIndoors() == Game1.currentLocation);
+            if (daycare?.GetIndoors() is not StardewValley.AnimalHouse)
+            {
+                this.Monitor.Log("The Slime Incubator only works inside the Slime Daycare.", LogLevel.Warn);
+                return;
+            }
+
+            this.Helper.Input.Suppress(e.Button);
+            string key = $"{Game1.currentLocation.NameOrUniqueName}:{(int)incubator.TileLocation.X},{(int)incubator.TileLocation.Y}";
+            Game1.activeClickableMenu = new SlimeIncubatorMenu(this.registry!, key, index => this.StartIncubation(key, index));
+            return;
+        }
+
         if (Context.IsWorldReady && Game1.activeClickableMenu is null && e.Button.IsActionButton()
             && Game1.currentLocation.Objects.TryGetValue(e.Cursor.GrabTile, out StardewValley.Object? placedObject)
             && placedObject.QualifiedItemId == ConverterContent.BreederQualifiedId)
@@ -507,6 +623,31 @@ public sealed class ModEntry : Mod
         }
 
         this.Monitor.Log("Added one Slime Breeder. Place it inside the Slime Daycare and use it to select two Ranch Slimes.", LogLevel.Info);
+    }
+
+    private void OnGiveIncubatorCommand(string command, string[] args)
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
+        {
+            this.Monitor.Log("Load a single-player save with available external slime state before requesting an incubator.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 1 || args[0] != saveName)
+        {
+            this.Monitor.Log($"To give an incubator to the currently loaded save, use: slime_ranching_give_incubator {saveName}", LogLevel.Warn);
+            return;
+        }
+
+        Item incubator = ItemRegistry.Create(ConverterContent.IncubatorQualifiedId);
+        if (!Game1.player.couldInventoryAcceptThisItem(incubator) || !Game1.player.addItemToInventoryBool(incubator))
+        {
+            this.Monitor.Log("Make room in your inventory for the Slime Incubator, then try again.", LogLevel.Warn);
+            return;
+        }
+
+        this.Monitor.Log("Added one Slime Incubator. Place it inside the Slime Daycare and use it with a genome-specific Ranch Slime Egg in your inventory.", LogLevel.Info);
     }
 
     private void OnInspectCommand(string command, string[] args)

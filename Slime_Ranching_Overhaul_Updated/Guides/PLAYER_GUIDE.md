@@ -1,6 +1,6 @@
 # Slime Ranching Overhaul — Player Guide
 
-This guide covers the current early prototype. The Slime Breeder can reserve two Ranch Slimes, run a two-day cycle, and produce an externally registered egg. Hatching and managed slime behavior are not available yet.
+This guide covers the current early prototype. The Slime Breeder can reserve two Ranch Slimes, run a two-day cycle, and produce an externally registered egg. A genome-specific egg can hatch in the Slime Incubator; managed slime behavior beyond breeding and basic animal behavior is still under development.
 
 ## Before you start
 
@@ -34,6 +34,17 @@ Put one green, blue, red, purple, or tiger Slime Egg into the converter. Collect
 
 The Common Slime Egg is not hatchable yet. The vanilla incubator won't produce a modded slime from it at this stage.
 
+## Slime Incubator
+
+The Slime Incubator accepts only a genome-specific Ranch Slime Egg from the player's inventory. The generic Common Slime Egg from the converter has no genome and cannot hatch.
+
+1. Request a testing incubator with `slime_ranching_give_incubator <exact save folder name>`.
+2. Place it inside the Slime Daycare. Use it while holding a genome-specific egg in your inventory; select the egg in the menu.
+3. The egg is removed from inventory; sleep to save the incubator job in the mod-folder registry. It hatches automatically at the start of the day two days later.
+4. The new Ranch Slime appears in the Daycare with the egg's stored genome. If the Daycare is full, the ready hatch waits until space is available.
+
+An egg's genome ID can hatch only once, so copied item stacks with that same ID become inactive after the first hatch. Vanilla eggs and the converter's generic Common Slime Egg are unaffected. The incubator's two-day duration and full-Daycare behavior are provisional for playtesting.
+
 ## Hutch inspection
 
 Enter the Slime Daycare or a vanilla Slime Hutch and run:
@@ -56,7 +67,7 @@ Select the book and press the action button to open it. It is a custom item refe
 
 ## Features still under development
 
-- **Hatching:** Common and genome-specific Ranch Slime Eggs do not hatch yet.
+- **Hatching:** Genome-specific Ranch Slime Eggs hatch in the custom incubator; generic Common Slime Eggs from the converter do not have a genome and remain unhatched.
 - **Breeding:** The breeder, parent selection, two-day cycle, and fixed-genome egg output work. Inheritance is a placeholder and needs balancing and in-game verification.
 - **Egg details:** Hover over a genome-specific Ranch Slime Egg to view its stored species, color, size, rarity, mutation, generation, parent IDs, and favorite food.
 - **Genetics and slime identity:** The registry model can hold genome data. Ranch Slime genomes are keyed to native FarmAnimal IDs; this still needs save/reload verification. Existing GreenSlime monsters are only captured in the first-seen snapshot; they aren't changed or adopted.
@@ -74,7 +85,7 @@ For the current test copy, use `slime_ranching_spawn_ranch_slime TaumTest_322865
 
 ### Breeder selection preview
 
-The breeder lists Daycare Ranch Slimes and previews selected parents in a chamber panel. Select two rows and click **Start 2-day Cycle**; the breeder reserves them automatically and starts the timer. The pair, start/ready days, and resulting genome are stored in the mod's external registry and survive reopening or reloading. Reserved slimes stop roaming where they are in the Daycare; the chamber remains a menu preview. Use **Cancel Cycle** to stop the timer or **Release Pair** when no cycle is active. When the cycle finishes, collect the fixed-genome egg from the breeder and hover over it to inspect the stored genome. Parents then rest for one in-game day; resting parents are marked in the menu and cannot be selected. Hatching remains future work.
+The breeder lists Daycare Ranch Slimes and previews selected parents in a chamber panel. Select two rows and click **Start 2-day Cycle**; the breeder reserves them automatically and starts the timer. The pair, start/ready days, and resulting genome are stored in the mod's external registry and survive reopening or reloading. Reserved slimes stop roaming where they are in the Daycare; the chamber remains a menu preview. Use **Cancel Cycle** to stop the timer or **Release Pair** when no cycle is active. When the cycle finishes, collect the fixed-genome egg from the breeder and hover over it to inspect the stored genome. Parents then rest for one in-game day; resting parents are marked in the menu and cannot be selected. Use the custom Slime Incubator to hatch a managed egg.
 
 ## Data and save behavior
 

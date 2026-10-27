@@ -11,10 +11,12 @@ internal static class ConverterContent
     private const string CommonEggItemId = "Taum.SlimeRanching_CommonEgg";
     private const string ConverterItemId = "Taum.SlimeRanching_EggConverter";
     private const string BreederItemId = "Taum.SlimeRanching_SlimeBreeder";
+    private const string IncubatorItemId = "Taum.SlimeRanching_SlimeIncubator";
 
     public const string CommonEggQualifiedId = "(O)" + CommonEggItemId;
     public const string ConverterQualifiedId = "(BC)" + ConverterItemId;
     public const string BreederQualifiedId = "(BC)" + BreederItemId;
+    public const string IncubatorQualifiedId = "(BC)" + IncubatorItemId;
 
     private static readonly string[] VanillaEggIds =
     {
@@ -77,6 +79,20 @@ internal static class ConverterContent
                         Name = "Slime Breeder",
                         DisplayName = "Slime Breeder",
                         Description = "Select two Ranch Slimes for breeding.",
+                        CanBePlacedIndoors = true,
+                        CanBePlacedOutdoors = false,
+                        Texture = "TileSheets/Craftables",
+                        SpriteIndex = 158
+                    };
+                }
+
+                if (!craftables.ContainsKey(IncubatorItemId))
+                {
+                    craftables[IncubatorItemId] = new BigCraftableData
+                    {
+                        Name = "Slime Incubator",
+                        DisplayName = "Slime Incubator",
+                        Description = "Hatches a genome-specific Ranch Slime Egg inside the Slime Daycare.",
                         CanBePlacedIndoors = true,
                         CanBePlacedOutdoors = false,
                         Texture = "TileSheets/Craftables",

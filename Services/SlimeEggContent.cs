@@ -32,7 +32,7 @@ internal static class SlimeEggContent
                 {
                     Name = $"{DisplayOrUnknown(genome.PrimarySpecies)} Egg ({color})",
                     DisplayName = $"{DisplayOrUnknown(genome.PrimarySpecies)} Egg ({color})",
-                    Description = CreateDescription(genome),
+                    Description = CreateDescription(genome, egg.HatchedAnimalId),
                     Type = "Basic",
                     Price = 0,
                     Texture = "Maps/springobjects",
@@ -46,7 +46,7 @@ internal static class SlimeEggContent
         });
     }
 
-    private static string CreateDescription(SlimeGenome genome)
+    private static string CreateDescription(SlimeGenome genome, long? hatchedAnimalId)
     {
         string parents = genome.ParentA is Guid parentA && genome.ParentB is Guid parentB
             ? $"Parents: {parentA.ToString("N")[..8]} / {parentB.ToString("N")[..8]}"
@@ -54,6 +54,9 @@ internal static class SlimeEggContent
         string mutation = string.IsNullOrWhiteSpace(genome.MutationTrait) ? "None" : genome.MutationTrait;
         string likedFood = GetFoodName(genome.LikedFoodItemId);
 
+        string hatchStatus = hatchedAnimalId is long animalId
+            ? $"\nHatched as FarmAnimal {animalId}."
+            : "\nPlace in a Slime Incubator to hatch.";
         return $"A unique Ranch Slime Egg.\n"
             + $"Species: {DisplayOrUnknown(genome.PrimarySpecies)}"
             + (string.IsNullOrWhiteSpace(genome.SecondarySpecies) ? "" : $" / {genome.SecondarySpecies}") + "\n"
@@ -63,7 +66,8 @@ internal static class SlimeEggContent
             + $"Mutation: {mutation}\n"
             + $"Generation: {genome.Generation}\n"
             + $"{parents}\n"
-            + $"Favorite food: {likedFood}";
+            + $"Favorite food: {likedFood}"
+            + hatchStatus;
     }
 
     private static string DisplayOrUnknown(string? value) =>

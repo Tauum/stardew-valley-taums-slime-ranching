@@ -1,6 +1,6 @@
 # Roadmap — fundamentals first, all slime types last
 
-**Current progress:** Stage 1 has a playable Ranch Slime/Daycare prototype and a basic vanilla-isolation smoke check. Stage 2 has parent selection, automatic reservation, a two-day cycle, and genome-specific egg output; identity transfer/reload checks and hatching remain open. See [`TASK_BOARD.md`](TASK_BOARD.md) and [`NEXT_SESSION.md`](NEXT_SESSION.md) before continuing.
+**Current progress:** Stage 1 has a playable Ranch Slime/Daycare prototype and a basic vanilla-isolation smoke check. Stage 2 has parent selection, automatic reservation, a two-day cycle, genome-specific egg output, and a prototype managed-egg incubator; identity transfer/reload and hatch verification remain open. See [`TASK_BOARD.md`](TASK_BOARD.md) and [`NEXT_SESSION.md`](NEXT_SESSION.md) before continuing.
 
 | Stage | Scope | Exit gate |
 |---|---|---|
