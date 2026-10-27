@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-10-27  
 **Test save:** `TaumTest_322865388` (disposable copy)  
-**Working tree:** feature branch `feature/egg-registry-asset-cache`, chained after `feature/genome-colored-eggs`; the incubator progress panel, Marnie's machine stock, a placeable trampoline and size-aware bounce prototype, external maturity progression, genome-driven slime tints, matching egg icon tints, and cached egg asset definitions are implemented. Build passes; latest changes are not tested in game.
+**Working tree:** performance branch `perf/cache-source-sprite-pixels`, chained after `feature/egg-registry-asset-cache`; the incubator progress panel, Marnie's machine stock, a placeable trampoline and size-aware bounce prototype, external maturity progression, genome-driven slime/egg tints, and cached egg/source-pixel assets are implemented. Build passes; latest changes are not tested in game.
 
 ## Current state
 
@@ -23,6 +23,7 @@
 - Ranch Slime textures now have seven cached tint assets. On load and hatch, the runtime selects the nearest Red/Orange/Yellow/Green/Blue/Purple/Pink tint from the external genome hex color using a local-only sprite texture override; this does not store skin metadata in the game save. Run `slime_ranching_give_color_eggs <save name>` for seven test eggs and compare their hatch colors. Exact hybrid color blending remains undecided.
 - Genome-specific egg items now use seven cached tints of the vanilla Green Slime Egg sprite, keeping its source silhouette and outline. Check item icons in inventory before hatching the color test eggs; verify hatchling tint and reload appearance as well.
 - Genome egg definitions scan mod-folder save registries once and cache the resulting item data. Cache refresh is tied to the existing object-data invalidations when eggs are created or hatch status changes, avoiding repeated recursive disk scans.
+- The vanilla Green Slime and Green Slime Egg source pixels are each decoded once per process and reused to build tint variants; verify visuals after load. The tint textures themselves remain normal SMAPI cached assets.
 - The user confirmed the egg spawn worked. Its tooltip showed Ranch Slime, green (`#00FF00`), Normal size, Common rarity, no mutation, Generation 1, two parent IDs, and favorite food `Broken CD`.
 - Egg hatching is implemented as a prototype. The registry schema is now version 6; schema upgrades create a neighboring `.before-managed-egg-incubation-v6.bak` copy. Verify egg identity through transfer/reload, then test incubation recovery and genome matching before expanding the hatch system.
 - Building art uses direct nearest-neighbor resized copies of the original images in `assets/Buildings/*_GameTexture.png`. The original full-size source images are preserved. Current frames are Base 160 by 160, Upgrade 1 176 by 160, and Upgrade 2 192 by 160; building widths are 10, 11, and 12 tiles.

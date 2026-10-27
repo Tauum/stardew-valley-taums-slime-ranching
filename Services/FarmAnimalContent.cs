@@ -13,6 +13,8 @@ internal static class FarmAnimalContent
     public const int RanchSlimeDaysToMature = 3;
     private const string RanchSlimeTexturePrefix = "Mods/Taum.SlimeRanching/Animals/RanchSlime_";
     private const string RanchSlimeTexture = RanchSlimeTexturePrefix + "Green";
+    private static Color[]? vanillaSlimePixels;
+    private static int vanillaSlimePixelWidth;
 
     private static readonly (string Name, Color Reference, Color Tint)[] ColorVariants =
     {
@@ -98,9 +100,7 @@ internal static class FarmAnimalContent
         const int frameHeight = 24;
         const int columns = 4;
         const int rows = 5;
-        Texture2D vanillaTexture = Game1.content.Load<Texture2D>("Characters/Monsters/Green Slime");
-        var vanillaPixels = new Color[vanillaTexture.Width * vanillaTexture.Height];
-        vanillaTexture.GetData(vanillaPixels);
+        Color[] vanillaPixels = GetVanillaSlimePixels(out int vanillaTextureWidth);
 
         // Stardew draws GreenSlime from a 16x24 greyscale body frame and overlays
         // its face from the same vanilla sheet. Recompose those exact pixels into
@@ -113,18 +113,33 @@ internal static class FarmAnimalContent
             int sourceFrame = frame;
             int destinationX = frame * frameWidth;
             int destinationY = row * frameHeight;
-            CopyTintedFrame(vanillaPixels, vanillaTexture.Width, pixels, texture.Width,
+            CopyTintedFrame(vanillaPixels, vanillaTextureWidth, pixels, texture.Width,
                 new Rectangle(sourceFrame * frameWidth, 0, frameWidth, frameHeight),
                 destinationX, destinationY, slimeTint);
 
             // Vanilla eye frame used by a calm slime looking toward the player.
             // The source eye art is white and is intentionally not color-tinted.
-            CopyFrame(vanillaPixels, vanillaTexture.Width, pixels, texture.Width,
+            CopyFrame(vanillaPixels, vanillaTextureWidth, pixels, texture.Width,
                 new Rectangle(32, 120, frameWidth, frameHeight), destinationX, destinationY);
         }
 
         texture.SetData(pixels);
         return texture;
+    }
+
+    private static Color[] GetVanillaSlimePixels(out int sourceWidth)
+    {
+        Texture2D source = Game1.content.Load<Texture2D>("Characters/Monsters/Green Slime");
+        sourceWidth = source.Width;
+        if (vanillaSlimePixels is null || vanillaSlimePixelWidth != source.Width
+            || vanillaSlimePixels.Length != source.Width * source.Height)
+        {
+            vanillaSlimePixels = new Color[source.Width * source.Height];
+            source.GetData(vanillaSlimePixels);
+            vanillaSlimePixelWidth = source.Width;
+        }
+
+        return vanillaSlimePixels;
     }
 
     private static Color ParseHexColor(string? value)

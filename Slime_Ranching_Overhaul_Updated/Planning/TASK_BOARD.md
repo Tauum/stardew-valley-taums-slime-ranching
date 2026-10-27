@@ -34,6 +34,7 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [x] Render Ranch Slimes with one of seven tint sheets selected from their external genome color.
 - [x] Tint genome-specific egg icons to match the nearest base genome color while preserving the vanilla egg sprite silhouette.
 - [x] Cache the cross-save egg registry scan used to define genome-specific item assets; refresh it when egg state changes.
+- [x] Decode each vanilla slime/egg source sprite sheet once and reuse its pixels to generate color variants.
 - [ ] Verify all seven tint colors on hatch and after save/reload.
 - [ ] Verify juvenile appearance, daily growth, save/reload age, and breeder eligibility at maturity.
 - [ ] Verify schema 7 migration preserves existing animals' current native maturity and backs up the previous registry.

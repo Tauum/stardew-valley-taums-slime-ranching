@@ -15,6 +15,8 @@ internal static class SlimeEggContent
     private const string EggTexturePrefix = "Mods/Taum.SlimeRanching/Objects/RanchSlimeEgg_";
     private static string? cachedModDirectory;
     private static List<SlimeEggRecord>? cachedEggs;
+    private static Color[]? springObjectPixels;
+    private static int springObjectPixelWidth;
 
     public static void InvalidateCache()
     {
@@ -77,10 +79,8 @@ internal static class SlimeEggContent
     {
         const int tileSize = 16;
         const int vanillaEggSpriteIndex = 680;
-        Texture2D source = Game1.content.Load<Texture2D>("Maps/springobjects");
-        int columns = source.Width / tileSize;
-        var sourcePixels = new Color[source.Width * source.Height];
-        source.GetData(sourcePixels);
+        Color[] sourcePixels = GetSpringObjectPixels(out int sourceWidth);
+        int columns = sourceWidth / tileSize;
 
         int sourceX = vanillaEggSpriteIndex % columns * tileSize;
         int sourceY = vanillaEggSpriteIndex / columns * tileSize;
@@ -89,7 +89,7 @@ internal static class SlimeEggContent
         for (int y = 0; y < tileSize; y++)
         for (int x = 0; x < tileSize; x++)
         {
-            Color pixel = sourcePixels[(sourceY + y) * source.Width + sourceX + x];
+            Color pixel = sourcePixels[(sourceY + y) * sourceWidth + sourceX + x];
             if (pixel.A == 0)
                 continue;
 
@@ -103,6 +103,21 @@ internal static class SlimeEggContent
 
         texture.SetData(output);
         return texture;
+    }
+
+    private static Color[] GetSpringObjectPixels(out int sourceWidth)
+    {
+        Texture2D source = Game1.content.Load<Texture2D>("Maps/springobjects");
+        sourceWidth = source.Width;
+        if (springObjectPixels is null || springObjectPixelWidth != source.Width
+            || springObjectPixels.Length != source.Width * source.Height)
+        {
+            springObjectPixels = new Color[source.Width * source.Height];
+            source.GetData(springObjectPixels);
+            springObjectPixelWidth = source.Width;
+        }
+
+        return springObjectPixels;
     }
 
     private static string CreateDescription(SlimeGenome genome, long? hatchedAnimalId)
