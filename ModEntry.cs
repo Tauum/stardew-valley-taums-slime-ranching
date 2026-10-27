@@ -64,7 +64,7 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("slime_ranching_give_pond", "Give one Slime Pond for testing. Usage: slime_ranching_give_pond <exact save folder name>.", this.OnGivePondCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_swing", "Give one Slime Swing for testing. Usage: slime_ranching_give_swing <exact save folder name>.", this.OnGiveSwingCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_fairy_lights", "Give one set of Slime Fairy Lights for testing. Usage: slime_ranching_give_fairy_lights <exact save folder name>.", this.OnGiveFairyLightsCommand);
-        helper.ConsoleCommands.Add("slime_ranching_give_test_eggs", "Create two genome-specific test eggs, use 'random' for randomized traits, or pass key=value metadata. Usage: slime_ranching_give_test_eggs <save name> [random|species=Name ...].", this.OnGiveTestEggsCommand);
+        helper.ConsoleCommands.Add("slime_ranching_give_test_eggs", "Create test eggs, use 'random' for one randomized egg, or pass key=value metadata for two controlled eggs. Usage: slime_ranching_give_test_eggs <save name> [random|species=Name ...].", this.OnGiveTestEggsCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_color_eggs", "Create seven color test eggs. Usage: slime_ranching_give_color_eggs <exact save folder name>.", this.OnGiveColorEggsCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_crystals", "Give one of each Chromatic Crystal for breeder testing. Usage: slime_ranching_give_crystals <exact save folder name>.", this.OnGiveCrystalsCommand);
     }
@@ -997,9 +997,10 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        if (Game1.player.Items.Count(item => item is null) < 2)
+        int requiredSlots = randomMode ? 1 : 2;
+        if (Game1.player.Items.Count(item => item is null) < requiredSlots)
         {
-            this.Monitor.Log("Make room for two separate eggs in your inventory, then try again.", LogLevel.Warn);
+            this.Monitor.Log($"Make room for {(requiredSlots == 1 ? "one egg" : "two eggs")} in your inventory, then try again.", LogLevel.Warn);
             return;
         }
 
@@ -1007,8 +1008,8 @@ public sealed class ModEntry : Mod
         string description;
         if (randomMode)
         {
-            eggs = new[] { this.CreateRandomTestEgg(), this.CreateRandomTestEgg() };
-            description = "two independently randomized genome-specific Ranch Slime Eggs";
+            eggs = new[] { this.CreateRandomTestEgg() };
+            description = "one genome-specific Ranch Slime Egg with randomized traits";
         }
         else
         {

@@ -30,7 +30,7 @@ The newly hatched slime should retain its egg genome and remain in the Daycare a
 
    Options are `species`, `secondary`, `color` (`#RRGGBB`), `size`, `rarity`, `shiny`, `food`, `generation`, and `mutation`. Values apply to both eggs; their genome IDs remain distinct. Food must be an eligible monster-drop or fishing-trash qualified item ID, such as `(O)684` or `(O)168`.
 
-   To instead generate two eggs with independently randomized traits, run the command with the standalone `random` option (don't combine it with `key=value` options):
+   To instead generate one egg with randomized traits, run the command with the standalone `random` option (don't combine it with `key=value` options):
 
    ```text
    slime_ranching_give_test_eggs TaumTest_322865388 random

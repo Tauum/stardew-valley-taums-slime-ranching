@@ -67,13 +67,13 @@ While the matching single-player save is loaded, use the SMAPI console to add tw
 slime_ranching_give_test_eggs <save folder name>
 ```
 
-To generate two eggs with independently randomized genome traits, add `random`:
+To generate one egg with randomized genome traits, add `random`:
 
 ```text
 slime_ranching_give_test_eggs <save folder name> random
 ```
 
-Random eggs independently roll a base color/species, optional secondary species, size, rarity, shiny state, eligible favorite food, generation, and Shadow Clone mutation. Parent links remain empty because these are test genomes, not offspring from a real pair.
+The randomized egg rolls a base color/species, optional secondary species, size, rarity, shiny state, eligible favorite food, generation, and Shadow Clone mutation. Its parent links remain empty because this is a test genome, not offspring from a real pair. The default and `key=value` forms still give two eggs.
 
 For controlled testing, pass one or more `key=value` options instead. Any omitted option keeps the command's default; explicit values apply to both eggs, while their genome IDs remain distinct:
 
