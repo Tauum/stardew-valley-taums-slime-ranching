@@ -9,8 +9,10 @@ internal sealed class TrampolineInteractionService
     private const int AssignmentIntervalTicks = 30;
     private const float InteractionRadiusPixels = 128f;
     private readonly Dictionary<long, Bounce> active = new();
+    private readonly Dictionary<long, float> cooldowns = new();
     private int assignmentTicks;
     private AnimalHouse? activeHouse;
+    private float elapsedSeconds;
 
     public void Update(GameLocation? location, GameTime time, SlimeRegistry? registry)
     {
@@ -28,7 +30,9 @@ internal sealed class TrampolineInteractionService
             this.activeHouse = house;
         }
 
-        this.UpdateActiveBounces(time.ElapsedGameTime.TotalSeconds);
+        float deltaSeconds = (float)time.ElapsedGameTime.TotalSeconds;
+        this.elapsedSeconds += deltaSeconds;
+        this.UpdateActiveBounces(deltaSeconds);
         if (++this.assignmentTicks < AssignmentIntervalTicks)
             return;
         this.assignmentTicks = 0;
@@ -46,8 +50,10 @@ internal sealed class TrampolineInteractionService
         foreach (Bounce bounce in this.active.Values)
             bounce.Animal.drawOffset = bounce.OriginalDrawOffset;
         this.active.Clear();
+        this.cooldowns.Clear();
         this.activeHouse = null;
         this.assignmentTicks = 0;
+        this.elapsedSeconds = 0;
     }
 
     private static bool IsSlimeDaycareInterior(AnimalHouse house) =>
@@ -91,6 +97,16 @@ internal sealed class TrampolineInteractionService
 
     private void AssignNearbySlimes(AnimalHouse house, SlimeRegistry registry)
     {
+        List<long>? expiredCooldowns = null;
+        foreach (KeyValuePair<long, float> entry in this.cooldowns)
+        {
+            if (entry.Value <= this.elapsedSeconds)
+                (expiredCooldowns ??= new List<long>()).Add(entry.Key);
+        }
+        if (expiredCooldowns is not null)
+            foreach (long id in expiredCooldowns)
+                this.cooldowns.Remove(id);
+
         var trampolineTiles = house.Objects.Values
             .Where(obj => obj.QualifiedItemId == FurnitureContent.TrampolineQualifiedId)
             .Select(obj => obj.TileLocation)
@@ -101,7 +117,8 @@ internal sealed class TrampolineInteractionService
 
         foreach (FarmAnimal animal in house.animals.Values
                      .Where(animal => animal.type.Value == FarmAnimalContent.RanchSlimeTypeId
-                         && !this.active.ContainsKey(animal.myID.Value)))
+                         && !this.active.ContainsKey(animal.myID.Value)
+                         && !this.cooldowns.ContainsKey(animal.myID.Value)))
         {
             Vector2 animalPosition = animal.Position;
             int nearestIndex = -1;
@@ -129,6 +146,7 @@ internal sealed class TrampolineInteractionService
             };
             this.active[animal.myID.Value] = new Bounce(animal, trampolineTile, animal.drawOffset,
                 duration, bounceHeight, compressionHeight);
+            this.cooldowns[animal.myID.Value] = this.elapsedSeconds + duration + 3f;
         }
     }
 

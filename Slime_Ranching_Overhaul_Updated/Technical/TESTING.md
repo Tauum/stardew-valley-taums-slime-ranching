@@ -88,7 +88,7 @@ These prices are provisional. This stock is only the core ranching machines; cus
 
 1. Place a Slime Trampoline inside the Slime Daycare with at least one Ranch Slime nearby.
 2. Wait beside the trampoline. A nearby slime should rise and settle in a short bounce lasting about 2.4 seconds.
-3. Confirm a single trampoline is reserved by at most one slime during a bounce, and that another nearby slime can use it afterward.
+3. With two or more nearby slimes and one trampoline, confirm only one is assigned during each bounce and another slime gets a turn afterward. A slime should wait about three seconds after its bounce before using that trampoline again.
 4. Leave the Daycare during a bounce and return; confirm no slime remains visually offset. Return to title during a bounce and load the save again; animation state should not persist.
 5. If test animals with Tiny, Normal, and Giant genomes are available, compare their arcs: Tiny should hop higher and finish sooner, Giant should compress more and bounce lower/slower, and Normal should fall between them.
 

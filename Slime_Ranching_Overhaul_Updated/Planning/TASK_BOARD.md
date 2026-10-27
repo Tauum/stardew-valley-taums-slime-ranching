@@ -45,6 +45,7 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [x] Add the existing Converter, Breeder, and Incubator to Marnie's shop; custom placeable enrichment furniture remains unimplemented.
 - [x] Add a placeable Slime Trampoline with a mod-owned pixel sprite and Marnie stock; slime use/animation is the next slice.
 - [x] Add a low-frequency proximity assignment and temporary bounce offset for Ranch Slimes near a trampoline; tiny, normal, and giant genome sizes now use different arc heights, compression, and durations. Approach/pathing and sprite impact poses remain.
+- [x] Add a short in-memory per-slime cooldown after trampoline use so nearby residents can take turns.
 - [ ] Use each slime's stored liked food when the Compost Trough is implemented; decide its bonus and consume only eligible items.
 - [ ] Beds, slide, tunnel, ball pit, heated stone, pond, compost trough; persistence and QA.
 
