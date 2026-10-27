@@ -18,6 +18,7 @@ public sealed class ModEntry : Mod
     private ModStateStore? stateStore;
     private ModConfig config = new();
     private bool stateReady;
+    private readonly TrampolineInteractionService trampolineInteractions = new();
 
     public override void Entry(IModHelper helper)
     {
@@ -130,6 +131,7 @@ public sealed class ModEntry : Mod
 
     private void OnReturnedToTitle(object? sender, ReturnedToTitleEventArgs e)
     {
+        this.trampolineInteractions.Clear();
         this.stateReady = false;
         this.registry = new SlimeRegistry(this.Monitor);
         this.stateStore = new ModStateStore(this.Helper.DirectoryPath);
@@ -137,6 +139,9 @@ public sealed class ModEntry : Mod
 
     private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
     {
+        if (Context.IsWorldReady && Context.IsMainPlayer)
+            this.trampolineInteractions.Update(Game1.currentLocation, Game1.currentGameTime);
+
         if (!this.stateReady || !Context.IsMainPlayer)
             return;
 

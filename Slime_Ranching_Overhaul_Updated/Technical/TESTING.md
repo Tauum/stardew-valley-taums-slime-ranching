@@ -84,6 +84,15 @@ The incubator runs inside the Daycare only, consumes Common or genome-specific R
 
 These prices are provisional. This stock is only the core ranching machines; custom enrichment furniture is not implemented yet.
 
+## Trampoline bounce prototype
+
+1. Place a Slime Trampoline inside the Slime Daycare with at least one Ranch Slime nearby.
+2. Wait beside the trampoline. A nearby slime should rise and settle in a short bounce lasting about 2.4 seconds.
+3. Confirm a single trampoline is reserved by at most one slime during a bounce, and that another nearby slime can use it afterward.
+4. Leave the Daycare during a bounce and return; confirm no slime remains visually offset. Return to title during a bounce and load the save again; animation state should not persist.
+
+The current prototype assigns only already-nearby slimes; it does not path them to the trampoline. The bounce is a visual offset and is not persisted in external state.
+
 ## Breeder cycle egg output (prototype)
 
 1. In the disposable save, make sure two Ranch Slimes are in the Daycare and give/place a Slime Breeder there. Select and reserve the pair, then start the two-day cycle.
