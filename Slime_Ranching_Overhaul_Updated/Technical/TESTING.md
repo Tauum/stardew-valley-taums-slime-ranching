@@ -95,6 +95,14 @@ These prices are provisional. This stock is only the core ranching machines; cus
 
 The current prototype assigns only already-nearby slimes; it does not path them to the trampoline. Genome size selects the bounce profile. The bounce is a visual offset and is not persisted in external state.
 
+## Genome-driven slime colors
+
+1. On the disposable save, run `slime_ranching_give_color_eggs <exact save folder name>` and then `slime_ranching_give_incubator <exact save folder name>` if needed.
+2. Hatch the color-specific eggs in the Daycare. Confirm each offspring uses the matching Red, Orange, Yellow, Green, Blue, Purple, or Pink tint and retains the same appearance after save/reload.
+3. Inspect each genome record's `VisualColor` in the mod-folder registry. The displayed tint is selected from that external value; no animal skin ID is written by the mod.
+
+Color test eggs are separate, unique genome items. Exact hybrid tint blending and colors outside the seven base tints are not implemented.
+
 ## Breeder cycle egg output (prototype)
 
 1. In the disposable save, make sure two Ranch Slimes are in the Daycare and give/place a Slime Breeder there. Select and reserve the pair, then start the two-day cycle.

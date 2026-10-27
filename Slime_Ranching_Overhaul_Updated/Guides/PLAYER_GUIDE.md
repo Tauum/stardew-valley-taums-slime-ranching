@@ -7,6 +7,7 @@ This guide covers the current early prototype. The Slime Breeder can reserve two
 - Test on a copied save. The converter itself leaves unused vanilla eggs alone, but its output is a custom mod item saved in the game save.
 - Back up `<installed mod folder>/data` before replacing or removing the mod. It contains the external slime registry and first-seen snapshots.
 - Marnie sells the Converter, Breeder, Incubator, and a placeable Slime Trampoline. Prices are configurable in `config.json` and provisional. The trampoline is decorative so far; slime interactions are still being developed. Testing commands can still provide machines directly.
+- Ranch Slime offspring use a sprite tint selected from their external genome color. The current prototype supports seven base tints; hybrid color blending is not implemented.
 
 ## Slime Egg Converter
 

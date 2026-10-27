@@ -41,6 +41,7 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("slime_ranching_give_breeder", "Give one Slime Breeder for testing. Usage: slime_ranching_give_breeder <exact save folder name>.", this.OnGiveBreederCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_incubator", "Give one Slime Incubator for testing. Usage: slime_ranching_give_incubator <exact save folder name>.", this.OnGiveIncubatorCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_test_eggs", "Create two external-genome test eggs. Usage: slime_ranching_give_test_eggs <exact save folder name>.", this.OnGiveTestEggsCommand);
+        helper.ConsoleCommands.Add("slime_ranching_give_color_eggs", "Create seven color test eggs. Usage: slime_ranching_give_color_eggs <exact save folder name>.", this.OnGiveColorEggsCommand);
     }
 
     private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
@@ -61,6 +62,7 @@ public sealed class ModEntry : Mod
             if (registeredRanchSlimes > 0)
                 this.Monitor.Log($"Registered {registeredRanchSlimes} Ranch Slime farm animal(s) in the external genome registry.", LogLevel.Info);
             (int detachedAnimals, int cancelledCycles) = this.registry.ReconcileRanchSlimes(GetFarmAnimals());
+            this.ApplyRanchSlimeAppearances();
             bool maturityChanged = this.registry.SynchronizeMaturity(GetFarmAnimals(), Game1.Date.TotalDays);
             this.stateReady = true;
             this.LogRegistryReconciliation(detachedAnimals, cancelledCycles);
@@ -295,6 +297,19 @@ public sealed class ModEntry : Mod
             .Select(group => group.First());
     }
 
+    private void ApplyRanchSlimeAppearances()
+    {
+        if (this.registry is null)
+            return;
+
+        foreach (FarmAnimal animal in GetFarmAnimals())
+        {
+            if (animal.type.Value != FarmAnimalContent.RanchSlimeTypeId)
+                continue;
+            FarmAnimalContent.ApplyAppearance(animal, this.registry.GetGenomeColor(animal.myID.Value));
+        }
+    }
+
     private bool SaveExternalStateNow()
     {
         if (!this.stateReady || !Context.IsMainPlayer)
@@ -416,6 +431,7 @@ public sealed class ModEntry : Mod
                 homeInterior = animalHouse
             };
             animal.age.Value = 0;
+            FarmAnimalContent.ApplyAppearance(animal, egg.Genome.VisualColor);
             animalHouse.adoptAnimal(animal);
             if (!this.registry.RegisterIncubationHatch(incubation, animal))
             {
@@ -534,12 +550,12 @@ public sealed class ModEntry : Mod
         {
             this.registry!.CreateEgg(new taums_slime_ranching.Models.SlimeGenome
             {
-                Id = mintId, PrimarySpecies = "Ranch Slime", VisualColor = "Mint", RarityTier = "Common",
+                Id = mintId, PrimarySpecies = "Ranch Slime", VisualColor = "#65DDBB", RarityTier = "Common",
                 LikedFoodItemId = FoodLikeCatalog.ForSlime(mintId)
             }),
             this.registry!.CreateEgg(new taums_slime_ranching.Models.SlimeGenome
             {
-                Id = violetId, PrimarySpecies = "Ranch Slime", VisualColor = "Violet", RarityTier = "Common",
+                Id = violetId, PrimarySpecies = "Ranch Slime", VisualColor = "#8A2BE2", RarityTier = "Common",
                 LikedFoodItemId = FoodLikeCatalog.ForSlime(violetId)
             })
         };
@@ -561,6 +577,59 @@ public sealed class ModEntry : Mod
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException)
         {
             this.Monitor.Log($"Could not create the test eggs: {exception.Message}", LogLevel.Error);
+        }
+    }
+
+    private void OnGiveColorEggsCommand(string command, string[] args)
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
+        {
+            this.Monitor.Log("Load a single-player save with available external slime state before requesting color test eggs.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 1 || args[0] != saveName)
+        {
+            this.Monitor.Log($"To add color test eggs to the currently loaded save, use: slime_ranching_give_color_eggs {saveName}", LogLevel.Warn);
+            return;
+        }
+
+        const int colorCount = 7;
+        if (Game1.player.Items.Count(item => item is null) < colorCount)
+        {
+            this.Monitor.Log("Make room for seven separate eggs in your inventory, then try again.", LogLevel.Warn);
+            return;
+        }
+
+        string[] colors = { "#FF0000", "#FF9500", "#FFD60A", "#00FF00", "#0A84FF", "#BF5AF2", "#FF69B4" };
+        SlimeEggRecord[] eggs = colors.Select(color =>
+        {
+            Guid genomeId = Guid.NewGuid();
+            return this.registry!.CreateEgg(new SlimeGenome
+            {
+                Id = genomeId,
+                PrimarySpecies = "Ranch Slime",
+                VisualColor = color,
+                Generation = 1,
+                RarityTier = "Common",
+                LikedFoodItemId = FoodLikeCatalog.ForSlime(genomeId)
+            });
+        }).ToArray();
+
+        try
+        {
+            if (!this.SaveExternalStateNow())
+                return;
+            this.Helper.GameContent.InvalidateCache("Data/Objects");
+            foreach (SlimeEggRecord egg in eggs)
+                Game1.player.addItemToInventoryBool(ItemRegistry.Create(SlimeEggContent.GetQualifiedId(egg.Genome.Id)));
+
+            this.Monitor.Log("Added Red, Orange, Yellow, Green, Blue, Purple, and Pink genome-specific test eggs. Hatch them in the Daycare to compare sprite colors.", LogLevel.Info);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException)
+        {
+            this.Monitor.Log($"Could not create the color test eggs: {exception.Message}", LogLevel.Error);
         }
     }
 

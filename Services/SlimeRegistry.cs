@@ -37,6 +37,9 @@ internal sealed class SlimeRegistry
     public string? GetGenomeSize(long farmAnimalId) =>
         this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record) ? record.Genome.Size : null;
 
+    public string? GetGenomeColor(long farmAnimalId) =>
+        this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record) ? record.Genome.VisualColor : null;
+
     public int GetMaturityAgeDays(long farmAnimalId, int fallbackAgeDays) =>
         this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record) && record.AgeClockInitialized
             ? Math.Clamp(record.AgeDays, 0, FarmAnimalContent.RanchSlimeDaysToMature)

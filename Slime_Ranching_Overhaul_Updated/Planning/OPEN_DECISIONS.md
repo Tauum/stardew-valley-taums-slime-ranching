@@ -4,6 +4,7 @@
 2. **Undefined breeding pairs:** Block the combination, return one parent's color, or offer a rare result?
 3. **Primary pair recipes:** Red+Yellow→Orange, Yellow+Blue→Green, Blue+Red→Violet suggested but not explicitly confirmed.
 4. **Hybrid scope:** Only six tertiary combinations initially, or secret hybrids later?
+   - Seven base genome colors currently map to the nearest Red/Orange/Yellow/Green/Blue/Purple/Pink sprite tint. Exact RGB blending for hybrids or arbitrary colors is still undecided.
 5. **Exceptional acquisition:** Can Golden/Prismatic/Black/White appear from breeding, exploration, mutation, or all three? At what rates?
 6. **Shiny inheritance:** Random roll, inherited boost, or both? Exact probability?
 7. **Mutagenic Pool:** Shadow Clone confirmed; which additional rare traits should be possible?
