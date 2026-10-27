@@ -254,7 +254,7 @@ internal static class FarmAnimalContent
                 (byte)(sourcePixel.R * tint.R / 255),
                 (byte)(sourcePixel.G * tint.G / 255),
                 (byte)(sourcePixel.B * tint.B / 255),
-                sourcePixel.A == 0 ? (byte)0 : (byte)(sourcePixel.A + (255 - sourcePixel.A) / 5));
+                sourcePixel.A);
             destination[(destinationY + y) * destinationWidth + destinationX + x] = pixel;
         }
     }
