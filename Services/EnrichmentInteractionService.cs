@@ -3,16 +3,15 @@ using StardewValley;
 
 namespace taums_slime_ranching.Services;
 
-/// <summary>Schedules short, transient interactions with enrichment furniture for nearby Ranch Slimes.</summary>
+/// <summary>Staggers roaming checks and longer enrichment activities for Ranch Slimes.</summary>
 internal sealed class EnrichmentInteractionService
 {
     private const int AssignmentIntervalTicks = 30;
     private const float InteractionRadiusPixels = 128f;
     private readonly Dictionary<long, Interaction> active = new();
-    private readonly Dictionary<long, float> cooldowns = new();
     private int assignmentTicks;
     private AnimalHouse? activeHouse;
-    private float elapsedSeconds;
+    private int activeDay = -1;
 
     public void Update(GameLocation? location, GameTime time, SlimeRegistry? registry)
     {
@@ -28,11 +27,16 @@ internal sealed class EnrichmentInteractionService
             if (!IsSlimeDaycareInterior(house))
                 return;
             this.activeHouse = house;
+            this.activeDay = Game1.Date.TotalDays;
         }
 
-        float deltaSeconds = (float)time.ElapsedGameTime.TotalSeconds;
-        this.elapsedSeconds += deltaSeconds;
-        this.UpdateActiveInteractions(house, deltaSeconds, registry);
+        int currentMinute = GetMinutesOfDay(Game1.timeOfDay);
+        if (this.activeDay != Game1.Date.TotalDays)
+        {
+            this.StopActiveInteractions();
+            this.activeDay = Game1.Date.TotalDays;
+        }
+        this.UpdateActiveInteractions(house, (float)time.ElapsedGameTime.TotalSeconds * (10f / 7f), registry);
         if (++this.assignmentTicks < AssignmentIntervalTicks)
             return;
         this.assignmentTicks = 0;
@@ -42,18 +46,22 @@ internal sealed class EnrichmentInteractionService
             return;
         }
         if (registry is not null)
-            this.AssignNearbySlimes(house, registry);
+            this.AssignNearbySlimes(house, registry, Game1.Date.TotalDays, currentMinute);
     }
 
     public void Clear()
     {
+        this.StopActiveInteractions();
+        this.activeHouse = null;
+        this.activeDay = -1;
+        this.assignmentTicks = 0;
+    }
+
+    private void StopActiveInteractions()
+    {
         foreach (Interaction bounce in this.active.Values)
             bounce.Animal.drawOffset = bounce.OriginalDrawOffset;
         this.active.Clear();
-        this.cooldowns.Clear();
-        this.activeHouse = null;
-        this.assignmentTicks = 0;
-        this.elapsedSeconds = 0;
     }
 
     private static bool IsSlimeDaycareInterior(AnimalHouse house) =>
@@ -61,7 +69,7 @@ internal sealed class EnrichmentInteractionService
             BuildingContent.IsSlimeDaycare(building.buildingType.Value)
             && ReferenceEquals(building.GetIndoors(), house));
 
-    private void UpdateActiveInteractions(AnimalHouse house, double elapsedSeconds, SlimeRegistry? registry)
+    private void UpdateActiveInteractions(AnimalHouse house, float elapsedGameMinutes, SlimeRegistry? registry)
     {
         List<long>? completed = null;
         foreach (KeyValuePair<long, Interaction> entry in this.active)
@@ -75,8 +83,8 @@ internal sealed class EnrichmentInteractionService
                 continue;
             }
 
-            bounce.ElapsedSeconds += (float)elapsedSeconds;
-            if (bounce.ElapsedSeconds >= bounce.DurationSeconds)
+            bounce.ElapsedMinutes += elapsedGameMinutes;
+            if (bounce.ElapsedMinutes >= bounce.DurationMinutes)
             {
                 bounce.Animal.drawOffset = bounce.OriginalDrawOffset;
                 (completed ??= new List<long>()).Add(id);
@@ -85,17 +93,18 @@ internal sealed class EnrichmentInteractionService
 
             if (bounce.SwingDistancePixels > 0)
             {
-                float progress = bounce.ElapsedSeconds / bounce.DurationSeconds;
+                float progress = bounce.ElapsedMinutes / bounce.DurationMinutes;
                 float sway = MathF.Sin(progress * MathF.PI * 2f);
                 bounce.Animal.drawOffset = bounce.OriginalDrawOffset
                     + new Vector2(sway * bounce.SwingDistancePixels, -MathF.Abs(sway) * 2f);
                 continue;
             }
 
-            float compressionProgress = Math.Clamp(bounce.ElapsedSeconds / bounce.CompressionDurationSeconds, 0f, 1f);
+            float elapsedMinutesFloat = bounce.ElapsedMinutes;
+            float compressionProgress = Math.Clamp(elapsedMinutesFloat / bounce.CompressionDurationMinutes, 0f, 1f);
             if (bounce.IsResting)
             {
-                float restProgress = bounce.ElapsedSeconds / bounce.DurationSeconds;
+                float restProgress = elapsedMinutesFloat / bounce.DurationMinutes;
                 float restAmount = restProgress < 0.2f
                     ? MathF.Sin(Math.Clamp(restProgress / 0.2f, 0f, 1f) * MathF.PI / 2f)
                     : restProgress > 0.8f
@@ -105,15 +114,15 @@ internal sealed class EnrichmentInteractionService
                 continue;
             }
 
-            if (bounce.ElapsedSeconds < bounce.CompressionDurationSeconds)
+            if (elapsedMinutesFloat < bounce.CompressionDurationMinutes)
             {
                 bounce.Animal.drawOffset = bounce.OriginalDrawOffset
                     + new Vector2(0f, bounce.CompressionHeightPixels * MathF.Sin(compressionProgress * MathF.PI / 2f));
                 continue;
             }
 
-            float flightDuration = Math.Max(0.01f, bounce.DurationSeconds - bounce.CompressionDurationSeconds);
-            float flightProgress = Math.Clamp((bounce.ElapsedSeconds - bounce.CompressionDurationSeconds) / flightDuration, 0f, 1f);
+            float flightDuration = Math.Max(0.01f, bounce.DurationMinutes - bounce.CompressionDurationMinutes);
+            float flightProgress = Math.Clamp((elapsedMinutesFloat - bounce.CompressionDurationMinutes) / flightDuration, 0f, 1f);
             float hop = MathF.Sin(flightProgress * MathF.PI);
             float slide = bounce.HorizontalTravelPixels * flightProgress;
             bounce.Animal.drawOffset = bounce.OriginalDrawOffset + new Vector2(slide, -hop * bounce.BounceHeightPixels);
@@ -124,18 +133,8 @@ internal sealed class EnrichmentInteractionService
                 this.active.Remove(id);
     }
 
-    private void AssignNearbySlimes(AnimalHouse house, SlimeRegistry registry)
+    private void AssignNearbySlimes(AnimalHouse house, SlimeRegistry registry, int currentDay, int currentMinute)
     {
-        List<long>? expiredCooldowns = null;
-        foreach (KeyValuePair<long, float> entry in this.cooldowns)
-        {
-            if (entry.Value <= this.elapsedSeconds)
-                (expiredCooldowns ??= new List<long>()).Add(entry.Key);
-        }
-        if (expiredCooldowns is not null)
-            foreach (long id in expiredCooldowns)
-                this.cooldowns.Remove(id);
-
         HashSet<Vector2> occupiedTiles = this.active.Values
             .Select(interaction => interaction.FurnitureTile)
             .ToHashSet();
@@ -152,40 +151,36 @@ internal sealed class EnrichmentInteractionService
             .Select(obj => new FurnitureSpot(obj.TileLocation, obj.QualifiedItemId))
             .Where(spot => !occupiedTiles.Contains(spot.Tile))
             .ToList();
-        if (furnitureSpots.Count == 0)
-            return;
-
         List<FarmAnimal> idleSlimes = house.animals.Values
                      .Where(animal => animal.type.Value == FarmAnimalContent.RanchSlimeTypeId
                          && !this.active.ContainsKey(animal.myID.Value)
-                         && !this.cooldowns.ContainsKey(animal.myID.Value)
                          && !registry.IsReserved(animal.myID.Value))
             .ToList();
 
-        // Playgrounds are group furniture: reserve one spot for two nearby slimes and start their hops together.
-        foreach (FurnitureSpot playground in furnitureSpots.Where(spot => spot.QualifiedItemId == FurnitureContent.SlimePlaygroundQualifiedId).ToList())
-        {
-            Vector2 center = playground.Tile * 64f + new Vector2(32f, 32f);
-            FarmAnimal[] pair = idleSlimes
-                .Select(animal => (Animal: animal, Distance: Vector2.DistanceSquared(animal.Position, center)))
-                .Where(candidate => candidate.Distance < InteractionRadiusPixels * InteractionRadiusPixels)
-                .OrderBy(candidate => candidate.Distance)
-                .Take(2)
-                .Select(candidate => candidate.Animal)
-                .ToArray();
-            furnitureSpots.Remove(playground);
-            if (pair.Length < 2)
-                continue;
-
-            foreach (FarmAnimal animal in pair)
-            {
-                this.StartInteraction(animal, playground.Tile, 2.6f, 18f, 5f);
-                idleSlimes.Remove(animal);
-            }
-        }
-
         foreach (FarmAnimal animal in idleSlimes)
         {
+            if (!registry.TryGetSlimeRecord(animal.myID.Value, out Models.SlimeRecord record))
+                continue;
+            if (record.EnrichmentActivityDay != currentDay)
+            {
+                record.EnrichmentActivityDay = currentDay;
+                record.EnrichmentActivitiesToday = 0;
+                record.NextEnrichmentCheckMinute = currentMinute + Game1.random.Next(120, 241);
+            }
+            if (record.EnrichmentActivitiesToday >= 4)
+                continue;
+            if (record.NextEnrichmentCheckMinute < 0)
+                record.NextEnrichmentCheckMinute = currentMinute + Game1.random.Next(120, 241);
+            if (currentMinute < record.NextEnrichmentCheckMinute)
+                continue;
+
+            // After each roaming period, each slime independently gets a 50% chance to use furniture.
+            if (Game1.random.NextDouble() >= 0.5)
+            {
+                record.NextEnrichmentCheckMinute = currentMinute + Game1.random.Next(120, 241);
+                continue;
+            }
+
             Vector2 animalPosition = animal.Position;
             int nearestIndex = -1;
             float nearestDistance = InteractionRadiusPixels * InteractionRadiusPixels;
@@ -200,75 +195,84 @@ internal sealed class EnrichmentInteractionService
             }
 
             if (nearestIndex < 0)
-                continue;
-
-            FurnitureSpot spot = furnitureSpots[nearestIndex];
-            furnitureSpots.RemoveAt(nearestIndex);
-            if (spot.QualifiedItemId == FurnitureContent.SlimeSwingQualifiedId)
             {
-                this.StartInteraction(animal, spot.Tile, 3.8f, 2f, 0f, swingDistance: 8f);
+                record.NextEnrichmentCheckMinute = currentMinute + Game1.random.Next(120, 241);
                 continue;
             }
 
-            (float duration, float bounceHeight, float compressionHeight, float slideDistance, bool isResting) = spot.QualifiedItemId switch
+            FurnitureSpot spot = furnitureSpots[nearestIndex];
+            furnitureSpots.RemoveAt(nearestIndex);
+            int durationMinutes = Game1.random.Next(120, 181);
+            record.EnrichmentActivitiesToday++;
+            record.NextEnrichmentCheckMinute = currentMinute + durationMinutes + Game1.random.Next(120, 241);
+            if (spot.QualifiedItemId == FurnitureContent.SlimeSwingQualifiedId)
             {
-                var id when id == FurnitureContent.SlimeCushionQualifiedId => (1.8f, 9f, 10f, 0f, false),
-                var id when id == FurnitureContent.SlimeSlideQualifiedId => (2.2f, 8f, 3f, 30f, false),
-                var id when id == FurnitureContent.SlimeBedQualifiedId => (4f, 0f, 7f, 0f, true),
-                var id when id == FurnitureContent.SlimeTunnelQualifiedId => (2.8f, 5f, 2f, 42f, false),
-                var id when id == FurnitureContent.HeatedSlimeStoneQualifiedId => (4.4f, 0f, 6f, 0f, true),
-                var id when id == FurnitureContent.SlimePondQualifiedId => (3.2f, 4f, 0f, 0f, false),
+                this.StartInteraction(animal, spot.Tile, durationMinutes, 2f, 2f, 0f, swingDistance: 8f);
+                continue;
+            }
+
+            (float bounceHeight, float compressionHeight, float slideDistance, bool isResting) = spot.QualifiedItemId switch
+            {
+                var id when id == FurnitureContent.SlimeCushionQualifiedId => (9f, 10f, 0f, false),
+                var id when id == FurnitureContent.SlimeSlideQualifiedId => (8f, 3f, 30f, false),
+                var id when id == FurnitureContent.SlimeBedQualifiedId => (0f, 7f, 0f, true),
+                var id when id == FurnitureContent.SlimeTunnelQualifiedId => (5f, 2f, 42f, false),
+                var id when id == FurnitureContent.HeatedSlimeStoneQualifiedId => (0f, 6f, 0f, true),
+                var id when id == FurnitureContent.SlimePondQualifiedId => (4f, 0f, 0f, false),
                 _ => registry.GetGenomeSize(animal.myID.Value)?.ToLowerInvariant() switch
                 {
-                    "tiny" => (1.8f, 36f, 2f, 0f, false),
-                    "small" => (2.1f, 32f, 3f, 0f, false),
-                    "large" => (2.8f, 24f, 7f, 0f, false),
-                    "giant" => (3.2f, 21f, 9f, 0f, false),
-                    _ => (2.4f, 28f, 4f, 0f, false)
+                    "tiny" => (36f, 2f, 0f, false),
+                    "small" => (32f, 3f, 0f, false),
+                    "large" => (24f, 7f, 0f, false),
+                    "giant" => (21f, 9f, 0f, false),
+                    _ => (28f, 4f, 0f, false)
                 }
             };
-            this.StartInteraction(animal, spot.Tile, duration, bounceHeight, compressionHeight, slideDistance, isResting);
+            this.StartInteraction(animal, spot.Tile, durationMinutes,
+                bounceHeight, compressionHeight, slideDistance, isResting);
         }
     }
 
-    private void StartInteraction(FarmAnimal animal, Vector2 furnitureTile, float duration, float bounceHeight, float compressionHeight,
+    private void StartInteraction(FarmAnimal animal, Vector2 furnitureTile, int durationMinutes,
+        float bounceHeight, float compressionHeight,
         float slideDistance = 0f, bool isResting = false, float swingDistance = 0f)
     {
         this.active[animal.myID.Value] = new Interaction(animal, furnitureTile, animal.drawOffset,
-            duration, bounceHeight, compressionHeight, slideDistance, isResting, swingDistance);
-        this.cooldowns[animal.myID.Value] = this.elapsedSeconds + duration + 3f;
+            durationMinutes, bounceHeight, compressionHeight, slideDistance, isResting, swingDistance);
     }
+
+    private static int GetMinutesOfDay(int timeOfDay) => timeOfDay / 100 * 60 + timeOfDay % 100;
 
     private readonly record struct FurnitureSpot(Vector2 Tile, string QualifiedItemId);
 
     private sealed class Interaction
     {
         public Interaction(FarmAnimal animal, Vector2 furnitureTile, Vector2 originalDrawOffset,
-            float durationSeconds, float bounceHeightPixels, float compressionHeightPixels, float horizontalTravelPixels,
+            int durationMinutes, float bounceHeightPixels, float compressionHeightPixels, float horizontalTravelPixels,
             bool isResting, float swingDistancePixels)
         {
             this.Animal = animal;
             this.FurnitureTile = furnitureTile;
             this.OriginalDrawOffset = originalDrawOffset;
-            this.DurationSeconds = durationSeconds;
+            this.DurationMinutes = durationMinutes;
             this.BounceHeightPixels = bounceHeightPixels;
             this.CompressionHeightPixels = compressionHeightPixels;
             this.HorizontalTravelPixels = horizontalTravelPixels;
             this.IsResting = isResting;
             this.SwingDistancePixels = swingDistancePixels;
-            this.CompressionDurationSeconds = durationSeconds * 0.16f;
+            this.CompressionDurationMinutes = durationMinutes * 0.16f;
         }
 
         public FarmAnimal Animal { get; }
         public Vector2 FurnitureTile { get; }
         public Vector2 OriginalDrawOffset { get; }
-        public float DurationSeconds { get; }
+        public int DurationMinutes { get; }
         public float BounceHeightPixels { get; }
         public float CompressionHeightPixels { get; }
         public float HorizontalTravelPixels { get; }
         public bool IsResting { get; }
         public float SwingDistancePixels { get; }
-        public float CompressionDurationSeconds { get; }
-        public float ElapsedSeconds { get; set; }
+        public float CompressionDurationMinutes { get; }
+        public float ElapsedMinutes { get; set; }
     }
 }

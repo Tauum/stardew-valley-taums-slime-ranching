@@ -18,6 +18,11 @@ public sealed class SlimeRecord
     public int MutagenicPoolFailures { get; set; }
     /// <summary>Last day this juvenile received a Compost Trough feeding; stored externally to limit feeding to once per day.</summary>
     public int LastCompostFeedDay { get; set; } = -1;
+    /// <summary>Day and daily count for autonomous enrichment furniture use.</summary>
+    public int EnrichmentActivityDay { get; set; } = -1;
+    public int EnrichmentActivitiesToday { get; set; }
+    /// <summary>Next in-game minute when this slime considers using nearby furniture.</summary>
+    public int NextEnrichmentCheckMinute { get; set; } = -1;
     public string? LastHutchName { get; set; }
     public bool IsCompanion { get; set; }
 }
