@@ -56,7 +56,10 @@ internal static class IncubatorFootprintPatches
                 if (footprintWidth == 0)
                     continue;
 
-                Rectangle footprint = new(tileX * TileSize, tileY * TileSize,
+                int footprintTopY = tileY + (obj.QualifiedItemId == ConverterContent.BreederQualifiedId
+                    ? BreederFootprintGeometry.FootprintOffsetY
+                    : 0);
+                Rectangle footprint = new(tileX * TileSize, footprintTopY * TileSize,
                     footprintWidth * TileSize, footprintHeight * TileSize);
                 if (!position.Intersects(footprint))
                     continue;

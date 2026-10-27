@@ -11,6 +11,7 @@ internal static class BreederFootprintGeometry
     public const int TileSize = 64;
     public const int Width = 5;
     public const int Height = 2;
+    public const int FootprintOffsetY = -1;
     private const int Border = 3;
 
     public static bool IsAreaClear(GameLocation location, Vector2 anchor)
@@ -18,7 +19,7 @@ internal static class BreederFootprintGeometry
         for (int y = 0; y < Height; y++)
         for (int x = 0; x < Width; x++)
         {
-            Vector2 tile = anchor + new Vector2(x, y);
+            Vector2 tile = anchor + new Vector2(x, y + FootprintOffsetY);
             if (!location.isTilePlaceable(tile, true)
                 || location.Objects.ContainsKey(tile)
                 || location.terrainFeatures.ContainsKey(tile))
@@ -30,7 +31,7 @@ internal static class BreederFootprintGeometry
 
     public static void Draw(SpriteBatch batch, GameLocation location, Vector2 anchor)
     {
-        Vector2 world = new(anchor.X * TileSize, anchor.Y * TileSize);
+        Vector2 world = new(anchor.X * TileSize, (anchor.Y + FootprintOffsetY) * TileSize);
         Vector2 screen = Game1.GlobalToLocal(Game1.viewport, world);
         bool canPlace = IsAreaClear(location, anchor);
         Color fill = canPlace ? new Color(75, 225, 105, 70) : new Color(240, 65, 65, 85);
