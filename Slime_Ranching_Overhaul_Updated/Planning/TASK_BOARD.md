@@ -67,6 +67,7 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [x] Add a Heated Slime Stone with a resting interaction, ember sprite, configurable Marnie stock, and test command.
 - [x] Add a Slime Pond with a low swim-bob animation, generated water sprite, configurable Marnie stock, and test command.
 - [x] Add a Slime Swing with a reversible oscillating draw offset, generated sprite, configurable Marnie stock, and test command.
+- [x] Add Daycare Fairy Lights with generated colored-bulb art, dusk-to-night glow, configurable Marnie stock, and test command.
 - [x] Prevent Ranch Slimes reserved by breeder, Mutagenic Pool, or other jobs from starting enrichment animations.
 - [x] Stop an in-progress enrichment animation and restore its original draw offset if the slime becomes reserved by a ranching job.
 - [x] Use each slime's stored liked food in the Compost Trough and consume only eligible items; review the provisional extra growth-day bonus.

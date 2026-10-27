@@ -79,6 +79,15 @@ The pond currently has no drops or friendship effects. Its 4,500g price is provi
 
 The 2,200g shop price is provisional; the interaction is visual-only.
 
+### Slime Fairy Lights
+
+1. Run `slime_ranching_give_fairy_lights TaumTest_322865388` in the SMAPI console while the disposable test save is loaded.
+2. Place the lights inside the Slime Daycare.
+3. Before 6:00 PM, confirm the colored bulbs are unlit. Advance to 6:00 PM and confirm a subtle glow appears; check it remains through 1:50 AM and disappears at 2:00 AM.
+4. Leave and re-enter the Daycare at night; confirm the glow remains attached to the placed lights and no glow appears in unrelated interiors.
+
+The glow is a visual overlay and does not alter room lighting, slime state, or save data beyond the normal placed-furniture item.
+
 ## Vanilla slime isolation
 
 1. Load the disposable test save and note the vanilla GreenSlime count in its Slime Hutch.

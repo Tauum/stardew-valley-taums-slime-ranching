@@ -55,6 +55,7 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("slime_ranching_give_heated_stone", "Give one Heated Slime Stone for testing. Usage: slime_ranching_give_heated_stone <exact save folder name>.", this.OnGiveHeatedStoneCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_pond", "Give one Slime Pond for testing. Usage: slime_ranching_give_pond <exact save folder name>.", this.OnGivePondCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_swing", "Give one Slime Swing for testing. Usage: slime_ranching_give_swing <exact save folder name>.", this.OnGiveSwingCommand);
+        helper.ConsoleCommands.Add("slime_ranching_give_fairy_lights", "Give one set of Slime Fairy Lights for testing. Usage: slime_ranching_give_fairy_lights <exact save folder name>.", this.OnGiveFairyLightsCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_test_eggs", "Create two external-genome test eggs. Usage: slime_ranching_give_test_eggs <exact save folder name>.", this.OnGiveTestEggsCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_color_eggs", "Create seven color test eggs. Usage: slime_ranching_give_color_eggs <exact save folder name>.", this.OnGiveColorEggsCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_crystals", "Give one of each Chromatic Crystal for breeder testing. Usage: slime_ranching_give_crystals <exact save folder name>.", this.OnGiveCrystalsCommand);
@@ -114,6 +115,7 @@ public sealed class ModEntry : Mod
         this.AddShopPriceOption(api, "Heated Slime Stone", "Price of the warm resting stone.", () => this.config.HeatedSlimeStoneShopPrice, value => this.config.HeatedSlimeStoneShopPrice = value);
         this.AddShopPriceOption(api, "Slime Pond", "Price of the decorative slime pond.", () => this.config.SlimePondShopPrice, value => this.config.SlimePondShopPrice = value);
         this.AddShopPriceOption(api, "Slime Swing", "Price of the decorative slime swing.", () => this.config.SlimeSwingShopPrice, value => this.config.SlimeSwingShopPrice = value);
+        this.AddShopPriceOption(api, "Slime Fairy Lights", "Price of the evening decorative lights.", () => this.config.SlimeFairyLightsShopPrice, value => this.config.SlimeFairyLightsShopPrice = value);
         api.AddSectionTitle(this.ModManifest, () => "Compost Trough");
         api.AddParagraph(this.ModManifest, () => "Growth advances are provisional. A favorite-food item grants the base days plus the favorite-food bonus.");
         api.AddNumberOption(this.ModManifest,
@@ -328,6 +330,7 @@ public sealed class ModEntry : Mod
 
         if (this.config.ShowShadowCloneVisualEchoes)
             this.shadowCloneVisuals.Draw(Game1.currentLocation, e.SpriteBatch, this.registry!);
+        this.DrawFairyLightGlow(e.SpriteBatch);
         if (Game1.currentLocation != Game1.getFarm())
             return;
 
@@ -382,6 +385,37 @@ public sealed class ModEntry : Mod
                 DrawLoveHearts(e.SpriteBatch, (int)screenPosition.X, (int)screenPosition.Y - 30, fade);
             }
         }
+    }
+
+    private void DrawFairyLightGlow(SpriteBatch batch)
+    {
+        if (Game1.timeOfDay < 1800 || Game1.timeOfDay >= 2600)
+            return;
+        if (Game1.currentLocation is not StardewValley.AnimalHouse house
+            || !Game1.getFarm().buildings.Any(building =>
+                BuildingContent.IsSlimeDaycare(building.buildingType.Value)
+                && ReferenceEquals(building.GetIndoors(), house)))
+            return;
+
+        Color[] colors = { new(246, 104, 133), new(112, 207, 237), new(255, 210, 102), new(175, 139, 237) };
+        int[] bulbXs = { 3, 6, 9, 12 };
+        foreach (StardewValley.Object lights in house.Objects.Values.Where(obj => obj.QualifiedItemId == FurnitureContent.SlimeFairyLightsQualifiedId))
+        {
+            for (int i = 0; i < bulbXs.Length; i++)
+            {
+                Vector2 world = lights.TileLocation * 64f + new Vector2(bulbXs[i] * 4f + 8f, -64f + 8f * 4f + 8f);
+                Vector2 screen = Game1.GlobalToLocal(Game1.viewport, world);
+                DrawGlow(batch, (int)screen.X, (int)screen.Y, colors[i]);
+            }
+        }
+    }
+
+    private static void DrawGlow(SpriteBatch batch, int x, int y, Color color)
+    {
+        Texture2D pixel = Game1.staminaRect;
+        batch.Draw(pixel, new Rectangle(x - 16, y - 16, 32, 32), color * 0.10f);
+        batch.Draw(pixel, new Rectangle(x - 10, y - 10, 20, 20), color * 0.18f);
+        batch.Draw(pixel, new Rectangle(x - 5, y - 5, 10, 10), color * 0.28f);
     }
 
     private static void DrawLoveHearts(SpriteBatch batch, int x, int y, float opacity)
@@ -1372,6 +1406,31 @@ public sealed class ModEntry : Mod
         }
 
         this.Monitor.Log("Added one Slime Swing. Place it in the Slime Daycare for nearby idle Ranch Slimes to sway on.", LogLevel.Info);
+    }
+
+    private void OnGiveFairyLightsCommand(string command, string[] args)
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
+        {
+            this.Monitor.Log("Load a single-player save with available external slime state before requesting Slime Fairy Lights.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 1 || args[0] != saveName)
+        {
+            this.Monitor.Log($"To give Slime Fairy Lights to the currently loaded save, use: slime_ranching_give_fairy_lights {saveName}", LogLevel.Warn);
+            return;
+        }
+
+        Item lights = ItemRegistry.Create(FurnitureContent.SlimeFairyLightsQualifiedId);
+        if (!Game1.player.couldInventoryAcceptThisItem(lights) || !Game1.player.addItemToInventoryBool(lights))
+        {
+            this.Monitor.Log("Make room in your inventory, then try again.", LogLevel.Warn);
+            return;
+        }
+
+        this.Monitor.Log("Added one set of Slime Fairy Lights. Place them in the Slime Daycare; their colored glow is on from 6:00 PM until 2:00 AM.", LogLevel.Info);
     }
 
     private bool StartRefineryBatch(string machineKey)

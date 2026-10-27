@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-10-27  
 **Test save:** `TaumTest_322865388` (disposable copy)  
-**Current branch:** `fix/stop-enrichment-on-reservation`, chained after `feature/slime-swing-interaction` (`7df791a`). Gel Refinery, Compost Trough, Tunnel, Heated Stone, Pond, Swing, inspection improvements, and the companion first-slice proposal are committed. This branch stops an active visual interaction if the slime becomes reserved; it builds, but the interruption behavior still needs in-game verification.
+**Current branch:** `feature/daycare-fairy-lights`, chained after `fix/stop-enrichment-on-reservation` (`b8f4253`). Gel Refinery, Compost Trough, Tunnel, Heated Stone, Pond, Swing, reservation-safe interaction cleanup, inspection improvements, and the companion first-slice proposal are committed. Fairy Lights are implemented and build; dusk/night rendering needs in-game verification.
 
 ## Current state
 
@@ -52,6 +52,7 @@
 - Slime Pond is a configurable Marnie item with a generated water basin and low swim-bob interaction; `slime_ranching_give_pond <save>` grants a test item. It generates no items. Review the open question about its drop pool, interval, and daily cap before adding production.
 - Slime Swing is a configurable Marnie item with generated wooden art and a brief oscillating draw offset for idle slimes; `slime_ranching_give_swing <save>` grants a test item. It does not move collision tiles or change stats. Verify cleanup in game.
 - Enrichment animations now terminate immediately if a breeder or mutation job reserves the active slime, restoring the saved draw offset. Verify by starting a job during a tunnel/swing/rest animation.
+- Slime Fairy Lights are sold by Marnie and glow from 6 PM through 2 AM inside the Daycare; `slime_ranching_give_fairy_lights <save>` grants a test set. Verify the time boundaries, correct interior placement, and subtlety in game.
 - The next major system is custom companion AI. `Features/COMPANIONS.md` now proposes one active mature Daycare slime, no duplicate FarmAnimal, external-only binding, and same-location following before cross-location transitions. Review Core acquisition, accessory slot, and dismissal/token behavior before implementation.
 - `slime_ranching_inspect` now shows the external registry schema on disk versus the current target schema and prints per-machine job dates/details. Use it during refinery, incubator, breeder, and mutation reload checks.
 - The interaction scheduler is now named `EnrichmentInteractionService`. It handles all five implemented furniture types, caches occupied target tiles once per assignment pass, and computes each playground candidate distance once during sorting. Build passes with only the existing analyzer/compiler version warning; compare behavior/performance with a crowded Daycare in game.

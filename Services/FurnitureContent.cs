@@ -29,6 +29,8 @@ internal static class FurnitureContent
     public const string SlimePondQualifiedId = "(BC)" + SlimePondItemId;
     public const string SlimeSwingItemId = "Taum.SlimeRanching_SlimeSwing";
     public const string SlimeSwingQualifiedId = "(BC)" + SlimeSwingItemId;
+    public const string SlimeFairyLightsItemId = "Taum.SlimeRanching_SlimeFairyLights";
+    public const string SlimeFairyLightsQualifiedId = "(BC)" + SlimeFairyLightsItemId;
     private const string TrampolineTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeTrampoline";
     private const string CushionTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeCushion";
     private const string PlaygroundTexture = "Mods/Taum.SlimeRanching/Furniture/SlimePlayground";
@@ -39,6 +41,7 @@ internal static class FurnitureContent
     private const string HeatedStoneTexture = "Mods/Taum.SlimeRanching/Furniture/HeatedSlimeStone";
     private const string PondTexture = "Mods/Taum.SlimeRanching/Furniture/SlimePond";
     private const string SwingTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeSwing";
+    private const string FairyLightsTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeFairyLights";
 
     public static void LoadAssets(AssetRequestedEventArgs e)
     {
@@ -62,6 +65,8 @@ internal static class FurnitureContent
             e.LoadFrom(() => CreatePondTexture(Game1.graphics.GraphicsDevice), AssetLoadPriority.Exclusive);
         else if (e.NameWithoutLocale.IsEquivalentTo(SwingTexture))
             e.LoadFrom(() => CreateSwingTexture(Game1.graphics.GraphicsDevice), AssetLoadPriority.Exclusive);
+        else if (e.NameWithoutLocale.IsEquivalentTo(FairyLightsTexture))
+            e.LoadFrom(() => CreateFairyLightsTexture(Game1.graphics.GraphicsDevice), AssetLoadPriority.Exclusive);
     }
 
     public static void EditAsset(AssetRequestedEventArgs e)
@@ -180,6 +185,17 @@ internal static class FurnitureContent
                 CanBePlacedOutdoors = false,
                 Fragility = 0,
                 Texture = SwingTexture,
+                SpriteIndex = 0
+            });
+            craftables.TryAdd(SlimeFairyLightsItemId, new BigCraftableData
+            {
+                Name = "Slime Fairy Lights",
+                DisplayName = "Slime Fairy Lights",
+                Description = "A string of colorful lights that glows after dusk in the Slime Daycare.",
+                CanBePlacedIndoors = true,
+                CanBePlacedOutdoors = false,
+                Fragility = 0,
+                Texture = FairyLightsTexture,
                 SpriteIndex = 0
             });
         });
@@ -521,6 +537,39 @@ internal static class FurnitureContent
             SetPixel(pixels, width, x, 15, outline);
         }
         for (int x = 4; x <= 11; x++) SetPixel(pixels, width, x, 16, new Color(67, 43, 56));
+        texture.SetData(pixels);
+        return texture;
+    }
+
+    private static Texture2D CreateFairyLightsTexture(GraphicsDevice graphicsDevice)
+    {
+        const int width = 16;
+        const int height = 32;
+        var texture = new Texture2D(graphicsDevice, width, height);
+        var pixels = new Color[width * height];
+        Color wire = new(70, 55, 55);
+        Color outline = new(66, 43, 58);
+        Color[] bulbs = { new(246, 104, 133), new(112, 207, 237), new(255, 210, 102), new(175, 139, 237) };
+
+        for (int x = 2; x <= 13; x++)
+        {
+            int y = x is 5 or 10 ? 7 : x is 3 or 12 ? 6 : 5;
+            SetPixel(pixels, width, x, y, wire);
+        }
+
+        int[] bulbXs = { 3, 6, 9, 12 };
+        for (int i = 0; i < bulbXs.Length; i++)
+        {
+            int x = bulbXs[i];
+            int y = x is 3 or 12 ? 6 : 7;
+            SetPixel(pixels, width, x, y, outline);
+            SetPixel(pixels, width, x, y + 1, bulbs[i]);
+            SetPixel(pixels, width, x, y + 2, bulbs[i]);
+            SetPixel(pixels, width, x, y + 3, new Color(255, 230, 190));
+        }
+
+        for (int x = 1; x <= 14; x++)
+            SetPixel(pixels, width, x, 11, new Color(67, 43, 56));
         texture.SetData(pixels);
         return texture;
     }

@@ -35,6 +35,7 @@ internal static class ShopContent
             AddIfMissing(shop, "HeatedSlimeStone", FurnitureContent.HeatedSlimeStoneQualifiedId, config.HeatedSlimeStoneShopPrice);
             AddIfMissing(shop, "SlimePond", FurnitureContent.SlimePondQualifiedId, config.SlimePondShopPrice);
             AddIfMissing(shop, "SlimeSwing", FurnitureContent.SlimeSwingQualifiedId, config.SlimeSwingShopPrice);
+            AddIfMissing(shop, "SlimeFairyLights", FurnitureContent.SlimeFairyLightsQualifiedId, config.SlimeFairyLightsShopPrice);
         });
     }
 

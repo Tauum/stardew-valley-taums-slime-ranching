@@ -28,4 +28,5 @@ public sealed class ModConfig
     public int HeatedSlimeStoneShopPrice { get; set; } = 1800;
     public int SlimePondShopPrice { get; set; } = 4500;
     public int SlimeSwingShopPrice { get; set; } = 2200;
+    public int SlimeFairyLightsShopPrice { get; set; } = 1600;
 }
