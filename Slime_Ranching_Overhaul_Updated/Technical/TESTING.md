@@ -72,6 +72,12 @@ Crystal items currently use vanilla mineral icons and are available only through
 
 The probabilities are provisional and listed in `Features/SIZE_AND_MATURITY.md`. A few manual samples only check that the categories and inheritance path work; they do not validate statistical balance.
 
+## Shiny sprite variant
+
+1. Spawn a Ranch Slime and note its FarmAnimal ID. Run `slime_ranching_set_shiny TaumTest_322865388 <animal ID> true`.
+2. Confirm the slime immediately gets a slightly brighter sprite while keeping the same size, shape, face, and base hue. Check that petting and furniture interactions remain normal.
+3. Save/reload and confirm the shiny appearance persists from the external genome. Set it back with `slime_ranching_set_shiny TaumTest_322865388 <animal ID> false` and confirm its prior base sprite returns.
+
 ## External genome-specific egg identity (prototype)
 
 1. Deploy the current build to the disposable `TaumTest_322865388` save. Make room for two inventory items.

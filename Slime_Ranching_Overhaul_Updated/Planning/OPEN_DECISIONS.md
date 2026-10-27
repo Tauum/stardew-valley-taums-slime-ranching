@@ -4,6 +4,8 @@
 
 **Size genetics prototype:** Five size labels, weighted inheritance, and nearest-neighbor sprite scaling now exist. Review the provisional same-size and mixed-size weights in `Features/SIZE_AND_MATURITY.md`; collision, placement, and petting interaction still need in-game validation.
 
+**Shiny visual prototype:** `IsShiny` now brightens Ranch Slime sprite pixels by a subtle fixed amount. Decide whether shiny is cosmetic-only or should have separate gameplay effects; avoid coupling it to rarity or size.
+
 1. **Pink recipes:** Pink is outside the standard wheel. Which pairings produce Pink or Pink hybrids?
 2. **Undefined breeding pairs:** Block the combination, return one parent's color, or offer a rare result?
 3. **Primary pair recipes:** Red+Yellow→Orange, Yellow+Blue→Green, Blue+Red→Violet suggested but not explicitly confirmed.

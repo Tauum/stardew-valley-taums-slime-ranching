@@ -48,8 +48,19 @@ internal sealed class SlimeRegistry
         return true;
     }
 
+    public bool SetGenomeShiny(long farmAnimalId, bool isShiny)
+    {
+        if (!this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record))
+            return false;
+        record.Genome.IsShiny = isShiny;
+        return true;
+    }
+
     public string? GetGenomeColor(long farmAnimalId) =>
         this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record) ? record.Genome.VisualColor : null;
+
+    public bool GetGenomeIsShiny(long farmAnimalId) =>
+        this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record) && record.Genome.IsShiny;
 
     public int GetMaturityAgeDays(long farmAnimalId, int fallbackAgeDays) =>
         this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record) && record.AgeClockInitialized

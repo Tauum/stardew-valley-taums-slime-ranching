@@ -50,6 +50,7 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [x] Separate size genetics from maturity; breed across five size categories using provisional weighted outcomes.
 - [x] Scale Ranch Slime sprite art by genetic size inside a shared frame canvas.
 - [ ] Validate size-specific animal placement, hitboxes, petting targets, and breeder previews in game.
+- [x] Render the independent shiny flag as a subtle sheen without changing size or base-color assets.
 - [ ] Independent shiny/rarity/mutation flags; store ancestry and hybrid ability IDs.
 
 ## Stage 4 — furniture

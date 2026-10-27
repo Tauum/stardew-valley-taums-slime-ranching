@@ -33,20 +33,24 @@ internal static class FarmAnimalContent
         if (!requestedName.StartsWith(RanchSlimeTexturePrefix, StringComparison.Ordinal))
             return;
 
-        string[] parts = requestedName[RanchSlimeTexturePrefix.Length..].Split('_', 2);
-        if (parts.Length != 2 || !TryGetColorVariant(parts[0], out var variant))
+        string[] parts = requestedName[RanchSlimeTexturePrefix.Length..].Split('_');
+        if (parts.Length is < 2 or > 3 || !TryGetColorVariant(parts[0], out var variant))
             return;
 
         float scale = GetSizeScale(parts[1]);
-        if (scale <= 0f)
+        bool isShiny = parts.Length == 3 && parts[2].Equals("Shiny", StringComparison.OrdinalIgnoreCase);
+        if (scale <= 0f || (parts.Length == 3 && !isShiny))
             return;
 
-        e.LoadFrom(() => CreateSpriteSheet(Game1.graphics.GraphicsDevice, variant.Tint, scale), AssetLoadPriority.Exclusive);
+        e.LoadFrom(() => CreateSpriteSheet(Game1.graphics.GraphicsDevice, variant.Tint, scale, isShiny), AssetLoadPriority.Exclusive);
     }
 
     public static void ApplyAppearance(FarmAnimal animal, string? visualColor, string? size = null)
+        => ApplyAppearance(animal, visualColor, size, isShiny: false);
+
+    public static void ApplyAppearance(FarmAnimal animal, string? visualColor, string? size, bool isShiny)
     {
-        string texture = GetTextureName(visualColor, size);
+        string texture = GetTextureName(visualColor, size, isShiny);
         animal.Sprite.LoadTexture(texture, syncTextureName: false);
     }
 
@@ -54,6 +58,9 @@ internal static class FarmAnimalContent
     {
         return RanchSlimeTexturePrefix + GetClosestVariant(visualColor).Name + "_" + GetCanonicalSize(size);
     }
+
+    public static string GetTextureName(string? visualColor, string? size, bool isShiny) =>
+        GetTextureName(visualColor, size) + (isShiny ? "_Shiny" : "");
 
     public static Color GetVisualTint(string? visualColor) => GetClosestVariant(visualColor).Tint;
 
@@ -97,7 +104,7 @@ internal static class FarmAnimalContent
         });
     }
 
-    private static Texture2D CreateSpriteSheet(GraphicsDevice graphicsDevice, Color slimeTint, float sizeScale)
+    private static Texture2D CreateSpriteSheet(GraphicsDevice graphicsDevice, Color slimeTint, float sizeScale, bool isShiny)
     {
         const int sourceFrameWidth = 16;
         const int sourceFrameHeight = 24;
@@ -144,6 +151,15 @@ internal static class FarmAnimalContent
             Color pixel = sourcePixels[(row * sourceFrameHeight + sourceY) * sourceSheetWidth + frame * sourceFrameWidth + sourceX];
             int targetX = frame * frameWidth + offsetX + x;
             int targetY = row * frameHeight + offsetY + y;
+            if (isShiny && pixel.A > 0)
+            {
+                const float sheen = 0.22f;
+                pixel = new Color(
+                    (byte)(pixel.R + (255 - pixel.R) * sheen),
+                    (byte)(pixel.G + (255 - pixel.G) * sheen),
+                    (byte)(pixel.B + (255 - pixel.B) * sheen),
+                    pixel.A);
+            }
             pixels[targetY * frameWidth * columns + targetX] = pixel;
         }
 

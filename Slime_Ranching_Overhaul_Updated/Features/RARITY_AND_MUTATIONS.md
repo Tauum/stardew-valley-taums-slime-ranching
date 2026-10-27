@@ -10,6 +10,8 @@ Keep separate fields: `Species`, `RarityTier`, `IsShiny`, `MutationTrait`, `Size
 - **Shadow Clone:** rare mutation trait that makes temporary copies performing reduced inherited abilities; copies never produce resources independently without caps, breed or clone recursively.
 - **Void:** removed as separate species; pocket inventory merged into Green Collector.
 
+The current `IsShiny` visual prototype applies a subtle 22% brightness lift to the sprite. It is independent of size and color and has no gameplay/stat effect yet; the proposed ~10% performance increase remains undecided. Use `slime_ranching_set_shiny <save> <animal ID> true|false` to inspect it on a disposable save.
+
 ## Mutagenic Pool
 Consumes a substantial quantity of vanilla Slime per attempt (proposed 500); adult slime is temporarily assigned. Proposed 1 day processing, base 5% chance + 2 percentage points per failed attempt, cap 30%. Per-slime pity counter persists; success resets it. No slime death on failure. Mutation pool grants **traits**, not exceptional colors. Other mutation outcomes TBD.
 
@@ -18,3 +20,4 @@ Acquisition probabilities, shiny inheritance, exceptional breeding rules, pool t
 
 ## Current locked implementation clarification
 All specified exceptional slime types remain core scope, implemented after fundamentals. Keep shiny, exceptional color and mutation independent. Shadow Clone remains; Black and White change time boundaries, Golden discounts are capped, Prismatic mounts and adapts.
+

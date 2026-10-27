@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-10-27  
 **Test save:** `TaumTest_322865388` (disposable copy)  
-**Working tree:** `feature/genetic-size-sprite-scaling`, chained after `feature/five-size-inheritance`; each managed slime now loads a color-and-size-specific nearest-neighbor sprite sheet. Build passes; size-dependent visuals have not been checked in game.
+**Working tree:** `feature/shiny-slime-sprites`, chained after `feature/genetic-size-sprite-scaling`; managed Ranch Slimes now load assets for color, size, and the independent shiny flag. Build passes; size and sheen still need in-game visual review.
 
 ## Current state
 
@@ -32,6 +32,7 @@
 - The interaction scheduler is now named `EnrichmentInteractionService`. It handles all five implemented furniture types, caches occupied target tiles once per assignment pass, and computes each playground candidate distance once during sorting. Build passes with only the existing analyzer/compiler version warning; compare behavior/performance with a crowded Daycare in game.
 - Breeder size inheritance now uses Tiny/Small/Normal/Large/Giant categories. The weights specified in the design notes are implemented; provisional defaults cover Tiny+Tiny, Normal+Normal, adjacent pairs, and wider gaps. Unknown legacy labels are treated as Normal only when rolling offspring. Small and Large also have distinct trampoline arcs.
 - Ranch Slime sprites now use separate color/size assets in 24x32 frame cells. Normal opaque art remains the original 16x24 pixels; Tiny/Small shrink and Large/Giant enlarge with nearest-neighbor sampling, centered and bottom-aligned. Check floors, petting, breeder previews, furniture animations, and clipping in-game.
+- The `IsShiny` flag applies a subtle 22% brightness lift on the size/color sprite sheet without changing color mapping or frame size. It is visual-only; the stat/ability impact remains open. `slime_ranching_set_shiny <save> <animal ID> true|false` updates an existing managed slime immediately and persists externally.
 - `slime_ranching_set_size <save> <animal ID> <Tiny|Small|Normal|Large|Giant>` sets a managed Ranch Slime's size in external state, saves it, and refreshes the current animal's sprite immediately. On external-write failure it restores both the old genome size and sprite.
 - The user confirmed the egg spawn worked. Its tooltip showed Ranch Slime, green (`#00FF00`), Normal size, Common rarity, no mutation, Generation 1, two parent IDs, and favorite food `Broken CD`.
 - Egg hatching is implemented as a prototype. It was introduced in schema 6; the registry is currently schema 8. Verify egg identity through transfer/reload, then test incubation recovery and genome matching.

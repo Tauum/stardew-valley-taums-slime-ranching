@@ -37,6 +37,7 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("slime_ranching_inspect", "Inspect vanilla slime or Ranch Slime counts in the current Slime Hutch or Slime Daycare.", this.OnInspectCommand);
         helper.ConsoleCommands.Add("slime_ranching_spawn_ranch_slime", "Spawn one Ranch Slime in the Slime Daycare. Usage: slime_ranching_spawn_ranch_slime <exact save folder name>.", this.OnSpawnRanchSlimeCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_size", "Set a managed Ranch Slime's test genome size. Usage: slime_ranching_set_size <exact save folder name> <animal ID> <Tiny|Small|Normal|Large|Giant>.", this.OnSetSlimeSizeCommand);
+        helper.ConsoleCommands.Add("slime_ranching_set_shiny", "Set a managed Ranch Slime's test shiny flag. Usage: slime_ranching_set_shiny <exact save folder name> <animal ID> <true|false>.", this.OnSetSlimeShinyCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_converter", "Give one Slime Egg Converter for testing. Usage: slime_ranching_give_converter <exact save folder name>.", this.OnGiveConverterCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_guidebook", "Give the Slime Ranching Field Guide. Usage: slime_ranching_give_guidebook <exact save folder name>.", this.OnGiveGuidebookCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_breeder", "Give one Slime Breeder for testing. Usage: slime_ranching_give_breeder <exact save folder name>.", this.OnGiveBreederCommand);
@@ -310,7 +311,8 @@ public sealed class ModEntry : Mod
                 continue;
             FarmAnimalContent.ApplyAppearance(animal,
                 this.registry.GetGenomeColor(animal.myID.Value),
-                this.registry.GetGenomeSize(animal.myID.Value));
+                this.registry.GetGenomeSize(animal.myID.Value),
+                this.registry.GetGenomeIsShiny(animal.myID.Value));
         }
     }
 
@@ -435,7 +437,7 @@ public sealed class ModEntry : Mod
                 homeInterior = animalHouse
             };
             animal.age.Value = 0;
-            FarmAnimalContent.ApplyAppearance(animal, egg.Genome.VisualColor, egg.Genome.Size);
+            FarmAnimalContent.ApplyAppearance(animal, egg.Genome.VisualColor, egg.Genome.Size, egg.Genome.IsShiny);
             animalHouse.adoptAnimal(animal);
             if (!this.registry.RegisterIncubationHatch(incubation, animal))
             {
@@ -768,7 +770,7 @@ public sealed class ModEntry : Mod
             FarmAnimal? animalToRestore = GetFarmAnimals().FirstOrDefault(candidate => candidate.myID.Value == animalId);
             if (animalToRestore is not null)
                 FarmAnimalContent.ApplyAppearance(animalToRestore,
-                    this.registry.GetGenomeColor(animalId), this.registry.GetGenomeSize(animalId));
+                    this.registry.GetGenomeColor(animalId), this.registry.GetGenomeSize(animalId), this.registry.GetGenomeIsShiny(animalId));
             this.Monitor.Log("Could not save external state; the original genome size was restored.", LogLevel.Error);
             return;
         }
@@ -776,8 +778,51 @@ public sealed class ModEntry : Mod
         FarmAnimal? animalToUpdate = GetFarmAnimals().FirstOrDefault(candidate => candidate.myID.Value == animalId);
         if (animalToUpdate is not null)
             FarmAnimalContent.ApplyAppearance(animalToUpdate,
-                this.registry.GetGenomeColor(animalId), this.registry.GetGenomeSize(animalId));
+                this.registry.GetGenomeColor(animalId), this.registry.GetGenomeSize(animalId), this.registry.GetGenomeIsShiny(animalId));
         this.Monitor.Log($"Changed Ranch Slime {animalId} genome size from {oldSize} to {this.registry.GetGenomeSize(animalId)} in the mod's external registry.", LogLevel.Info);
+    }
+
+    private void OnSetSlimeShinyCommand(string command, string[] args)
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
+        {
+            this.Monitor.Log("Load a single-player save with available external slime state before changing a test genome.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 3 || args[0] != saveName || !long.TryParse(args[1], out long animalId)
+            || !bool.TryParse(args[2], out bool isShiny))
+        {
+            this.Monitor.Log($"Usage: slime_ranching_set_shiny {saveName} <animal ID> <true|false>", LogLevel.Warn);
+            return;
+        }
+
+        bool oldValue = this.registry!.GetGenomeIsShiny(animalId);
+        if (this.registry.GetGenomeSize(animalId) is null || !this.registry.SetGenomeShiny(animalId, isShiny))
+        {
+            this.Monitor.Log("That ID is not a managed Ranch Slime.", LogLevel.Warn);
+            return;
+        }
+
+        if (!this.SaveExternalStateNow())
+        {
+            this.registry.SetGenomeShiny(animalId, oldValue);
+            this.RefreshRanchSlimeAppearance(animalId);
+            this.Monitor.Log("Could not save external state; the original shiny flag was restored.", LogLevel.Error);
+            return;
+        }
+
+        this.RefreshRanchSlimeAppearance(animalId);
+        this.Monitor.Log($"Changed Ranch Slime {animalId} shiny flag to {isShiny} in the mod's external registry.", LogLevel.Info);
+    }
+
+    private void RefreshRanchSlimeAppearance(long animalId)
+    {
+        FarmAnimal? animal = GetFarmAnimals().FirstOrDefault(candidate => candidate.myID.Value == animalId);
+        if (animal is not null && this.registry is not null)
+            FarmAnimalContent.ApplyAppearance(animal, this.registry.GetGenomeColor(animalId),
+                this.registry.GetGenomeSize(animalId), this.registry.GetGenomeIsShiny(animalId));
     }
 
     private void OnGiveGuidebookCommand(string command, string[] args)
