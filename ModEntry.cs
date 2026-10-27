@@ -18,6 +18,7 @@ public sealed class ModEntry : Mod
     private ModStateStore? stateStore;
     private ModConfig config = new();
     private bool stateReady;
+    private Texture2D? incubatorTexture;
     private readonly EnrichmentInteractionService trampolineInteractions = new();
     private readonly ShadowCloneVisualService shadowCloneVisuals = new();
     private readonly List<(long SlimeId, bool Success, double Chance)> pendingMutagenicNotifications = new();
@@ -346,6 +347,8 @@ public sealed class ModEntry : Mod
     {
         if (!this.stateReady || !Context.IsMainPlayer)
             return;
+
+        this.DrawIncubators(e.SpriteBatch);
 
         if (this.config.ShowShadowCloneVisualEchoes)
             this.shadowCloneVisuals.Draw(Game1.currentLocation, e.SpriteBatch, this.registry!);
@@ -686,6 +689,8 @@ public sealed class ModEntry : Mod
 
     private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
     {
+        if (e.NameWithoutLocale.IsEquivalentTo("Mods/Taum.SlimeRanching/Machines/SlimeIncubator"))
+            e.LoadFromModFile<Texture2D>("assets/Machines/SlimeIncubator.png", AssetLoadPriority.Medium);
         BuildingContent.LoadAssets(e, this.Helper);
         ConverterContent.EditAsset(e);
         ChromaticCrystalContent.EditAsset(e);
@@ -702,6 +707,27 @@ public sealed class ModEntry : Mod
         MutagenicPoolContent.LoadAssets(e);
         MutagenicPoolContent.EditAsset(e);
         BuildingContent.EditAsset(e, this.Helper, this.config);
+    }
+
+    private void DrawIncubators(SpriteBatch batch)
+    {
+        if (this.incubatorTexture is null)
+            this.incubatorTexture = this.Helper.GameContent.Load<Texture2D>("Mods/Taum.SlimeRanching/Machines/SlimeIncubator");
+
+        const int footprintWidth = 4 * 64;
+        const int spriteHeight = 320;
+        foreach (KeyValuePair<Vector2, StardewValley.Object> pair in Game1.currentLocation.Objects.Pairs)
+        {
+            if (pair.Value.QualifiedItemId != ConverterContent.IncubatorQualifiedId)
+                continue;
+
+            Vector2 worldTopLeft = new(pair.Key.X * 64, (pair.Key.Y + 2) * 64 - spriteHeight);
+            Vector2 screenTopLeft = Game1.GlobalToLocal(Game1.viewport, worldTopLeft);
+            Rectangle destination = new((int)screenTopLeft.X, (int)screenTopLeft.Y, footprintWidth, spriteHeight);
+            batch.Draw(this.incubatorTexture, destination,
+                new Rectangle(0, 0, this.incubatorTexture.Width, this.incubatorTexture.Height),
+                Color.White, 0f, Vector2.Zero, SpriteEffects.None, 0.999f);
+        }
     }
 
     private void ApplyDaycareExteriorDesign()
@@ -721,8 +747,7 @@ public sealed class ModEntry : Mod
     private void OnButtonPressed(object? sender, ButtonPressedEventArgs e)
     {
         if (Context.IsWorldReady && Game1.activeClickableMenu is null && e.Button.IsActionButton()
-            && Game1.currentLocation.Objects.TryGetValue(e.Cursor.GrabTile, out StardewValley.Object? incubator)
-            && incubator.QualifiedItemId == ConverterContent.IncubatorQualifiedId)
+            && this.TryGetIncubatorAt(e.Cursor.GrabTile, out Vector2 incubatorAnchor, out StardewValley.Object? incubator))
         {
             if (!this.stateReady)
             {
@@ -740,8 +765,10 @@ public sealed class ModEntry : Mod
             }
 
             this.Helper.Input.Suppress(e.Button);
-            string key = $"{Game1.currentLocation.NameOrUniqueName}:{(int)incubator.TileLocation.X},{(int)incubator.TileLocation.Y}";
-            Game1.activeClickableMenu = new SlimeIncubatorMenu(this.registry!, key, index => this.StartIncubation(key, index));
+            string key = $"{Game1.currentLocation.NameOrUniqueName}:{(int)incubatorAnchor.X},{(int)incubatorAnchor.Y}";
+            this.incubatorTexture ??= this.Helper.GameContent.Load<Texture2D>("Mods/Taum.SlimeRanching/Machines/SlimeIncubator");
+            Game1.activeClickableMenu = new SlimeIncubatorMenu(this.registry!, key,
+                index => this.StartIncubation(key, index), this.incubatorTexture);
             return;
         }
 
@@ -842,6 +869,28 @@ public sealed class ModEntry : Mod
 
         this.Helper.Input.Suppress(e.Button);
         Game1.activeClickableMenu = new StardewValley.Menus.LetterViewerMenu(GuidebookContent.Text);
+    }
+
+    private bool TryGetIncubatorAt(Vector2 clickedTile, out Vector2 anchor, out StardewValley.Object? incubator)
+    {
+        foreach (KeyValuePair<Vector2, StardewValley.Object> pair in Game1.currentLocation.Objects.Pairs)
+        {
+            if (pair.Value.QualifiedItemId != ConverterContent.IncubatorQualifiedId)
+                continue;
+
+            bool insideMachine = clickedTile.X >= pair.Key.X && clickedTile.X < pair.Key.X + 4
+                && clickedTile.Y >= pair.Key.Y - 3 && clickedTile.Y < pair.Key.Y + 2;
+            if (!insideMachine)
+                continue;
+
+            anchor = pair.Key;
+            incubator = pair.Value;
+            return true;
+        }
+
+        anchor = Vector2.Zero;
+        incubator = null;
+        return false;
     }
 
     private void ReconcileBreederMachineKeys(GameLocation location)

@@ -17,18 +17,20 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
     private readonly SlimeRegistry registry;
     private readonly string machineKey;
     private readonly Func<int, bool> startIncubation;
+    private readonly Texture2D incubatorTexture;
     private readonly List<(int InventoryIndex, string Name, int Stack)> candidates;
     private readonly int listTop;
     private readonly int listBottom;
     private int firstVisible;
     private string? statusMessage;
 
-    public SlimeIncubatorMenu(SlimeRegistry registry, string machineKey, Func<int, bool> startIncubation)
+    public SlimeIncubatorMenu(SlimeRegistry registry, string machineKey, Func<int, bool> startIncubation, Texture2D incubatorTexture)
         : base(Game1.uiViewport.Width / 2 - 350, Game1.uiViewport.Height / 2 - 240, 700, 480)
     {
         this.registry = registry;
         this.machineKey = machineKey;
         this.startIncubation = startIncubation;
+        this.incubatorTexture = incubatorTexture;
         this.listTop = this.yPositionOnScreen + 132;
         this.listBottom = this.listTop + VisibleRows * RowHeight;
         this.candidates = Game1.player.Items
@@ -94,26 +96,36 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
             int panelX = this.xPositionOnScreen + 36;
             int panelY = this.listTop + 8;
             int panelWidth = this.width - 72;
-            int panelHeight = 190;
+            int panelHeight = 260;
             Rectangle panel = new(panelX, panelY, panelWidth, panelHeight);
-            b.Draw(Game1.staminaRect, panel, new Color(238, 224, 190));
+            b.Draw(Game1.staminaRect, panel, new Color(48, 52, 93));
+            Rectangle machineArea = new(panelX + 4, panelY + 6, 250, 246);
+            b.Draw(this.incubatorTexture, machineArea,
+                new Rectangle(0, 0, this.incubatorTexture.Width, this.incubatorTexture.Height), Color.White);
+            int infoX = panelX + 270;
+            int infoWidth = panelWidth - 288;
+            b.Draw(Game1.staminaRect, new Rectangle(infoX, panelY + 8, infoWidth, panelHeight - 16),
+                active.ReadyOnDay <= Game1.Date.TotalDays ? new Color(200, 225, 239) : new Color(72, 77, 126));
 
             string eggName = "Ranch Slime Egg";
             if (this.registry.TryGetEgg(active.EggItemId, out SlimeEggRecord egg))
                 eggName = $"{egg.Genome.PrimarySpecies} Egg  •  {egg.Genome.RarityTier}  •  Gen {egg.Genome.Generation}";
+            Color infoText = active.ReadyOnDay <= Game1.Date.TotalDays ? new Color(42, 50, 88) : Color.White;
+            string stageTitle = active.ReadyOnDay <= Game1.Date.TotalDays ? "READY TO HATCH" : "HATCHING...";
+            b.DrawString(Game1.smallFont, stageTitle, new Vector2(infoX + 14, panelY + 22), infoText);
             b.DrawString(Game1.dialogueFont, eggName,
-                new Vector2(panelX + 18, panelY + 16), Game1.textColor);
+                new Vector2(infoX + 14, panelY + 54), infoText);
 
             string state = active.HatchAnimalId is not null
                 ? "Hatch reserved; confirming the saved animal."
                 : daysLeft > 0 ? $"Incubating  •  {daysLeft} day(s) remaining"
                 : "Ready to hatch  •  waiting for Daycare space";
             b.DrawString(Game1.smallFont, state,
-                new Vector2(panelX + 18, panelY + 55), Game1.textColor);
+                new Vector2(infoX + 14, panelY + 102), infoText);
 
-            int barX = panelX + 18;
-            int barY = panelY + 94;
-            int barWidth = panelWidth - 36;
+            int barX = infoX + 14;
+            int barY = panelY + 148;
+            int barWidth = infoWidth - 28;
             Rectangle barBack = new(barX, barY, barWidth, 24);
             b.Draw(Game1.staminaRect, barBack, new Color(91, 75, 58));
             if (progress > 0)
@@ -123,7 +135,12 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
             string progressText = $"{elapsed} / {duration} days  ({(int)(progress * 100)}%)";
             Vector2 progressSize = Game1.smallFont.MeasureString(progressText);
             b.DrawString(Game1.smallFont, progressText,
-                new Vector2(panelX + (panelWidth - progressSize.X) / 2, barY + 31), Game1.textColor);
+                new Vector2(infoX + (infoWidth - progressSize.X) / 2, barY + 31), infoText);
+
+            b.DrawString(Game1.smallFont, "Temperature", new Vector2(panelX + 16, panelY + 237), Color.White);
+            b.Draw(Game1.staminaRect, new Rectangle(panelX + 130, panelY + 239, 220, 14), new Color(25, 38, 74));
+            b.Draw(Game1.staminaRect, new Rectangle(panelX + 133, panelY + 242,
+                Math.Max(1, (int)(214 * progress)), 8), new Color(47, 199, 234));
         }
         else if (this.candidates.Count == 0)
         {
