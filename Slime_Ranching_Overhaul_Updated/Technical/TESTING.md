@@ -12,6 +12,10 @@ Use a copy of a single-player save with at least one existing Slime Hutch and on
 
 The `TaumTest_322865388` copy passed the basic load, save, reload, and hutch inspection checks on 2026-10-26: seven vanilla slimes remained unmanaged and the external registry reloaded with zero records. Other foundation checks remain open.
 
+## External mod-data backup command
+
+While a single-player save is loaded, run `slime_ranching_backup_external_data <exact save folder name>`. Confirm the log gives a path under `<installed mod folder>/data/backups/`, then open the ZIP and confirm it contains the save's `slime-registry-v1.json` (if created) and `first-seen/` snapshot files. The command does not copy the vanilla Stardew save; back that up separately.
+
 ## Vanilla slime isolation
 
 1. Load the disposable test save and note the vanilla GreenSlime count in its Slime Hutch.

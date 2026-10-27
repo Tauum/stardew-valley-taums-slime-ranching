@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.IO.Compression;
 using StardewModdingAPI;
 using taums_slime_ranching.Models;
 
@@ -134,6 +135,21 @@ internal sealed class ModStateStore
         File.Move(pendingPath, path, overwrite: true);
         this.legacyFoodLikeMoved = false;
         this.schemaMigrated = false;
+    }
+
+    public string? CreateExternalDataBackup()
+    {
+        string saveDirectory = GetSaveDirectory(this.modDirectory);
+        if (!Directory.Exists(saveDirectory))
+            return null;
+
+        string saveName = Constants.SaveFolderName!;
+        string backupDirectory = Path.Combine(this.modDirectory, "data", "backups");
+        Directory.CreateDirectory(backupDirectory);
+        string fileName = $"{saveName}-{DateTime.UtcNow:yyyyMMdd-HHmmss-fff}.zip";
+        string backupPath = Path.Combine(backupDirectory, fileName);
+        ZipFile.CreateFromDirectory(saveDirectory, backupPath, CompressionLevel.Optimal, includeBaseDirectory: false);
+        return backupPath;
     }
 
     public static string GetSaveDirectory(string modDirectory)

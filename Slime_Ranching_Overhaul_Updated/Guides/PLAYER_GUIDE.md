@@ -120,6 +120,14 @@ The mod keeps its registry and first-seen snapshot under:
 <installed mod folder>/data/saves/<save folder name>/
 ```
 
+To create a timestamped ZIP backup of that save-specific mod data while playing, run:
+
+```text
+slime_ranching_backup_external_data <exact save folder name>
+```
+
+The archive is written under `<installed mod folder>/data/backups/`. It contains the external registry and first-seen snapshot, not the vanilla Stardew save. Keep making normal game-save backups separately.
+
 The converter, Field Guide, and Common Slime Egg are custom item references in the Stardew save. If the mod is removed while one remains in a save, Stardew will show it as an Error Item. The Slime Daycare building and Ranch Slime animals are native game entities saved by Stardew. Existing `GreenSlime` monsters are not matched or changed. Ranch Slime genome records are stored externally and keyed by the native FarmAnimal ID; normal farm-animal properties remain in the save.
 
 ## Development book status

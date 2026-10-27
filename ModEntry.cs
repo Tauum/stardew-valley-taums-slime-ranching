@@ -38,6 +38,7 @@ public sealed class ModEntry : Mod
         helper.Events.Content.AssetRequested += this.OnAssetRequested;
         helper.Events.Input.ButtonPressed += this.OnButtonPressed;
         helper.ConsoleCommands.Add("slime_ranching_inspect", "Inspect vanilla slime or Ranch Slime counts in the current Slime Hutch or Slime Daycare.", this.OnInspectCommand);
+        helper.ConsoleCommands.Add("slime_ranching_backup_external_data", "Back up the current save's external mod data. Usage: slime_ranching_backup_external_data <exact save folder name>.", this.OnBackupExternalDataCommand);
         helper.ConsoleCommands.Add("slime_ranching_spawn_ranch_slime", "Spawn one Ranch Slime in the Slime Daycare. Usage: slime_ranching_spawn_ranch_slime <exact save folder name>.", this.OnSpawnRanchSlimeCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_size", "Set a managed Ranch Slime's test genome size. Usage: slime_ranching_set_size <exact save folder name> <animal ID> <Tiny|Small|Normal|Large|Giant>.", this.OnSetSlimeSizeCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_color", "Set a managed Ranch Slime's test base color. Usage: slime_ranching_set_color <exact save folder name> <animal ID> <Red|Orange|Yellow|Green|Blue|Purple|Pink>.", this.OnSetSlimeColorCommand);
@@ -1110,6 +1111,38 @@ public sealed class ModEntry : Mod
         }
 
         this.Monitor.Log("Added one Mutagenic Pool. Place it inside the Slime Daycare and use it with vanilla Slime in your inventory.", LogLevel.Info);
+    }
+
+    private void OnBackupExternalDataCommand(string command, string[] args)
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
+        {
+            this.Monitor.Log("Load a single-player save with available external slime state before creating a backup.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 1 || args[0] != saveName)
+        {
+            this.Monitor.Log($"Usage: slime_ranching_backup_external_data {saveName}", LogLevel.Warn);
+            return;
+        }
+
+        try
+        {
+            string? path = this.stateStore!.CreateExternalDataBackup();
+            if (path is null)
+            {
+                this.Monitor.Log("There is no external mod data folder to back up for this save yet.", LogLevel.Warn);
+                return;
+            }
+
+            this.Monitor.Log($"Backed up this save's external mod data (registry and first-seen snapshot) to: {path}", LogLevel.Info);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            this.Monitor.Log($"Could not back up external mod data: {exception.Message}", LogLevel.Error);
+        }
     }
 
     private void OnInspectCommand(string command, string[] args)
