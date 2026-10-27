@@ -31,6 +31,7 @@ public sealed class ModEntry : Mod
         this.config = helper.ReadConfig<ModConfig>();
         BuildingContent.NormalizeConfig(this.config);
         this.registry = new SlimeRegistry(this.Monitor);
+        BreederMovementPatch.SetReservationLookup(id => this.registry?.IsBreedingParentReserved(id) == true);
         this.stateStore = new ModStateStore(helper.DirectoryPath);
 
         helper.Events.GameLoop.SaveLoaded += this.OnSaveLoaded;

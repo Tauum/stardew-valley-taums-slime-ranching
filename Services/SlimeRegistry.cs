@@ -27,6 +27,9 @@ internal sealed class SlimeRegistry
     public IReadOnlyCollection<RefineryJobRecord> RefineryJobs => this.refineryJobs.Values;
 
     public IReadOnlyCollection<long> RanchSlimeFarmAnimalIds => this.farmAnimalRecords.Keys;
+    public bool IsBreedingParentReserved(long farmAnimalId) => this.breedingPairs.Values
+        .Any(pair => pair.OutputEggItemId is null
+            && (pair.ParentAId == farmAnimalId || pair.ParentBId == farmAnimalId));
     public IReadOnlyCollection<long> ReservedFarmAnimalIds => this.breedingPairs.Values
         .Where(pair => pair.OutputEggItemId is null)
         .SelectMany(pair => new[] { pair.ParentAId, pair.ParentBId })
