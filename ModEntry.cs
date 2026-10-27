@@ -619,6 +619,17 @@ public sealed class ModEntry : Mod
         {
             if (!this.registry.TryGetEgg(incubation.EggItemId, out SlimeEggRecord egg))
                 continue;
+
+            if (incubation.HatchAnimalId is long recordedAnimalId)
+            {
+                FarmAnimal? recordedAnimal = GetFarmAnimals().FirstOrDefault(animal => animal.myID.Value == recordedAnimalId);
+                if (recordedAnimal?.type.Value == FarmAnimalContent.RanchSlimeTypeId)
+                {
+                    this.registry.RegisterIncubationHatch(incubation, recordedAnimal);
+                    continue;
+                }
+            }
+
             if (animalHouse.animalsThatLiveHere.Count >= animalHouse.animalLimit.Value)
             {
                 this.Monitor.Log("A Ranch Slime Egg is ready, but the Slime Daycare is full; hatching will retry after space is available.", LogLevel.Trace);
@@ -774,7 +785,18 @@ public sealed class ModEntry : Mod
             string key = $"{Game1.currentLocation.NameOrUniqueName}:{(int)incubatorAnchor.X},{(int)incubatorAnchor.Y}";
             this.incubatorTexture ??= this.Helper.GameContent.Load<Texture2D>("Mods/Taum.SlimeRanching/Machines/SlimeIncubator");
             Game1.activeClickableMenu = new SlimeIncubatorMenu(this.registry!, key,
-                index => this.StartIncubation(key, index), this.incubatorTexture);
+                index => this.StartIncubation(key, index),
+                () =>
+                {
+                    IncubationRecord? record = this.registry!.GetIncubation(key);
+                    if (record?.HatchAnimalId is null || !this.registry.CompleteIncubation(key))
+                        return false;
+                    if (this.SaveExternalStateNow())
+                        return true;
+                    this.registry.RestoreIncubation(record);
+                    return false;
+                },
+                this.incubatorTexture);
             return;
         }
 

@@ -305,7 +305,6 @@ internal sealed class SlimeRegistry
                 continue;
             if (this.RegisterIncubationHatch(incubation, animal))
             {
-                this.CompleteIncubation(incubation.MachineKey);
                 recovered++;
             }
         }
@@ -344,6 +343,17 @@ internal sealed class SlimeRegistry
     }
 
     public bool CompleteIncubation(string machineKey) => this.incubations.Remove(machineKey);
+
+    public bool RestoreIncubation(IncubationRecord record)
+    {
+        if (string.IsNullOrWhiteSpace(record.MachineKey)
+            || this.incubations.ContainsKey(record.MachineKey)
+            || !this.eggs.ContainsKey(record.EggItemId))
+            return false;
+
+        this.incubations.Add(record.MachineKey, record);
+        return true;
+    }
 
     public bool IsReserved(long farmAnimalId, string? exceptMachineKey = null) =>
         (this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? slime) && slime.IsCompanion)
