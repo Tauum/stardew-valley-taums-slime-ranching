@@ -20,6 +20,7 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [x] Open breeder UI, select two Ranch Slime rows, and display selected parents in the menu preview.
 - [x] Scroll through all Daycare residents in the breeder parent list; only four rows are visible at once.
 - [x] Start the cycle from the selection screen; it automatically reserves the parents.
+- [x] Show selected parent species, size, shiny/mutation flags, and favorite food in the chamber preview.
 - [x] Implement a two-day cycle and fixed-genome Ranch Slime Egg output with tooltip fields for parents, generation, and favorite food. Egg spawn and tooltip were confirmed in-game.
 - [x] Persist breeder-ready notification state; retry the notice after an external write failure and avoid repeat notices after reload.
 - [ ] Verify ready notification, collect flow, cancellation/release, and cycle/egg persistence after save/reload.
@@ -89,6 +90,7 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [ ] Documentation and recovery instructions; single-player alpha packaging.
 
 ## Next in-game verification
+- [ ] Check the breeder's two genome summaries with a hybrid, a Shadow Clone, and a parent with each long favorite-food label; confirm text does not collide or clip.
 - [ ] On the disposable `TaumTest_322865388` save, buy/place a Mutagenic Pool in the Daycare; confirm a juvenile, busy, or already-mutated slime can't be selected.
 - [ ] Start an attempt with 500 vanilla Slime, sleep, and verify the success/failure message, stored trait or pity increment, and unchanged slime health/existence. Reload mid-cycle and ensure the stored roll does not change.
 - [ ] Verify the per-slime odds increase by 2 points per failure to 30%, reset after success, and remain independent between slimes; review these provisional values before release.

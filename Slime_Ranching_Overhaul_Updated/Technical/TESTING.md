@@ -51,6 +51,13 @@ Common and genome-specific Ranch Slime Eggs can now hatch in the custom Slime In
 
 The pair, cycle dates, and resulting egg genome are stored in the mod-folder registry, not in game-save metadata. Parents remain in the Daycare and stop moving in place; the chamber is a menu preview, not a physical enclosure. The two-day cycle can produce an egg; verify its ready notification, collection, and persistence in game. The machine currently borrows the vanilla Egg-Press sprite as a visual placeholder.
 
+## Breeder parent genome preview
+
+1. Open the Slime Breeder and select two Ranch Slimes with different colors, sizes, liked foods, or mutation traits.
+2. In each chamber slot, confirm the preview lists species (including both species for a hybrid), size, shiny/mutation flags, and the liked food by name.
+3. Change the selected pair and verify both summaries follow the new selection. Confirm long hybrid labels remain inside their own side of the chamber at the normal game UI scale.
+4. Start and cancel a cycle, then reopen the menu. The preview must reflect the parents' current external genomes and must not change any genome fields itself.
+
 ## Chromatic Crystal breeding inputs (prototype)
 
 1. In the disposable `TaumTest_322865388` save, run `slime_ranching_give_crystals TaumTest_322865388`. It requires seven free inventory slots and adds one crystal for each base color.

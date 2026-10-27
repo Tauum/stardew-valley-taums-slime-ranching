@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-10-27  
 **Test save:** `TaumTest_322865388` (disposable copy)  
-**Current branch:** `feature/shadow-clone-visual-echo`, chained after `feature/mutagenic-pool-safe-failure`. Mutagenic Pool prototype remains in the parent. This branch adds transient, Daycare-only translucent echoes for Shadow Clone slimes and a `slime_ranching_set_mutation` test command. Build passes; visual placement, tint, alpha, and flicker need an in-game look. Continue development after review; this is not a stopping point.
+**Current branch:** `feature/breeder-genome-inspector`, chained after `feature/shadow-clone-visual-echo`. The breeder chamber now previews each selected parent's species, size, shiny/mutation flags, and favorite food. Build passes; text fit and clarity need an in-game check. Continue feature work after review; this is not a stopping point.
 
 ## Current state
 
@@ -31,6 +31,7 @@
 - Marnie also sells a Slime Bed (configurable default 1,800g). Nearby slimes lower briefly into a resting pose, then return to their normal offset. It does not change happiness, age, or breeding; verify interruption cleanup.
 - Marnie also sells a Mutagenic Pool (configurable default 15,000g). It consumes 500 vanilla Slime and assigns one mature, unreserved Ranch Slime for a one-day attempt. Chance starts at 5%, rises by 2 percentage points per failure, and caps at 30%; failure is safe. Shadow Clone is data-only. Attempt/pity state is external, schema 9; sleep to save the inventory and attempt. All numbers are provisional; see `Technical/TESTING.md`.
 - Shadow Clone slimes now get a short translucent render-only echo in the Daycare, at most four visible simultaneously. It creates no FarmAnimal, drops, breeding, or AI behavior. Use `slime_ranching_set_mutation <save> <animal ID> ShadowClone|none` for deterministic visual testing. This is a visual scaffold, not the planned ability behavior.
+- The breeder chamber now identifies each selected parent from its external genome, including hybrid species, size, shiny/mutation flags, and favorite food display name. `Technical/TESTING.md` has a short layout/readability check.
 - The interaction scheduler is now named `EnrichmentInteractionService`. It handles all five implemented furniture types, caches occupied target tiles once per assignment pass, and computes each playground candidate distance once during sorting. Build passes with only the existing analyzer/compiler version warning; compare behavior/performance with a crowded Daycare in game.
 - Breeder size inheritance now uses Tiny/Small/Normal/Large/Giant categories. The weights specified in the design notes are implemented; provisional defaults cover Tiny+Tiny, Normal+Normal, adjacent pairs, and wider gaps. Unknown legacy labels are treated as Normal only when rolling offspring. Small and Large also have distinct trampoline arcs.
 - Ranch Slime sprites now use separate color/size assets in 24x32 frame cells. Normal opaque art remains the original 16x24 pixels; Tiny/Small shrink and Large/Giant enlarge with nearest-neighbor sampling, centered and bottom-aligned. Check floors, petting, breeder previews, furniture animations, and clipping in-game.

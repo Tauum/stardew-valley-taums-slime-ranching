@@ -14,6 +14,22 @@ internal static class FoodLikeCatalog
     public static bool IsEligible(string? qualifiedItemId) =>
         qualifiedItemId is not null && ItemIds.Contains(qualifiedItemId, StringComparer.Ordinal);
 
+    public static string GetDisplayName(string? qualifiedItemId) => qualifiedItemId switch
+    {
+        "(O)684" => "Bug Meat",
+        "(O)766" => "Slime",
+        "(O)767" => "Bat Wing",
+        "(O)768" => "Solar Essence",
+        "(O)769" => "Void Essence",
+        "(O)167" => "Joja Cola",
+        "(O)168" => "Trash",
+        "(O)169" => "Driftwood",
+        "(O)170" => "Broken Glasses",
+        "(O)171" => "Broken CD",
+        "(O)172" => "Soggy Newspaper",
+        _ => "Unknown"
+    };
+
     /// <summary>Assign the same favorite for a given slime ID on every load.</summary>
     public static string ForSlime(Guid slimeId)
     {

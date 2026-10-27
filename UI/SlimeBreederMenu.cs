@@ -289,12 +289,35 @@ internal sealed class SlimeBreederMenu : IClickableMenu
             FarmAnimal parent = parents[i];
             int centerX = chamber.X + (i == 0 ? 102 : 242);
             float bob = (float)Math.Sin(time * 4 + i * Math.PI) * 5f;
-            Rectangle spriteBounds = new(centerX - 36, chamber.Y + 60 + (int)bob, 72, 108);
+            Rectangle spriteBounds = new(centerX - 36, chamber.Y + 38 + (int)bob, 72, 96);
             b.Draw(parent.Sprite.Texture, spriteBounds, parent.Sprite.SourceRect, Color.White);
             string name = i == 0 ? "Parent A" : "Parent B";
             float nameWidth = Game1.smallFont.MeasureString(name).X;
-            b.DrawString(Game1.smallFont, name, new Vector2(centerX - nameWidth / 2, chamber.Y + 182), Game1.textColor);
+            b.DrawString(Game1.smallFont, name, new Vector2(centerX - nameWidth / 2, chamber.Y + 136), Game1.textColor);
+
+            var species = this.registry.GetGenomeColorState(parent.myID.Value);
+            string speciesName = species?.SecondarySpecies is string secondary
+                ? $"{species.Value.PrimarySpecies} / {secondary}"
+                : species?.PrimarySpecies ?? "Ranch Slime";
+            string size = this.registry.GetGenomeSize(parent.myID.Value) ?? "Normal";
+            string shiny = this.registry.GetGenomeIsShiny(parent.myID.Value) ? " · Shiny" : "";
+            string mutation = this.registry.GetMutationTrait(parent.myID.Value) is string trait ? $" · {trait}" : "";
+            DrawCenteredFittedText(b, speciesName, centerX, chamber.Y + 156);
+            string traits = $"{size}{shiny}{mutation}";
+            DrawCenteredFittedText(b, traits, centerX, chamber.Y + 174);
+
+            string likedFood = $"Likes: {FoodLikeCatalog.GetDisplayName(this.registry.GetGenomeLikedFood(parent.myID.Value))}";
+            DrawCenteredFittedText(b, likedFood, centerX, chamber.Y + 192);
         }
+    }
+
+    private static void DrawCenteredFittedText(SpriteBatch batch, string text, int centerX, int y)
+    {
+        Vector2 measured = Game1.tinyFont.MeasureString(text);
+        float scale = Math.Min(1f, 148f / Math.Max(1f, measured.X));
+        batch.DrawString(Game1.tinyFont, text,
+            new Vector2(centerX - measured.X * scale / 2f, y), Game1.textColor,
+            0f, Vector2.Zero, scale, SpriteEffects.None, 0.999f);
     }
 
     private void DrawCrystalSelector(SpriteBatch b)
