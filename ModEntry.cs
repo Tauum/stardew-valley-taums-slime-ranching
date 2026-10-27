@@ -18,7 +18,7 @@ public sealed class ModEntry : Mod
     private ModStateStore? stateStore;
     private ModConfig config = new();
     private bool stateReady;
-    private readonly TrampolineInteractionService trampolineInteractions = new();
+    private readonly EnrichmentInteractionService trampolineInteractions = new();
 
     public override void Entry(IModHelper helper)
     {

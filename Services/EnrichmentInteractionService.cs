@@ -4,7 +4,7 @@ using StardewValley;
 namespace taums_slime_ranching.Services;
 
 /// <summary>Runs short, local-only trampoline bounce animations for nearby Ranch Slimes.</summary>
-internal sealed class TrampolineInteractionService
+internal sealed class EnrichmentInteractionService
 {
     private const int AssignmentIntervalTicks = 30;
     private const float InteractionRadiusPixels = 128f;
