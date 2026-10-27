@@ -32,6 +32,7 @@ See `Guides/PLAYER_GUIDE.md` for detailed instructions on the converter, inspect
 - The Slime Playground supports a synchronized two-slime hop interaction. These furniture interactions are visual prototypes and do not yet affect happiness or friendship.
 - A Slime Slide adds a low hop and horizontal glide animation for nearby Ranch Slimes.
 - A Slime Bed adds a short resting pose animation. The enrichment objects are visual prototypes with no happiness or breeding effects yet.
+- Breeding size now inherits across Tiny, Small, Normal, Large, and Giant using provisional weights; a setup command can assign sizes to managed slimes for testing.
 - Chromatic Crystals can focus breeder offspring on one of seven base colors. Crystal acquisition and progression are undecided; a SMAPI command supplies test crystals.
 - AI-assisted/generated artwork is planned; placeholder art first. Generated images will require sprite-sheet preparation and in-game QA.
 - Single-player v1; multiplayer explicitly deferred. Cosmetic item transmutation and elaborate family-tree UI may follow v1.

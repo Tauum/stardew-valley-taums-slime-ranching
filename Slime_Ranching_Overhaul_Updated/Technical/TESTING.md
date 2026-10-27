@@ -64,10 +64,11 @@ Crystal items currently use vanilla mineral icons and are available only through
 
 ## Five-size inheritance prototype
 
-1. Prepare two mature slimes with known sizes (inspect their external genome entries). Breed Small+Small, Large+Large, Small+Large, and Giant+Giant pairs and inspect each egg tooltip's Size value.
-2. Check that every outcome is one of Tiny, Small, Normal, Large, or Giant, and that size does not change the parents or maturity clock.
-3. Hatch size-varied eggs. Compare trampoline animation profiles: Tiny highest/fastest, Small above Normal, Large below Normal, and Giant lowest/slowest. Cushion, bed, slide, and playground interactions should remain independent of genetic size for now.
-4. Visual sprite scaling and collision/selection behavior are not implemented yet; review those separately before marking the five-size feature complete.
+1. Run `slime_ranching_spawn_ranch_slime <save name>` twice and note each FarmAnimal ID from the console log. Set their external test sizes with `slime_ranching_set_size <save name> <animal ID> <Tiny|Small|Normal|Large|Giant>`. For example, set both to `Small` for a Small+Small pair.
+2. Prepare known pairs. Breed Small+Small, Large+Large, Small+Large, and Giant+Giant pairs and inspect each egg tooltip's Size value.
+3. Check that every outcome is one of Tiny, Small, Normal, Large, or Giant, and that size does not change the parents or maturity clock.
+4. Hatch size-varied eggs. Compare trampoline animation profiles: Tiny highest/fastest, Small above Normal, Large below Normal, and Giant lowest/slowest. Cushion, bed, slide, and playground interactions should remain independent of genetic size for now.
+5. Visual sprite scaling and collision/selection behavior are not implemented yet; review those separately before marking the five-size feature complete.
 
 The probabilities are provisional and listed in `Features/SIZE_AND_MATURITY.md`. A few manual samples only check that the categories and inheritance path work; they do not validate statistical balance.
 

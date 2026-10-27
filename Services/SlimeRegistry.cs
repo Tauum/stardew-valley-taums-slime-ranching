@@ -37,6 +37,17 @@ internal sealed class SlimeRegistry
     public string? GetGenomeSize(long farmAnimalId) =>
         this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record) ? record.Genome.Size : null;
 
+    public bool SetGenomeSize(long farmAnimalId, string size)
+    {
+        if (!this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record)
+            || !new[] { "Tiny", "Small", "Normal", "Large", "Giant" }.Contains(size, StringComparer.OrdinalIgnoreCase))
+            return false;
+
+        record.Genome.Size = new[] { "Tiny", "Small", "Normal", "Large", "Giant" }
+            .First(value => value.Equals(size, StringComparison.OrdinalIgnoreCase));
+        return true;
+    }
+
     public string? GetGenomeColor(long farmAnimalId) =>
         this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record) ? record.Genome.VisualColor : null;
 

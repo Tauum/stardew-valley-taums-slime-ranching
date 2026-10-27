@@ -36,6 +36,7 @@ public sealed class ModEntry : Mod
         helper.Events.Input.ButtonPressed += this.OnButtonPressed;
         helper.ConsoleCommands.Add("slime_ranching_inspect", "Inspect vanilla slime or Ranch Slime counts in the current Slime Hutch or Slime Daycare.", this.OnInspectCommand);
         helper.ConsoleCommands.Add("slime_ranching_spawn_ranch_slime", "Spawn one Ranch Slime in the Slime Daycare. Usage: slime_ranching_spawn_ranch_slime <exact save folder name>.", this.OnSpawnRanchSlimeCommand);
+        helper.ConsoleCommands.Add("slime_ranching_set_size", "Set a managed Ranch Slime's test genome size. Usage: slime_ranching_set_size <exact save folder name> <animal ID> <Tiny|Small|Normal|Large|Giant>.", this.OnSetSlimeSizeCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_converter", "Give one Slime Egg Converter for testing. Usage: slime_ranching_give_converter <exact save folder name>.", this.OnGiveConverterCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_guidebook", "Give the Slime Ranching Field Guide. Usage: slime_ranching_give_guidebook <exact save folder name>.", this.OnGiveGuidebookCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_breeder", "Give one Slime Breeder for testing. Usage: slime_ranching_give_breeder <exact save folder name>.", this.OnGiveBreederCommand);
@@ -735,6 +736,38 @@ public sealed class ModEntry : Mod
         animalHouse.adoptAnimal(animal);
         this.registry!.RegisterRanchSlimes(new[] { animal });
         this.Monitor.Log($"Added one Ranch Slime to the Slime Daycare (FarmAnimal ID {animalId}). Sleep to save the animal and its external genome record.", LogLevel.Info);
+    }
+
+    private void OnSetSlimeSizeCommand(string command, string[] args)
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
+        {
+            this.Monitor.Log("Load a single-player save with available external slime state before changing a test genome.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 3 || args[0] != saveName || !long.TryParse(args[1], out long animalId))
+        {
+            this.Monitor.Log($"Usage: slime_ranching_set_size {saveName} <animal ID> <Tiny|Small|Normal|Large|Giant>", LogLevel.Warn);
+            return;
+        }
+
+        string? oldSize = this.registry!.GetGenomeSize(animalId);
+        if (oldSize is null || !this.registry.SetGenomeSize(animalId, args[2]))
+        {
+            this.Monitor.Log("That ID is not a managed Ranch Slime, or the requested size is invalid.", LogLevel.Warn);
+            return;
+        }
+
+        if (!this.SaveExternalStateNow())
+        {
+            this.registry.SetGenomeSize(animalId, oldSize);
+            this.Monitor.Log("Could not save external state; the original genome size was restored.", LogLevel.Error);
+            return;
+        }
+
+        this.Monitor.Log($"Changed Ranch Slime {animalId} genome size from {oldSize} to {this.registry.GetGenomeSize(animalId)} in the mod's external registry.", LogLevel.Info);
     }
 
     private void OnGiveGuidebookCommand(string command, string[] args)

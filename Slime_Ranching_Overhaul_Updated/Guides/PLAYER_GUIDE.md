@@ -75,10 +75,12 @@ Select the book and press the action button to open it. It is a custom item refe
 ## Features still under development
 
 - **Hatching:** Common and genome-specific Ranch Slime Eggs hatch in the custom incubator; vanilla eggs are unaffected.
-- **Breeding:** The breeder, parent selection, two-day cycle, and fixed-genome egg output work. Inheritance is a placeholder and needs balancing and in-game verification.
+- **Breeding:** The breeder, parent selection, two-day cycle, and fixed-genome egg output work. Size inheritance now uses five weighted categories; color inheritance and exceptional traits remain provisional and need balancing and in-game verification.
 - **Egg details:** Hover over a genome-specific Ranch Slime Egg to view its stored species, color, size, rarity, mutation, generation, parent IDs, and favorite food.
 - **Genetics and slime identity:** The registry model can hold genome data. Ranch Slime genomes are keyed to native FarmAnimal IDs; this still needs save/reload verification. Existing GreenSlime monsters are only captured in the first-seen snapshot; they aren't changed or adopted.
-- **Food likes, furniture, production, and companions:** These systems are planned but aren't active gameplay features yet.
+- **Food likes:** Favorite food is stored and shown on genome eggs, but feeding a Ranch Slime has no gameplay effect yet.
+- **Furniture:** Trampoline, cushion, playground, slide, and bed animations are active prototypes in the Daycare, with no happiness or breeding effects yet.
+- **Production and companions:** Slime-produced goods and custom companion AI are not active gameplay features yet.
 
 ## Ranch Slime animal prototype
 
@@ -89,6 +91,8 @@ slime_ranching_spawn_ranch_slime <exact save folder name>
 ```
 
 For the current test copy, use `slime_ranching_spawn_ranch_slime TaumTest_322865388`. It adds a farm-animal prototype without converting or removing any existing vanilla slimes. Petting, movement, Daycare assignment, and save/reload still need in-game verification. When the game saves, the mod records its genome externally and links it to the animal's native farm-animal ID. Standard animal properties like its name, home, age, and friendship remain part of Stardew's normal animal save data.
+
+To set up controlled size-inheritance pairs, use `slime_ranching_set_size TaumTest_322865388 <animal ID> <Tiny|Small|Normal|Large|Giant>`. The command edits only that managed Ranch Slime's external genome record.
 
 ### Breeder selection preview
 
