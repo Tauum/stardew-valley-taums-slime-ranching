@@ -12,7 +12,7 @@ internal static class BuildingContent
 {
     private const int PixelsPerTile = 16;
     private const int DaycareTextureWidth = 112;
-    private const int DaycareTextureHeight = 128;
+    private const int DaycareTextureHeight = 64;
     private const int DaycareFootprintWidth = 7;
     private const int DaycareFootprintHeight = 4;
     private const int DesignCellWidth = 384;
@@ -111,8 +111,7 @@ internal static class BuildingContent
             daycare.Texture = selectedTexture;
             daycare.Size = new Point(DaycareFootprintWidth, DaycareFootprintHeight);
             daycare.SourceRect = new Rectangle(0, 0, daycare.Size.X * PixelsPerTile, DaycareTextureHeight);
-            // Visually align the building body with the marked footprint without
-            // translating/cropping its roof in the source texture.
+            // Use the full 7x4 tile footprint as the source art bounds.
             daycare.DrawOffset = new Vector2(3f, 8f);
             // Explicitly allow this custom animal's House ID. Some animal
             // placement paths only consult ValidOccupantTypes for modded types.
@@ -157,8 +156,8 @@ internal static class BuildingContent
         int sourceHeight = DesignRowBounds[row + 1] - sourceY;
         Color[] output = new Color[DaycareTextureWidth * DaycareTextureHeight];
 
-        // Use nearest-neighbor scaling to keep the authored pixels crisp at the
-        // 112x128 source size Stardew expects for the standard 7x4 footprint.
+        // Use nearest-neighbor scaling to fit the complete 7x4 building source
+        // rectangle (112x64 pixels) without texture pixels extending past it.
         for (int y = 0; y < DaycareTextureHeight; y++)
         for (int x = 0; x < DaycareTextureWidth; x++)
         {
