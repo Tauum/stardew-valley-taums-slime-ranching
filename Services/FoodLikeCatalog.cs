@@ -1,3 +1,5 @@
+using StardewValley;
+
 namespace taums_slime_ranching.Services;
 
 /// <summary>Vanilla monster loot and fishing trash eligible as a slime's one favorite food.</summary>
@@ -38,4 +40,7 @@ internal static class FoodLikeCatalog
 
         return ItemIds[slimeId.ToByteArray()[0] % ItemIds.Length];
     }
+
+    /// <summary>Choose an eligible favorite for randomized test genomes.</summary>
+    public static string GetRandomItemId() => ItemIds[Game1.random.Next(ItemIds.Length)];
 }

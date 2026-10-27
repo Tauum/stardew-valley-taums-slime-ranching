@@ -65,7 +65,7 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("slime_ranching_give_pond", "Give one Slime Pond for testing. Usage: slime_ranching_give_pond <exact save folder name>.", this.OnGivePondCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_swing", "Give one Slime Swing for testing. Usage: slime_ranching_give_swing <exact save folder name>.", this.OnGiveSwingCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_fairy_lights", "Give one set of Slime Fairy Lights for testing. Usage: slime_ranching_give_fairy_lights <exact save folder name>.", this.OnGiveFairyLightsCommand);
-        helper.ConsoleCommands.Add("slime_ranching_give_test_eggs", "Create two genome-specific test eggs with optional metadata. Usage: slime_ranching_give_test_eggs <save name> [species=Name] [secondary=Name|none] [color=#RRGGBB] [size=Tiny|Small|Normal|Large|Giant] [rarity=Tier] [shiny=true|false] [food=(O)itemId] [generation=number] [mutation=ShadowClone|none].", this.OnGiveTestEggsCommand);
+        helper.ConsoleCommands.Add("slime_ranching_give_test_eggs", "Create two genome-specific test eggs, use 'random' for randomized traits, or pass key=value metadata. Usage: slime_ranching_give_test_eggs <save name> [random|species=Name ...].", this.OnGiveTestEggsCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_color_eggs", "Create seven color test eggs. Usage: slime_ranching_give_color_eggs <exact save folder name>.", this.OnGiveColorEggsCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_crystals", "Give one of each Chromatic Crystal for breeder testing. Usage: slime_ranching_give_crystals <exact save folder name>.", this.OnGiveCrystalsCommand);
     }
@@ -1008,7 +1008,15 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        if (!TryParseTestEggMetadata(args.Skip(1), out Dictionary<string, string> metadata, out string? metadataError))
+        bool randomMode = args.Skip(1).Any(argument => argument.Equals("random", StringComparison.OrdinalIgnoreCase));
+        if (randomMode && args.Length != 2)
+        {
+            this.Monitor.Log($"Use either 'slime_ranching_give_test_eggs {saveName} random' or the optional key=value fields, not both.", LogLevel.Warn);
+            return;
+        }
+
+        Dictionary<string, string> metadata = new(StringComparer.OrdinalIgnoreCase);
+        if (!randomMode && !TryParseTestEggMetadata(args.Skip(1), out metadata, out string? metadataError))
         {
             this.Monitor.Log($"Invalid test egg metadata: {metadataError} Usage: slime_ranching_give_test_eggs {saveName} [key=value ...].", LogLevel.Warn);
             return;
@@ -1020,28 +1028,39 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        Guid mintId = Guid.NewGuid();
-        Guid violetId = Guid.NewGuid();
-        string species = NormalizeTestGenomeName(metadata.GetValueOrDefault("species", "Ranch Slime"));
-        string? secondarySpecies = metadata.TryGetValue("secondary", out string? secondary)
-            && !secondary.Equals("none", StringComparison.OrdinalIgnoreCase)
-                ? NormalizeTestGenomeName(secondary)
-                : null;
-        string? chosenColor = metadata.GetValueOrDefault("color");
-        string? chosenSize = metadata.GetValueOrDefault("size");
-        string? chosenRarity = metadata.GetValueOrDefault("rarity");
-        bool? chosenShiny = metadata.TryGetValue("shiny", out string? shinyText) ? bool.Parse(shinyText) : null;
-        string? chosenFood = metadata.GetValueOrDefault("food");
-        int? chosenGeneration = metadata.TryGetValue("generation", out string? generationText) ? int.Parse(generationText) : null;
-        string? chosenMutation = metadata.TryGetValue("mutation", out string? mutationText)
-            && !mutationText.Equals("none", StringComparison.OrdinalIgnoreCase)
-                ? "Shadow Clone"
-                : null;
-        taums_slime_ranching.Models.SlimeEggRecord[] eggs =
+        taums_slime_ranching.Models.SlimeEggRecord[] eggs;
+        string description;
+        if (randomMode)
         {
-            this.CreateTestEgg(mintId, species, secondarySpecies, chosenColor ?? "#65DDBB", chosenSize, chosenRarity, chosenShiny, chosenFood, chosenGeneration, chosenMutation),
-            this.CreateTestEgg(violetId, species, secondarySpecies, chosenColor ?? "#8A2BE2", chosenSize, chosenRarity, chosenShiny, chosenFood, chosenGeneration, chosenMutation)
-        };
+            eggs = new[] { this.CreateRandomTestEgg(), this.CreateRandomTestEgg() };
+            description = "two independently randomized genome-specific Ranch Slime Eggs";
+        }
+        else
+        {
+            Guid mintId = Guid.NewGuid();
+            Guid violetId = Guid.NewGuid();
+            string species = NormalizeTestGenomeName(metadata.GetValueOrDefault("species", "Ranch Slime"));
+            string? secondarySpecies = metadata.TryGetValue("secondary", out string? secondary)
+                && !secondary.Equals("none", StringComparison.OrdinalIgnoreCase)
+                    ? NormalizeTestGenomeName(secondary)
+                    : null;
+            string? chosenColor = metadata.GetValueOrDefault("color");
+            string? chosenSize = metadata.GetValueOrDefault("size");
+            string? chosenRarity = metadata.GetValueOrDefault("rarity");
+            bool? chosenShiny = metadata.TryGetValue("shiny", out string? shinyText) ? bool.Parse(shinyText) : null;
+            string? chosenFood = metadata.GetValueOrDefault("food");
+            int? chosenGeneration = metadata.TryGetValue("generation", out string? generationText) ? int.Parse(generationText) : null;
+            string? chosenMutation = metadata.TryGetValue("mutation", out string? mutationText)
+                && !mutationText.Equals("none", StringComparison.OrdinalIgnoreCase)
+                    ? "Shadow Clone"
+                    : null;
+            eggs = new[]
+            {
+                this.CreateTestEgg(mintId, species, secondarySpecies, chosenColor ?? "#65DDBB", chosenSize, chosenRarity, chosenShiny, chosenFood, chosenGeneration, chosenMutation),
+                this.CreateTestEgg(violetId, species, secondarySpecies, chosenColor ?? "#8A2BE2", chosenSize, chosenRarity, chosenShiny, chosenFood, chosenGeneration, chosenMutation)
+            };
+            description = $"two distinct genome-specific Ranch Slime Eggs ({species}; {eggs[0].Genome.VisualColor}, {eggs[0].Genome.Size}, {eggs[0].Genome.RarityTier}, shiny={eggs[0].Genome.IsShiny}, generation={eggs[0].Genome.Generation}, mutation={eggs[0].Genome.MutationTrait ?? "none"})";
+        }
 
         try
         {
@@ -1055,7 +1074,7 @@ public sealed class ModEntry : Mod
                     throw new InvalidOperationException("Inventory space changed while the test eggs were being added.");
             }
 
-            this.Monitor.Log($"Added two distinct genome-specific Ranch Slime Eggs ({species}; {eggs[0].Genome.VisualColor}, {eggs[0].Genome.Size}, {eggs[0].Genome.RarityTier}, shiny={eggs[0].Genome.IsShiny}, generation={eggs[0].Genome.Generation}, mutation={eggs[0].Genome.MutationTrait ?? "none"}). Their genome records are in the mod's external registry.", LogLevel.Info);
+            this.Monitor.Log($"Added {description}. Their genome records are in the mod's external registry.", LogLevel.Info);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException)
         {
@@ -1081,6 +1100,35 @@ public sealed class ModEntry : Mod
             LikedFoodItemId = likedFoodItemId ?? FoodLikeCatalog.ForSlime(genomeId)
         };
         return this.registry!.CreateEgg(genome);
+    }
+
+    private taums_slime_ranching.Models.SlimeEggRecord CreateRandomTestEgg()
+    {
+        (string Name, string Hex)[] colors =
+        {
+            ("Red", "#FF0000"), ("Orange", "#FF9500"), ("Yellow", "#FFD60A"),
+            ("Green", "#00FF00"), ("Blue", "#0A84FF"), ("Purple", "#BF5AF2"), ("Pink", "#FF69B4")
+        };
+        string[] sizes = { "Tiny", "Small", "Normal", "Large", "Giant" };
+        string[] rarities = { "Common", "Uncommon", "Rare", "Epic", "Legendary" };
+        var primary = colors[Game1.random.Next(colors.Length)];
+        string? secondary = Game1.random.NextDouble() < 0.3
+            ? $"{colors.Where(color => color.Name != primary.Name).ElementAt(Game1.random.Next(colors.Length - 1)).Name} Slime"
+            : null;
+        Guid id = Guid.NewGuid();
+        return this.registry!.CreateEgg(new SlimeGenome
+        {
+            Id = id,
+            PrimarySpecies = $"{primary.Name} Slime",
+            SecondarySpecies = secondary,
+            VisualColor = primary.Hex,
+            Size = sizes[Game1.random.Next(sizes.Length)],
+            RarityTier = rarities[Game1.random.Next(rarities.Length)],
+            IsShiny = Game1.random.NextDouble() < 0.1,
+            LikedFoodItemId = FoodLikeCatalog.GetRandomItemId(),
+            Generation = Game1.random.Next(0, 7),
+            MutationTrait = Game1.random.NextDouble() < 0.1 ? "Shadow Clone" : null
+        });
     }
 
     private static bool TryParseTestEggMetadata(IEnumerable<string> arguments,
