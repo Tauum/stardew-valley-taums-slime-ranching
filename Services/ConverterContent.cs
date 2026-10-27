@@ -183,15 +183,51 @@ internal static class ConverterContent
 
         // Incubator: a single glowing violet egg chamber.
         int incubatorX = tileWidth * 2;
-        DrawMachineBody(pixels, tileWidth * columns, incubatorX, outline, steel, highlight);
-        Fill(pixels, tileWidth * columns, incubatorX + 5, 10, 6, 12, purple);
-        Fill(pixels, tileWidth * columns, incubatorX + 6, 12, 4, 8, new Color(77, 207, 244));
-        Fill(pixels, tileWidth * columns, incubatorX + 7, 14, 2, 4, new Color(221, 151, 255));
-        Fill(pixels, tileWidth * columns, incubatorX + 5, 8, 6, 2, highlight);
-        Fill(pixels, tileWidth * columns, incubatorX + 5, 23, 6, 2, orange);
+        Texture2D incubatorArt = Game1.content.Load<Texture2D>("Mods/Taum.SlimeRanching/Machines/SlimeIncubator");
+        DrawMachineArtIcon(pixels, tileWidth * columns, incubatorX, incubatorArt);
 
         texture.SetData(pixels);
         return texture;
+    }
+
+    private static void DrawMachineArtIcon(Color[] destination, int destinationWidth, int destinationX, Texture2D source)
+    {
+        const int iconWidth = 14;
+        const int iconHeight = 23;
+        const int iconOffsetX = 1;
+        const int iconOffsetY = 4;
+        Color[] sourcePixels = new Color[source.Width * source.Height];
+        source.GetData(sourcePixels);
+
+        int left = source.Width;
+        int top = source.Height;
+        int right = -1;
+        int bottom = -1;
+        for (int y = 0; y < source.Height; y++)
+        for (int x = 0; x < source.Width; x++)
+        {
+            if (sourcePixels[y * source.Width + x].A == 0)
+                continue;
+
+            left = Math.Min(left, x);
+            top = Math.Min(top, y);
+            right = Math.Max(right, x);
+            bottom = Math.Max(bottom, y);
+        }
+
+        if (right < left || bottom < top)
+            return;
+
+        int sourceWidth = right - left + 1;
+        int sourceHeight = bottom - top + 1;
+        for (int y = 0; y < iconHeight; y++)
+        for (int x = 0; x < iconWidth; x++)
+        {
+            int sourceX = left + Math.Min(sourceWidth - 1, x * sourceWidth / iconWidth);
+            int sourceY = top + Math.Min(sourceHeight - 1, y * sourceHeight / iconHeight);
+            destination[(y + iconOffsetY) * destinationWidth + destinationX + iconOffsetX + x] =
+                sourcePixels[sourceY * source.Width + sourceX];
+        }
     }
 
     private static void DrawMachineBody(Color[] pixels, int sheetWidth, int offsetX, Color outline, Color steel, Color highlight)
