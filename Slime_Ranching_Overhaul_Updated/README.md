@@ -36,6 +36,7 @@ See `Guides/PLAYER_GUIDE.md` for detailed instructions on the converter, inspect
 - The Mutagenic Pool uses configurable cost, duration, pity increment, chance cap, and shop price. Shadow Clone currently has a visual echo only; its companion abilities remain planned.
 - The Gel Refinery's first provisional recipe consumes 1 Broken Glasses and 10 vanilla Slime to produce 1 Refined Quartz after one in-game day. Fuel, time, and machine price can be changed; recipe balance and in-game persistence need review.
 - The Compost Trough feeds juvenile Ranch Slimes eligible trash, algae, or monster drops once per day. Favorite food advances extra growth; the values are provisional and configurable.
+- The Slime Tunnel adds a temporary crawl-through interaction for nearby idle slimes; it is visual-only and configurable in Marnie's shop.
 - Chromatic Crystals can focus breeder offspring on one of seven base colors. Crystal acquisition and progression are undecided; a SMAPI command supplies test crystals.
 - AI-assisted/generated artwork is planned; placeholder art first. Generated images will require sprite-sheet preparation and in-game QA.
 - Single-player v1; multiplayer explicitly deferred. Cosmetic item transmutation and elaborate family-tree UI may follow v1.

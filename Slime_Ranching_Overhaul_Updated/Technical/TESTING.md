@@ -40,6 +40,16 @@ The recipe, fuel, duration, and shop price are provisional. A failed external wr
 
 The one-day base growth, one-day favorite bonus, once-per-day limit, 3,500g price, and accepted algae set are provisional. Adjust `CompostTroughGrowthDays`, `CompostTroughLikedFoodBonusDays`, and `CompostTroughShopPrice` in config/GMCM before deciding balance.
 
+## Slime Tunnel visual interaction
+
+1. In the disposable save, run `slime_ranching_give_tunnel TaumTest_322865388`, then place the tunnel inside the Slime Daycare.
+2. Let one idle Ranch Slime stand near the tunnel. Confirm it performs the low horizontal crawl-through and returns to the exact same tile afterward.
+3. Place a trampoline and slide nearby too. Confirm each furniture spot is assigned to at most one slime per interaction and idle residents can use different objects.
+4. Start a breeder or Mutagenic Pool job with one slime and confirm the reserved slime does not begin the tunnel animation.
+5. Leave the Daycare during a crawl, return, and confirm the animal's draw offset resets. Confirm no age, friendship, or genome fields changed.
+
+The animation is local visual state; it does not persist and must clean up on room change/title return. The 2,500g stock price is configurable and provisional.
+
 ## Vanilla slime isolation
 
 1. Load the disposable test save and note the vanilla GreenSlime count in its Slime Hutch.

@@ -63,10 +63,12 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [x] Add a Slime Slide with a low hop and horizontal glide animation; share furniture reservation and cleanup.
 - [x] Add a low-frequency proximity assignment and temporary bounce offset for Ranch Slimes near a trampoline; tiny, normal, and giant genome sizes now use different arc heights, compression, and durations. Approach/pathing and sprite impact poses remain.
 - [x] Add a short in-memory per-slime cooldown after trampoline use so nearby residents can take turns.
+- [x] Add a Slime Tunnel with a short low crawl-through animation, generated arch sprite, configurable Marnie stock, and test command.
+- [x] Prevent Ranch Slimes reserved by breeder, Mutagenic Pool, or other jobs from starting enrichment animations.
 - [x] Use each slime's stored liked food in the Compost Trough and consume only eligible items; review the provisional extra growth-day bonus.
 - [x] Add Slime Bed rest animation with transient draw-offset cleanup.
 - [x] Generalize the trampoline scheduler into an enrichment scheduler and cache occupied target tiles and group-pair distances per assignment pass.
-- [ ] Tunnel, ball pit, heated stone, Gel Pond; persistent gameplay effects and QA.
+- [ ] Ball pit, heated stone, Gel Pond; persistent gameplay effects and QA. The current tunnel animation is visual-only and needs in-game cleanup/position checks.
 
 ## Stage 5 — machines
 - [x] Implement the Compost Trough's one-item-per-juvenile-per-day feeding flow, liked-food bonus, external maturity update, and configurable Marnie price/growth settings.

@@ -3,12 +3,12 @@ using StardewValley;
 
 namespace taums_slime_ranching.Services;
 
-/// <summary>Runs short, local-only trampoline bounce animations for nearby Ranch Slimes.</summary>
+/// <summary>Schedules short, transient interactions with enrichment furniture for nearby Ranch Slimes.</summary>
 internal sealed class EnrichmentInteractionService
 {
     private const int AssignmentIntervalTicks = 30;
     private const float InteractionRadiusPixels = 128f;
-    private readonly Dictionary<long, Bounce> active = new();
+    private readonly Dictionary<long, Interaction> active = new();
     private readonly Dictionary<long, float> cooldowns = new();
     private int assignmentTicks;
     private AnimalHouse? activeHouse;
@@ -47,7 +47,7 @@ internal sealed class EnrichmentInteractionService
 
     public void Clear()
     {
-        foreach (Bounce bounce in this.active.Values)
+        foreach (Interaction bounce in this.active.Values)
             bounce.Animal.drawOffset = bounce.OriginalDrawOffset;
         this.active.Clear();
         this.cooldowns.Clear();
@@ -64,10 +64,10 @@ internal sealed class EnrichmentInteractionService
     private void UpdateActiveBounces(double elapsedSeconds)
     {
         List<long>? completed = null;
-        foreach (KeyValuePair<long, Bounce> entry in this.active)
+        foreach (KeyValuePair<long, Interaction> entry in this.active)
         {
             long id = entry.Key;
-            Bounce bounce = entry.Value;
+            Interaction bounce = entry.Value;
             bounce.ElapsedSeconds += (float)elapsedSeconds;
             if (bounce.ElapsedSeconds >= bounce.DurationSeconds)
             {
@@ -121,14 +121,15 @@ internal sealed class EnrichmentInteractionService
                 this.cooldowns.Remove(id);
 
         HashSet<Vector2> occupiedTiles = this.active.Values
-            .Select(bounce => bounce.TrampolineTile)
+            .Select(interaction => interaction.FurnitureTile)
             .ToHashSet();
         var furnitureSpots = house.Objects.Values
             .Where(obj => obj.QualifiedItemId == FurnitureContent.TrampolineQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.SlimeCushionQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.SlimePlaygroundQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.SlimeSlideQualifiedId
-                || obj.QualifiedItemId == FurnitureContent.SlimeBedQualifiedId)
+            || obj.QualifiedItemId == FurnitureContent.SlimeBedQualifiedId
+            || obj.QualifiedItemId == FurnitureContent.SlimeTunnelQualifiedId)
             .Select(obj => new FurnitureSpot(obj.TileLocation, obj.QualifiedItemId))
             .Where(spot => !occupiedTiles.Contains(spot.Tile))
             .ToList();
@@ -138,7 +139,8 @@ internal sealed class EnrichmentInteractionService
         List<FarmAnimal> idleSlimes = house.animals.Values
                      .Where(animal => animal.type.Value == FarmAnimalContent.RanchSlimeTypeId
                          && !this.active.ContainsKey(animal.myID.Value)
-                         && !this.cooldowns.ContainsKey(animal.myID.Value))
+                         && !this.cooldowns.ContainsKey(animal.myID.Value)
+                         && !registry.IsReserved(animal.myID.Value))
             .ToList();
 
         // Playgrounds are group furniture: reserve one spot for two nearby slimes and start their hops together.
@@ -188,6 +190,7 @@ internal sealed class EnrichmentInteractionService
                 var id when id == FurnitureContent.SlimeCushionQualifiedId => (1.8f, 9f, 10f, 0f, false),
                 var id when id == FurnitureContent.SlimeSlideQualifiedId => (2.2f, 8f, 3f, 30f, false),
                 var id when id == FurnitureContent.SlimeBedQualifiedId => (4f, 0f, 7f, 0f, true),
+                var id when id == FurnitureContent.SlimeTunnelQualifiedId => (2.8f, 5f, 2f, 42f, false),
                 _ => registry.GetGenomeSize(animal.myID.Value)?.ToLowerInvariant() switch
                 {
                     "tiny" => (1.8f, 36f, 2f, 0f, false),
@@ -204,20 +207,20 @@ internal sealed class EnrichmentInteractionService
     private void StartInteraction(FarmAnimal animal, Vector2 furnitureTile, float duration, float bounceHeight, float compressionHeight,
         float slideDistance = 0f, bool isResting = false)
     {
-        this.active[animal.myID.Value] = new Bounce(animal, furnitureTile, animal.drawOffset,
+        this.active[animal.myID.Value] = new Interaction(animal, furnitureTile, animal.drawOffset,
             duration, bounceHeight, compressionHeight, slideDistance, isResting);
         this.cooldowns[animal.myID.Value] = this.elapsedSeconds + duration + 3f;
     }
 
     private readonly record struct FurnitureSpot(Vector2 Tile, string QualifiedItemId);
 
-    private sealed class Bounce
+    private sealed class Interaction
     {
-        public Bounce(FarmAnimal animal, Vector2 trampolineTile, Vector2 originalDrawOffset,
+        public Interaction(FarmAnimal animal, Vector2 furnitureTile, Vector2 originalDrawOffset,
             float durationSeconds, float bounceHeightPixels, float compressionHeightPixels, float horizontalTravelPixels, bool isResting)
         {
             this.Animal = animal;
-            this.TrampolineTile = trampolineTile;
+            this.FurnitureTile = furnitureTile;
             this.OriginalDrawOffset = originalDrawOffset;
             this.DurationSeconds = durationSeconds;
             this.BounceHeightPixels = bounceHeightPixels;
@@ -228,7 +231,7 @@ internal sealed class EnrichmentInteractionService
         }
 
         public FarmAnimal Animal { get; }
-        public Vector2 TrampolineTile { get; }
+        public Vector2 FurnitureTile { get; }
         public Vector2 OriginalDrawOffset { get; }
         public float DurationSeconds { get; }
         public float BounceHeightPixels { get; }
