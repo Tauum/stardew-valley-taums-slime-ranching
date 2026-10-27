@@ -8,6 +8,8 @@ public sealed class SlimeRecord
     public long? FarmAnimalId { get; set; }
     public string? FarmAnimalTypeId { get; set; }
     public int AgeDays { get; set; }
+    /// <summary>First in-game day when this slime may start another breeding cycle.</summary>
+    public int BreedingCooldownUntilDay { get; set; }
     public string? LastHutchName { get; set; }
     public bool IsCompanion { get; set; }
 }

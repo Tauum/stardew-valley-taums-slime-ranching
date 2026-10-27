@@ -20,6 +20,7 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [x] Start the cycle from the selection screen; it automatically reserves the parents.
 - [x] Implement a two-day cycle and fixed-genome Ranch Slime Egg output with tooltip fields for parents, generation, and favorite food. Egg spawn and tooltip were confirmed in-game.
 - [ ] Verify ready notification, collect flow, cancellation/release, and cycle/egg persistence after save/reload.
+- [x] Add a one-day post-collection rest for both parents; the duration is provisional pending balance review.
 - [ ] Verify different genome eggs remain distinct through inventory, chests, shipping, and machine transfers.
 - [ ] Implement incubator hatching for managed eggs only and create a juvenile with the recorded genome.
 - [ ] Add parent cooldown, crash/reload recovery, and actual in-world enclosure animation beyond the current menu preview.

@@ -98,7 +98,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
                 else
                 {
                     long[] ids = this.selected.ToArray();
-                    if (this.registry.ReservePair(this.machineKey, ids[0], ids[1]))
+                    if (this.registry.ReservePair(this.machineKey, ids[0], ids[1], Game1.Date.TotalDays))
                     {
                         if (this.registry.StartBreedingCycle(this.machineKey, Game1.Date.TotalDays))
                         {
@@ -114,7 +114,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
                         }
                     }
                     else
-                        this.statusMessage = "One parent is already reserved by another breeder.";
+                        this.statusMessage = "A parent is reserved or still resting after its last cycle.";
                 }
             }
             else
@@ -154,6 +154,14 @@ internal sealed class SlimeBreederMenu : IClickableMenu
             return;
 
         long id = this.candidates[index].myID.Value;
+        int restDays = this.registry.GetBreedingRestDays(id, Game1.Date.TotalDays);
+        if (restDays > 0)
+        {
+            this.statusMessage = $"This Ranch Slime needs {restDays} more day(s) of rest.";
+            Game1.playSound("cancel");
+            return;
+        }
+
         if (!this.selected.Add(id))
             this.selected.Remove(id);
         else if (this.selected.Count > 2)
@@ -191,9 +199,12 @@ internal sealed class SlimeBreederMenu : IClickableMenu
                 FarmAnimal animal = this.candidates[i];
                 int rowY = this.listTop + i * RowHeight;
                 bool isSelected = this.selected.Contains(animal.myID.Value);
+                int restDays = this.registry.GetBreedingRestDays(animal.myID.Value, Game1.Date.TotalDays);
                 Rectangle row = new(this.xPositionOnScreen + 24, rowY, 382, RowHeight - 4);
-                b.Draw(Game1.staminaRect, row, isSelected ? new Color(180, 235, 170) : new Color(238, 224, 190));
-                string label = $"{(isSelected ? "[SELECTED] " : "[  ] ")}{animal.Name}";
+                b.Draw(Game1.staminaRect, row, restDays > 0 ? new Color(210, 210, 210) : isSelected ? new Color(180, 235, 170) : new Color(238, 224, 190));
+                string label = restDays > 0
+                    ? $"[RESTING {restDays}d] {animal.Name}"
+                    : $"{(isSelected ? "[SELECTED] " : "[  ] ")}{animal.Name}";
                 b.DrawString(Game1.smallFont, label, new Vector2(row.X + 12, row.Y + 14), Game1.textColor);
             }
         }
@@ -270,16 +281,16 @@ internal sealed class SlimeBreederMenu : IClickableMenu
             }
 
             Item item = this.createEggItem(egg.Genome.Id);
-            if (!this.registry.FinishBreedingCycle(this.machineKey, egg.ItemId) || !this.saveExternalState())
+            if (!this.registry.FinishBreedingCycle(this.machineKey, egg.ItemId, Game1.Date.TotalDays) || !this.saveExternalState())
             {
-                this.registry.RestoreBreedingCycle(pair);
+                this.registry.RestoreBreedingCycle(pair, Game1.Date.TotalDays);
                 this.statusMessage = "Could not save egg collection; the egg remains ready in the breeder.";
                 return;
             }
 
             if (!Game1.player.addItemToInventoryBool(item))
             {
-                this.registry.RestoreBreedingCycle(pair);
+                this.registry.RestoreBreedingCycle(pair, Game1.Date.TotalDays);
                 this.saveExternalState();
                 this.statusMessage = "Inventory is full; the egg remains ready in the breeder.";
                 return;

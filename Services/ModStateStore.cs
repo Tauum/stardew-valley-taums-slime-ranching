@@ -13,7 +13,7 @@ internal sealed class ModStateStore
     private string? registryPath;
     private bool legacyFoodLikeMoved;
     private bool schemaMigrated;
-    private string schemaBackupSuffix = ".before-external-eggs-v3.bak";
+    private string schemaBackupSuffix = ".before-breeding-cooldown-v5.bak";
 
     public ModStateStore(string modDirectory) => this.modDirectory = modDirectory;
 
@@ -21,7 +21,7 @@ internal sealed class ModStateStore
     {
         this.legacyFoodLikeMoved = false;
         this.schemaMigrated = false;
-        this.schemaBackupSuffix = ".before-external-eggs-v3.bak";
+        this.schemaBackupSuffix = ".before-breeding-cooldown-v5.bak";
         this.registryPath = Path.Combine(GetSaveDirectory(this.modDirectory), RegistryFileName);
         if (!File.Exists(this.registryPath))
             return null;
@@ -44,8 +44,15 @@ internal sealed class ModStateStore
 
         if (root is JsonObject schemaThree && schemaThree["SchemaVersion"]?.GetValue<int>() == 3)
         {
-            schemaThree["SchemaVersion"] = SlimeSaveData.CurrentSchemaVersion;
+            schemaThree["SchemaVersion"] = 4;
             this.schemaBackupSuffix = ".before-breeding-output-v4.bak";
+            this.schemaMigrated = true;
+        }
+
+        if (root is JsonObject schemaFour && schemaFour["SchemaVersion"]?.GetValue<int>() == 4)
+        {
+            schemaFour["SchemaVersion"] = SlimeSaveData.CurrentSchemaVersion;
+            this.schemaBackupSuffix = ".before-breeding-cooldown-v5.bak";
             this.schemaMigrated = true;
         }
 

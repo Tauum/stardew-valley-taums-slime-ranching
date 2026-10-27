@@ -74,7 +74,7 @@ For the current test copy, use `slime_ranching_spawn_ranch_slime TaumTest_322865
 
 ### Breeder selection preview
 
-The breeder lists Daycare Ranch Slimes and previews selected parents in a chamber panel. Select two rows and click **Start 2-day Cycle**; the breeder reserves them automatically and starts the timer. The pair, start/ready days, and resulting genome are stored in the mod's external registry and survive reopening or reloading. Reserved slimes stop roaming where they are in the Daycare; the chamber remains a menu preview. Use **Cancel Cycle** to stop the timer or **Release Pair** when no cycle is active. When the cycle finishes, collect the fixed-genome egg from the breeder and hover over it to inspect the stored genome. Hatching remains future work.
+The breeder lists Daycare Ranch Slimes and previews selected parents in a chamber panel. Select two rows and click **Start 2-day Cycle**; the breeder reserves them automatically and starts the timer. The pair, start/ready days, and resulting genome are stored in the mod's external registry and survive reopening or reloading. Reserved slimes stop roaming where they are in the Daycare; the chamber remains a menu preview. Use **Cancel Cycle** to stop the timer or **Release Pair** when no cycle is active. When the cycle finishes, collect the fixed-genome egg from the breeder and hover over it to inspect the stored genome. Parents then rest for one in-game day; resting parents are marked in the menu and cannot be selected. Hatching remains future work.
 
 ## Data and save behavior
 

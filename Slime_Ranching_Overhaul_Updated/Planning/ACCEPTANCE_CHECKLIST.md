@@ -7,6 +7,7 @@
 - [x] Ranch Slime farm animal can be spawned into the separate Daycare.
 - [x] Breeder UI selection works, and starting the cycle reserves the selected pair automatically.
 - [x] A genome-specific Ranch Slime Egg spawned and its tooltip showed species, color, size, rarity, mutation, generation, parent IDs, and favorite food.
+- [x] Parents receive a one-day, externally persisted rest period after egg collection; in-game verification remains pending.
 - [x] Converter can be issued with its SMAPI command. Actual conversion still needs a documented end-to-end check.
 
 ## Sprint 1: core alpha
@@ -17,6 +18,7 @@
 
 ## Sprint 2: hutch alpha
 - [ ] Complete repeatable breeder cycle, ready notification, egg collection, and external egg identity checks through save/reload and chest transfer.
+- [ ] Confirm a collected pair is shown as resting for one day, remains resting after reload, and becomes eligible the following day.
 - [ ] Implement and test managed-egg hatching into the recorded genome; keep vanilla eggs and slimes unchanged.
 - [ ] Marnie sells functional furniture; trampoline bounces slimes.
 - [ ] Mutagenic Pool pity and Gel Refinery item conversion persist.
