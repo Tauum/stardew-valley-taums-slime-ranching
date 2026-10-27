@@ -20,7 +20,6 @@ public sealed class ModEntry : Mod
     private ModConfig config = new();
     private bool stateReady;
     private Texture2D? incubatorTexture;
-    private Texture2D? breederTexture;
     private readonly EnrichmentInteractionService trampolineInteractions = new();
     private readonly ShadowCloneVisualService shadowCloneVisuals = new();
     private readonly List<(long SlimeId, bool Success, double Chance)> pendingMutagenicNotifications = new();
@@ -353,7 +352,6 @@ public sealed class ModEntry : Mod
             return;
 
         this.DrawIncubators(e.SpriteBatch);
-        this.DrawBreeders(e.SpriteBatch);
 
         if (this.config.ShowShadowCloneVisualEchoes)
             this.shadowCloneVisuals.Draw(Game1.currentLocation, e.SpriteBatch, this.registry!);
@@ -733,27 +731,6 @@ public sealed class ModEntry : Mod
             Rectangle destination = new((int)screenTopLeft.X, (int)screenTopLeft.Y, footprintWidth, spriteHeight);
             batch.Draw(this.incubatorTexture, destination,
                 new Rectangle(0, 0, this.incubatorTexture.Width, this.incubatorTexture.Height),
-                Color.White, 0f, Vector2.Zero, SpriteEffects.None, 0.999f);
-        }
-    }
-
-    private void DrawBreeders(SpriteBatch batch)
-    {
-        if (this.breederTexture is null)
-            this.breederTexture = this.Helper.GameContent.Load<Texture2D>("Mods/Taum.SlimeRanching/Machines/SlimeBreeder");
-
-        const int footprintWidth = 5 * 64;
-        int spriteHeight = (int)Math.Round(footprintWidth * (double)this.breederTexture.Height / this.breederTexture.Width);
-        foreach (KeyValuePair<Vector2, StardewValley.Object> pair in Game1.currentLocation.Objects.Pairs)
-        {
-            if (pair.Value.QualifiedItemId != ConverterContent.BreederQualifiedId)
-                continue;
-
-            Vector2 worldTopLeft = new(pair.Key.X * 64, (pair.Key.Y + 2) * 64 - spriteHeight);
-            Vector2 screenTopLeft = Game1.GlobalToLocal(Game1.viewport, worldTopLeft);
-            Rectangle destination = new((int)screenTopLeft.X, (int)screenTopLeft.Y, footprintWidth, spriteHeight);
-            batch.Draw(this.breederTexture, destination,
-                new Rectangle(0, 0, this.breederTexture.Width, this.breederTexture.Height),
                 Color.White, 0f, Vector2.Zero, SpriteEffects.None, 0.999f);
         }
     }
