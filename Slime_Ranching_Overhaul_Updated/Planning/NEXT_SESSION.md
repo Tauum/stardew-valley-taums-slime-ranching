@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-10-27  
 **Test save:** `TaumTest_322865388` (disposable copy)  
-**Current branch:** `feature/slime-pond-interaction`, chained after `feature/heated-slime-stone` (`afe4cfb`). Gel Refinery, Compost Trough, Slime Tunnel, machine inspection, and Heated Slime Stone are committed. The Slime Pond visual interaction is implemented on this branch and builds; verify it, then commit. No pond drops are enabled.
+**Current branch:** `docs/reconcile-roadmap-current-state`, chained after `feature/slime-pond-interaction` (`878cd21`). Gel Refinery, Compost Trough, Slime Tunnel, machine inspection, Heated Slime Stone, and the visual-only Slime Pond are committed. This branch reconciles roadmap and acceptance status; latest code build succeeds. No pond drops are enabled.
 
 ## Current state
 

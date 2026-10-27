@@ -16,6 +16,10 @@
 - [x] Incubator offspring use Stardew's juvenile age and three-day maturity; the breeder blocks juveniles. Visual and in-game growth checks remain open.
 - [x] Store authoritative maturity age/day state in the external registry and mirror it to native animal age; schema migration and in-game age/reload checks remain open.
 - [x] Converter can be issued with its SMAPI command. Actual conversion still needs a documented end-to-end check.
+- [x] Gel Refinery has a Broken Glasses + Slime -> Refined Quartz first recipe, external batch record, ready notice, full-inventory deferral, Marnie/GMCM settings, and test command; in-game persistence/economy checks remain open.
+- [x] Compost Trough consumes one eligible item per juvenile per day, applies a favorite-food growth bonus, writes the feed clock externally, and blocks mature/busy slimes; in-game and balance checks remain open.
+- [x] Slime Tunnel, Heated Slime Stone, and Slime Pond have generated sprites and transient enrichment animations; offsets/reservation behavior need in-game verification.
+- [x] `slime_ranching_inspect` reports the external schema and per-machine job details; run it against live jobs after save/reload.
 
 ## Sprint 1: core alpha
 - [ ] Verify Ranch Slime petting, movement, native ID stability, and genome link over save/reload.
@@ -32,8 +36,8 @@
 - [ ] Verify incubator recovery across save/reload, full-Daycare deferral, and one-hatch-per-genome behavior.
 - [ ] Confirm a hatched slime visibly grows for three days, retains age after reload, and becomes eligible for breeding on the maturity day.
 - [ ] Convert vanilla eggs and hatch two Common Eggs; confirm each gets a separate external genome ID.
-- [ ] Marnie sells functional furniture; trampoline bounces slimes.
-- [ ] Mutagenic Pool pity and Gel Refinery item conversion persist.
+- [ ] Marnie sells the functional and decorative furniture stock; check trampoline, tunnel, Heated Stone, and Pond interactions and cleanup.
+- [ ] Mutagenic Pool pity, Gel Refinery item conversion, and Compost Trough maturation persist after reload.
 
 ## Sprint 3: companion alpha
 - [ ] Slime Core binds one existing slime, follows and uses base/hybrid abilities.
