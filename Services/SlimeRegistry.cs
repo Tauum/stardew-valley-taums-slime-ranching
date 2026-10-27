@@ -56,6 +56,34 @@ internal sealed class SlimeRegistry
         return true;
     }
 
+    public (string PrimarySpecies, string? SecondarySpecies, string VisualColor)? GetGenomeColorState(long farmAnimalId) =>
+        this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record)
+            ? (record.Genome.PrimarySpecies, record.Genome.SecondarySpecies, record.Genome.VisualColor)
+            : null;
+
+    public bool SetGenomeBaseColor(long farmAnimalId, string colorName)
+    {
+        if (!this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record)
+            || !ChromaticCrystalContent.TryGetColorByName(colorName, out string canonicalName, out string colorHex))
+            return false;
+
+        record.Genome.PrimarySpecies = $"{canonicalName} Slime";
+        record.Genome.SecondarySpecies = null;
+        record.Genome.VisualColor = colorHex;
+        return true;
+    }
+
+    public bool RestoreGenomeColorState(long farmAnimalId, (string PrimarySpecies, string? SecondarySpecies, string VisualColor) state)
+    {
+        if (!this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record))
+            return false;
+
+        record.Genome.PrimarySpecies = state.PrimarySpecies;
+        record.Genome.SecondarySpecies = state.SecondarySpecies;
+        record.Genome.VisualColor = state.VisualColor;
+        return true;
+    }
+
     public string? GetGenomeColor(long farmAnimalId) =>
         this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record) ? record.Genome.VisualColor : null;
 

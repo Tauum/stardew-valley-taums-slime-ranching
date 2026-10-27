@@ -37,6 +37,7 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("slime_ranching_inspect", "Inspect vanilla slime or Ranch Slime counts in the current Slime Hutch or Slime Daycare.", this.OnInspectCommand);
         helper.ConsoleCommands.Add("slime_ranching_spawn_ranch_slime", "Spawn one Ranch Slime in the Slime Daycare. Usage: slime_ranching_spawn_ranch_slime <exact save folder name>.", this.OnSpawnRanchSlimeCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_size", "Set a managed Ranch Slime's test genome size. Usage: slime_ranching_set_size <exact save folder name> <animal ID> <Tiny|Small|Normal|Large|Giant>.", this.OnSetSlimeSizeCommand);
+        helper.ConsoleCommands.Add("slime_ranching_set_color", "Set a managed Ranch Slime's test base color. Usage: slime_ranching_set_color <exact save folder name> <animal ID> <Red|Orange|Yellow|Green|Blue|Purple|Pink>.", this.OnSetSlimeColorCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_shiny", "Set a managed Ranch Slime's test shiny flag. Usage: slime_ranching_set_shiny <exact save folder name> <animal ID> <true|false>.", this.OnSetSlimeShinyCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_converter", "Give one Slime Egg Converter for testing. Usage: slime_ranching_give_converter <exact save folder name>.", this.OnGiveConverterCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_guidebook", "Give the Slime Ranching Field Guide. Usage: slime_ranching_give_guidebook <exact save folder name>.", this.OnGiveGuidebookCommand);
@@ -815,6 +816,40 @@ public sealed class ModEntry : Mod
 
         this.RefreshRanchSlimeAppearance(animalId);
         this.Monitor.Log($"Changed Ranch Slime {animalId} shiny flag to {isShiny} in the mod's external registry.", LogLevel.Info);
+    }
+
+    private void OnSetSlimeColorCommand(string command, string[] args)
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
+        {
+            this.Monitor.Log("Load a single-player save with available external slime state before changing a test genome.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 3 || args[0] != saveName || !long.TryParse(args[1], out long animalId))
+        {
+            this.Monitor.Log($"Usage: slime_ranching_set_color {saveName} <animal ID> <Red|Orange|Yellow|Green|Blue|Purple|Pink>", LogLevel.Warn);
+            return;
+        }
+
+        var oldState = this.registry!.GetGenomeColorState(animalId);
+        if (oldState is null || !this.registry.SetGenomeBaseColor(animalId, args[2]))
+        {
+            this.Monitor.Log("That ID is not a managed Ranch Slime, or the requested base color is invalid.", LogLevel.Warn);
+            return;
+        }
+
+        if (!this.SaveExternalStateNow())
+        {
+            this.registry.RestoreGenomeColorState(animalId, oldState.Value);
+            this.RefreshRanchSlimeAppearance(animalId);
+            this.Monitor.Log("Could not save external state; the original species and color were restored.", LogLevel.Error);
+            return;
+        }
+
+        this.RefreshRanchSlimeAppearance(animalId);
+        this.Monitor.Log($"Changed Ranch Slime {animalId} base color and species to {this.registry.GetGenomeColorState(animalId)?.PrimarySpecies} in the mod's external registry.", LogLevel.Info);
     }
 
     private void RefreshRanchSlimeAppearance(long animalId)

@@ -64,8 +64,8 @@ Crystal items currently use vanilla mineral icons and are available only through
 
 ## Color-wheel breeding prototype
 
-1. Use `slime_ranching_give_color_eggs <save name>` and incubate colored eggs to produce mature base-color parents. The size and shiny setup commands can be used independently.
-2. Breed Red+Yellow, Yellow+Blue, and Blue+Red. Expect pure Orange, Green, and Purple/Violet offspring, respectively, with no secondary species.
+1. Spawn two managed slimes and note their animal IDs. Set parent colors directly with `slime_ranching_set_color <save name> <animal ID> <Red|Orange|Yellow|Green|Blue|Purple|Pink>`.
+2. Breed Red+Yellow, Yellow+Blue, and Blue+Red. Expect pure Orange, Green, and Purple/Violet offspring, respectively, with no secondary species. The size and shiny setup commands can be used independently.
 3. Breed the six tabled tertiary pairs in `Features/COLOURS_AND_BREEDING.md`. Expect the corresponding two base species in the offspring genome, and inspect its stored midpoint RGB plus rendered nearest-base tint.
 4. Try a pairing not listed in the recipe table and one involving Pink. The current prototype selects one parent's full species/color identity for the offspring; verify that behavior and review whether it should instead block the cycle.
 5. Save/reload with a ready egg and confirm its species, secondary species, and color remain fixed; incubation must not reroll the result.
