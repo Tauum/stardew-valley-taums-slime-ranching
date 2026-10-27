@@ -71,6 +71,7 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 ## Stage 5 — machines
 - [x] Add a placeable Mutagenic Pool with configurable-duration attempts, a per-slime pity counter, and safe failure; Shadow Clone is currently data/visual-only. Verify the schema migration and reload lifecycle in game.
 - [x] Make Mutagenic Pool cost, duration, pity step, and chance bounds configurable with runtime clamping.
+- [x] Show the active pool assignment, locked chance, and day progress in a status card.
 - [ ] Extend the temporary Shadow Clone visual echo into bounded companion behavior; no clones may breed, produce resources, or recursively clone.
 - [x] Chromatic Crystals as breeder consumables, **not furniture**; obtainment recipes and unlock progression remain open.
 - [ ] Gel Refinery stored Slime and vanilla-item conversion recipes.
@@ -96,6 +97,7 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [ ] Start an attempt with 500 vanilla Slime, sleep, and verify the success/failure message, stored trait or pity increment, and unchanged slime health/existence. Reload mid-cycle and ensure the stored roll does not change.
 - [ ] Verify the per-slime odds increase by 2 points per failure to 30%, reset after success, and remain independent between slimes; review these provisional values before release.
 - [ ] Verify config overrides for guaranteed failure/success, lower cost, and alternate duration; check invalid values are safely clamped.
+- [ ] Check the Pool status card with one- and multi-day durations, then reload an active job and confirm the assignment and progress are restored.
 - [ ] Verify schema 8 migrates to schema 9, creates `.before-mutagenic-pool-v9.bak`, and preserves existing genomes, eggs, breeding pairs, and incubations.
 - [ ] On the disposable save, run `slime_ranching_set_mutation TaumTest_322865388 <animal ID> ShadowClone`; confirm a faint temporary duplicate appears near the slime only inside the Daycare. Then use `none` and confirm it stops; reload with Shadow Clone enabled and check it returns.
 - [ ] Deploy current build to `TaumTest_322865388`; check the complete Base roof and confirm its foundation corner touches the blue footprint's bottom-left, then check both upgrades.

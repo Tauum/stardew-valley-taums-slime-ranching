@@ -126,6 +126,8 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
             b.DrawString(Game1.smallFont, label, new Vector2(row.X + 10, row.Y + 14), Game1.textColor);
         }
 
+        this.DrawStatusPanel(b, active);
+
         b.Draw(Game1.staminaRect, this.actionButton, active is null ? new Color(200, 177, 220) : new Color(210, 210, 210));
         b.DrawString(Game1.smallFont, active is null ? $"Start {this.rules.DurationDays}-day Attempt" : $"Processing until day {active.ReadyOnDay}",
             new Vector2(this.actionButton.X + 16, this.actionButton.Y + 16), Game1.textColor);
@@ -138,6 +140,50 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
                 new Vector2(this.listBounds.X, this.listBounds.Bottom + 4), Game1.textColor);
         b.DrawString(Game1.tinyFont, "Esc: close", new Vector2(this.xPositionOnScreen + this.width - 100, this.yPositionOnScreen + this.height - 26), Game1.textColor);
         this.drawMouse(b);
+    }
+
+    private void DrawStatusPanel(SpriteBatch batch, MutagenicAttemptRecord? active)
+    {
+        Rectangle panel = new(this.listBounds.Right + 16, this.listBounds.Y, this.width - 32 - (this.listBounds.Right - this.xPositionOnScreen + 16), 214);
+        IClickableMenu.drawTextureBox(batch, panel.X, panel.Y, panel.Width, panel.Height, Color.White);
+
+        if (active is not null)
+        {
+            FarmAnimal? assigned = this.candidates.FirstOrDefault(animal => animal.myID.Value == active.SlimeId);
+            string name = assigned?.Name ?? "Ranch Slime";
+            batch.DrawString(Game1.smallFont, "Attempt in progress", new Vector2(panel.X + 14, panel.Y + 16), Game1.textColor);
+            batch.DrawString(Game1.tinyFont, name, new Vector2(panel.X + 14, panel.Y + 44), Game1.textColor);
+            batch.DrawString(Game1.tinyFont, $"Chance locked: {active.ChanceAtStart:P0}", new Vector2(panel.X + 14, panel.Y + 68), Game1.textColor);
+
+            int duration = Math.Max(1, active.ReadyOnDay - active.StartedOnDay);
+            float progress = Math.Clamp((Game1.Date.TotalDays - active.StartedOnDay) / (float)duration, 0f, 1f);
+            Rectangle bar = new(panel.X + 14, panel.Y + 106, panel.Width - 28, 24);
+            batch.Draw(Game1.staminaRect, bar, new Color(91, 75, 58));
+            if (progress > 0)
+                batch.Draw(Game1.staminaRect, new Rectangle(bar.X + 3, bar.Y + 3,
+                    Math.Max(1, (int)((bar.Width - 6) * progress)), bar.Height - 6), new Color(184, 135, 204));
+            batch.DrawString(Game1.tinyFont, $"Day {Math.Clamp(Game1.Date.TotalDays - active.StartedOnDay, 0, duration)} of {duration}",
+                new Vector2(panel.X + 14, panel.Y + 140), Game1.textColor);
+            batch.DrawString(Game1.tinyFont, $"Ready on day {active.ReadyOnDay}; sleep to resolve.",
+                new Vector2(panel.X + 14, panel.Y + 164), Game1.textColor);
+            return;
+        }
+
+        batch.DrawString(Game1.smallFont, "Mutation preview", new Vector2(panel.X + 14, panel.Y + 16), Game1.textColor);
+        batch.DrawString(Game1.tinyFont, "Current pool trait: Shadow Clone", new Vector2(panel.X + 14, panel.Y + 48), Game1.textColor);
+        if (this.selectedSlimeId is long selectedId)
+        {
+            int failures = this.registry.GetMutagenicPoolFailures(selectedId);
+            batch.DrawString(Game1.tinyFont, $"Selected slime pity: {failures}", new Vector2(panel.X + 14, panel.Y + 78), Game1.textColor);
+            batch.DrawString(Game1.tinyFont, $"Next chance: {this.rules.GetChance(failures):P0}", new Vector2(panel.X + 14, panel.Y + 102), Game1.textColor);
+        }
+        else
+            batch.DrawString(Game1.tinyFont, $"Base chance: {this.rules.GetChance(0):P0}", new Vector2(panel.X + 14, panel.Y + 78), Game1.textColor);
+
+        batch.DrawString(Game1.tinyFont, "Failure is safe; each miss raises this slime's chance.",
+            new Vector2(panel.X + 14, panel.Y + 144), Game1.textColor);
+        batch.DrawString(Game1.tinyFont, "Success adds Shadow Clone and resets pity.",
+            new Vector2(panel.X + 14, panel.Y + 168), Game1.textColor);
     }
 
     private void StartAttempt()

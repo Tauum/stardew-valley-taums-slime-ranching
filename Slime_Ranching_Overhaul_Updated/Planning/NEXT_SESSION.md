@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-10-27  
 **Test save:** `TaumTest_322865388` (disposable copy)  
-**Current branch:** `feature/mutagenic-pool-configurable-balance`, chained after `feature/breeder-genome-inspector`. Mutagenic Pool cost, duration, base chance, pity step, maximum chance, and shop price are now configurable with runtime clamping. Build passes; config override behavior needs in-game verification. Continue feature work after review; this is not a stopping point.
+**Current branch:** `feature/mutagenic-pool-progress-panel`, chained after `feature/mutagenic-pool-configurable-balance`. The Pool menu now shows an assigned slime, locked chance, ready day, and day progress, or the selected slime's current pity chance while idle. Build passes; check layout/reload progress in game. Continue feature work after review; this is not a stopping point.
 
 ## Current state
 
@@ -33,6 +33,7 @@
 - Shadow Clone slimes now get a short translucent render-only echo in the Daycare, at most four visible simultaneously. It creates no FarmAnimal, drops, breeding, or AI behavior. Use `slime_ranching_set_mutation <save> <animal ID> ShadowClone|none` for deterministic visual testing. This is a visual scaffold, not the planned ability behavior.
 - The breeder chamber now identifies each selected parent from its external genome, including hybrid species, size, shiny/mutation flags, and favorite food display name. `Technical/TESTING.md` has a short layout/readability check.
 - Mutagenic Pool tuning is controlled by `MutagenicPoolSlimeCost`, `MutagenicPoolDurationDays`, `MutagenicPoolBaseChance`, `MutagenicPoolChancePerFailure`, `MutagenicPoolMaximumChance`, and `MutagenicPoolShopPrice` in the installed `config.json`. Values clamp when the Pool menu opens; restart after editing. Manual override checks are in `Technical/TESTING.md`.
+- The Mutagenic Pool idle/active status card reports the selected slime's pity or the running job's fixed chance, target, elapsed days, and ready day. It reads the external job record and has no additional saved state.
 - The interaction scheduler is now named `EnrichmentInteractionService`. It handles all five implemented furniture types, caches occupied target tiles once per assignment pass, and computes each playground candidate distance once during sorting. Build passes with only the existing analyzer/compiler version warning; compare behavior/performance with a crowded Daycare in game.
 - Breeder size inheritance now uses Tiny/Small/Normal/Large/Giant categories. The weights specified in the design notes are implemented; provisional defaults cover Tiny+Tiny, Normal+Normal, adjacent pairs, and wider gaps. Unknown legacy labels are treated as Normal only when rolling offspring. Small and Large also have distinct trampoline arcs.
 - Ranch Slime sprites now use separate color/size assets in 24x32 frame cells. Normal opaque art remains the original 16x24 pixels; Tiny/Small shrink and Large/Giant enlarge with nearest-neighbor sampling, centered and bottom-aligned. Check floors, petting, breeder previews, furniture animations, and clipping in-game.
