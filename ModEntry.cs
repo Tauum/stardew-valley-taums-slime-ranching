@@ -96,27 +96,33 @@ public sealed class ModEntry : Mod
         if (!this.stateReady || !Context.IsMainPlayer)
             return;
 
-        var newlyReady = new List<taums_slime_ranching.Models.SlimeEggRecord>();
+        var readyToNotify = new List<(taums_slime_ranching.Models.BreedingPairRecord Pair, taums_slime_ranching.Models.SlimeEggRecord Egg)>();
         foreach (taums_slime_ranching.Models.BreedingPairRecord pair in this.registry!.BreedingPairs.ToArray())
         {
-            taums_slime_ranching.Models.SlimeEggRecord? egg = this.registry.GetOrCreateBreedingEgg(pair.MachineKey, Game1.Date.TotalDays, out bool created);
-            if (created && egg is not null)
-                newlyReady.Add(egg);
+            taums_slime_ranching.Models.SlimeEggRecord? egg = this.registry.GetOrCreateBreedingEgg(pair.MachineKey, Game1.Date.TotalDays, out _);
+            if (egg is not null && !pair.ReadyNotificationSent)
+            {
+                pair.ReadyNotificationSent = true;
+                readyToNotify.Add((pair, egg));
+            }
         }
 
         this.ProcessReadyIncubations();
 
-        if (newlyReady.Count == 0)
+        if (readyToNotify.Count == 0)
             return;
 
         if (!this.SaveExternalStateNow())
         {
-            this.Monitor.Log("A completed breeder cycle could not save its fixed egg genome; it will retry next morning.", LogLevel.Error);
+            foreach (var ready in readyToNotify)
+                ready.Pair.ReadyNotificationSent = false;
+            this.Monitor.Log("A completed breeder egg or its notification status could not be saved; the egg notification will retry next morning.", LogLevel.Error);
             return;
         }
 
-        foreach (taums_slime_ranching.Models.SlimeEggRecord egg in newlyReady)
+        foreach (var ready in readyToNotify)
         {
+            taums_slime_ranching.Models.SlimeEggRecord egg = ready.Egg;
             Game1.addHUDMessage(new HUDMessage("A Ranch Slime Egg is ready to collect from the Slime Breeder!", HUDMessage.newQuest_type));
             this.Monitor.Log($"A Ranch Slime Egg (genome {egg.Genome.Id:N}) is ready to collect.", LogLevel.Info);
         }

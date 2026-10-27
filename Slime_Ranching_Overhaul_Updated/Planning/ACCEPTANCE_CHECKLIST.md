@@ -7,6 +7,7 @@
 - [x] Ranch Slime farm animal can be spawned into the separate Daycare.
 - [x] Breeder UI selection works, and starting the cycle reserves the selected pair automatically.
 - [x] A genome-specific Ranch Slime Egg spawned and its tooltip showed species, color, size, rarity, mutation, generation, parent IDs, and favorite food.
+- [x] Breeder-ready notification state is persisted and retries after an external write failure; notification behavior still needs in-game verification.
 - [x] Parents receive a one-day, externally persisted rest period after egg collection; in-game verification remains pending.
 - [x] Breeder candidate list scrolls so Daycares with more than four slimes can access every resident; in-game verification remains pending.
 - [x] Missing Ranch Slime IDs are detached on load/save without deleting their genome archive; unfinished cycles without an egg are cleared.
