@@ -19,7 +19,6 @@ public sealed class ModEntry : Mod
     private ModStateStore? stateStore;
     private ModConfig config = new();
     private bool stateReady;
-    private Texture2D? incubatorTexture;
     private readonly EnrichmentInteractionService trampolineInteractions = new();
     private readonly ShadowCloneVisualService shadowCloneVisuals = new();
     private readonly List<(long SlimeId, bool Success, double Chance)> pendingMutagenicNotifications = new();
@@ -377,8 +376,6 @@ public sealed class ModEntry : Mod
     {
         if (!this.stateReady || !Context.IsMainPlayer)
             return;
-
-        this.DrawIncubators(e.SpriteBatch);
 
         if (this.config.ShowShadowCloneVisualEchoes)
             this.shadowCloneVisuals.Draw(Game1.currentLocation, e.SpriteBatch, this.registry!);
@@ -753,27 +750,6 @@ public sealed class ModEntry : Mod
         BuildingContent.EditAsset(e, this.Helper, this.config);
     }
 
-    private void DrawIncubators(SpriteBatch batch)
-    {
-        if (this.incubatorTexture is null)
-            this.incubatorTexture = this.Helper.GameContent.Load<Texture2D>("Mods/Taum.SlimeRanching/Machines/SlimeIncubator");
-
-        const int footprintWidth = 4 * 64;
-        const int spriteHeight = 320;
-        foreach (KeyValuePair<Vector2, StardewValley.Object> pair in Game1.currentLocation.Objects.Pairs)
-        {
-            if (pair.Value.QualifiedItemId != ConverterContent.IncubatorQualifiedId)
-                continue;
-
-            Vector2 worldTopLeft = new(pair.Key.X * 64, (pair.Key.Y + 2) * 64 - spriteHeight);
-            Vector2 screenTopLeft = Game1.GlobalToLocal(Game1.viewport, worldTopLeft);
-            Rectangle destination = new((int)screenTopLeft.X, (int)screenTopLeft.Y, footprintWidth, spriteHeight);
-            batch.Draw(this.incubatorTexture, destination,
-                new Rectangle(0, 0, this.incubatorTexture.Width, this.incubatorTexture.Height),
-                Color.White, 0f, Vector2.Zero, SpriteEffects.None, 0.999f);
-        }
-    }
-
     private void OnButtonPressed(object? sender, ButtonPressedEventArgs e)
     {
         if (Context.IsWorldReady && Game1.activeClickableMenu is null && e.Button.IsActionButton()
@@ -796,7 +772,6 @@ public sealed class ModEntry : Mod
 
             this.Helper.Input.Suppress(e.Button);
             string key = $"{Game1.currentLocation.NameOrUniqueName}:{(int)incubatorAnchor.X},{(int)incubatorAnchor.Y}";
-            this.incubatorTexture ??= this.Helper.GameContent.Load<Texture2D>("Mods/Taum.SlimeRanching/Machines/SlimeIncubator");
             Game1.activeClickableMenu = new SlimeIncubatorMenu(this.registry!, key,
                 index => this.StartIncubation(key, index),
                 name =>
@@ -821,7 +796,7 @@ public sealed class ModEntry : Mod
                     animal.Name = previousName;
                     return false;
                 },
-                this.incubatorTexture);
+                IncubatorPlacementGeometry.Texture);
             return;
         }
 
