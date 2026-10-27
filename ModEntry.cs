@@ -28,6 +28,7 @@ public sealed class ModEntry : Mod
         new Harmony(this.ModManifest.UniqueID).PatchAll(typeof(ModEntry).Assembly);
         this.config = helper.ReadConfig<ModConfig>();
         BuildingContent.NormalizeConfig(this.config);
+        this.config.IncubatorDurationDays = Math.Clamp(this.config.IncubatorDurationDays, 1, 28);
         this.registry = new SlimeRegistry(this.Monitor);
         BreederMovementPatch.SetReservationLookup(id => this.registry?.IsBreedingParentReserved(id) == true);
         BreederParentVisibilityPatch.SetActiveCycleLookup(id => this.registry?.IsInActiveBreedingCycle(id) == true);
@@ -118,6 +119,13 @@ public sealed class ModEntry : Mod
         this.AddShopPriceOption(api, "Egg Converter", "Price of the vanilla Slime Egg converter.", () => this.config.ConverterShopPrice, value => this.config.ConverterShopPrice = value);
         this.AddShopPriceOption(api, "Slime Breeder", "Price of the Slime Breeder.", () => this.config.BreederShopPrice, value => this.config.BreederShopPrice = value);
         this.AddShopPriceOption(api, "Slime Incubator", "Price of the Slime Incubator.", () => this.config.IncubatorShopPrice, value => this.config.IncubatorShopPrice = value);
+        api.AddSectionTitle(this.ModManifest, () => "Slime Incubator");
+        api.AddParagraph(this.ModManifest, () => "The standard incubation time is 15 days. New cycles use this setting; cycles already in progress keep their original ready day.");
+        api.AddNumberOption(this.ModManifest,
+            () => this.config.IncubatorDurationDays,
+            value => this.config.IncubatorDurationDays = value,
+            () => "Incubation days",
+            () => "Whole in-game days for new incubation cycles (1–28).", 1, 28, 1);
         this.AddShopPriceOption(api, "Slime Trampoline", "Price of the trampoline enrichment furniture.", () => this.config.TrampolineShopPrice, value => this.config.TrampolineShopPrice = value);
         this.AddShopPriceOption(api, "Slime Cushion", "Price of the cushion enrichment furniture.", () => this.config.SlimeCushionShopPrice, value => this.config.SlimeCushionShopPrice = value);
         this.AddShopPriceOption(api, "Slime Playground", "Price of the playground enrichment furniture.", () => this.config.SlimePlaygroundShopPrice, value => this.config.SlimePlaygroundShopPrice = value);
@@ -604,7 +612,7 @@ public sealed class ModEntry : Mod
             return false;
 
         if (!registry.CanIncubate(eggItemId)
-            || !registry.StartIncubation(machineKey, eggItemId, Game1.Date.TotalDays))
+            || !registry.StartIncubation(machineKey, eggItemId, Game1.Date.TotalDays, this.config.IncubatorDurationDays))
         {
             if (createdCommonGenome)
                 registry.RemoveUnincubatedEgg(eggItemId);
@@ -773,7 +781,7 @@ public sealed class ModEntry : Mod
 
             this.Helper.Input.Suppress(e.Button);
             string key = $"{Game1.currentLocation.NameOrUniqueName}:{(int)incubatorAnchor.X},{(int)incubatorAnchor.Y}";
-            Game1.activeClickableMenu = new SlimeIncubatorMenu(this.registry!, key,
+            Game1.activeClickableMenu = new SlimeIncubatorMenu(this.registry!, key, this.config.IncubatorDurationDays,
                 index => this.StartIncubation(key, index),
                 name =>
                 {

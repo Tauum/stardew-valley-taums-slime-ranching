@@ -244,10 +244,10 @@ internal sealed class SlimeRegistry
         && egg.HatchedAnimalId is null
         && !this.incubations.Values.Any(record => record.EggItemId == itemId);
 
-    public bool StartIncubation(string machineKey, string eggItemId, int currentDay)
+    public bool StartIncubation(string machineKey, string eggItemId, int currentDay, int durationDays)
     {
         if (string.IsNullOrWhiteSpace(machineKey) || this.incubations.ContainsKey(machineKey)
-            || !this.CanIncubate(eggItemId))
+            || !this.CanIncubate(eggItemId) || durationDays is < 1 or > 28)
             return false;
 
         this.incubations[machineKey] = new IncubationRecord
@@ -255,7 +255,7 @@ internal sealed class SlimeRegistry
             MachineKey = machineKey,
             EggItemId = eggItemId,
             StartedOnDay = currentDay,
-            ReadyOnDay = currentDay + 2
+            ReadyOnDay = currentDay + durationDays
         };
         return true;
     }

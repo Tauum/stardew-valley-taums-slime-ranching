@@ -7,7 +7,7 @@ using taums_slime_ranching.Services;
 
 namespace taums_slime_ranching.UI;
 
-/// <summary>Starts a two-day hatch job from a genome-specific egg in the player's inventory.</summary>
+/// <summary>Starts a configurable hatch job from an eligible egg in the player's inventory.</summary>
 internal sealed class SlimeIncubatorMenu : IClickableMenu
 {
     private const int GridColumns = 3;
@@ -16,6 +16,7 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
 
     private readonly SlimeRegistry registry;
     private readonly string machineKey;
+    private readonly int incubationDurationDays;
     private readonly Func<int, bool> startIncubation;
     private readonly Func<string, bool> takeHatchedSlime;
     private readonly Texture2D incubatorTexture;
@@ -28,11 +29,12 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
     private int? selectedInventoryIndex;
     private string? statusMessage;
 
-    public SlimeIncubatorMenu(SlimeRegistry registry, string machineKey, Func<int, bool> startIncubation, Func<string, bool> takeHatchedSlime, Texture2D incubatorTexture)
+    public SlimeIncubatorMenu(SlimeRegistry registry, string machineKey, int incubationDurationDays, Func<int, bool> startIncubation, Func<string, bool> takeHatchedSlime, Texture2D incubatorTexture)
         : base(Game1.uiViewport.Width / 2 - 450, Game1.uiViewport.Height / 2 - 280, 900, 560)
     {
         this.registry = registry;
         this.machineKey = machineKey;
+        this.incubationDurationDays = Math.Clamp(incubationDurationDays, 1, 28);
         this.startIncubation = startIncubation;
         this.takeHatchedSlime = takeHatchedSlime;
         this.incubatorTexture = incubatorTexture;
@@ -95,7 +97,7 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
                 this.statusMessage = "Select an egg first.";
             else if (this.startIncubation(inventoryIndex))
             {
-                this.statusMessage = "Egg inserted. It will hatch in two in-game days.";
+                this.statusMessage = $"Egg inserted. It will hatch in {this.incubationDurationDays} in-game days.";
                 this.selectedInventoryIndex = null;
             }
             else
@@ -206,7 +208,7 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
     private void DrawIncubationControls(SpriteBatch b, Rectangle panel)
     {
         b.DrawString(Game1.smallFont, "INCUBATION TIME", new Vector2(panel.X + 24, panel.Y + 294), Color.White);
-        DrawCentered(b, "2 Days", Game1.dialogueFont, new Rectangle(panel.X + 160, panel.Y + 282, 135, 44), new Color(188, 235, 255));
+        DrawCentered(b, $"{this.incubationDurationDays} Days", Game1.dialogueFont, new Rectangle(panel.X + 160, panel.Y + 282, 135, 44), new Color(188, 235, 255));
         DrawProgress(b, new Rectangle(panel.X + 305, panel.Y + 300, 160, 14), 0f);
         DrawPanel(b, this.actionButton, this.selectedInventoryIndex is null ? new Color(65, 79, 105) : new Color(43, 151, 73), this.selectedInventoryIndex is null ? new Color(117, 131, 159) : new Color(139, 240, 127));
         DrawCentered(b, "▶  START", Game1.smallFont, this.actionButton, Color.White);
