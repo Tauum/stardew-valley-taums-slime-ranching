@@ -116,10 +116,10 @@ internal sealed class SlimeRegistry
     public bool SetGenomeSize(long farmAnimalId, string size)
     {
         if (!this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record)
-            || !new[] { "Tiny", "Small", "Normal", "Large", "Giant" }.Contains(size, StringComparer.OrdinalIgnoreCase))
+            || !new[] { "Small", "Normal", "Large", "Giant" }.Contains(size, StringComparer.OrdinalIgnoreCase))
             return false;
 
-        record.Genome.Size = new[] { "Tiny", "Small", "Normal", "Large", "Giant" }
+        record.Genome.Size = new[] { "Small", "Normal", "Large", "Giant" }
             .First(value => value.Equals(size, StringComparison.OrdinalIgnoreCase));
         return true;
     }
@@ -644,7 +644,9 @@ internal sealed class SlimeRegistry
 
     private static string RollOffspringSize(string parentA, string parentB)
     {
-        string[] sizes = { "Tiny", "Small", "Normal", "Large", "Giant" };
+        string[] sizes = { "Small", "Normal", "Large", "Giant" };
+        if (string.Equals(parentA, "Tiny", StringComparison.OrdinalIgnoreCase)) parentA = "Small";
+        if (string.Equals(parentB, "Tiny", StringComparison.OrdinalIgnoreCase)) parentB = "Small";
         int a = Array.FindIndex(sizes, size => size.Equals(parentA, StringComparison.OrdinalIgnoreCase));
         int b = Array.FindIndex(sizes, size => size.Equals(parentB, StringComparison.OrdinalIgnoreCase));
         if (a < 0) a = 2;
@@ -654,10 +656,9 @@ internal sealed class SlimeRegistry
         {
             return a switch
             {
-                0 => RollWeighted(("Tiny", 75), ("Small", 20), ("Normal", 5)),
-                1 => RollWeighted(("Small", 75), ("Normal", 20), ("Tiny", 5)),
-                2 => RollWeighted(("Normal", 80), ("Small", 10), ("Large", 10)),
-                3 => RollWeighted(("Large", 75), ("Normal", 15), ("Giant", 10)),
+                0 => RollWeighted(("Small", 80), ("Normal", 20)),
+                1 => RollWeighted(("Normal", 80), ("Small", 10), ("Large", 10)),
+                2 => RollWeighted(("Large", 75), ("Normal", 15), ("Giant", 10)),
                 _ => RollWeighted(("Giant", 85), ("Large", 15))
             };
         }
@@ -679,6 +680,15 @@ internal sealed class SlimeRegistry
             middle++;
         return sizes[middle];
     }
+
+    private static string NormalizeSize(string? size) => size?.ToLowerInvariant() switch
+    {
+        "tiny" or "small" => "Small",
+        "normal" => "Normal",
+        "large" => "Large",
+        "giant" => "Giant",
+        _ => "Normal"
+    };
 
     private static string RollWeighted(params (string Size, int Weight)[] outcomes)
     {
@@ -792,7 +802,10 @@ internal sealed class SlimeRegistry
         foreach (SlimeRecord record in data?.Slimes ?? Enumerable.Empty<SlimeRecord>())
         {
             if (record is not null)
+            {
+                record.Genome.Size = NormalizeSize(record.Genome.Size);
                 record.LastCompostFeedDay = Math.Clamp(record.LastCompostFeedDay, -1, Math.Max(0, record.AgeLastUpdatedDay));
+            }
             bool alreadyLikedFood = FoodLikeCatalog.IsEligible(record?.Genome?.LikedFoodItemId);
             if (!this.TryAdd(record))
             {
@@ -815,6 +828,8 @@ internal sealed class SlimeRegistry
 
         foreach (SlimeEggRecord egg in data?.Eggs ?? Enumerable.Empty<SlimeEggRecord>())
         {
+            if (egg?.Genome is not null)
+                egg.Genome.Size = NormalizeSize(egg.Genome.Size);
             if (egg?.Genome is not { Id: var id } || id == Guid.Empty
                 || string.IsNullOrWhiteSpace(egg.ItemId)
                 || egg.ItemId != SlimeEggContent.GetItemId(id)
@@ -889,6 +904,7 @@ internal sealed class SlimeRegistry
         if (genome.Id == Guid.Empty)
             throw new ArgumentException("An egg genome must have a unique ID.", nameof(genome));
 
+        genome.Size = NormalizeSize(genome.Size);
         string itemId = SlimeEggContent.GetItemId(genome.Id);
         SlimeAbilityCatalog.Refresh(genome);
         var egg = new SlimeEggRecord { ItemId = itemId, Genome = genome };

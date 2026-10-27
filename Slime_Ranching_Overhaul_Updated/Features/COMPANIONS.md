@@ -25,7 +25,7 @@ Genome records now store stable ability IDs for the seven base species and the i
 The Mutagenic Pool can currently assign the Shadow Clone genome trait. In the Daycare, that trait produces a capped, temporary translucent sprite echo as a visual prototype; it is not a second FarmAnimal and cannot act, breed, or produce items. The planned inherited-ability behavior remains unimplemented.
 
 ## Size / shiny
-Tiny prioritizes movement and activation frequency; Giant prioritizes quantity/radius. Shiny gives small (~10%) performance boost. Golden discounts and Black/White time are capped and don't multiply with size.
+Small is the smallest size; Giant prioritizes quantity/radius. Shiny gives small (~10%) performance boost. Golden discounts and Black/White time are capped and don't multiply with size.
 
 ## Engineering concerns
 Inventory ownership/overflow, item duplication, location transfers, event scenes, combat safety, mounts, time-based cutscenes, multiplayer day sync, save/reload and follower cleanup.

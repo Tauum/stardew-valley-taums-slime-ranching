@@ -221,7 +221,6 @@ internal sealed class EnrichmentInteractionService
                 var id when id == FurnitureContent.SlimePondQualifiedId => (4f, 0f, 0f, false),
                 _ => registry.GetGenomeSize(animal.myID.Value)?.ToLowerInvariant() switch
                 {
-                    "tiny" => (36f, 2f, 0f, false),
                     "small" => (32f, 3f, 0f, false),
                     "large" => (24f, 7f, 0f, false),
                     "giant" => (21f, 9f, 0f, false),

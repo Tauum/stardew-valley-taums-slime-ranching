@@ -82,7 +82,7 @@ For controlled testing, pass one or more `key=value` options instead. Any omitte
 slime_ranching_give_test_eggs <save folder name> species=Mint_Slime secondary=none color=#65DDBB size=Giant rarity=Rare shiny=true food=(O)168 generation=4 mutation=ShadowClone
 ```
 
-Available keys: `species`, `secondary` (`none` clears it), `color` (`#RRGGBB`), `size` (`Tiny`, `Small`, `Normal`, `Large`, or `Giant`), `rarity` (text tier), `shiny` (`true`/`false`), `food` (eligible item ID), `generation` (0–999), and `mutation` (`ShadowClone` or `none`). Eligible food IDs include `(O)684` Bug Meat, `(O)766` Slime, `(O)168` Trash, and `(O)170` Broken Glasses. The `random` mode can't be combined with `key=value` options.
+Available keys: `species`, `secondary` (`none` clears it), `color` (`#RRGGBB`), `size` (`Small`, `Normal`, `Large`, or `Giant`), `rarity` (text tier), `shiny` (`true`/`false`), `food` (eligible item ID), `generation` (0–999), and `mutation` (`ShadowClone` or `none`). Eligible food IDs include `(O)684` Bug Meat, `(O)766` Slime, `(O)168` Trash, and `(O)170` Broken Glasses. The `random` mode can't be combined with `key=value` options.
 
 ## Hutch inspection
 
@@ -145,7 +145,7 @@ slime_ranching_spawn_ranch_slime <exact save folder name> <age in days 0-28>
 
 For the current test copy, use `slime_ranching_spawn_ranch_slime TaumTest_322865388 28` to spawn a mature slime, or use `slime_ranching_spawn_ranch_slime TaumTest_322865388 0` to spawn a newborn. Ages 1–27 create juveniles that need the remaining days to reach maturity. The command adds a Ranch Slime without converting or removing any vanilla slimes, and immediately saves its genome to the mod's external registry. The animal itself and standard properties like its name, home, age, and friendship are stored by Stardew when the game saves.
 
-To set up controlled size-inheritance pairs, use `slime_ranching_set_size TaumTest_322865388 <animal ID> <Tiny|Small|Normal|Large|Giant>`. The command edits only that managed Ranch Slime's external genome record.
+To set up controlled size-inheritance pairs, use `slime_ranching_set_size TaumTest_322865388 <animal ID> <Small|Normal|Large|Giant>`. The command edits only that managed Ranch Slime's external genome record.
 
 ### Breeder selection preview
 

@@ -179,13 +179,13 @@ Crystal items currently use vanilla mineral icons and are available only through
 
 Primary-pair naming (`Purple` versus `Violet`), fallback behavior, Pink recipes, and exact hybrid sprite blending remain open review items.
 
-## Five-size inheritance prototype
+## Four-size inheritance prototype
 
-1. Run `slime_ranching_spawn_ranch_slime <save name>` twice and note each FarmAnimal ID from the console log. Set their external test sizes with `slime_ranching_set_size <save name> <animal ID> <Tiny|Small|Normal|Large|Giant>`. For example, set both to `Small` for a Small+Small pair.
+1. Run `slime_ranching_spawn_ranch_slime <save name>` twice and note each FarmAnimal ID from the console log. Set their external test sizes with `slime_ranching_set_size <save name> <animal ID> <Small|Normal|Large|Giant>`. For example, set both to `Small` for a Small+Small pair.
 2. Prepare known pairs. Breed Small+Small, Large+Large, Small+Large, and Giant+Giant pairs and inspect each egg tooltip's Size value.
-3. Check that every outcome is one of Tiny, Small, Normal, Large, or Giant, and that size does not change the parents or maturity clock.
-4. Hatch size-varied eggs. Compare trampoline animation profiles: Tiny highest/fastest, Small above Normal, Large below Normal, and Giant lowest/slowest. Cushion, bed, slide, and playground interactions should remain independent of genetic size for now.
-5. Compare all five animal sprite sizes in the Daycare. Check feet align to the floor, slimes remain clickable/pettable, and enlarged art does not overlap unrelated objects. Check the breeder chamber preview and every furniture animation for clipping or baseline shifts.
+3. Check that every outcome is one of Small, Normal, Large, or Giant, and that size does not change the parents or maturity clock.
+4. Hatch size-varied eggs. Compare trampoline animation profiles: Small highest/fastest, Large below Normal, and Giant lowest/slowest. Cushion, bed, slide, and playground interactions should remain independent of genetic size for now.
+5. Compare all four animal sprite sizes in the Daycare. Check feet align to the floor, slimes remain clickable/pettable, and enlarged art does not overlap unrelated objects. Check the breeder chamber preview and every furniture animation for clipping or baseline shifts.
 
 The probabilities are provisional and listed in `Features/SIZE_AND_MATURITY.md`. A few manual samples only check that the categories and inheritance path work; they do not validate statistical balance.
 
@@ -262,7 +262,7 @@ These prices are provisional; all listed enrichment furniture is still a visual 
 2. Wait beside the trampoline. A nearby slime should rise and settle in a short bounce lasting about 2.4 seconds.
 3. With two or more nearby slimes and one trampoline, confirm only one is assigned during each bounce and another slime gets a turn afterward. A slime should wait about three seconds after its bounce before using that trampoline again.
 4. Leave the Daycare during a bounce and return; confirm no slime remains visually offset. Return to title during a bounce and load the save again; animation state should not persist.
-5. If test animals with Tiny, Normal, and Giant genomes are available, compare their arcs: Tiny should hop higher and finish sooner, Giant should compress more and bounce lower/slower, and Normal should fall between them.
+5. If test animals with Small, Normal, and Giant genomes are available, compare their arcs: Small should hop higher and finish sooner, Giant should compress more and bounce lower/slower, and Normal should fall between them.
 
 The current prototype assigns only already-nearby slimes; it does not path them to the trampoline. Genome size selects the bounce profile. The bounce is a visual offset and is not persisted in external state.
 

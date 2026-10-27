@@ -103,8 +103,8 @@ internal static class FarmAnimalContent
                     GrassEatAmount = 0,
                     HappinessDrain = 0,
                     Texture = RanchSlimeTexture,
-                    SpriteWidth = 24,
-                    SpriteHeight = 32,
+                    SpriteWidth = 40,
+                    SpriteHeight = 60,
                     UseFlippedRightForLeft = true,
                     CanEatGoldenCrackers = false
                 };
@@ -116,14 +116,14 @@ internal static class FarmAnimalContent
     {
         const int sourceFrameWidth = 16;
         const int sourceFrameHeight = 24;
-        const int frameWidth = 24;
-        const int frameHeight = 32;
+        const int frameWidth = 40;
+        const int frameHeight = 60;
         const int columns = 4;
         const int rows = 5;
         Color[] vanillaPixels = GetVanillaSlimePixels(out int vanillaTextureWidth);
 
         // Recompose each vanilla 16x24 slime frame, then nearest-neighbor scale its
-        // opaque pixels into a larger transparent 24x32 farm-animal frame. The
+        // opaque pixels into a larger transparent 40x60 farm-animal frame. The
         // normal-size variant keeps the original pixel dimensions and is bottom-aligned.
         int sourceSheetWidth = sourceFrameWidth * columns;
         int sourceSheetHeight = sourceFrameHeight * rows;
@@ -184,16 +184,19 @@ internal static class FarmAnimalContent
 
     private static string GetCanonicalSize(string? size)
     {
-        string[] sizes = { "Tiny", "Small", "Normal", "Large", "Giant" };
+        // Keep existing external records and eggs usable after Tiny is retired.
+        if (string.Equals(size, "Tiny", StringComparison.OrdinalIgnoreCase))
+            return "Small";
+
+        string[] sizes = { "Small", "Normal", "Large", "Giant" };
         return sizes.FirstOrDefault(value => value.Equals(size, StringComparison.OrdinalIgnoreCase)) ?? "Normal";
     }
 
     private static float GetSizeScale(string size) => GetCanonicalSize(size) switch
     {
-        "Tiny" => 0.65f,
         "Small" => 0.82f,
         "Large" => 1.18f,
-        "Giant" => 1.32f,
+        "Giant" => 2.5f,
         _ => size.Equals("Normal", StringComparison.OrdinalIgnoreCase) ? 1f : 0f
     };
 

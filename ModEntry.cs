@@ -47,7 +47,7 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("slime_ranching_inspect", "Inspect vanilla slime or Ranch Slime counts in the current Slime Hutch or Slime Daycare.", this.OnInspectCommand);
         helper.ConsoleCommands.Add("slime_ranching_backup_external_data", "Back up the current save's external mod data. Usage: slime_ranching_backup_external_data <exact save folder name>.", this.OnBackupExternalDataCommand);
         helper.ConsoleCommands.Add("slime_ranching_spawn_ranch_slime", $"Spawn one Ranch Slime at a chosen age in the Slime Daycare. Usage: slime_ranching_spawn_ranch_slime <exact save folder name> <age days 0-{FarmAnimalContent.RanchSlimeDaysToMature}>.", this.OnSpawnRanchSlimeCommand);
-        helper.ConsoleCommands.Add("slime_ranching_set_size", "Set a managed Ranch Slime's test genome size. Usage: slime_ranching_set_size <exact save folder name> <animal ID> <Tiny|Small|Normal|Large|Giant>.", this.OnSetSlimeSizeCommand);
+        helper.ConsoleCommands.Add("slime_ranching_set_size", "Set a managed Ranch Slime's test genome size. Usage: slime_ranching_set_size <exact save folder name> <animal ID> <Small|Normal|Large|Giant>.", this.OnSetSlimeSizeCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_color", "Set a managed Ranch Slime's test base color. Usage: slime_ranching_set_color <exact save folder name> <animal ID> <Red|Orange|Yellow|Green|Blue|Purple|Pink>.", this.OnSetSlimeColorCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_shiny", "Set a managed Ranch Slime's test shiny flag. Usage: slime_ranching_set_shiny <exact save folder name> <animal ID> <true|false>.", this.OnSetSlimeShinyCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_mutation", "Set a managed Ranch Slime's test mutation. Usage: slime_ranching_set_mutation <exact save folder name> <animal ID> <ShadowClone|none>.", this.OnSetSlimeMutationCommand);
@@ -980,7 +980,7 @@ public sealed class ModEntry : Mod
         string? saveName = Constants.SaveFolderName;
         if (args.Length < 1 || args[0] != saveName)
         {
-            this.Monitor.Log($"Usage: slime_ranching_give_test_eggs {saveName} [species=Name] [secondary=Name|none] [color=#RRGGBB] [size=Tiny|Small|Normal|Large|Giant] [rarity=Tier] [shiny=true|false] [food=(O)itemId] [generation=number] [mutation=ShadowClone|none].", LogLevel.Warn);
+            this.Monitor.Log($"Usage: slime_ranching_give_test_eggs {saveName} [species=Name] [secondary=Name|none] [color=#RRGGBB] [size=Small|Normal|Large|Giant] [rarity=Tier] [shiny=true|false] [food=(O)itemId] [generation=number] [mutation=ShadowClone|none].", LogLevel.Warn);
             return;
         }
 
@@ -1086,7 +1086,7 @@ public sealed class ModEntry : Mod
             ("Red", "#FF0000"), ("Orange", "#FF9500"), ("Yellow", "#FFD60A"),
             ("Green", "#00FF00"), ("Blue", "#0A84FF"), ("Purple", "#BF5AF2"), ("Pink", "#FF69B4")
         };
-        string[] sizes = { "Tiny", "Small", "Normal", "Large", "Giant" };
+        string[] sizes = { "Small", "Normal", "Large", "Giant" };
         string[] rarities = { "Common", "Uncommon", "Rare", "Epic", "Legendary" };
         var primary = colors[Game1.random.Next(colors.Length)];
         string? secondary = Game1.random.NextDouble() < 0.3
@@ -1156,9 +1156,9 @@ public sealed class ModEntry : Mod
             return false;
         }
         if (metadata.TryGetValue("size", out string? size)
-            && !new[] { "Tiny", "Small", "Normal", "Large", "Giant" }.Contains(size, StringComparer.OrdinalIgnoreCase))
+            && !new[] { "Small", "Normal", "Large", "Giant" }.Contains(size, StringComparer.OrdinalIgnoreCase))
         {
-            error = "size must be Tiny, Small, Normal, Large, or Giant";
+            error = "size must be Small, Normal, Large, or Giant";
             return false;
         }
         if (metadata.TryGetValue("rarity", out string? rarity) && (rarity.Length > 32 || string.IsNullOrWhiteSpace(rarity)))
@@ -1192,7 +1192,7 @@ public sealed class ModEntry : Mod
         }
 
         if (metadata.TryGetValue("size", out string? canonicalSize))
-            metadata["size"] = new[] { "Tiny", "Small", "Normal", "Large", "Giant" }.First(value => value.Equals(canonicalSize, StringComparison.OrdinalIgnoreCase));
+            metadata["size"] = new[] { "Small", "Normal", "Large", "Giant" }.First(value => value.Equals(canonicalSize, StringComparison.OrdinalIgnoreCase));
         if (metadata.TryGetValue("color", out string? canonicalColor))
             metadata["color"] = canonicalColor.ToUpperInvariant();
         return true;
@@ -1370,7 +1370,7 @@ public sealed class ModEntry : Mod
         string? saveName = Constants.SaveFolderName;
         if (args.Length != 3 || args[0] != saveName || !long.TryParse(args[1], out long animalId))
         {
-            this.Monitor.Log($"Usage: slime_ranching_set_size {saveName} <animal ID> <Tiny|Small|Normal|Large|Giant>", LogLevel.Warn);
+            this.Monitor.Log($"Usage: slime_ranching_set_size {saveName} <animal ID> <Small|Normal|Large|Giant>", LogLevel.Warn);
             return;
         }
 
