@@ -32,6 +32,7 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [x] Store authoritative maturity age and day clock in the external registry; mirror to native animal age for Stardew maturity behavior.
 - [x] Use external maturity age for breeder growth labels and selection eligibility.
 - [x] Render Ranch Slimes with one of seven tint sheets selected from their external genome color.
+- [x] Tint genome-specific egg icons to match the nearest base genome color while preserving the vanilla egg sprite silhouette.
 - [ ] Verify all seven tint colors on hatch and after save/reload.
 - [ ] Verify juvenile appearance, daily growth, save/reload age, and breeder eligibility at maturity.
 - [ ] Verify schema 7 migration preserves existing animals' current native maturity and backs up the previous registry.

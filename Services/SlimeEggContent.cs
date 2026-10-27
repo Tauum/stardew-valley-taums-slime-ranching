@@ -1,5 +1,8 @@
 using System.Text.Json;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI.Events;
+using StardewValley;
 using StardewValley.GameData.Objects;
 using taums_slime_ranching.Models;
 
@@ -9,6 +12,21 @@ namespace taums_slime_ranching.Services;
 internal static class SlimeEggContent
 {
     private const string RegistryFileName = "slime-registry-v1.json";
+    private const string EggTexturePrefix = "Mods/Taum.SlimeRanching/Objects/RanchSlimeEgg_";
+
+    public static void LoadAssets(AssetRequestedEventArgs e)
+    {
+        string assetName = e.NameWithoutLocale.BaseName;
+        if (!assetName.StartsWith(EggTexturePrefix, StringComparison.Ordinal))
+            return;
+
+        string colorName = assetName[EggTexturePrefix.Length..];
+        if (!new[] { "Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Pink" }.Contains(colorName))
+            return;
+
+        Color tint = FarmAnimalContent.GetTintForVariantName(colorName);
+        e.LoadFrom(() => CreateEggIcon(Game1.graphics.GraphicsDevice, tint), AssetLoadPriority.Exclusive);
+    }
 
     public static string GetItemId(Guid genomeId) => $"Taum.SlimeRanching_Egg_{genomeId:N}";
     public static string GetQualifiedId(Guid genomeId) => "(O)" + GetItemId(genomeId);
@@ -28,6 +46,7 @@ internal static class SlimeEggContent
 
                 SlimeGenome genome = egg.Genome;
                 string color = DisplayOrUnknown(genome.VisualColor);
+                string texture = EggTexturePrefix + FarmAnimalContent.GetTextureName(genome.VisualColor).Split('_').Last();
                 objects[egg.ItemId] = new ObjectData
                 {
                     Name = $"{DisplayOrUnknown(genome.PrimarySpecies)} Egg ({color})",
@@ -35,8 +54,8 @@ internal static class SlimeEggContent
                     Description = CreateDescription(genome, egg.HatchedAnimalId),
                     Type = "Basic",
                     Price = 0,
-                    Texture = "Maps/springobjects",
-                    SpriteIndex = 680,
+                    Texture = texture,
+                    SpriteIndex = 0,
                     CanBeGivenAsGift = false,
                     CanBeTrashed = true,
                     ExcludeFromShippingCollection = true,
@@ -44,6 +63,38 @@ internal static class SlimeEggContent
                 };
             }
         });
+    }
+
+    private static Texture2D CreateEggIcon(GraphicsDevice graphicsDevice, Color tint)
+    {
+        const int tileSize = 16;
+        const int vanillaEggSpriteIndex = 680;
+        Texture2D source = Game1.content.Load<Texture2D>("Maps/springobjects");
+        int columns = source.Width / tileSize;
+        var sourcePixels = new Color[source.Width * source.Height];
+        source.GetData(sourcePixels);
+
+        int sourceX = vanillaEggSpriteIndex % columns * tileSize;
+        int sourceY = vanillaEggSpriteIndex / columns * tileSize;
+        var texture = new Texture2D(graphicsDevice, tileSize, tileSize);
+        var output = new Color[tileSize * tileSize];
+        for (int y = 0; y < tileSize; y++)
+        for (int x = 0; x < tileSize; x++)
+        {
+            Color pixel = sourcePixels[(sourceY + y) * source.Width + sourceX + x];
+            if (pixel.A == 0)
+                continue;
+
+            float brightness = Math.Max(pixel.R, Math.Max(pixel.G, pixel.B)) / 255f;
+            output[y * tileSize + x] = new Color(
+                (byte)(tint.R * brightness),
+                (byte)(tint.G * brightness),
+                (byte)(tint.B * brightness),
+                pixel.A);
+        }
+
+        texture.SetData(output);
+        return texture;
     }
 
     private static string CreateDescription(SlimeGenome genome, long? hatchedAnimalId)

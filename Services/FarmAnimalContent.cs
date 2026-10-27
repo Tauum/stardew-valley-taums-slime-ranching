@@ -47,11 +47,18 @@ internal static class FarmAnimalContent
 
     public static string GetTextureName(string? visualColor)
     {
+        return RanchSlimeTexturePrefix + GetClosestVariant(visualColor).Name;
+    }
+
+    public static Color GetVisualTint(string? visualColor) => GetClosestVariant(visualColor).Tint;
+
+    public static Color GetTintForVariantName(string name) =>
+        ColorVariants.FirstOrDefault(variant => variant.Name == name).Tint;
+
+    private static (string Name, Color Reference, Color Tint) GetClosestVariant(string? visualColor)
+    {
         Color requested = ParseHexColor(visualColor);
-        (string Name, Color Reference, Color Tint) closest = ColorVariants
-            .OrderBy(variant => ColorDistanceSquared(requested, variant.Reference))
-            .First();
-        return RanchSlimeTexturePrefix + closest.Name;
+        return ColorVariants.OrderBy(variant => ColorDistanceSquared(requested, variant.Reference)).First();
     }
 
     public static void EditAsset(AssetRequestedEventArgs e)

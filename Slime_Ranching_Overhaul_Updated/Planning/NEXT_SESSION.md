@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-10-27  
 **Test save:** `TaumTest_322865388` (disposable copy)  
-**Working tree:** feature branch `feature/genome-color-sprites`, chained after `feature/breeder-external-age-eligibility`; the incubator progress panel, Marnie's machine stock, a placeable trampoline and size-aware bounce prototype, external maturity progression, and genome-driven slime tint sheets are implemented. Build passes; latest changes are not tested in game.
+**Working tree:** feature branch `feature/genome-colored-eggs`, chained after `feature/genome-color-sprites`; the incubator progress panel, Marnie's machine stock, a placeable trampoline and size-aware bounce prototype, external maturity progression, genome-driven slime tints, and matching egg icon tints are implemented. Build passes; latest changes are not tested in game.
 
 ## Current state
 
@@ -21,6 +21,7 @@
 - Maturity age is now authoritative in each external `SlimeRecord` (`AgeDays`, `AgeLastUpdatedDay`, and `AgeClockInitialized`) and is mirrored to Stardew's native `FarmAnimal.age` so its animal system can apply maturity. The registry schema is version 7 and backs up the prior JSON as `.before-external-maturity-v7.bak` on migration. Verify upgrading existing adult/juvenile test slimes, sleeping and reload progression, and the external fields. This does not add mod metadata to the game save; the native age field remains a compatibility mirror.
 - Breeder candidate rows and selection now query external age directly, falling back to native age only before the record's age clock is initialized.
 - Ranch Slime textures now have seven cached tint assets. On load and hatch, the runtime selects the nearest Red/Orange/Yellow/Green/Blue/Purple/Pink tint from the external genome hex color using a local-only sprite texture override; this does not store skin metadata in the game save. Run `slime_ranching_give_color_eggs <save name>` for seven test eggs and compare their hatch colors. Exact hybrid color blending remains undecided.
+- Genome-specific egg items now use seven cached tints of the vanilla Green Slime Egg sprite, keeping its source silhouette and outline. Check item icons in inventory before hatching the color test eggs; verify hatchling tint and reload appearance as well.
 - The user confirmed the egg spawn worked. Its tooltip showed Ranch Slime, green (`#00FF00`), Normal size, Common rarity, no mutation, Generation 1, two parent IDs, and favorite food `Broken CD`.
 - Egg hatching is implemented as a prototype. The registry schema is now version 6; schema upgrades create a neighboring `.before-managed-egg-incubation-v6.bak` copy. Verify egg identity through transfer/reload, then test incubation recovery and genome matching before expanding the hatch system.
 - Building art uses direct nearest-neighbor resized copies of the original images in `assets/Buildings/*_GameTexture.png`. The original full-size source images are preserved. Current frames are Base 160 by 160, Upgrade 1 176 by 160, and Upgrade 2 192 by 160; building widths are 10, 11, and 12 tiles.

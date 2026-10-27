@@ -467,6 +467,7 @@ public sealed class ModEntry : Mod
     {
         ConverterContent.EditAsset(e);
         ShopContent.EditAsset(e, this.config);
+        SlimeEggContent.LoadAssets(e);
         SlimeEggContent.EditAsset(e, this.Helper.DirectoryPath);
         GuidebookContent.EditAsset(e);
         FarmAnimalContent.LoadAssets(e);
