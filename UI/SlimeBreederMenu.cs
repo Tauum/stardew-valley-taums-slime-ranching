@@ -25,6 +25,8 @@ internal sealed class SlimeBreederMenu : IClickableMenu
     private int firstVisibleCandidate;
     private readonly Rectangle actionButton;
     private readonly Rectangle releaseButton;
+    private readonly Rectangle crystalSelector;
+    private string? selectedCrystalColor;
     private bool pairReserved;
     private string? statusMessage;
 
@@ -68,6 +70,9 @@ internal sealed class SlimeBreederMenu : IClickableMenu
         this.listBottom = this.yPositionOnScreen + 326;
         this.actionButton = new Rectangle(this.xPositionOnScreen + 34, this.yPositionOnScreen + this.height - 90, 190, 56);
         this.releaseButton = new Rectangle(this.xPositionOnScreen + 236, this.yPositionOnScreen + this.height - 90, 180, 56);
+        this.crystalSelector = new Rectangle(this.xPositionOnScreen + 430, this.listBottom + 12, 336, 72);
+        if (pair?.ChromaticCrystalColor is string savedColor && ChromaticCrystalContent.IsColorName(savedColor))
+            this.selectedCrystalColor = savedColor;
     }
 
     public override void receiveScrollWheelAction(int direction)
@@ -89,6 +94,13 @@ internal sealed class SlimeBreederMenu : IClickableMenu
     public override void receiveLeftClick(int x, int y, bool playSound = true)
     {
         base.receiveLeftClick(x, y, playSound);
+        if (this.crystalSelector.Contains(x, y) && this.registry.GetBreedingPair(this.machineKey)?.CycleReadyOnDay <= 0)
+        {
+            this.CycleCrystalSelection();
+            Game1.playSound("smallSelect");
+            return;
+        }
+
         if (this.releaseButton.Contains(x, y))
         {
             BreedingPairRecord? pair = this.registry.GetBreedingPair(this.machineKey);
@@ -117,12 +129,10 @@ internal sealed class SlimeBreederMenu : IClickableMenu
                     long[] ids = this.selected.ToArray();
                     if (this.registry.ReservePair(this.machineKey, ids[0], ids[1], Game1.Date.TotalDays))
                     {
-                        if (this.registry.StartBreedingCycle(this.machineKey, Game1.Date.TotalDays))
+                        if (this.TryStartBreedingCycle())
                         {
                             this.pairReserved = true;
                             this.statusMessage = "Two-day cycle started; parents are reserved.";
-                            if (!this.saveExternalState())
-                                this.statusMessage = "Cycle started, but external state could not be saved.";
                         }
                         else
                         {
@@ -150,10 +160,9 @@ internal sealed class SlimeBreederMenu : IClickableMenu
                 }
                 else
                 {
-                    if (this.registry.StartBreedingCycle(this.machineKey, Game1.Date.TotalDays))
+                    if (this.TryStartBreedingCycle())
                     {
                         this.statusMessage = "Two-day breeding cycle started.";
-                        this.saveExternalState();
                     }
                     else
                         this.statusMessage = "Reserve two parents first.";
@@ -247,6 +256,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
         }
 
         this.DrawChamber(b);
+        this.DrawCrystalSelector(b);
         b.Draw(Game1.staminaRect, this.actionButton, new Color(180, 220, 177));
         BreedingPairRecord? currentPair = this.registry.GetBreedingPair(this.machineKey);
         bool cycleFinished = currentPair?.CycleReadyOnDay > 0 && Game1.Date.TotalDays >= currentPair.CycleReadyOnDay;
@@ -285,6 +295,88 @@ internal sealed class SlimeBreederMenu : IClickableMenu
             float nameWidth = Game1.smallFont.MeasureString(name).X;
             b.DrawString(Game1.smallFont, name, new Vector2(centerX - nameWidth / 2, chamber.Y + 182), Game1.textColor);
         }
+    }
+
+    private void DrawCrystalSelector(SpriteBatch b)
+    {
+        b.Draw(Game1.staminaRect, this.crystalSelector, new Color(244, 224, 176));
+        IClickableMenu.drawTextureBox(b, this.crystalSelector.X, this.crystalSelector.Y, this.crystalSelector.Width, this.crystalSelector.Height, Color.White);
+        string label = this.selectedCrystalColor is null
+            ? "Offspring color: inherited (click to choose a crystal)"
+            : $"Offspring color: {this.selectedCrystalColor} (crystal consumed on start)";
+        b.DrawString(Game1.smallFont, label, new Vector2(this.crystalSelector.X + 12, this.crystalSelector.Y + 13), Game1.textColor);
+        b.DrawString(Game1.tinyFont, "Only common single-color offspring result; hybrid and exceptional traits are cleared.",
+            new Vector2(this.crystalSelector.X + 12, this.crystalSelector.Y + 43), Game1.textColor);
+    }
+
+    private void CycleCrystalSelection()
+    {
+        List<string> available = ChromaticCrystalContent.QualifiedItemIds
+            .Where(id => Game1.player.Items.Any(item => item is not null && item.QualifiedItemId == id))
+            .Select(id => ChromaticCrystalContent.TryGetColor(id, out string color, out _) ? color : "")
+            .Where(color => color.Length > 0)
+            .ToList();
+        if (available.Count == 0)
+        {
+            this.selectedCrystalColor = null;
+            this.statusMessage = "No Chromatic Crystals in inventory; using inherited color.";
+            return;
+        }
+
+        int current = this.selectedCrystalColor is null ? -1 : available.FindIndex(color => color.Equals(this.selectedCrystalColor, StringComparison.OrdinalIgnoreCase));
+        this.selectedCrystalColor = current == available.Count - 1 ? null : available[Math.Max(0, current + 1)];
+        this.statusMessage = this.selectedCrystalColor is null
+            ? "Crystal focus disabled; offspring will inherit a parent color."
+            : $"Crystal focus: {this.selectedCrystalColor}. Click again to cycle.";
+    }
+
+    private bool TryStartBreedingCycle()
+    {
+        Item? crystalItem = null;
+        int crystalSlot = -1;
+        if (this.selectedCrystalColor is not null)
+        {
+            string qualifiedId = "(O)" + ChromaticCrystalContent.GetItemId(this.selectedCrystalColor);
+            for (int i = 0; i < Game1.player.Items.Count; i++)
+            {
+                Item? item = Game1.player.Items[i];
+                if (item is not null && item.QualifiedItemId == qualifiedId && item.Stack > 0)
+                {
+                    crystalSlot = i;
+                    break;
+                }
+            }
+            if (crystalSlot < 0)
+            {
+                this.statusMessage = $"No {this.selectedCrystalColor} Chromatic Crystal remains; choose another focus.";
+                return false;
+            }
+            crystalItem = Game1.player.Items[crystalSlot];
+        }
+
+        if (!this.registry.StartBreedingCycle(this.machineKey, Game1.Date.TotalDays, this.selectedCrystalColor))
+            return false;
+
+        if (crystalItem is not null)
+        {
+            crystalItem.Stack--;
+            if (crystalItem.Stack <= 0)
+                Game1.player.Items[crystalSlot] = null;
+        }
+
+        if (this.saveExternalState())
+            return true;
+
+        this.registry.CancelBreedingCycle(this.machineKey);
+        if (crystalItem is not null)
+        {
+            if (crystalItem.Stack > 0)
+                crystalItem.Stack++;
+            else
+                Game1.player.Items[crystalSlot] = crystalItem;
+        }
+        this.statusMessage = "Could not save the cycle; the crystal was returned.";
+        return false;
     }
 
     private int GetVisibleCandidateCount() => Math.Max(1, (this.listBottom - this.listTop) / RowHeight);

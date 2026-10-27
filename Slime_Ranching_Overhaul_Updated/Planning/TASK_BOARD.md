@@ -35,9 +35,11 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [x] Tint genome-specific egg icons to match the nearest base genome color while preserving the vanilla egg sprite silhouette.
 - [x] Cache the cross-save egg registry scan used to define genome-specific item assets; refresh it when egg state changes.
 - [x] Decode each vanilla slime/egg source sprite sheet once and reuse its pixels to generate color variants.
+- [x] Add seven Chromatic Crystal breeder inputs; a chosen crystal fixes offspring to its base color and clears hybrid/exceptional traits. Recipes and unlock progression remain undecided; confirm consumption, persistence, and hatching in game.
 - [ ] Verify all seven tint colors on hatch and after save/reload.
 - [ ] Verify juvenile appearance, daily growth, save/reload age, and breeder eligibility at maturity.
-- [ ] Verify schema 7 migration preserves existing animals' current native maturity and backs up the previous registry.
+- [ ] Verify schema 7-to-8 migration preserves existing animals' native maturity and backs up the previous registry.
+- [ ] Verify schema 8 migration and crystal selection/consumption, two-day cycle persistence, and resulting egg/hatchling traits.
 - [ ] Verify incubation start, save/reload recovery, hatch, full-Daycare deferral, and duplicate-egg handling in game.
 - [ ] Verify the incubator progress card at start, after one sleep, and when the egg is ready.
 - [x] Add parent cooldown after egg collection; duration remains provisional.

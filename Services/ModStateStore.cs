@@ -13,7 +13,7 @@ internal sealed class ModStateStore
     private string? registryPath;
     private bool legacyFoodLikeMoved;
     private bool schemaMigrated;
-    private string schemaBackupSuffix = ".before-external-maturity-v7.bak";
+    private string schemaBackupSuffix = ".before-chromatic-crystals-v8.bak";
 
     public ModStateStore(string modDirectory) => this.modDirectory = modDirectory;
 
@@ -21,7 +21,7 @@ internal sealed class ModStateStore
     {
         this.legacyFoodLikeMoved = false;
         this.schemaMigrated = false;
-        this.schemaBackupSuffix = ".before-external-maturity-v7.bak";
+        this.schemaBackupSuffix = ".before-chromatic-crystals-v8.bak";
         this.registryPath = Path.Combine(GetSaveDirectory(this.modDirectory), RegistryFileName);
         if (!File.Exists(this.registryPath))
             return null;
@@ -65,8 +65,15 @@ internal sealed class ModStateStore
 
         if (root is JsonObject schemaSix && schemaSix["SchemaVersion"]?.GetValue<int>() == 6)
         {
-            schemaSix["SchemaVersion"] = SlimeSaveData.CurrentSchemaVersion;
+            schemaSix["SchemaVersion"] = 7;
             this.schemaBackupSuffix = ".before-external-maturity-v7.bak";
+            this.schemaMigrated = true;
+        }
+
+        if (root is JsonObject schemaSeven && schemaSeven["SchemaVersion"]?.GetValue<int>() == 7)
+        {
+            schemaSeven["SchemaVersion"] = SlimeSaveData.CurrentSchemaVersion;
+            this.schemaBackupSuffix = ".before-chromatic-crystals-v8.bak";
             this.schemaMigrated = true;
         }
 

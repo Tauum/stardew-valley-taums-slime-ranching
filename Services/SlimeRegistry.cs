@@ -208,13 +208,15 @@ internal sealed class SlimeRegistry
 
     public void ReleasePair(string machineKey) => this.breedingPairs.Remove(machineKey);
 
-    public bool StartBreedingCycle(string machineKey, int currentDay)
+    public bool StartBreedingCycle(string machineKey, int currentDay, string? chromaticCrystalColor = null)
     {
-        if (!this.breedingPairs.TryGetValue(machineKey, out BreedingPairRecord? pair) || pair.CycleReadyOnDay > 0)
+        if (!this.breedingPairs.TryGetValue(machineKey, out BreedingPairRecord? pair) || pair.CycleReadyOnDay > 0
+            || (chromaticCrystalColor is not null && !ChromaticCrystalContent.IsColorName(chromaticCrystalColor)))
             return false;
 
         pair.CycleStartedOnDay = currentDay;
         pair.CycleReadyOnDay = currentDay + 2;
+        pair.ChromaticCrystalColor = chromaticCrystalColor;
         return true;
     }
 
@@ -226,6 +228,7 @@ internal sealed class SlimeRegistry
 
         pair.CycleStartedOnDay = 0;
         pair.CycleReadyOnDay = 0;
+        pair.ChromaticCrystalColor = null;
         return true;
     }
 
@@ -261,6 +264,17 @@ internal sealed class SlimeRegistry
             MutationTrait = chooseA() ? a.MutationTrait : b.MutationTrait,
             LikedFoodItemId = chooseA() ? a.LikedFoodItemId : b.LikedFoodItemId
         };
+
+        if (pair.ChromaticCrystalColor is string crystalColor
+            && ChromaticCrystalContent.TryGetColorByName(crystalColor, out string colorName, out string colorHex))
+        {
+            offspring.PrimarySpecies = $"{colorName} Slime";
+            offspring.SecondarySpecies = null;
+            offspring.VisualColor = colorHex;
+            offspring.IsShiny = false;
+            offspring.RarityTier = "Common";
+            offspring.MutationTrait = null;
+        }
 
         SlimeEggRecord egg = this.CreateEgg(offspring);
         pair.OutputEggItemId = egg.ItemId;

@@ -9,5 +9,6 @@ public sealed class BreedingPairRecord
     public int CycleStartedOnDay { get; set; }
     public int CycleReadyOnDay { get; set; }
     public string? OutputEggItemId { get; set; }
+    public string? ChromaticCrystalColor { get; set; }
     public bool ReadyNotificationSent { get; set; }
 }

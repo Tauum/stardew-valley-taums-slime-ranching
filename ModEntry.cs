@@ -42,6 +42,7 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("slime_ranching_give_incubator", "Give one Slime Incubator for testing. Usage: slime_ranching_give_incubator <exact save folder name>.", this.OnGiveIncubatorCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_test_eggs", "Create two external-genome test eggs. Usage: slime_ranching_give_test_eggs <exact save folder name>.", this.OnGiveTestEggsCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_color_eggs", "Create seven color test eggs. Usage: slime_ranching_give_color_eggs <exact save folder name>.", this.OnGiveColorEggsCommand);
+        helper.ConsoleCommands.Add("slime_ranching_give_crystals", "Give one of each Chromatic Crystal for breeder testing. Usage: slime_ranching_give_crystals <exact save folder name>.", this.OnGiveCrystalsCommand);
     }
 
     private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
@@ -472,6 +473,7 @@ public sealed class ModEntry : Mod
     private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
     {
         ConverterContent.EditAsset(e);
+        ChromaticCrystalContent.EditAsset(e);
         ShopContent.EditAsset(e, this.config);
         SlimeEggContent.LoadAssets(e);
         SlimeEggContent.EditAsset(e, this.Helper.DirectoryPath);
@@ -638,6 +640,33 @@ public sealed class ModEntry : Mod
         {
             this.Monitor.Log($"Could not create the color test eggs: {exception.Message}", LogLevel.Error);
         }
+    }
+
+    private void OnGiveCrystalsCommand(string command, string[] args)
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer)
+        {
+            this.Monitor.Log("Load a single-player save before requesting Chromatic Crystals.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 1 || args[0] != saveName)
+        {
+            this.Monitor.Log($"To give crystals to the currently loaded save, use: slime_ranching_give_crystals {saveName}", LogLevel.Warn);
+            return;
+        }
+
+        string[] colors = { "Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Pink" };
+        if (Game1.player.Items.Count(item => item is null) < colors.Length)
+        {
+            this.Monitor.Log("Make room for seven separate crystals in your inventory, then try again.", LogLevel.Warn);
+            return;
+        }
+
+        foreach (string color in colors)
+            Game1.player.addItemToInventoryBool(ItemRegistry.Create("(O)" + ChromaticCrystalContent.GetItemId(color)));
+        this.Monitor.Log("Added one Red, Orange, Yellow, Green, Blue, Purple, and Pink Chromatic Crystal.", LogLevel.Info);
     }
 
     private void OnGiveConverterCommand(string command, string[] args)

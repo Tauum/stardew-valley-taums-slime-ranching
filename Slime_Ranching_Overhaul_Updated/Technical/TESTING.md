@@ -51,6 +51,17 @@ Common and genome-specific Ranch Slime Eggs can now hatch in the custom Slime In
 
 The pair, cycle dates, and resulting egg genome are stored in the mod-folder registry, not in game-save metadata. Parents remain in the Daycare and stop moving in place; the chamber is a menu preview, not a physical enclosure. The two-day cycle can produce an egg; verify its ready notification, collection, and persistence in game. The machine currently borrows the vanilla Egg-Press sprite as a visual placeholder.
 
+## Chromatic Crystal breeding inputs (prototype)
+
+1. In the disposable `TaumTest_322865388` save, run `slime_ranching_give_crystals TaumTest_322865388`. It requires seven free inventory slots and adds one crystal for each base color.
+2. Open a Slime Breeder with two mature Ranch Slimes. Click the crystal panel below the preview until the desired color appears; the panel also cycles through **inherited color**. The chosen crystal must be in the farmer's inventory.
+3. Start the two-day cycle. Confirm exactly one selected crystal is consumed and the pair's `ChromaticCrystalColor` is written to the mod-folder registry. Save/reload during the cycle and confirm the focus remains attached to that pair.
+4. Collect the egg after two days. Its genome should use the chosen base color and a matching `<Color> Slime` species name; it should be Common, non-shiny, and have no mutation or secondary species. Generation, parent IDs, size, and liked food continue to inherit from the parents.
+5. Incubate the egg and confirm the hatchling keeps the crystal color after save/reload. Repeat without a crystal to check normal inheritance, and cancel a crystal-focused cycle to confirm the already-consumed crystal is not refunded.
+6. Check schema 7 data migrates to schema 8, creates a `.before-chromatic-crystals-v8.bak` backup, and leaves existing cycles and eggs intact.
+
+Crystal items currently use vanilla mineral icons and are available only through the testing command; Marnie stock, crafting recipes, unlock levels, and pricing are intentionally undecided. The crystal affects offspring traits only; it does not change the parent genomes.
+
 ## External genome-specific egg identity (prototype)
 
 1. Deploy the current build to the disposable `TaumTest_322865388` save. Make room for two inventory items.

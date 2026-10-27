@@ -2,7 +2,7 @@ namespace taums_slime_ranching.Models;
 
 public sealed class SlimeSaveData
 {
-    public const int CurrentSchemaVersion = 7;
+    public const int CurrentSchemaVersion = 8;
 
     public int SchemaVersion { get; set; } = CurrentSchemaVersion;
     public List<SlimeRecord> Slimes { get; set; } = new();
