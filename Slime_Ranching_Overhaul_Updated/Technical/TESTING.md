@@ -113,7 +113,7 @@ Use the disposable `TaumTest_322865388` save. Back up the installed mod's `data`
 ## Shadow Clone visual echo
 
 1. On `TaumTest_322865388`, note a mature Ranch Slime ID and run `slime_ranching_set_mutation TaumTest_322865388 <animal ID> ShadowClone`.
-2. Enter the Slime Daycare and watch the slime for at least 12 seconds. A short translucent copy should appear beside it, drift upward, and fade; at most four echoes are drawn at once.
+2. Enter the Slime Daycare and watch the slime for at least 12 seconds. A short translucent copy should appear beside it, drift upward, and fade; at most four echoes are drawn at once. With five or more mutated slimes, confirm the visible echoes rotate so every resident gets a turn.
 3. Walk outside the Daycare. The echo should not appear around farm buildings or in vanilla Slime Huts. Re-enter and confirm the effect resumes.
 4. Run `slime_ranching_set_mutation TaumTest_322865388 <animal ID> none`, save, and confirm the echo stops. Set the trait again, reload, and verify the same genome still triggers the effect.
 5. Confirm the echo cannot be petted, selected, bred, or produce drops. It is a render-only prototype, not a second animal or an implemented inherited ability.

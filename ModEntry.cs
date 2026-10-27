@@ -19,6 +19,7 @@ public sealed class ModEntry : Mod
     private ModConfig config = new();
     private bool stateReady;
     private readonly EnrichmentInteractionService trampolineInteractions = new();
+    private readonly ShadowCloneVisualService shadowCloneVisuals = new();
     private readonly List<(long SlimeId, bool Success, double Chance)> pendingMutagenicNotifications = new();
 
     public override void Entry(IModHelper helper)
@@ -159,6 +160,7 @@ public sealed class ModEntry : Mod
     private void OnReturnedToTitle(object? sender, ReturnedToTitleEventArgs e)
     {
         this.trampolineInteractions.Clear();
+        this.shadowCloneVisuals.Clear();
         this.pendingMutagenicNotifications.Clear();
         this.stateReady = false;
         this.registry = new SlimeRegistry(this.Monitor);
@@ -190,7 +192,7 @@ public sealed class ModEntry : Mod
         if (!this.stateReady || !Context.IsMainPlayer)
             return;
 
-        ShadowCloneVisualService.Draw(Game1.currentLocation, e.SpriteBatch, this.registry!);
+        this.shadowCloneVisuals.Draw(Game1.currentLocation, e.SpriteBatch, this.registry!);
         if (Game1.currentLocation != Game1.getFarm())
             return;
 

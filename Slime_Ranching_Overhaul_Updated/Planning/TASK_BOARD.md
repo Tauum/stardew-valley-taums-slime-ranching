@@ -72,6 +72,7 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [x] Add a placeable Mutagenic Pool with configurable-duration attempts, a per-slime pity counter, and safe failure; Shadow Clone is currently data/visual-only. Verify the schema migration and reload lifecycle in game.
 - [x] Make Mutagenic Pool cost, duration, pity step, and chance bounds configurable with runtime clamping.
 - [x] Show the active pool assignment, locked chance, and day progress in a status card.
+- [x] Cache mutated-slime candidates for the Shadow Clone renderer and rotate the four-echo draw budget fairly.
 - [ ] Extend the temporary Shadow Clone visual echo into bounded companion behavior; no clones may breed, produce resources, or recursively clone.
 - [x] Chromatic Crystals as breeder consumables, **not furniture**; obtainment recipes and unlock progression remain open.
 - [ ] Gel Refinery stored Slime and vanilla-item conversion recipes.
@@ -93,6 +94,7 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 
 ## Next in-game verification
 - [ ] Check the breeder's two genome summaries with a hybrid, a Shadow Clone, and a parent with each long favorite-food label; confirm text does not collide or clip.
+- [ ] Mark five or more Ranch Slimes as Shadow Clone and verify the four visible echoes rotate without frame stutter in a crowded Daycare.
 - [ ] On the disposable `TaumTest_322865388` save, buy/place a Mutagenic Pool in the Daycare; confirm a juvenile, busy, or already-mutated slime can't be selected.
 - [ ] Start an attempt with 500 vanilla Slime, sleep, and verify the success/failure message, stored trait or pity increment, and unchanged slime health/existence. Reload mid-cycle and ensure the stored roll does not change.
 - [ ] Verify the per-slime odds increase by 2 points per failure to 30%, reset after success, and remain independent between slimes; review these provisional values before release.
