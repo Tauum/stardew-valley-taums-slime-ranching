@@ -1,7 +1,8 @@
 # Today's Feature Testing Walkthrough
 
 Updated: 2026-10-27  
-Current branch: `feature/stage-2-breeder-lifecycle`  
+Current branch: `feature/test-egg-metadata-options`  
+Current HEAD: `9a16303` (`Remove temporary Ranch Slime petting friendship boost`)  
 Test save: `TaumTest_322865388` (use this copied save, not the main farm).
 
 ## How to use this walkthrough
@@ -12,12 +13,22 @@ Test only the current stage. Reply with the results or issues. I will help resol
 
 **Commits:** `5e851e8`, `65450f5`, `7d72cc7`, `b602304`, `99c7ca5`, `9571b25`, `1d60ec2`, `8ebdc7e`, `b7cb3f9`.
 
-This stage covers Common and genome-specific egg incubation, the two-day job and recovery across menu/game reloads, hatch notifications, and the Name & Take prompt. The newly hatched slime should retain its egg genome and remain in the Daycare after collection.
+This stage covers Common and genome-specific egg incubation, 
+the two-day job and recovery across menu/game reloads, hatch notifications,  and the Name & Take prompt. 
+The newly hatched slime should retain its egg genome and remain in the Daycare after collection.
 
 **How to test:**
 
 1. Run **3 Build, Deploy, Run**, load `TaumTest_322865388`, and enter the Slime Daycare.
 2. In the SMAPI console, run `slime_ranching_give_test_eggs TaumTest_322865388` and `slime_ranching_give_incubator TaumTest_322865388` if you need test eggs or an incubator. Place the incubator inside the Daycare.
+
+   The egg command still works with just the save name. Optional `key=value` metadata overrides let you control the genomes. For example:
+
+   ```text
+   slime_ranching_give_test_eggs TaumTest_322865388 species=Mint_Slime secondary=none color=#65DDBB size=Giant rarity=Rare shiny=true food=(O)168 generation=4 mutation=ShadowClone
+   ```
+
+   Options are `species`, `secondary`, `color` (`#RRGGBB`), `size`, `rarity`, `shiny`, `food`, `generation`, and `mutation`. Values apply to both eggs; their genome IDs remain distinct. Food must be an eligible monster-drop or fishing-trash qualified item ID, such as `(O)684` or `(O)168`.
 3. Hold a test egg and use the incubator. Select the egg, start incubation, and confirm the egg leaves your inventory.
 4. Close and reopen the incubator menu. Confirm the job remains active, shows time remaining, and the same egg can't be started in another incubator.
 5. Save and reload the copied save while incubation is active. Reopen the incubator and confirm its progress persisted.
@@ -28,7 +39,6 @@ This stage covers Common and genome-specific egg incubation, the two-day job and
 **Expected:** the incubator consumes one eligible egg, recovers its job and hatchling across reloads, then lets you name and collect exactly one Ranch Slime with the egg's genome.
 
 **Your results / issues:** pending.
-
 ## Remaining stages (pending your confirmation)
 ### Stage 4 — Juvenile growth and breeding eligibility
 
