@@ -195,6 +195,12 @@ internal sealed class SlimeRegistry
                 || !this.farmAnimalRecords.TryGetValue(animal.myID.Value, out SlimeRecord? record))
                 continue;
 
+            if (!string.Equals(record.AnimalName, animal.Name, StringComparison.Ordinal))
+            {
+                record.AnimalName = animal.Name;
+                changed = true;
+            }
+
             if (!record.AgeClockInitialized)
             {
                 record.AgeDays = Math.Clamp(animal.age.Value, 0, FarmAnimalContent.RanchSlimeDaysToMature);
@@ -705,6 +711,7 @@ internal sealed class SlimeRegistry
             {
                 FarmAnimalId = animal.myID.Value,
                 FarmAnimalTypeId = animal.type.Value,
+                AnimalName = animal.Name,
                 Genome = new Models.SlimeGenome
                 {
                     Id = Guid.NewGuid(),

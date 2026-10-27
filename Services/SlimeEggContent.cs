@@ -192,10 +192,22 @@ internal static class SlimeEggContent
                 continue;
             }
 
+            Dictionary<Guid, string> parentNames = (data?.Slimes ?? new List<SlimeRecord>())
+                .Where(record => !string.IsNullOrWhiteSpace(record.AnimalName))
+                .GroupBy(record => record.Genome.Id)
+                .ToDictionary(group => group.Key, group => group.First().AnimalName!);
             foreach (SlimeEggRecord egg in data?.Eggs ?? Enumerable.Empty<SlimeEggRecord>())
             {
-                if (egg?.Genome is { Id: var id } && id != Guid.Empty && egg.ItemId == GetItemId(id))
-                    yield return egg;
+                if (egg?.Genome is not { Id: var id } genome || id == Guid.Empty || egg.ItemId != GetItemId(id))
+                    continue;
+
+                if (genome.ParentA is Guid parentA && string.IsNullOrWhiteSpace(genome.ParentAName)
+                    && parentNames.TryGetValue(parentA, out string? parentAName))
+                    genome.ParentAName = parentAName;
+                if (genome.ParentB is Guid parentB && string.IsNullOrWhiteSpace(genome.ParentBName)
+                    && parentNames.TryGetValue(parentB, out string? parentBName))
+                    genome.ParentBName = parentBName;
+                yield return egg;
             }
         }
     }

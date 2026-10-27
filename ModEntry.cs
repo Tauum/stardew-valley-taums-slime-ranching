@@ -90,8 +90,13 @@ public sealed class ModEntry : Mod
             bool maturityChanged = this.registry.SynchronizeMaturity(GetFarmAnimals(), Game1.Date.TotalDays);
             this.stateReady = true;
             this.LogRegistryReconciliation(detachedAnimals, cancelledCycles);
-            if ((recoveredHatches > 0 || detachedAnimals > 0 || cancelledCycles > 0 || maturityChanged) && !this.SaveExternalStateNow())
-                this.Monitor.Log("Reconciled Ranch Slime records remain in memory but could not yet be written to the mod-folder registry.", LogLevel.Error);
+            if (recoveredHatches > 0 || detachedAnimals > 0 || cancelledCycles > 0 || maturityChanged)
+            {
+                if (!this.SaveExternalStateNow())
+                    this.Monitor.Log("Reconciled Ranch Slime records remain in memory but could not yet be written to the mod-folder registry.", LogLevel.Error);
+                else if (maturityChanged)
+                    this.InvalidateEggObjectData();
+            }
         }
         catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException or System.Text.Json.JsonException or NotSupportedException)
         {
@@ -264,6 +269,8 @@ public sealed class ModEntry : Mod
         {
             if (maturityChanged && !this.SaveExternalStateNow())
                 this.Monitor.Log("Could not save the Ranch Slime maturity clock to the mod-folder registry; it will retry at the next save.", LogLevel.Error);
+            else if (maturityChanged)
+                this.InvalidateEggObjectData();
             return;
         }
 
@@ -276,6 +283,8 @@ public sealed class ModEntry : Mod
             this.Monitor.Log("A completed breeding or mutation result could not be saved; notifications will retry after the next external-state save.", LogLevel.Error);
             return;
         }
+        if (maturityChanged)
+            this.InvalidateEggObjectData();
 
         foreach (var ready in readyToNotify)
         {
