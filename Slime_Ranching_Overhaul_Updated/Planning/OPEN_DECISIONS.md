@@ -9,7 +9,7 @@
 7. **Mutagenic Pool:** Shadow Clone confirmed; which additional rare traits should be possible?
 8. **Furniture:** Marnie's initial stock, pricing and unlock conditions; exact happiness effect.
 9. **Breeder:** How to obtain the basic machine; cycle-time tuning; whether parents remain in world while shown in machine. A one-day rest after egg collection is implemented provisionally; review the duration after playtesting.
-10. **Eggs:** Distinct custom IDs are implemented for individualized breeder eggs as a prototype. Confirm persistence/transfer behavior and decide how managed eggs integrate with vanilla incubators.
+10. **Eggs:** Distinct custom IDs are implemented for individualized breeder eggs as a prototype. Confirm persistence/transfer behavior. Before implementing hatching, decide the incubator interaction, hatch duration, where a new slime appears, behavior when the Daycare is full, and how to prevent duplicate hatches from duplicated copies of one custom egg ID. Managed eggs must not use vanilla incubator behavior unless it can preserve external genome identity.
 11. **White/Black:** Behavior at sleep, festivals and multiplayer; whether time powers stack (recommend never).
 12. **Gel Refinery:** Conversion recipes, slime fuel costs, progression unlock and cosmetic transmutation feasibility.
 13. **Resource production:** How drops are collected, production interval, caps and exceptional outputs.

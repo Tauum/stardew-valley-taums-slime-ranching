@@ -22,6 +22,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
     private readonly Func<Guid, Item> createEggItem;
     private readonly int listTop;
     private readonly int listBottom;
+    private int firstVisibleCandidate;
     private readonly Rectangle actionButton;
     private readonly Rectangle releaseButton;
     private bool pairReserved;
@@ -67,6 +68,22 @@ internal sealed class SlimeBreederMenu : IClickableMenu
         this.listBottom = this.yPositionOnScreen + 326;
         this.actionButton = new Rectangle(this.xPositionOnScreen + 34, this.yPositionOnScreen + this.height - 90, 190, 56);
         this.releaseButton = new Rectangle(this.xPositionOnScreen + 236, this.yPositionOnScreen + this.height - 90, 180, 56);
+    }
+
+    public override void receiveScrollWheelAction(int direction)
+    {
+        base.receiveScrollWheelAction(direction);
+        int mouseX = Game1.getMouseX();
+        int mouseY = Game1.getMouseY();
+        if (mouseX < this.xPositionOnScreen + 24 || mouseX > this.xPositionOnScreen + 406
+            || mouseY < this.listTop || mouseY >= this.listBottom)
+            return;
+
+        int lastFirstVisible = Math.Max(0, this.candidates.Count - this.GetVisibleCandidateCount());
+        this.firstVisibleCandidate = Math.Clamp(
+            this.firstVisibleCandidate + (direction < 0 ? 1 : -1),
+            0,
+            lastFirstVisible);
     }
 
     public override void receiveLeftClick(int x, int y, bool playSound = true)
@@ -149,8 +166,9 @@ internal sealed class SlimeBreederMenu : IClickableMenu
         if (this.pairReserved || x < this.xPositionOnScreen + 24 || x > this.xPositionOnScreen + 410 || y < this.listTop || y >= this.listBottom)
             return;
 
-        int index = (y - this.listTop) / RowHeight;
-        if (index < 0 || index >= this.candidates.Count)
+        int visibleIndex = (y - this.listTop) / RowHeight;
+        int index = this.firstVisibleCandidate + visibleIndex;
+        if (visibleIndex < 0 || visibleIndex >= this.GetVisibleCandidateCount() || index >= this.candidates.Count)
             return;
 
         long id = this.candidates[index].myID.Value;
@@ -184,7 +202,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
             new Vector2(this.xPositionOnScreen + (this.width - Game1.dialogueFont.MeasureString(title).X) / 2, this.yPositionOnScreen + 28),
             Game1.textColor);
 
-        string instructions = "Choose two parents, then start the cycle to reserve them.";
+        string instructions = "Choose two parents, then start the cycle to reserve them. Scroll the list for more.";
         b.DrawString(Game1.smallFont, instructions, new Vector2(this.xPositionOnScreen + 40, this.yPositionOnScreen + 82), Game1.textColor);
 
         if (this.candidates.Count == 0)
@@ -194,10 +212,12 @@ internal sealed class SlimeBreederMenu : IClickableMenu
         }
         else
         {
-            for (int i = 0; i < this.candidates.Count && this.listTop + i * RowHeight < this.listBottom; i++)
+            int visibleCount = this.GetVisibleCandidateCount();
+            int visibleEnd = Math.Min(this.firstVisibleCandidate + visibleCount, this.candidates.Count);
+            for (int i = this.firstVisibleCandidate; i < visibleEnd; i++)
             {
                 FarmAnimal animal = this.candidates[i];
-                int rowY = this.listTop + i * RowHeight;
+                int rowY = this.listTop + (i - this.firstVisibleCandidate) * RowHeight;
                 bool isSelected = this.selected.Contains(animal.myID.Value);
                 int restDays = this.registry.GetBreedingRestDays(animal.myID.Value, Game1.Date.TotalDays);
                 Rectangle row = new(this.xPositionOnScreen + 24, rowY, 382, RowHeight - 4);
@@ -206,6 +226,12 @@ internal sealed class SlimeBreederMenu : IClickableMenu
                     ? $"[RESTING {restDays}d] {animal.Name}"
                     : $"{(isSelected ? "[SELECTED] " : "[  ] ")}{animal.Name}";
                 b.DrawString(Game1.smallFont, label, new Vector2(row.X + 12, row.Y + 14), Game1.textColor);
+            }
+
+            if (this.candidates.Count > visibleCount)
+            {
+                string range = $"{this.firstVisibleCandidate + 1}-{visibleEnd} of {this.candidates.Count}";
+                b.DrawString(Game1.tinyFont, range, new Vector2(this.xPositionOnScreen + 320, this.listBottom - 18), Game1.textColor);
             }
         }
 
@@ -249,6 +275,8 @@ internal sealed class SlimeBreederMenu : IClickableMenu
             b.DrawString(Game1.smallFont, name, new Vector2(centerX - nameWidth / 2, chamber.Y + 182), Game1.textColor);
         }
     }
+
+    private int GetVisibleCandidateCount() => Math.Max(1, (this.listBottom - this.listTop) / RowHeight);
 
     private string GetCycleStatus(BreedingPairRecord? pair)
     {

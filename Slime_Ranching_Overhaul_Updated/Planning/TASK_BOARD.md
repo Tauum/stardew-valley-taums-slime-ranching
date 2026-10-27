@@ -17,6 +17,7 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 
 ## Stage 2 — fully custom breeding
 - [x] Open breeder UI, select two Ranch Slime rows, and display selected parents in the menu preview.
+- [x] Scroll through all Daycare residents in the breeder parent list; only four rows are visible at once.
 - [x] Start the cycle from the selection screen; it automatically reserves the parents.
 - [x] Implement a two-day cycle and fixed-genome Ranch Slime Egg output with tooltip fields for parents, generation, and favorite food. Egg spawn and tooltip were confirmed in-game.
 - [ ] Verify ready notification, collect flow, cancellation/release, and cycle/egg persistence after save/reload.

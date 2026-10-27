@@ -93,6 +93,12 @@ On a disposable mod-data copy, put one record with `Genome.Id` set to `00000001-
 
 For migration, put `LikedFoodItemId` on the record outside `Genome` in a test copy. After load/save, it should appear only inside `Genome`, and `slime-registry-v1.json.before-food-like-move.bak` should preserve the original file.
 
+## Breeder list scrolling and parent rest
+
+1. Spawn at least five Ranch Slimes in the Daycare and open the breeder. Scroll over the left list; the range indicator should change and the final resident should be selectable.
+2. Select two residents and complete a cycle. After collecting the egg, confirm the pair shows `RESTING 1d` and can't be selected immediately.
+3. Save and reload. Confirm the parents remain resting, then become eligible on the next in-game day. The one-day duration is provisional and will be reviewed after playtesting.
+
 ## Unit tests
 - Recipe table is symmetric where intended and never creates undefined hybrids.
 - Crystal override always yields pure base color and preserves unrelated genetic rolls.
