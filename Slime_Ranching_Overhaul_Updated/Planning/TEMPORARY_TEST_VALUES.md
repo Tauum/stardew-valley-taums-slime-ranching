@@ -4,10 +4,14 @@ This file tracks temporary balance/debug values that must be removed or replaced
 
 ## Active
 
-- **Ranch Slime petting friendship boost:** each successful pet temporarily grants 200 total friendship points instead of the normal small daily increase, so one full heart appears immediately in the Animals menu. This applies only to modded Ranch Slimes. Remove the patch after petting visuals and persistence are confirmed, then retest normal friendship progression.
+None.
+
+## Removed
+
+- **Ranch Slime petting friendship boost** — removed in `temp/remove-visible-petting-heart-boost` after confirming the heart meter updated. It temporarily granted 200 friendship points per successful pet. Standard petting progression is restored in code.
 
 ## Removal checklist
 
-- [ ] Remove `TemporaryPettingFriendshipBoostPatch` and its Harmony patch.
-- [ ] Remove the temporary test entry from this list and restore the standard Ranch Slime friendship progression.
+- [x] Remove `TemporaryPettingFriendshipBoostPatch` and its Harmony patch.
+- [x] Restore standard Ranch Slime friendship progression.
 - [ ] Re-test that the Animals menu's petted indicator and friendship hearts persist after sleep/reload without the boost.
