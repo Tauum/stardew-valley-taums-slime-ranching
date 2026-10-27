@@ -2,7 +2,7 @@
 
 **Chromatic Crystal prototype:** One crystal can focus a breeder offspring on a base color and clear hybrid/exceptional traits. Decide acquisition (processing, recipes, Marnie, drops, or progression rewards), cost/rarity, and whether matching species names should stay. Verify the crystal palette against the intended art before balancing.
 
-**Size genetics prototype:** Five size labels and weighted inheritance now exist. Review the provisional same-size and mixed-size weights in `Features/SIZE_AND_MATURITY.md`; visual scaling and its interaction with native animal collision/selection are still open.
+**Size genetics prototype:** Five size labels, weighted inheritance, and nearest-neighbor sprite scaling now exist. Review the provisional same-size and mixed-size weights in `Features/SIZE_AND_MATURITY.md`; collision, placement, and petting interaction still need in-game validation.
 
 1. **Pink recipes:** Pink is outside the standard wheel. Which pairings produce Pink or Pink hybrids?
 2. **Undefined breeding pairs:** Block the combination, return one parent's color, or offer a rare result?

@@ -12,7 +12,7 @@ internal static class FarmAnimalContent
     public const string RanchSlimeTypeId = "Taum.SlimeRanching_RanchSlime";
     public const int RanchSlimeDaysToMature = 3;
     private const string RanchSlimeTexturePrefix = "Mods/Taum.SlimeRanching/Animals/RanchSlime_";
-    private const string RanchSlimeTexture = RanchSlimeTexturePrefix + "Green";
+    private const string RanchSlimeTexture = RanchSlimeTexturePrefix + "Green_Normal";
     private static Color[]? vanillaSlimePixels;
     private static int vanillaSlimePixelWidth;
 
@@ -33,23 +33,26 @@ internal static class FarmAnimalContent
         if (!requestedName.StartsWith(RanchSlimeTexturePrefix, StringComparison.Ordinal))
             return;
 
-        string colorName = requestedName[RanchSlimeTexturePrefix.Length..];
-        (string Name, Color Reference, Color Tint)? variant = ColorVariants.FirstOrDefault(color => color.Name == colorName);
-        if (variant is null)
+        string[] parts = requestedName[RanchSlimeTexturePrefix.Length..].Split('_', 2);
+        if (parts.Length != 2 || !TryGetColorVariant(parts[0], out var variant))
             return;
 
-        e.LoadFrom(() => CreateSpriteSheet(Game1.graphics.GraphicsDevice, variant.Value.Tint), AssetLoadPriority.Exclusive);
+        float scale = GetSizeScale(parts[1]);
+        if (scale <= 0f)
+            return;
+
+        e.LoadFrom(() => CreateSpriteSheet(Game1.graphics.GraphicsDevice, variant.Tint, scale), AssetLoadPriority.Exclusive);
     }
 
-    public static void ApplyAppearance(FarmAnimal animal, string? visualColor)
+    public static void ApplyAppearance(FarmAnimal animal, string? visualColor, string? size = null)
     {
-        string texture = GetTextureName(visualColor);
+        string texture = GetTextureName(visualColor, size);
         animal.Sprite.LoadTexture(texture, syncTextureName: false);
     }
 
-    public static string GetTextureName(string? visualColor)
+    public static string GetTextureName(string? visualColor, string? size = null)
     {
-        return RanchSlimeTexturePrefix + GetClosestVariant(visualColor).Name;
+        return RanchSlimeTexturePrefix + GetClosestVariant(visualColor).Name + "_" + GetCanonicalSize(size);
     }
 
     public static Color GetVisualTint(string? visualColor) => GetClosestVariant(visualColor).Tint;
@@ -85,8 +88,8 @@ internal static class FarmAnimalContent
                     GrassEatAmount = 0,
                     HappinessDrain = 0,
                     Texture = RanchSlimeTexture,
-                    SpriteWidth = 16,
-                    SpriteHeight = 24,
+                    SpriteWidth = 24,
+                    SpriteHeight = 32,
                     UseFlippedRightForLeft = true,
                     CanEatGoldenCrackers = false
                 };
@@ -94,38 +97,81 @@ internal static class FarmAnimalContent
         });
     }
 
-    private static Texture2D CreateSpriteSheet(GraphicsDevice graphicsDevice, Color slimeTint)
+    private static Texture2D CreateSpriteSheet(GraphicsDevice graphicsDevice, Color slimeTint, float sizeScale)
     {
-        const int frameWidth = 16;
-        const int frameHeight = 24;
+        const int sourceFrameWidth = 16;
+        const int sourceFrameHeight = 24;
+        const int frameWidth = 24;
+        const int frameHeight = 32;
         const int columns = 4;
         const int rows = 5;
         Color[] vanillaPixels = GetVanillaSlimePixels(out int vanillaTextureWidth);
 
-        // Stardew draws GreenSlime from a 16x24 greyscale body frame and overlays
-        // its face from the same vanilla sheet. Recompose those exact pixels into
-        // the FarmAnimal 4-column layout, using the vanilla green tint.
-        var texture = new Texture2D(graphicsDevice, frameWidth * columns, frameHeight * rows);
-        var pixels = new Color[texture.Width * texture.Height];
+        // Recompose each vanilla 16x24 slime frame, then nearest-neighbor scale its
+        // opaque pixels into a larger transparent 24x32 farm-animal frame. The
+        // normal-size variant keeps the original pixel dimensions and is bottom-aligned.
+        int sourceSheetWidth = sourceFrameWidth * columns;
+        int sourceSheetHeight = sourceFrameHeight * rows;
+        var sourcePixels = new Color[sourceSheetWidth * sourceSheetHeight];
         for (int row = 0; row < rows; row++)
         for (int frame = 0; frame < columns; frame++)
         {
             int sourceFrame = frame;
-            int destinationX = frame * frameWidth;
-            int destinationY = row * frameHeight;
-            CopyTintedFrame(vanillaPixels, vanillaTextureWidth, pixels, texture.Width,
-                new Rectangle(sourceFrame * frameWidth, 0, frameWidth, frameHeight),
+            int destinationX = frame * sourceFrameWidth;
+            int destinationY = row * sourceFrameHeight;
+            CopyTintedFrame(vanillaPixels, vanillaTextureWidth, sourcePixels, sourceSheetWidth,
+                new Rectangle(sourceFrame * sourceFrameWidth, 0, sourceFrameWidth, sourceFrameHeight),
                 destinationX, destinationY, slimeTint);
 
             // Vanilla eye frame used by a calm slime looking toward the player.
             // The source eye art is white and is intentionally not color-tinted.
-            CopyFrame(vanillaPixels, vanillaTextureWidth, pixels, texture.Width,
-                new Rectangle(32, 120, frameWidth, frameHeight), destinationX, destinationY);
+            CopyFrame(vanillaPixels, vanillaTextureWidth, sourcePixels, sourceSheetWidth,
+                new Rectangle(32, 120, sourceFrameWidth, sourceFrameHeight), destinationX, destinationY);
         }
 
+        var pixels = new Color[frameWidth * columns * frameHeight * rows];
+        int scaledWidth = Math.Clamp((int)MathF.Round(sourceFrameWidth * sizeScale), 1, frameWidth);
+        int scaledHeight = Math.Clamp((int)MathF.Round(sourceFrameHeight * sizeScale), 1, frameHeight);
+        int offsetX = (frameWidth - scaledWidth) / 2;
+        int offsetY = frameHeight - scaledHeight;
+        for (int row = 0; row < rows; row++)
+        for (int frame = 0; frame < columns; frame++)
+        for (int y = 0; y < scaledHeight; y++)
+        for (int x = 0; x < scaledWidth; x++)
+        {
+            int sourceX = Math.Min(sourceFrameWidth - 1, (int)(x / sizeScale));
+            int sourceY = Math.Min(sourceFrameHeight - 1, (int)(y / sizeScale));
+            Color pixel = sourcePixels[(row * sourceFrameHeight + sourceY) * sourceSheetWidth + frame * sourceFrameWidth + sourceX];
+            int targetX = frame * frameWidth + offsetX + x;
+            int targetY = row * frameHeight + offsetY + y;
+            pixels[targetY * frameWidth * columns + targetX] = pixel;
+        }
+
+        var texture = new Texture2D(graphicsDevice, frameWidth * columns, frameHeight * rows);
         texture.SetData(pixels);
         return texture;
     }
+
+    private static bool TryGetColorVariant(string name, out (string Name, Color Reference, Color Tint) variant)
+    {
+        variant = ColorVariants.FirstOrDefault(color => color.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        return !string.IsNullOrEmpty(variant.Name);
+    }
+
+    private static string GetCanonicalSize(string? size)
+    {
+        string[] sizes = { "Tiny", "Small", "Normal", "Large", "Giant" };
+        return sizes.FirstOrDefault(value => value.Equals(size, StringComparison.OrdinalIgnoreCase)) ?? "Normal";
+    }
+
+    private static float GetSizeScale(string size) => GetCanonicalSize(size) switch
+    {
+        "Tiny" => 0.65f,
+        "Small" => 0.82f,
+        "Large" => 1.18f,
+        "Giant" => 1.32f,
+        _ => size.Equals("Normal", StringComparison.OrdinalIgnoreCase) ? 1f : 0f
+    };
 
     private static Color[] GetVanillaSlimePixels(out int sourceWidth)
     {

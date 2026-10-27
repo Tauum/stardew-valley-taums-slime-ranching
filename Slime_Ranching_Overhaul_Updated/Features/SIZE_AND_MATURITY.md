@@ -12,7 +12,9 @@ Use a configurable generalized weighted model for other pairs. Seeded tests shou
 
 ## Implemented prototype inheritance
 
-Breeder offspring now roll among Tiny/Small/Normal/Large/Giant rather than copying one parent's size. The four specified examples above use those weights. Same-size Tiny parents provisionally roll 75% Tiny, 20% Small, 5% Normal; Normal parents roll 80% Normal, 10% Small, 10% Large. Adjacent mixed sizes split evenly; pairs two steps apart use 20% lower, 60% midpoint, 20% upper. Wider gaps use 25% for either endpoint and 50% for the middle category/categories. Unknown legacy size names are treated as Normal for this roll. Review these assumptions before balancing; visual sprite scaling is not implemented yet.
+Breeder offspring now roll among Tiny/Small/Normal/Large/Giant rather than copying one parent's size. The four specified examples above use those weights. Same-size Tiny parents provisionally roll 75% Tiny, 20% Small, 5% Normal; Normal parents roll 80% Normal, 10% Small, 10% Large. Adjacent mixed sizes split evenly; pairs two steps apart use 20% lower, 60% midpoint, 20% upper. Wider gaps use 25% for either endpoint and 50% for the middle category/categories. Unknown legacy size names are treated as Normal for this roll. Review these assumptions before balancing.
+
+Ranch Slimes now use size-specific nearest-neighbor sprite sheets with 24x32 frame cells. Normal-size opaque pixels keep the vanilla 16x24 art dimensions; Tiny and Small shrink, while Large and Giant expand within the transparent frame, bottom-aligned to keep their feet on the same baseline. In-game alignment, collision bounds, and petting targets still need validation.
 
 ## Companion scaling
 - Tiny: highest movement speed and shortest activation cooldown; smallest amount/capacity.

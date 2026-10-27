@@ -48,7 +48,8 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 ## Stage 3 — genetics
 - [ ] Fixed color-wheel recipe table and tests; record unresolved Pink recipes explicitly.
 - [x] Separate size genetics from maturity; breed across five size categories using provisional weighted outcomes.
-- [ ] Scale Ranch Slime sprites by genetic size and validate hitboxes, placement, and petting in game.
+- [x] Scale Ranch Slime sprite art by genetic size inside a shared frame canvas.
+- [ ] Validate size-specific animal placement, hitboxes, petting targets, and breeder previews in game.
 - [ ] Independent shiny/rarity/mutation flags; store ancestry and hybrid ability IDs.
 
 ## Stage 4 — furniture

@@ -308,7 +308,9 @@ public sealed class ModEntry : Mod
         {
             if (animal.type.Value != FarmAnimalContent.RanchSlimeTypeId)
                 continue;
-            FarmAnimalContent.ApplyAppearance(animal, this.registry.GetGenomeColor(animal.myID.Value));
+            FarmAnimalContent.ApplyAppearance(animal,
+                this.registry.GetGenomeColor(animal.myID.Value),
+                this.registry.GetGenomeSize(animal.myID.Value));
         }
     }
 
@@ -433,7 +435,7 @@ public sealed class ModEntry : Mod
                 homeInterior = animalHouse
             };
             animal.age.Value = 0;
-            FarmAnimalContent.ApplyAppearance(animal, egg.Genome.VisualColor);
+            FarmAnimalContent.ApplyAppearance(animal, egg.Genome.VisualColor, egg.Genome.Size);
             animalHouse.adoptAnimal(animal);
             if (!this.registry.RegisterIncubationHatch(incubation, animal))
             {
@@ -763,10 +765,18 @@ public sealed class ModEntry : Mod
         if (!this.SaveExternalStateNow())
         {
             this.registry.SetGenomeSize(animalId, oldSize);
+            FarmAnimal? animalToRestore = GetFarmAnimals().FirstOrDefault(candidate => candidate.myID.Value == animalId);
+            if (animalToRestore is not null)
+                FarmAnimalContent.ApplyAppearance(animalToRestore,
+                    this.registry.GetGenomeColor(animalId), this.registry.GetGenomeSize(animalId));
             this.Monitor.Log("Could not save external state; the original genome size was restored.", LogLevel.Error);
             return;
         }
 
+        FarmAnimal? animalToUpdate = GetFarmAnimals().FirstOrDefault(candidate => candidate.myID.Value == animalId);
+        if (animalToUpdate is not null)
+            FarmAnimalContent.ApplyAppearance(animalToUpdate,
+                this.registry.GetGenomeColor(animalId), this.registry.GetGenomeSize(animalId));
         this.Monitor.Log($"Changed Ranch Slime {animalId} genome size from {oldSize} to {this.registry.GetGenomeSize(animalId)} in the mod's external registry.", LogLevel.Info);
     }
 

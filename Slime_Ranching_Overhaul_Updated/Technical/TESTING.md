@@ -68,7 +68,7 @@ Crystal items currently use vanilla mineral icons and are available only through
 2. Prepare known pairs. Breed Small+Small, Large+Large, Small+Large, and Giant+Giant pairs and inspect each egg tooltip's Size value.
 3. Check that every outcome is one of Tiny, Small, Normal, Large, or Giant, and that size does not change the parents or maturity clock.
 4. Hatch size-varied eggs. Compare trampoline animation profiles: Tiny highest/fastest, Small above Normal, Large below Normal, and Giant lowest/slowest. Cushion, bed, slide, and playground interactions should remain independent of genetic size for now.
-5. Visual sprite scaling and collision/selection behavior are not implemented yet; review those separately before marking the five-size feature complete.
+5. Compare all five animal sprite sizes in the Daycare. Check feet align to the floor, slimes remain clickable/pettable, and enlarged art does not overlap unrelated objects. Check the breeder chamber preview and every furniture animation for clipping or baseline shifts.
 
 The probabilities are provisional and listed in `Features/SIZE_AND_MATURITY.md`. A few manual samples only check that the categories and inheritance path work; they do not validate statistical balance.
 

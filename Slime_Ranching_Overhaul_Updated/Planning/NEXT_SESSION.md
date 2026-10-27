@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-10-27  
 **Test save:** `TaumTest_322865388` (disposable copy)  
-**Working tree:** `feature/five-size-inheritance`, chained after `perf/enrichment-scheduler-target-index`; breeder offspring now roll among five genetic sizes using provisional weighted outcomes, and trampoline arcs distinguish Small and Large too. Build passes; no in-game checks have been done for this branch.
+**Working tree:** `feature/genetic-size-sprite-scaling`, chained after `feature/five-size-inheritance`; each managed slime now loads a color-and-size-specific nearest-neighbor sprite sheet. Build passes; size-dependent visuals have not been checked in game.
 
 ## Current state
 
@@ -30,8 +30,9 @@
 - Marnie also sells a Slime Slide (configurable default 3,000g). Nearby idle slimes perform a low hop and glide horizontally across it. The travel direction is fixed and the animation has no gameplay effect; verify offset cleanup and competing furniture reservations.
 - Marnie also sells a Slime Bed (configurable default 1,800g). Nearby slimes lower briefly into a resting pose, then return to their normal offset. It does not change happiness, age, or breeding; verify interruption cleanup.
 - The interaction scheduler is now named `EnrichmentInteractionService`. It handles all five implemented furniture types, caches occupied target tiles once per assignment pass, and computes each playground candidate distance once during sorting. Build passes with only the existing analyzer/compiler version warning; compare behavior/performance with a crowded Daycare in game.
-- Breeder size inheritance now uses Tiny/Small/Normal/Large/Giant categories. The weights specified in the design notes are implemented; provisional defaults cover Tiny+Tiny, Normal+Normal, adjacent pairs, and wider gaps. Unknown legacy labels are treated as Normal only when rolling offspring. Small and Large also have distinct trampoline arcs. Visual size scaling remains open and requires in-game review.
-- `slime_ranching_set_size <save> <animal ID> <size>` now sets a managed Ranch Slime's size in external state and rolls back the edit if writing fails. Pair it with `slime_ranching_spawn_ranch_slime` to set up known-size breeding pairs. This is a test/setup command; size still does not scale the sprite.
+- Breeder size inheritance now uses Tiny/Small/Normal/Large/Giant categories. The weights specified in the design notes are implemented; provisional defaults cover Tiny+Tiny, Normal+Normal, adjacent pairs, and wider gaps. Unknown legacy labels are treated as Normal only when rolling offspring. Small and Large also have distinct trampoline arcs.
+- Ranch Slime sprites now use separate color/size assets in 24x32 frame cells. Normal opaque art remains the original 16x24 pixels; Tiny/Small shrink and Large/Giant enlarge with nearest-neighbor sampling, centered and bottom-aligned. Check floors, petting, breeder previews, furniture animations, and clipping in-game.
+- `slime_ranching_set_size <save> <animal ID> <Tiny|Small|Normal|Large|Giant>` sets a managed Ranch Slime's size in external state, saves it, and refreshes the current animal's sprite immediately. On external-write failure it restores both the old genome size and sprite.
 - The user confirmed the egg spawn worked. Its tooltip showed Ranch Slime, green (`#00FF00`), Normal size, Common rarity, no mutation, Generation 1, two parent IDs, and favorite food `Broken CD`.
 - Egg hatching is implemented as a prototype. It was introduced in schema 6; the registry is currently schema 8. Verify egg identity through transfer/reload, then test incubation recovery and genome matching.
 - Building art uses direct nearest-neighbor resized copies of the original images in `assets/Buildings/*_GameTexture.png`. The original full-size source images are preserved. Current frames are Base 160 by 160, Upgrade 1 176 by 160, and Upgrade 2 192 by 160; building widths are 10, 11, and 12 tiles.
