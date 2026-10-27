@@ -32,7 +32,7 @@ internal sealed class EnrichmentInteractionService
 
         float deltaSeconds = (float)time.ElapsedGameTime.TotalSeconds;
         this.elapsedSeconds += deltaSeconds;
-        this.UpdateActiveInteractions(deltaSeconds);
+        this.UpdateActiveInteractions(deltaSeconds, registry);
         if (++this.assignmentTicks < AssignmentIntervalTicks)
             return;
         this.assignmentTicks = 0;
@@ -61,13 +61,20 @@ internal sealed class EnrichmentInteractionService
             BuildingContent.IsSlimeDaycare(building.buildingType.Value)
             && ReferenceEquals(building.GetIndoors(), house));
 
-    private void UpdateActiveInteractions(double elapsedSeconds)
+    private void UpdateActiveInteractions(double elapsedSeconds, SlimeRegistry? registry)
     {
         List<long>? completed = null;
         foreach (KeyValuePair<long, Interaction> entry in this.active)
         {
             long id = entry.Key;
             Interaction bounce = entry.Value;
+            if (registry?.IsReserved(id) == true)
+            {
+                bounce.Animal.drawOffset = bounce.OriginalDrawOffset;
+                (completed ??= new List<long>()).Add(id);
+                continue;
+            }
+
             bounce.ElapsedSeconds += (float)elapsedSeconds;
             if (bounce.ElapsedSeconds >= bounce.DurationSeconds)
             {
