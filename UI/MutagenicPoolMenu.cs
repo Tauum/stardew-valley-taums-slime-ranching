@@ -10,7 +10,6 @@ namespace taums_slime_ranching.UI;
 /// <summary>Assign one mature Ranch Slime to a one-day safe-failure mutation attempt.</summary>
 internal sealed class MutagenicPoolMenu : IClickableMenu
 {
-    private const int RowHeight = 50;
     private const int SlimeItemId = 766;
     private readonly SlimeRegistry registry;
     private readonly string machineKey;
@@ -18,14 +17,15 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
     private readonly List<FarmAnimal> candidates;
     private readonly Rectangle actionButton;
     private readonly Rectangle mutationsButton;
-    private readonly Rectangle listBounds;
+    private readonly Rectangle selectedSlimePanel;
+    private readonly Rectangle previousSlimeButton;
+    private readonly Rectangle nextSlimeButton;
     private long? selectedSlimeId;
     private string? statusMessage;
-    private int firstVisibleIndex;
     private bool showMutations;
 
     public MutagenicPoolMenu(SlimeRegistry registry, string machineKey, MutagenicPoolRules rules)
-        : base(Game1.uiViewport.Width / 2 - 400, Game1.uiViewport.Height / 2 - 300, 800, 600)
+        : base(Game1.uiViewport.Width / 2 - 500, Game1.uiViewport.Height / 2 - 310, 1000, 620)
     {
         this.registry = registry;
         this.machineKey = machineKey;
@@ -37,9 +37,11 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
             .Where(animal => animal.type.Value == FarmAnimalContent.RanchSlimeTypeId)
             .OrderBy(animal => animal.myID.Value)
             .ToList();
-        this.listBounds = new Rectangle(this.xPositionOnScreen + 30, this.yPositionOnScreen + 124, 370, 286);
-        this.actionButton = new Rectangle(this.xPositionOnScreen + 30, this.yPositionOnScreen + this.height - 84, 270, 52);
-        this.mutationsButton = new Rectangle(this.xPositionOnScreen + 316, this.yPositionOnScreen + this.height - 84, 210, 52);
+        this.selectedSlimePanel = new Rectangle(this.xPositionOnScreen + 56, this.yPositionOnScreen + 166, 270, 76);
+        this.previousSlimeButton = new Rectangle(this.xPositionOnScreen + 28, this.yPositionOnScreen + 176, 38, 52);
+        this.nextSlimeButton = new Rectangle(this.xPositionOnScreen + 326, this.yPositionOnScreen + 176, 38, 52);
+        this.actionButton = new Rectangle(this.xPositionOnScreen + 70, this.yPositionOnScreen + 550, 245, 52);
+        this.mutationsButton = new Rectangle(this.xPositionOnScreen + 438, this.yPositionOnScreen + 550, 350, 52);
     }
 
     public override void receiveLeftClick(int x, int y, bool playSound = true)
@@ -57,6 +59,16 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
             Game1.playSound("smallSelect");
             return;
         }
+        if (this.previousSlimeButton.Contains(x, y))
+        {
+            this.SelectAdjacentSlime(-1);
+            return;
+        }
+        if (this.nextSlimeButton.Contains(x, y))
+        {
+            this.SelectAdjacentSlime(1);
+            return;
+        }
         if (this.actionButton.Contains(x, y))
         {
             this.StartAttempt();
@@ -64,152 +76,114 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
             return;
         }
 
-        if (!this.listBounds.Contains(x, y) || this.registry.GetMutagenicAttempt(this.machineKey) is not null)
-            return;
-
-        int index = this.firstVisibleIndex + (y - this.listBounds.Y) / RowHeight;
-        if (index < 0 || index >= this.candidates.Count)
-            return;
-
-        FarmAnimal animal = this.candidates[index];
-        int age = this.registry.GetMaturityAgeDays(animal.myID.Value, animal.age.Value);
-        if (age < FarmAnimalContent.RanchSlimeDaysToMature)
+        if (this.selectedSlimePanel.Contains(x, y) && this.registry.GetMutagenicAttempt(this.machineKey) is null)
         {
-            this.statusMessage = $"{animal.Name} is still growing and cannot use the pool yet.";
-            Game1.playSound("cancel");
+            this.SelectAdjacentSlime(1);
             return;
         }
-        if (this.registry.IsReserved(animal.myID.Value, this.machineKey))
-        {
-            this.statusMessage = $"{animal.Name} is already assigned to another ranching job.";
-            Game1.playSound("cancel");
-            return;
-        }
-        if (!string.IsNullOrWhiteSpace(this.registry.GetMutationTrait(animal.myID.Value)))
-        {
-            this.statusMessage = $"{animal.Name} already has a mutation trait.";
-            Game1.playSound("cancel");
-            return;
-        }
-
-        this.selectedSlimeId = animal.myID.Value;
-        this.statusMessage = $"Selected {animal.Name}; failure history: {this.registry.GetMutagenicPoolFailures(animal.myID.Value)}.";
-        Game1.playSound("smallSelect");
-    }
-
-    public override void receiveScrollWheelAction(int direction)
-    {
-        int visibleRows = this.listBounds.Height / RowHeight;
-        int maxFirst = Math.Max(0, this.candidates.Count - visibleRows);
-        this.firstVisibleIndex = Math.Clamp(this.firstVisibleIndex + (direction < 0 ? 1 : -1), 0, maxFirst);
-        base.receiveScrollWheelAction(direction);
     }
 
     public override void draw(SpriteBatch b)
     {
         IClickableMenu.drawTextureBox(b, this.xPositionOnScreen, this.yPositionOnScreen, this.width, this.height, Color.White);
-        string title = "Mutagenic Pool";
-        Utility.drawTextWithShadow(b, title, Game1.dialogueFont,
-            new Vector2(this.xPositionOnScreen + (this.width - Game1.dialogueFont.MeasureString(title).X) / 2, this.yPositionOnScreen + 24),
-            Game1.textColor);
-        b.DrawString(Game1.smallFont, $"Choose one mature Ranch Slime. Cost: {this.rules.SlimeCost} vanilla Slime. Failure never harms the animal.",
-            new Vector2(this.xPositionOnScreen + 32, this.yPositionOnScreen + 76), Game1.textColor);
-
         MutagenicAttemptRecord? active = this.registry.GetMutagenicAttempt(this.machineKey);
-        int visibleRows = this.listBounds.Height / RowHeight;
-        for (int rowIndex = 0; rowIndex < visibleRows && this.firstVisibleIndex + rowIndex < this.candidates.Count; rowIndex++)
+        DrawInset(b, new Rectangle(this.xPositionOnScreen + 20, this.yPositionOnScreen + 12, this.width - 40, 54), new Color(154, 93, 51));
+        Utility.drawTextWithShadow(b, "Mutagenic Pool", Game1.dialogueFont,
+            new Vector2(this.xPositionOnScreen + 42, this.yPositionOnScreen + 20), Color.White);
+
+        int left = this.xPositionOnScreen + 20;
+        int top = this.yPositionOnScreen + 78;
+        DrawInset(b, new Rectangle(left, top, 360, 462), new Color(238, 224, 190));
+        b.DrawString(Game1.smallFont, "1. Select Adult Slime", new Vector2(left + 24, top + 20), Game1.textColor);
+        DrawInset(b, this.selectedSlimePanel, new Color(224, 196, 147));
+        DrawButton(b, this.previousSlimeButton, "‹", new Color(198, 145, 87));
+        DrawButton(b, this.nextSlimeButton, "›", new Color(198, 145, 87));
+        FarmAnimal? selected = this.GetSelectedSlime()
+            ?? (active is null ? null : this.candidates.FirstOrDefault(animal => animal.myID.Value == active.SlimeId));
+        if (selected is null)
         {
-            int i = this.firstVisibleIndex + rowIndex;
-            FarmAnimal animal = this.candidates[i];
-            int age = this.registry.GetMaturityAgeDays(animal.myID.Value, animal.age.Value);
-            int failures = this.registry.GetMutagenicPoolFailures(animal.myID.Value);
-            bool eligible = age >= FarmAnimalContent.RanchSlimeDaysToMature
-                && !this.registry.IsReserved(animal.myID.Value, this.machineKey)
-                && string.IsNullOrWhiteSpace(this.registry.GetMutationTrait(animal.myID.Value))
-                && active is null;
-            Rectangle row = new(this.listBounds.X, this.listBounds.Y + rowIndex * RowHeight, this.listBounds.Width, RowHeight - 3);
-            Color fill = this.selectedSlimeId == animal.myID.Value ? new Color(178, 225, 173)
-                : eligible ? new Color(239, 224, 190) : new Color(211, 211, 211);
-            b.Draw(Game1.staminaRect, row, fill);
-            string label = age < FarmAnimalContent.RanchSlimeDaysToMature
-                ? $"[GROWING] {animal.Name}"
-                : !string.IsNullOrWhiteSpace(this.registry.GetMutationTrait(animal.myID.Value))
-                    ? $"[MUTATED] {animal.Name}"
-                : active is not null || this.registry.IsReserved(animal.myID.Value, this.machineKey)
-                        ? $"[BUSY] {animal.Name}"
-                : $"{animal.Name}  |  pity {failures}  |  next {this.rules.GetChance(failures):P0}";
-            b.DrawString(Game1.smallFont, label, new Vector2(row.X + 10, row.Y + 14), Game1.textColor);
+            b.DrawString(Game1.smallFont, this.candidates.Count == 0 ? "No Ranch Slimes" : "Select a slime",
+                new Vector2(this.selectedSlimePanel.X + 22, this.selectedSlimePanel.Y + 24), Game1.textColor);
         }
+        else
+        {
+            b.DrawString(Game1.smallFont, selected.Name, new Vector2(this.selectedSlimePanel.X + 14, this.selectedSlimePanel.Y + 10), Game1.textColor);
+            int age = this.registry.GetMaturityAgeDays(selected.myID.Value, selected.age.Value);
+            b.DrawString(Game1.tinyFont, $"Adult · age {age} days", new Vector2(this.selectedSlimePanel.X + 14, this.selectedSlimePanel.Y + 42), Game1.textColor);
+        }
+        b.DrawString(Game1.tinyFont, selected is null ? "Use the arrows to choose a resident" : "‹ / › to change selected slime",
+            new Vector2(left + 32, top + 258), Game1.textColor);
 
-        this.DrawStatusPanel(b, active);
+        b.DrawString(Game1.smallFont, "2. Add Slime (Fuel)", new Vector2(left + 24, top + 302), Game1.textColor);
+        DrawInset(b, new Rectangle(left + 22, top + 330, 316, 60), new Color(224, 196, 147));
+        DrawSlimeIcon(b, new Rectangle(left + 32, top + 336, 48, 48));
+        b.DrawString(Game1.smallFont, $"{CountSlimeItems()} / {this.rules.SlimeCost}", new Vector2(left + 92, top + 340), Game1.textColor);
+        b.DrawString(Game1.tinyFont, "vanilla Slime in inventory", new Vector2(left + 92, top + 366), Game1.textColor);
 
-        b.Draw(Game1.staminaRect, this.actionButton, active is null ? new Color(200, 177, 220) : new Color(210, 210, 210));
-        b.DrawString(Game1.smallFont, active is null ? $"Start {this.rules.DurationDays}-day Attempt" : $"Processing until day {active.ReadyOnDay}",
-            new Vector2(this.actionButton.X + 16, this.actionButton.Y + 16), Game1.textColor);
-        string message = this.statusMessage ?? (active is null
-            ? $"Slime in inventory: {CountSlimeItems()}/{this.rules.SlimeCost}. Cycle: {this.rules.DurationDays} in-game day(s), placeholder."
-            : $"Chance locked at {active.ChanceAtStart:P0}; sleep to resolve.");
-        b.Draw(Game1.staminaRect, this.mutationsButton, new Color(224, 192, 137));
-        b.DrawString(Game1.smallFont, "Possible Mutations", new Vector2(this.mutationsButton.X + 14, this.mutationsButton.Y + 16), Game1.textColor);
-        b.DrawString(Game1.tinyFont, message, new Vector2(this.xPositionOnScreen + 542, this.actionButton.Y + 8), Game1.textColor);
-        if (this.candidates.Count > visibleRows)
-            b.DrawString(Game1.tinyFont, $"Residents {this.firstVisibleIndex + 1}-{Math.Min(this.firstVisibleIndex + visibleRows, this.candidates.Count)} of {this.candidates.Count} (scroll)",
-                new Vector2(this.listBounds.X, this.listBounds.Bottom + 4), Game1.textColor);
+        b.DrawString(Game1.smallFont, "3. Mutation Attempt", new Vector2(left + 24, top + 402), Game1.textColor);
+        if (active is null)
+        {
+            b.DrawString(Game1.tinyFont, $"Cycle: {this.rules.DurationDays} in-game day(s) · placeholder",
+                new Vector2(left + 24, top + 418), Game1.textColor);
+            DrawBar(b, new Rectangle(left + 24, top + 442, 306, 20), 0f, new Color(184, 135, 204));
+        }
+        else
+        {
+            int duration = Math.Max(1, active.ReadyOnDay - active.StartedOnDay);
+            float progress = Math.Clamp((Game1.Date.TotalDays - active.StartedOnDay) / (float)duration, 0f, 1f);
+            b.DrawString(Game1.tinyFont, $"Attempt in progress · ready day {active.ReadyOnDay}", new Vector2(left + 24, top + 418), Game1.textColor);
+            DrawBar(b, new Rectangle(left + 24, top + 442, 306, 20), progress, new Color(184, 135, 204));
+        }
+        DrawButton(b, this.actionButton, active is null ? "Start" : "Processing", active is null ? new Color(103, 155, 206) : new Color(175, 175, 175));
+
+        int center = this.xPositionOnScreen + 394;
+        DrawInset(b, new Rectangle(center, top, 390, 462), new Color(238, 224, 190));
+        DrawInset(b, new Rectangle(center + 8, top + 8, 374, 46), new Color(154, 93, 51));
+        b.DrawString(Game1.smallFont, "Possible Mutation Examples", new Vector2(center + 82, top + 21), Color.White);
+        string[] mutationNames = { "Spotted", "Striped", "Starry", "Speckled", "Glowing", "Crystalline", "Mossy", "Metallic" };
+        Color[] mutationColors = { new(224, 126, 162), new(90, 169, 221), new(148, 116, 214), new(232, 174, 75),
+            new(148, 199, 92), new(119, 211, 227), new(92, 142, 66), new(153, 160, 168) };
+        for (int i = 0; i < mutationNames.Length; i++)
+        {
+            int column = i % 4;
+            int row = i / 4;
+            Rectangle tile = new(center + 18 + column * 88, top + 78 + row * 106, 78, 94);
+            DrawInset(b, tile, new Color(249, 231, 201));
+            DrawSlimeSwatch(b, new Rectangle(tile.X + 18, tile.Y + 10, 42, 42), mutationColors[i]);
+            b.DrawString(Game1.tinyFont, mutationNames[i], new Vector2(tile.X + 5, tile.Y + 65), Game1.textColor);
+        }
+        b.DrawString(Game1.tinyFont, "Design examples shown above.", new Vector2(center + 18, top + 300), Game1.textColor);
+        b.DrawString(Game1.tinyFont, "Only Shadow Clone is implemented.", new Vector2(center + 18, top + 320), Game1.textColor);
+        DrawButton(b, this.mutationsButton, "Possible Mutations", new Color(198, 145, 87));
+
+        int right = this.xPositionOnScreen + 804;
+        DrawInset(b, new Rectangle(right, top, 176, 462), new Color(238, 224, 190));
+        DrawInset(b, new Rectangle(right + 6, top + 6, 164, 46), new Color(154, 93, 51));
+        b.DrawString(Game1.smallFont, "Pity System", new Vector2(right + 34, top + 20), Color.White);
+        b.DrawString(Game1.tinyFont, "Each slime has", new Vector2(right + 14, top + 72), Game1.textColor);
+        b.DrawString(Game1.tinyFont, "its own counter.", new Vector2(right + 14, top + 92), Game1.textColor);
+        double chance = active?.ChanceAtStart ?? (selected is null
+            ? this.rules.GetChance(0)
+            : this.rules.GetChance(this.registry.GetMutagenicPoolFailures(selected.myID.Value)));
+        b.DrawString(Game1.smallFont, $"Chance {chance:P0}", new Vector2(right + 14, top + 132), Game1.textColor);
+        DrawBar(b, new Rectangle(right + 14, top + 162, 148, 22), (float)chance, new Color(184, 135, 204));
+        int failures = selected is null ? 0 : this.registry.GetMutagenicPoolFailures(selected.myID.Value);
+        b.DrawString(Game1.tinyFont, $"Previous misses: {failures}", new Vector2(right + 14, top + 198), Game1.textColor);
+        b.DrawString(Game1.tinyFont, "Misses raise its", new Vector2(right + 14, top + 238), Game1.textColor);
+        b.DrawString(Game1.tinyFont, "chance. Failure", new Vector2(right + 14, top + 258), Game1.textColor);
+        b.DrawString(Game1.tinyFont, "never harms it.", new Vector2(right + 14, top + 278), Game1.textColor);
+        b.DrawString(Game1.tinyFont, "Success gives", new Vector2(right + 14, top + 316), Game1.textColor);
+        b.DrawString(Game1.tinyFont, "Shadow Clone.", new Vector2(right + 14, top + 336), Game1.textColor);
+        if (active is not null)
+            b.DrawString(Game1.tinyFont, $"Locked at {active.ChanceAtStart:P0} for this attempt.", new Vector2(right + 14, top + 360), Game1.textColor);
+
+        if (!string.IsNullOrEmpty(this.statusMessage))
+            b.DrawString(Game1.tinyFont, this.statusMessage.Length > 72 ? this.statusMessage[..69] + "..." : this.statusMessage,
+                new Vector2(this.xPositionOnScreen + 500, this.yPositionOnScreen + 34), Color.White);
         b.DrawString(Game1.tinyFont, "Esc: close", new Vector2(this.xPositionOnScreen + this.width - 100, this.yPositionOnScreen + this.height - 26), Game1.textColor);
         if (this.showMutations)
             this.DrawMutationsModal(b);
         this.drawMouse(b);
-    }
-
-    private void DrawStatusPanel(SpriteBatch batch, MutagenicAttemptRecord? active)
-    {
-        Rectangle panel = new(this.listBounds.Right + 16, this.listBounds.Y, this.width - 32 - (this.listBounds.Right - this.xPositionOnScreen + 16), 214);
-        IClickableMenu.drawTextureBox(batch, panel.X, panel.Y, panel.Width, panel.Height, Color.White);
-
-        if (active is not null)
-        {
-            FarmAnimal? assigned = this.candidates.FirstOrDefault(animal => animal.myID.Value == active.SlimeId);
-            string name = assigned?.Name ?? "Ranch Slime";
-            batch.DrawString(Game1.smallFont, "Attempt in progress", new Vector2(panel.X + 14, panel.Y + 16), Game1.textColor);
-            batch.DrawString(Game1.tinyFont, name, new Vector2(panel.X + 14, panel.Y + 44), Game1.textColor);
-            batch.DrawString(Game1.tinyFont, $"Chance locked: {active.ChanceAtStart:P0}", new Vector2(panel.X + 14, panel.Y + 68), Game1.textColor);
-
-            int duration = Math.Max(1, active.ReadyOnDay - active.StartedOnDay);
-            float progress = Math.Clamp((Game1.Date.TotalDays - active.StartedOnDay) / (float)duration, 0f, 1f);
-            Rectangle bar = new(panel.X + 14, panel.Y + 106, panel.Width - 28, 24);
-            batch.Draw(Game1.staminaRect, bar, new Color(91, 75, 58));
-            if (progress > 0)
-                batch.Draw(Game1.staminaRect, new Rectangle(bar.X + 3, bar.Y + 3,
-                    Math.Max(1, (int)((bar.Width - 6) * progress)), bar.Height - 6), new Color(184, 135, 204));
-            batch.DrawString(Game1.tinyFont, $"Day {Math.Clamp(Game1.Date.TotalDays - active.StartedOnDay, 0, duration)} of {duration}",
-                new Vector2(panel.X + 14, panel.Y + 140), Game1.textColor);
-            batch.DrawString(Game1.tinyFont, $"Ready on day {active.ReadyOnDay}; sleep to resolve.",
-                new Vector2(panel.X + 14, panel.Y + 164), Game1.textColor);
-            DrawBar(batch, new Rectangle(panel.X + 14, panel.Y + 188, panel.Width - 28, 16), progress, new Color(184, 135, 204));
-            return;
-        }
-
-        batch.DrawString(Game1.smallFont, "Mutation preview", new Vector2(panel.X + 14, panel.Y + 16), Game1.textColor);
-        batch.DrawString(Game1.tinyFont, "Current pool trait: Shadow Clone", new Vector2(panel.X + 14, panel.Y + 48), Game1.textColor);
-        if (this.selectedSlimeId is long selectedId)
-        {
-            int failures = this.registry.GetMutagenicPoolFailures(selectedId);
-            batch.DrawString(Game1.tinyFont, $"Selected slime pity: {failures}", new Vector2(panel.X + 14, panel.Y + 78), Game1.textColor);
-            double chance = this.rules.GetChance(failures);
-            batch.DrawString(Game1.tinyFont, $"Next mutation chance: {chance:P0}", new Vector2(panel.X + 14, panel.Y + 102), Game1.textColor);
-            DrawBar(batch, new Rectangle(panel.X + 14, panel.Y + 126, panel.Width - 28, 18), (float)chance, new Color(184, 135, 204));
-        }
-        else
-        {
-            double chance = this.rules.GetChance(0);
-            batch.DrawString(Game1.tinyFont, $"Base mutation chance: {chance:P0}", new Vector2(panel.X + 14, panel.Y + 78), Game1.textColor);
-            DrawBar(batch, new Rectangle(panel.X + 14, panel.Y + 102, panel.Width - 28, 18), (float)chance, new Color(184, 135, 204));
-        }
-
-        batch.DrawString(Game1.tinyFont, "Failure is safe; each miss raises this slime's chance.",
-            new Vector2(panel.X + 14, panel.Y + 144), Game1.textColor);
-        batch.DrawString(Game1.tinyFont, "Success adds Shadow Clone and resets pity.",
-            new Vector2(panel.X + 14, panel.Y + 168), Game1.textColor);
     }
 
     private void DrawMutationsModal(SpriteBatch b)
@@ -229,6 +203,65 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
         b.DrawString(Game1.tinyFont, "Spotted, Striped, Starry, Speckled, Glowing, Crystalline, Mossy, and Metallic are design examples only; not implemented yet.",
             new Vector2(x + 32, y + 260), Game1.textColor);
         b.DrawString(Game1.tinyFont, "Click anywhere to close", new Vector2(x + width - 174, y + height - 24), Game1.textColor);
+    }
+
+    private FarmAnimal? GetSelectedSlime() => this.selectedSlimeId is long id
+        ? this.candidates.FirstOrDefault(animal => animal.myID.Value == id)
+        : null;
+
+    private void SelectAdjacentSlime(int direction)
+    {
+        if (this.registry.GetMutagenicAttempt(this.machineKey) is not null)
+            return;
+
+        FarmAnimal[] eligible = this.candidates.Where(animal =>
+        {
+            int age = this.registry.GetMaturityAgeDays(animal.myID.Value, animal.age.Value);
+            return age >= FarmAnimalContent.RanchSlimeDaysToMature
+                && !this.registry.IsReserved(animal.myID.Value, this.machineKey)
+                && string.IsNullOrWhiteSpace(this.registry.GetMutationTrait(animal.myID.Value));
+        }).ToArray();
+        if (eligible.Length == 0)
+        {
+            this.statusMessage = "No eligible mature Ranch Slime is available.";
+            Game1.playSound("cancel");
+            return;
+        }
+
+        int current = Array.FindIndex(eligible, animal => animal.myID.Value == this.selectedSlimeId);
+        int next = current < 0 ? (direction > 0 ? 0 : eligible.Length - 1)
+            : (current + direction + eligible.Length) % eligible.Length;
+        FarmAnimal selected = eligible[next];
+        this.selectedSlimeId = selected.myID.Value;
+        this.statusMessage = $"Selected {selected.Name}.";
+        Game1.playSound("smallSelect");
+    }
+
+    private static void DrawInset(SpriteBatch b, Rectangle bounds, Color fill)
+    {
+        b.Draw(Game1.staminaRect, bounds, new Color(109, 72, 48));
+        b.Draw(Game1.staminaRect, new Rectangle(bounds.X + 3, bounds.Y + 3, bounds.Width - 6, bounds.Height - 6), fill);
+    }
+
+    private static void DrawButton(SpriteBatch b, Rectangle bounds, string label, Color fill)
+    {
+        DrawInset(b, bounds, fill);
+        Vector2 size = Game1.smallFont.MeasureString(label);
+        b.DrawString(Game1.smallFont, label,
+            new Vector2(bounds.X + (bounds.Width - size.X) / 2, bounds.Y + (bounds.Height - size.Y) / 2), Game1.textColor);
+    }
+
+    private static void DrawSlimeIcon(SpriteBatch b, Rectangle bounds)
+    {
+        DrawSlimeSwatch(b, bounds, new Color(165, 93, 203));
+    }
+
+    private static void DrawSlimeSwatch(SpriteBatch b, Rectangle bounds, Color color)
+    {
+        b.Draw(Game1.staminaRect, new Rectangle(bounds.X + 5, bounds.Y + 18, bounds.Width - 10, bounds.Height - 18), color);
+        b.Draw(Game1.staminaRect, new Rectangle(bounds.X + 12, bounds.Y + 9, bounds.Width - 24, 12), color);
+        b.Draw(Game1.staminaRect, new Rectangle(bounds.X + 13, bounds.Y + 28, 4, 4), Color.White);
+        b.Draw(Game1.staminaRect, new Rectangle(bounds.X + bounds.Width - 17, bounds.Y + 28, 4, 4), Color.White);
     }
 
     private static void DrawBar(SpriteBatch batch, Rectangle bounds, float value, Color fill)

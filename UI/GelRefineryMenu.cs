@@ -22,15 +22,15 @@ internal sealed class GelRefineryMenu : IClickableMenu
 
     public GelRefineryMenu(SlimeRegistry registry, string machineKey, GelRefineryRules rules,
         Func<bool> startBatch, Func<bool> collectBatch)
-        : base(Game1.uiViewport.Width / 2 - 390, Game1.uiViewport.Height / 2 - 270, 780, 540)
+        : base(Game1.uiViewport.Width / 2 - 450, Game1.uiViewport.Height / 2 - 290, 900, 580)
     {
         this.registry = registry;
         this.machineKey = machineKey;
         this.rules = rules;
         this.startBatch = startBatch;
         this.collectBatch = collectBatch;
-        this.actionButton = new Rectangle(this.xPositionOnScreen + 34, this.yPositionOnScreen + 434, 230, 54);
-        this.recipesButton = new Rectangle(this.xPositionOnScreen + 282, this.yPositionOnScreen + 434, 210, 54);
+        this.actionButton = new Rectangle(this.xPositionOnScreen + 220, this.yPositionOnScreen + 474, 230, 54);
+        this.recipesButton = new Rectangle(this.xPositionOnScreen + 630, this.yPositionOnScreen + 474, 230, 54);
     }
 
     public override void receiveLeftClick(int x, int y, bool playSound = true)
@@ -78,24 +78,39 @@ internal sealed class GelRefineryMenu : IClickableMenu
             new Vector2(this.xPositionOnScreen + (this.width - Game1.dialogueFont.MeasureString(title).X) / 2, this.yPositionOnScreen + 24),
             Game1.textColor);
 
-        int left = this.xPositionOnScreen + 34;
-        int top = this.yPositionOnScreen + 82;
-        Rectangle recipePanel = new(left, top, this.width - 68, 106);
-        b.Draw(Game1.staminaRect, recipePanel, new Color(238, 224, 190));
-        b.DrawString(Game1.smallFont, "Provisional recycling recipe", new Vector2(left + 16, top + 12), Game1.textColor);
-        b.DrawString(Game1.dialogueFont, "1 Broken Glasses + vanilla Slime", new Vector2(left + 16, top + 37), Game1.textColor);
-        b.DrawString(Game1.smallFont, "= 1 Refined Quartz", new Vector2(left + 16, top + 76), Game1.textColor);
+        int left = this.xPositionOnScreen + 30;
+        int top = this.yPositionOnScreen + 78;
+        Rectangle workstation = new(left, top, 570, 378);
+        b.Draw(Game1.staminaRect, workstation, new Color(238, 224, 190));
+        DrawInset(b, new Rectangle(left + 12, top + 12, 546, 54), new Color(154, 93, 51));
+        b.DrawString(Game1.dialogueFont, "Gel Refinery", new Vector2(left + 190, top + 17), Color.White);
+
+        b.DrawString(Game1.smallFont, "Fuel (Slime)", new Vector2(left + 26, top + 82), Game1.textColor);
+        DrawInset(b, new Rectangle(left + 24, top + 110, 350, 82), new Color(224, 196, 147));
+        DrawSlimeIcon(b, new Rectangle(left + 38, top + 119, 56, 56));
+        int slimeCount = CountItem("(O)766");
+        b.DrawString(Game1.smallFont, $"{slimeCount} / {this.rules.FuelCost}", new Vector2(left + 112, top + 123), Game1.textColor);
+        b.DrawString(Game1.tinyFont, "in inventory; consumed when batch starts", new Vector2(left + 112, top + 151), Game1.textColor);
+        DrawProgressBar(b, new Rectangle(left + 215, top + 174, 145, 12), Math.Min(1f, slimeCount / (float)this.rules.FuelCost), "");
+
+        b.DrawString(Game1.smallFont, "Input", new Vector2(left + 28, top + 214), Game1.textColor);
+        b.DrawString(Game1.smallFont, "Output", new Vector2(left + 410, top + 214), Game1.textColor);
+        DrawInset(b, new Rectangle(left + 24, top + 242, 205, 92), new Color(224, 196, 147));
+        DrawObjectIcon(b, 170, new Rectangle(left + 38, top + 252, 64, 64));
+        b.DrawString(Game1.smallFont, "Broken Glasses ×1", new Vector2(left + 106, top + 268), Game1.textColor);
+        b.DrawString(Game1.dialogueFont, "→", new Vector2(left + 250, top + 260), Game1.textColor);
+        DrawInset(b, new Rectangle(left + 316, top + 242, 230, 92), new Color(224, 196, 147));
+        DrawObjectIcon(b, 338, new Rectangle(left + 328, top + 252, 64, 64));
+        b.DrawString(Game1.smallFont, "Refined Quartz ×1", new Vector2(left + 396, top + 268), Game1.textColor);
 
         RefineryJobRecord? job = this.registry.GetRefineryJob(this.machineKey);
         if (job is null)
         {
-            b.DrawString(Game1.smallFont, $"In inventory: Broken Glasses {CountItem("(O)170")}/1   |   Slime {CountItem("(O)766")}/{this.rules.FuelCost}",
-                new Vector2(left, top + 128), Game1.textColor);
-            b.DrawString(Game1.smallFont, $"Cycle time: {this.rules.DurationDays} in-game day(s) (placeholder; tune later).",
-                new Vector2(left, top + 158), Game1.textColor);
-            DrawProgressBar(b, new Rectangle(left, top + 188, this.width - 68, 24), 0f, "Idle");
+            b.DrawString(Game1.tinyFont, $"Cycle: {this.rules.DurationDays} in-game day(s) (placeholder)",
+                new Vector2(left + 28, top + 342), Game1.textColor);
+            DrawProgressBar(b, new Rectangle(left + 260, top + 346, 270, 22), 0f, "Ready");
             b.Draw(Game1.staminaRect, this.actionButton, new Color(198, 177, 220));
-            b.DrawString(Game1.smallFont, "Start Batch", new Vector2(this.actionButton.X + 66, this.actionButton.Y + 17), Game1.textColor);
+            b.DrawString(Game1.smallFont, "Start", new Vector2(this.actionButton.X + 86, this.actionButton.Y + 17), Game1.textColor);
         }
         else
         {
@@ -103,28 +118,71 @@ internal sealed class GelRefineryMenu : IClickableMenu
             int duration = Math.Max(1, job.ReadyOnDay - job.StartedOnDay);
             int elapsed = Math.Clamp(Game1.Date.TotalDays - job.StartedOnDay, 0, duration);
             float progress = elapsed / (float)duration;
-            b.DrawString(Game1.smallFont, ready ? "Batch ready" : $"Batch processing  |  ready day {job.ReadyOnDay}",
-                new Vector2(left, top + 128), Game1.textColor);
-            DrawProgressBar(b, new Rectangle(left, top + 162, this.width - 68, 24), progress,
+            b.DrawString(Game1.smallFont, ready ? "Batch ready" : $"Processing · ready day {job.ReadyOnDay}",
+                new Vector2(left + 28, top + 342), Game1.textColor);
+            DrawProgressBar(b, new Rectangle(left + 260, top + 346, 270, 22), progress,
                 ready ? "Complete" : $"{elapsed} / {duration} days");
-            b.DrawString(Game1.tinyFont, ready ? "Output is reserved here until collected." : $"Placeholder cycle: {duration} in-game day(s).",
-                new Vector2(left, top + 194), Game1.textColor);
+            b.DrawString(Game1.tinyFont, ready ? "Output reserved until collected." : $"{duration}-day placeholder cycle",
+                new Vector2(left + 28, top + 370), Game1.textColor);
             bool buttonEnabled = ready;
             b.Draw(Game1.staminaRect, this.actionButton, buttonEnabled ? new Color(198, 177, 220) : new Color(210, 210, 210));
-            b.DrawString(Game1.smallFont, buttonEnabled ? "Collect Refined Quartz" : "Processing",
-                new Vector2(this.actionButton.X + 18, this.actionButton.Y + 17), Game1.textColor);
+            b.DrawString(Game1.smallFont, buttonEnabled ? "Collect Output" : "Processing",
+                new Vector2(this.actionButton.X + 46, this.actionButton.Y + 17), Game1.textColor);
         }
 
+        int examplesX = this.xPositionOnScreen + 620;
+        DrawInset(b, new Rectangle(examplesX, top, 250, 282), new Color(238, 224, 190));
+        DrawInset(b, new Rectangle(examplesX + 6, top + 6, 238, 42), new Color(154, 93, 51));
+        b.DrawString(Game1.smallFont, "Example Uses", new Vector2(examplesX + 72, top + 17), Color.White);
+        DrawExample(b, examplesX + 18, top + 62, 400, "Strawberry", "Strawberry Jam");
+        DrawExample(b, examplesX + 18, top + 112, 176, "Egg", "Mayonnaise");
+        DrawExample(b, examplesX + 18, top + 162, 184, "Milk", "Cheese");
+        DrawExample(b, examplesX + 18, top + 212, 258, "Blueberry", "Blueberry Wine");
+        DrawInset(b, new Rectangle(examplesX, top + 294, 250, 84), new Color(238, 224, 190));
+        b.DrawString(Game1.smallFont, "Notes", new Vector2(examplesX + 96, top + 302), Game1.textColor);
+        b.DrawString(Game1.tinyFont, "Reference recipes are not active yet. The prototype uses existing items and Slime fuel.",
+            new Vector2(examplesX + 12, top + 330), Game1.textColor);
+
         b.Draw(Game1.staminaRect, this.recipesButton, new Color(224, 192, 137));
-        b.DrawString(Game1.smallFont, "Inputs / Outputs", new Vector2(this.recipesButton.X + 20, this.recipesButton.Y + 17), Game1.textColor);
-        b.DrawString(Game1.tinyFont, this.statusMessage ?? "The current test recipe is provisional.",
-            new Vector2(this.xPositionOnScreen + 510, this.actionButton.Y + 10), Game1.textColor);
+        b.DrawString(Game1.smallFont, "Inputs / Outputs", new Vector2(this.recipesButton.X + 40, this.recipesButton.Y + 17), Game1.textColor);
+        if (!string.IsNullOrEmpty(this.statusMessage))
+            b.DrawString(Game1.tinyFont, this.statusMessage, new Vector2(this.xPositionOnScreen + 30, this.yPositionOnScreen + 458), Game1.textColor);
         b.DrawString(Game1.tinyFont, "Esc: close",
             new Vector2(this.xPositionOnScreen + this.width - 100, this.yPositionOnScreen + this.height - 24), Game1.textColor);
         if (this.showRecipes)
             this.DrawRecipesModal(b);
         this.drawMouse(b);
     }
+
+    private static void DrawInset(SpriteBatch b, Rectangle bounds, Color fill)
+    {
+        b.Draw(Game1.staminaRect, bounds, new Color(109, 72, 48));
+        b.Draw(Game1.staminaRect, new Rectangle(bounds.X + 3, bounds.Y + 3, bounds.Width - 6, bounds.Height - 6), fill);
+    }
+
+    private static void DrawSlimeIcon(SpriteBatch b, Rectangle bounds)
+    {
+        b.Draw(Game1.staminaRect, bounds, new Color(132, 78, 178));
+        b.Draw(Game1.staminaRect, new Rectangle(bounds.X + 10, bounds.Y + 19, bounds.Width - 20, bounds.Height - 20), new Color(197, 130, 226));
+        b.Draw(Game1.staminaRect, new Rectangle(bounds.X + 21, bounds.Y + 8, bounds.Width - 42, 12), new Color(197, 130, 226));
+        b.Draw(Game1.staminaRect, new Rectangle(bounds.X + 20, bounds.Y + 31, 4, 4), Color.White);
+        b.Draw(Game1.staminaRect, new Rectangle(bounds.X + 34, bounds.Y + 31, 4, 4), Color.White);
+    }
+
+    private static void DrawObjectIcon(SpriteBatch b, int index, Rectangle target)
+    {
+        Rectangle source = Game1.getSourceRectForStandardTileSheet(Game1.objectSpriteSheet, index, 16, 16);
+        b.Draw(Game1.objectSpriteSheet, target, source, Color.White);
+    }
+
+    private static void DrawExample(SpriteBatch b, int x, int y, int itemIndex, string input, string output)
+    {
+        DrawObjectIcon(b, itemIndex, new Rectangle(x, y, 38, 38));
+        b.DrawString(Game1.tinyFont, input, new Vector2(x + 42, y + 10), Game1.textColor);
+        b.DrawString(Game1.tinyFont, "→", new Vector2(x + 106, y + 10), Game1.textColor);
+        b.DrawString(Game1.tinyFont, output, new Vector2(x + 130, y + 10), Game1.textColor);
+    }
+
 
     private void DrawRecipesModal(SpriteBatch b)
     {
