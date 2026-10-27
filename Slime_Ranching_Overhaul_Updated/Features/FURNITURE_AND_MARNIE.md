@@ -21,6 +21,10 @@ water bowls and feeding troughs
 
 make it so you can apply your own wallpaper and flooring like the normal house
 
+## Prototype status
+
+The Slime Playground is implemented as group-play furniture: it reserves one placed object for two nearby Ranch Slimes and starts their short hop animations together. It has no happiness or friendship effect yet. Marnie's default prototype price is 6,000g, configurable in `config.json`; price and progression remain open for review.
+
 ## Interaction architecture
 Furniture exposes a target position, eligible sizes, interaction duration, maximum concurrent users, animation, cooldown and optional happiness delta. A hutch-level scheduler periodically assigns idle slimes to available furniture. Use visual offsets for bouncing rather than moving collision boxes vertically. Reserve targets to avoid multiple slimes deadlocking. Skip or simplify offscreen animations.
 

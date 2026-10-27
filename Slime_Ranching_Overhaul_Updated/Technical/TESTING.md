@@ -90,7 +90,7 @@ The incubator runs inside the Daycare only, consumes Common or genome-specific R
 ## Marnie's ranching machine stock
 
 1. Open Marnie's Ranch shop (or use `shop AnimalShop` in the SMAPI console).
-2. Confirm the Converter, Breeder, Incubator, Slime Trampoline, and Slime Cushion appear at their configured prices (defaults: 2,500g, 10,000g, 5,000g, 2,500g, and 1,500g).
+2. Confirm the Converter, Breeder, Incubator, Slime Trampoline, Slime Cushion, and Slime Playground appear at their configured prices (defaults: 2,500g, 10,000g, 5,000g, 2,500g, 1,500g, and 6,000g).
 3. Buy a machine and verify its item can be placed and used as described above. Place the trampoline and cushion indoors and outdoors; both should be accepted indoors only. Confirm buying one of each does not affect vanilla animal stock.
 4. Reopen the shop on the same day: each purchased item should be out of stock for that player. Check again after sleeping; stock should reset.
 
@@ -113,6 +113,14 @@ The current prototype assigns only already-nearby slimes; it does not path them 
 3. Place two cushions and several slimes. Confirm each object is used by at most one slime at a time, and the animations restore the original sprite offset when finished.
 4. Leave/re-enter the Daycare during an animation and return to title during one. Confirm no slime remains visually displaced.
 5. Confirm a regular Barn and wild/vanilla slimes do not run this behavior. The animation and cooldown are transient and do not change breeding, happiness, or save data.
+
+## Slime Playground group interaction
+
+1. Buy a Slime Playground from Marnie, place it inside the Daycare, and ensure at least two Ranch Slimes can wander nearby.
+2. Wait for two slimes within two tiles of the playground. Both should begin a synchronized short hop, then settle back to their original draw offsets.
+3. Place a trampoline or cushion nearby. Confirm the same slime pair uses only the playground during the group animation, another furniture item remains available, and the playground cannot start a second group until both users finish.
+4. Repeat with one nearby slime only; the playground should remain idle until a second eligible slime is close enough.
+5. Leave the room during the group animation and verify both offsets reset. Confirm the interaction is visual only and does not change friendship, happiness, or external save data.
 
 ## Genome-driven slime colors
 

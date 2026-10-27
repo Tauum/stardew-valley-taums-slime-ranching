@@ -109,17 +109,41 @@ internal sealed class TrampolineInteractionService
 
         var furnitureSpots = house.Objects.Values
             .Where(obj => obj.QualifiedItemId == FurnitureContent.TrampolineQualifiedId
-                || obj.QualifiedItemId == FurnitureContent.SlimeCushionQualifiedId)
+                || obj.QualifiedItemId == FurnitureContent.SlimeCushionQualifiedId
+                || obj.QualifiedItemId == FurnitureContent.SlimePlaygroundQualifiedId)
             .Select(obj => new FurnitureSpot(obj.TileLocation, obj.QualifiedItemId))
             .Where(spot => !this.active.Values.Any(bounce => bounce.TrampolineTile == spot.Tile))
             .ToList();
         if (furnitureSpots.Count == 0)
             return;
 
-        foreach (FarmAnimal animal in house.animals.Values
+        List<FarmAnimal> idleSlimes = house.animals.Values
                      .Where(animal => animal.type.Value == FarmAnimalContent.RanchSlimeTypeId
                          && !this.active.ContainsKey(animal.myID.Value)
-                         && !this.cooldowns.ContainsKey(animal.myID.Value)))
+                         && !this.cooldowns.ContainsKey(animal.myID.Value))
+            .ToList();
+
+        // Playgrounds are group furniture: reserve one spot for two nearby slimes and start their hops together.
+        foreach (FurnitureSpot playground in furnitureSpots.Where(spot => spot.QualifiedItemId == FurnitureContent.SlimePlaygroundQualifiedId).ToList())
+        {
+            Vector2 center = playground.Tile * 64f + new Vector2(32f, 32f);
+            FarmAnimal[] pair = idleSlimes
+                .Where(animal => Vector2.DistanceSquared(animal.Position, center) < InteractionRadiusPixels * InteractionRadiusPixels)
+                .OrderBy(animal => Vector2.DistanceSquared(animal.Position, center))
+                .Take(2)
+                .ToArray();
+            furnitureSpots.Remove(playground);
+            if (pair.Length < 2)
+                continue;
+
+            foreach (FarmAnimal animal in pair)
+            {
+                this.StartInteraction(animal, playground.Tile, 2.6f, 18f, 5f);
+                idleSlimes.Remove(animal);
+            }
+        }
+
+        foreach (FarmAnimal animal in idleSlimes)
         {
             Vector2 animalPosition = animal.Position;
             int nearestIndex = -1;
@@ -147,10 +171,15 @@ internal sealed class TrampolineInteractionService
                     "giant" => (3.2f, 21f, 9f),
                     _ => (2.4f, 28f, 4f)
                 };
-            this.active[animal.myID.Value] = new Bounce(animal, spot.Tile, animal.drawOffset,
-                duration, bounceHeight, compressionHeight);
-            this.cooldowns[animal.myID.Value] = this.elapsedSeconds + duration + 3f;
+            this.StartInteraction(animal, spot.Tile, duration, bounceHeight, compressionHeight);
         }
+    }
+
+    private void StartInteraction(FarmAnimal animal, Vector2 furnitureTile, float duration, float bounceHeight, float compressionHeight)
+    {
+        this.active[animal.myID.Value] = new Bounce(animal, furnitureTile, animal.drawOffset,
+            duration, bounceHeight, compressionHeight);
+        this.cooldowns[animal.myID.Value] = this.elapsedSeconds + duration + 3f;
     }
 
     private readonly record struct FurnitureSpot(Vector2 Tile, string QualifiedItemId);
