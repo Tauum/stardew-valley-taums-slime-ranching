@@ -192,12 +192,12 @@ internal static class FarmAnimalContent
         return sizes.FirstOrDefault(value => value.Equals(size, StringComparison.OrdinalIgnoreCase)) ?? "Normal";
     }
 
-    private static float GetSizeScale(string size) => GetCanonicalSize(size) switch
+    public static float GetSizeScale(string? size) => GetCanonicalSize(size) switch
     {
         "Small" => 0.82f,
         "Large" => 1.18f,
         "Giant" => 2.5f,
-        _ => size.Equals("Normal", StringComparison.OrdinalIgnoreCase) ? 1f : 0f
+        _ => string.Equals(size, "Normal", StringComparison.OrdinalIgnoreCase) ? 1f : 0f
     };
 
     private static Color[] GetVanillaSlimePixels(out int sourceWidth)

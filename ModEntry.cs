@@ -30,6 +30,7 @@ public sealed class ModEntry : Mod
         BuildingContent.NormalizeConfig(this.config);
         this.config.IncubatorDurationDays = Math.Clamp(this.config.IncubatorDurationDays, 1, 28);
         this.registry = new SlimeRegistry(this.Monitor);
+        RanchSlimeShadowScalePatch.SetSizeLookup(id => this.registry?.GetGenomeSize(id));
         BreederMovementPatch.SetReservationLookup(id => this.registry?.IsBreedingParentReserved(id) == true);
         BreederParentVisibilityPatch.SetActiveCycleLookup(id => this.registry?.IsInActiveBreedingCycle(id) == true);
         BreederParentVisibilityPatch.SetUnclaimedHatchLookup(id => this.registry?.IsUnclaimedIncubationHatch(id) == true);
