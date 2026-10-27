@@ -43,7 +43,7 @@ Each stage groups related commits from today's first-parent history so its behav
 **Your results / issues:**
 
 - `slime_ranching_inspect` in the vanilla Slime Hutch reported 19 vanilla `GreenSlime` monsters left unchanged and 5 Ranch Slime genome records in the external registry. This check passed.
-- The Animals menu shows the slime as petted, while its friendship hearts remain empty. One pet adds 15 friendship points; the menu displays progress in half-heart steps of 100 points. A newly spawned slime may need about seven consecutive daily pets before the first half-heart appears. Verify that increment over several in-game days. Stage 1 remains current until this is confirmed.
+- The Animals menu showed the slime as petted while its friendship hearts remained empty. A temporary test aid now raises a successful Ranch Slime pet to 200 friendship points, making one full heart visible immediately. Pet once, confirm the heart appears, sleep/reload, and confirm it remains. This test boost is listed for later removal in `TEMPORARY_TEST_VALUES.md`. Stage 1 remains current until this is confirmed.
 
 ## Remaining stages (pending your confirmation)
 
