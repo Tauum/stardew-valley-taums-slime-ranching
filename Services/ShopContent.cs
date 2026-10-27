@@ -42,16 +42,22 @@ internal static class ShopContent
     private static void AddIfMissing(ShopData shop, string name, string qualifiedItemId, int price)
     {
         string id = $"Taum.SlimeRanching_{name}";
-        if (shop.Items!.Any(item => item.Id == id || item.ItemId == qualifiedItemId))
+        ShopItemData? existing = shop.Items!.FirstOrDefault(item => item.Id == id || item.ItemId == qualifiedItemId);
+        if (existing is not null)
+        {
+            existing.Price = Math.Max(0, price);
+            existing.AvailableStock = int.MaxValue;
+            existing.AvailableStockLimit = LimitedStockMode.None;
             return;
+        }
 
         shop.Items.Add(new ShopItemData
         {
             Id = id,
             ItemId = qualifiedItemId,
             Price = Math.Max(0, price),
-            AvailableStock = 1,
-            AvailableStockLimit = LimitedStockMode.Player
+            AvailableStock = int.MaxValue,
+            AvailableStockLimit = LimitedStockMode.None
         });
     }
 }

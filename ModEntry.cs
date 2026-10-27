@@ -4,6 +4,7 @@ using StardewValley;
 using StardewValley.Buildings;
 using StardewValley.Locations;
 using StardewValley.Monsters;
+using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using taums_slime_ranching.Models;
@@ -25,6 +26,7 @@ public sealed class ModEntry : Mod
 
     public override void Entry(IModHelper helper)
     {
+        new Harmony(this.ModManifest.UniqueID).PatchAll(typeof(ModEntry).Assembly);
         this.config = helper.ReadConfig<ModConfig>();
         BuildingContent.NormalizeConfig(this.config);
         this.registry = new SlimeRegistry(this.Monitor);
