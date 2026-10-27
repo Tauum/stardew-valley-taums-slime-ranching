@@ -38,8 +38,8 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [x] Add seven Chromatic Crystal breeder inputs; a chosen crystal fixes offspring to its base color and clears hybrid/exceptional traits. Recipes and unlock progression remain undecided; confirm consumption, persistence, and hatching in game.
 - [ ] Verify all seven tint colors on hatch and after save/reload.
 - [ ] Verify juvenile appearance, daily growth, save/reload age, and breeder eligibility at maturity.
-- [ ] Verify schema 7-to-8 migration preserves existing animals' native maturity and backs up the previous registry.
-- [ ] Verify schema 8 migration and crystal selection/consumption, two-day cycle persistence, and resulting egg/hatchling traits.
+- [ ] Verify schema 7-to-9 migration preserves existing animals' native maturity and backs up the previous registry.
+- [ ] Verify schema 7-to-9 migration and crystal selection/consumption, two-day cycle persistence, and resulting egg/hatchling traits.
 - [ ] Verify incubation start, save/reload recovery, hatch, full-Daycare deferral, and duplicate-egg handling in game.
 - [ ] Verify the incubator progress card at start, after one sleep, and when the egg is ready.
 - [x] Add parent cooldown after egg collection; duration remains provisional.
@@ -68,7 +68,8 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [ ] Tunnel, ball pit, heated stone, Gel Pond, compost trough; persistent gameplay effects and QA.
 
 ## Stage 5 — machines
-- [ ] Mutagenic Pool with per-slime pity and safe failure.
+- [x] Add a placeable Mutagenic Pool with one-day attempts, a per-slime pity counter, and safe failure; Shadow Clone is currently data-only. Verify the schema migration and reload lifecycle in game.
+- [ ] Implement Shadow Clone's bounded, non-recursive behavior and tune its ability effects.
 - [x] Chromatic Crystals as breeder consumables, **not furniture**; obtainment recipes and unlock progression remain open.
 - [ ] Gel Refinery stored Slime and vanilla-item conversion recipes.
 
@@ -88,6 +89,10 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [ ] Documentation and recovery instructions; single-player alpha packaging.
 
 ## Next in-game verification
+- [ ] On the disposable `TaumTest_322865388` save, buy/place a Mutagenic Pool in the Daycare; confirm a juvenile, busy, or already-mutated slime can't be selected.
+- [ ] Start an attempt with 500 vanilla Slime, sleep, and verify the success/failure message, stored trait or pity increment, and unchanged slime health/existence. Reload mid-cycle and ensure the stored roll does not change.
+- [ ] Verify the per-slime odds increase by 2 points per failure to 30%, reset after success, and remain independent between slimes; review these provisional values before release.
+- [ ] Verify schema 8 migrates to schema 9, creates `.before-mutagenic-pool-v9.bak`, and preserves existing genomes, eggs, breeding pairs, and incubations.
 - [ ] Deploy current build to `TaumTest_322865388`; check the complete Base roof and confirm its foundation corner touches the blue footprint's bottom-left, then check both upgrades.
 - [ ] Check that hearts are 30 screen pixels higher than their original position, 20% larger, and float on a 4-second cycle.
 - [ ] Continue with breeder-ready notification, egg persistence, and incubator hatching checks.

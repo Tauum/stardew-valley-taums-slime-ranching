@@ -13,6 +13,8 @@ public sealed class SlimeRecord
     public bool AgeClockInitialized { get; set; }
     /// <summary>First in-game day when this slime may start another breeding cycle.</summary>
     public int BreedingCooldownUntilDay { get; set; }
+    /// <summary>Failed Mutagenic Pool rolls, used by its per-slime pity chance.</summary>
+    public int MutagenicPoolFailures { get; set; }
     public string? LastHutchName { get; set; }
     public bool IsCompanion { get; set; }
 }

@@ -7,7 +7,7 @@ Only intentional breeding in the Slime Daycare. Parent selection; visible bounci
 A breeder-slot consumable, **not furniture**. Seven pure base-color variants, override parent color/species, cannot make hybrids or exceptional species. Recipe/unlock TBD.
 
 ## Mutagenic Pool (Stage 6)
-Separate placeable machine. Fill with vanilla Slime, select adult, spend Slime for a chance to add a rare mutation; per-slime pity system; failure never kills. Does not recolor or resize the slime.
+Prototype implemented: place the machine inside the Slime Daycare, choose one mature unreserved Ranch Slime, and consume 500 vanilla Slime for a one-day attempt. It currently grants the Shadow Clone mutation trait with a per-slime pity chance; failure is safe. The attempt and pity counter persist in the mod-folder registry, while item consumption is committed by the normal Stardew save. Sleep after starting an attempt. The 500-Slime cost, 5% base chance, +2 percentage points per failure, 30% cap, and 15,000g Marnie price are provisional test defaults. Shadow Clone's actual clone behavior is not implemented yet. Verify on a disposable save.
 
 ## Gel Refinery (Stage 6)
 Stores vanilla Slime as fuel, accepts existing items and produces existing items. No new artisan material catalogue.

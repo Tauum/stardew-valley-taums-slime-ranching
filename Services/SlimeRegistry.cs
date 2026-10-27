@@ -14,6 +14,7 @@ internal sealed class SlimeRegistry
     private readonly Dictionary<string, BreedingPairRecord> breedingPairs = new(StringComparer.Ordinal);
     private readonly Dictionary<string, SlimeEggRecord> eggs = new(StringComparer.Ordinal);
     private readonly Dictionary<string, IncubationRecord> incubations = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, MutagenicAttemptRecord> mutagenicAttempts = new(StringComparer.Ordinal);
 
     public SlimeRegistry(IMonitor monitor) => this.monitor = monitor;
 
@@ -21,10 +22,12 @@ internal sealed class SlimeRegistry
     public IReadOnlyCollection<SlimeEggRecord> Eggs => this.eggs.Values;
     public IReadOnlyCollection<IncubationRecord> Incubations => this.incubations.Values;
     public IReadOnlyCollection<BreedingPairRecord> BreedingPairs => this.breedingPairs.Values;
+    public IReadOnlyCollection<MutagenicAttemptRecord> MutagenicAttempts => this.mutagenicAttempts.Values;
 
     public IReadOnlyCollection<long> RanchSlimeFarmAnimalIds => this.farmAnimalRecords.Keys;
     public IReadOnlyCollection<long> ReservedFarmAnimalIds => this.breedingPairs.Values
         .SelectMany(pair => new[] { pair.ParentAId, pair.ParentBId })
+        .Concat(this.mutagenicAttempts.Values.Select(attempt => attempt.SlimeId))
         .Distinct()
         .ToArray();
 
@@ -233,7 +236,67 @@ internal sealed class SlimeRegistry
 
     public bool IsReserved(long farmAnimalId, string? exceptMachineKey = null) =>
         this.breedingPairs.Values.Any(pair => pair.MachineKey != exceptMachineKey
-            && (pair.ParentAId == farmAnimalId || pair.ParentBId == farmAnimalId));
+            && (pair.ParentAId == farmAnimalId || pair.ParentBId == farmAnimalId))
+        || this.mutagenicAttempts.Values.Any(attempt => attempt.MachineKey != exceptMachineKey && attempt.SlimeId == farmAnimalId);
+
+    public MutagenicAttemptRecord? GetMutagenicAttempt(string machineKey) =>
+        this.mutagenicAttempts.TryGetValue(machineKey, out MutagenicAttemptRecord? attempt) ? attempt : null;
+
+    public int GetMutagenicPoolFailures(long slimeId) =>
+        this.farmAnimalRecords.TryGetValue(slimeId, out SlimeRecord? record) ? record.MutagenicPoolFailures : 0;
+
+    public string? GetMutationTrait(long slimeId) =>
+        this.farmAnimalRecords.TryGetValue(slimeId, out SlimeRecord? record) ? record.Genome.MutationTrait : null;
+
+    public bool StartMutagenicAttempt(string machineKey, long slimeId, int currentDay, int ageDays, double roll)
+    {
+        if (string.IsNullOrWhiteSpace(machineKey) || this.mutagenicAttempts.ContainsKey(machineKey)
+            || !this.farmAnimalRecords.TryGetValue(slimeId, out SlimeRecord? record)
+            || ageDays < FarmAnimalContent.RanchSlimeDaysToMature
+            || !string.IsNullOrWhiteSpace(record.Genome.MutationTrait)
+            || this.IsReserved(slimeId, machineKey))
+            return false;
+
+        int failures = Math.Clamp(record.MutagenicPoolFailures, 0, 13);
+        double chance = Math.Min(0.30, 0.05 + 0.02 * failures);
+        this.mutagenicAttempts[machineKey] = new MutagenicAttemptRecord
+        {
+            MachineKey = machineKey,
+            SlimeId = slimeId,
+            StartedOnDay = currentDay,
+            ReadyOnDay = currentDay + 1,
+            ChanceAtStart = chance,
+            Roll = Math.Clamp(roll, 0, 0.999999999)
+        };
+        return true;
+    }
+
+    public List<(long SlimeId, bool Success, double Chance)> ResolveReadyMutagenicAttempts(int currentDay)
+    {
+        var results = new List<(long SlimeId, bool Success, double Chance)>();
+        MutagenicAttemptRecord[] ready = this.mutagenicAttempts.Values
+            .Where(attempt => currentDay >= attempt.ReadyOnDay
+                && this.farmAnimalRecords.ContainsKey(attempt.SlimeId))
+            .ToArray();
+        foreach (MutagenicAttemptRecord attempt in ready)
+        {
+            if (!this.farmAnimalRecords.TryGetValue(attempt.SlimeId, out SlimeRecord? slime))
+                continue;
+
+            bool success = attempt.Roll < attempt.ChanceAtStart;
+            if (success)
+            {
+                slime.Genome.MutationTrait = "Shadow Clone";
+                slime.MutagenicPoolFailures = 0;
+            }
+            else
+                slime.MutagenicPoolFailures = Math.Min(13, slime.MutagenicPoolFailures + 1);
+            results.Add((attempt.SlimeId, success, attempt.ChanceAtStart));
+            this.mutagenicAttempts.Remove(attempt.MachineKey);
+        }
+
+        return results;
+    }
 
     public int GetBreedingRestDays(long farmAnimalId, int currentDay) =>
         this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record)
@@ -531,6 +594,11 @@ internal sealed class SlimeRegistry
             record.FarmAnimalTypeId = null;
         }
 
+        foreach (string machineKey in this.mutagenicAttempts.Values
+                     .Where(attempt => !this.farmAnimalRecords.ContainsKey(attempt.SlimeId))
+                     .Select(attempt => attempt.MachineKey).ToArray())
+            this.mutagenicAttempts.Remove(machineKey);
+
         string[] abandonedCycles = this.breedingPairs.Values
             .Where(pair =>
             {
@@ -554,6 +622,7 @@ internal sealed class SlimeRegistry
         this.breedingPairs.Clear();
         this.eggs.Clear();
         this.incubations.Clear();
+        this.mutagenicAttempts.Clear();
         if (data is not null && data.SchemaVersion != SlimeSaveData.CurrentSchemaVersion)
             throw new InvalidOperationException($"Unsupported slime data schema {data.SchemaVersion}; expected {SlimeSaveData.CurrentSchemaVersion}.");
 
@@ -607,6 +676,22 @@ internal sealed class SlimeRegistry
             this.incubations.Add(incubation.MachineKey, incubation);
         }
 
+        foreach (MutagenicAttemptRecord attempt in data?.MutagenicAttempts ?? Enumerable.Empty<MutagenicAttemptRecord>())
+        {
+            if (attempt is null || string.IsNullOrWhiteSpace(attempt.MachineKey)
+                || !this.farmAnimalRecords.ContainsKey(attempt.SlimeId)
+                || attempt.ReadyOnDay < attempt.StartedOnDay
+                || attempt.ChanceAtStart is < 0 or > 1 || attempt.Roll is < 0 or >= 1
+                || this.IsReserved(attempt.SlimeId)
+                || this.mutagenicAttempts.ContainsKey(attempt.MachineKey)
+                || this.mutagenicAttempts.Values.Any(other => other.SlimeId == attempt.SlimeId))
+            {
+                this.monitor.Log("Skipped a malformed or duplicate external Mutagenic Pool attempt.", LogLevel.Warn);
+                continue;
+            }
+            this.mutagenicAttempts.Add(attempt.MachineKey, attempt);
+        }
+
         if (logSummary)
             this.monitor.Log($"Loaded {this.records.Count} external Ranch Slime record(s); assigned {assignedFoodLikes} missing or invalid food like(s). Existing vanilla GreenSlime monsters are not managed.", LogLevel.Info);
     }
@@ -616,7 +701,8 @@ internal sealed class SlimeRegistry
         Slimes = this.records.Values.OrderBy(record => record.Genome.Id).ToList(),
         BreedingPairs = this.breedingPairs.Values.OrderBy(pair => pair.MachineKey, StringComparer.Ordinal).ToList(),
         Eggs = this.eggs.Values.OrderBy(egg => egg.ItemId, StringComparer.Ordinal).ToList(),
-        Incubations = this.incubations.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList()
+        Incubations = this.incubations.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList(),
+        MutagenicAttempts = this.mutagenicAttempts.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList()
     };
 
     public SlimeEggRecord CreateEgg(SlimeGenome genome)

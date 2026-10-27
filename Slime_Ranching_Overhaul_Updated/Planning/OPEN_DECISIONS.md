@@ -15,7 +15,7 @@
    - Seven base genome colors currently map to the nearest Red/Orange/Yellow/Green/Blue/Purple/Pink sprite tint. Exact RGB blending for hybrids or arbitrary colors is still undecided.
 5. **Exceptional acquisition:** Can Golden/Prismatic/Black/White appear from breeding, exploration, mutation, or all three? At what rates?
 6. **Shiny inheritance:** Random roll, inherited boost, or both? Exact probability?
-7. **Mutagenic Pool:** Shadow Clone confirmed; which additional rare traits should be possible?
+7. **Mutagenic Pool:** Shadow Clone is the first data-only trait. Which additional rare traits should be possible? Review the current provisional 500-Slime cost, 5% base chance, +2 points per failure, 30% cap, and 15,000g shop price after playtesting.
 8. **Furniture:** The Converter, Breeder, and Incubator are in Marnie's shop at configurable provisional prices (2,500g, 10,000g, and 5,000g). A Slime Trampoline (2,500g), Slime Cushion (1,500g), Slime Playground (6,000g), Slime Slide (3,000g), and Slime Bed (1,800g) are also available at provisional prices. Their animations have no gameplay effects. Review balance and progression unlocks; other enrichment stock and any happiness effect remain undecided.
 9. **Breeder:** How to obtain the basic machine; cycle-time tuning; whether parents remain in world while shown in machine. A one-day rest after egg collection is implemented provisionally; review the duration after playtesting.
 10. **Eggs:** A prototype now uses a dedicated Daycare incubator, a two-day timer, and automatic hatching into the Daycare when space exists. Its menu displays the active egg's genome label and day-based progress. Inserting a converter Common Egg creates a fresh Green (`#00FF00`), Normal, Common, Generation 1 genome; breeder eggs keep their stored genome. Duplicate copies of one breeder genome egg ID can hatch only once. Confirm persistence/transfer behavior, the duration, and duplicate-item handling through playtesting. Keep managed eggs out of the vanilla incubator. The concept image's liquid modes and stability meter have no defined mechanics yet; do not imply effects until designed.
@@ -39,6 +39,7 @@
 | 2026-10-27 | Managed eggs hatch in a separate two-day Slime Incubator inside the Daycare; a full Daycare defers hatching | Prototype implemented; verify and review balance |
 | 2026-10-27 | Common converter eggs receive a fresh base Common genome when inserted into the incubator | Prototype implemented; verify common egg flow |
 | 2026-10-27 | Ranch Slime juveniles mature after three in-game days and cannot breed while growing | Provisional implementation; verify visual growth and balance |
+| 2026-10-27 | Mutagenic Pool assigns one mature Ranch Slime for a one-day, nonlethal Shadow Clone mutation roll with per-slime pity | Prototype implemented; all cost, odds, duration, and shop price remain provisional |
 
 ## Current decisions locked
 Full custom breeder; external-only mod state; custom companion AI; single-player first; GPT-assisted sprite production. The breeder egg ID to external genome link is prototyped but still needs transfer/reload verification. Remaining design decisions include Pink recipe rules, exceptional acquisition, time-change safeguards, precise mutation and shop balancing.

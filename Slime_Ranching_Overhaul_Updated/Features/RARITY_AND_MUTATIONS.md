@@ -13,7 +13,9 @@ Keep separate fields: `Species`, `RarityTier`, `IsShiny`, `MutationTrait`, `Size
 The current `IsShiny` visual prototype applies a subtle 22% brightness lift to the sprite. It is independent of size and color and has no gameplay/stat effect yet; the proposed ~10% performance increase remains undecided. Use `slime_ranching_set_shiny <save> <animal ID> true|false` to inspect it on a disposable save.
 
 ## Mutagenic Pool
-Consumes a substantial quantity of vanilla Slime per attempt (proposed 500); adult slime is temporarily assigned. Proposed 1 day processing, base 5% chance + 2 percentage points per failed attempt, cap 30%. Per-slime pity counter persists; success resets it. No slime death on failure. Mutation pool grants **traits**, not exceptional colors. Other mutation outcomes TBD.
+The first pool prototype is implemented on `feature/mutagenic-pool-safe-failure`: place the Mutagenic Pool in the Slime Daycare, select one mature, unreserved Ranch Slime, and spend 500 vanilla Slime for a one-day attempt. The first trait is Shadow Clone. The current provisional roll is 5% plus 2 percentage points per failed attempt, capped at 30%; failure never harms the slime, and the per-slime failure count persists in its external record. The chance and roll are fixed when the attempt starts, so reloading cannot reroll it. Success adds the `MutationTrait` genome field and clears pity.
+
+These numbers and the 15,000g Marnie price are test defaults, not final balance. Shadow Clone is currently only a stored genome trait; clone behavior is not implemented. The attempt and pity state live in the mod-folder registry. The 500 Slime inventory removal is handled by Stardew's normal save; sleep to persist both it and the external attempt. Test only on a disposable save until reload and crash recovery have been checked.
 
 ## Open balancing
 Acquisition probabilities, shiny inheritance, exceptional breeding rules, pool trait weights, Black/White multiplayer compatibility and Prismatic mounting limits require playtests.

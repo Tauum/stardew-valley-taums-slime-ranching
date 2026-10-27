@@ -19,6 +19,7 @@ public sealed class ModEntry : Mod
     private ModConfig config = new();
     private bool stateReady;
     private readonly EnrichmentInteractionService trampolineInteractions = new();
+    private readonly List<(long SlimeId, bool Success, double Chance)> pendingMutagenicNotifications = new();
 
     public override void Entry(IModHelper helper)
     {
@@ -119,8 +120,9 @@ public sealed class ModEntry : Mod
 
         this.ProcessReadyIncubations();
         maturityChanged |= this.registry.SynchronizeMaturity(GetFarmAnimals(), Game1.Date.TotalDays);
+        this.pendingMutagenicNotifications.AddRange(this.registry.ResolveReadyMutagenicAttempts(Game1.Date.TotalDays));
 
-        if (readyToNotify.Count == 0)
+        if (readyToNotify.Count == 0 && this.pendingMutagenicNotifications.Count == 0)
         {
             if (maturityChanged && !this.SaveExternalStateNow())
                 this.Monitor.Log("Could not save the Ranch Slime maturity clock to the mod-folder registry; it will retry at the next save.", LogLevel.Error);
@@ -131,7 +133,7 @@ public sealed class ModEntry : Mod
         {
             foreach (var ready in readyToNotify)
                 ready.Pair.ReadyNotificationSent = false;
-            this.Monitor.Log("A completed breeder egg or its notification status could not be saved; the egg notification will retry next morning.", LogLevel.Error);
+            this.Monitor.Log("A completed breeding or mutation result could not be saved; notifications will retry after the next external-state save.", LogLevel.Error);
             return;
         }
 
@@ -141,11 +143,22 @@ public sealed class ModEntry : Mod
             Game1.addHUDMessage(new HUDMessage("A Ranch Slime Egg is ready to collect from the Slime Breeder!", HUDMessage.newQuest_type));
             this.Monitor.Log($"A Ranch Slime Egg (genome {egg.Genome.Id:N}) is ready to collect.", LogLevel.Info);
         }
+
+        foreach (var result in this.pendingMutagenicNotifications)
+        {
+            string message = result.Success
+                ? "A Ranch Slime's mutation has awakened!"
+                : "The Mutagenic Pool attempt failed safely. That slime's next chance has increased.";
+            Game1.addHUDMessage(new HUDMessage(message, result.Success ? HUDMessage.newQuest_type : HUDMessage.error_type));
+            this.Monitor.Log($"Mutagenic Pool attempt for Ranch Slime {result.SlimeId}: {(result.Success ? "success" : "safe failure")} at {result.Chance:P0}.", LogLevel.Info);
+        }
+        this.pendingMutagenicNotifications.Clear();
     }
 
     private void OnReturnedToTitle(object? sender, ReturnedToTitleEventArgs e)
     {
         this.trampolineInteractions.Clear();
+        this.pendingMutagenicNotifications.Clear();
         this.stateReady = false;
         this.registry = new SlimeRegistry(this.Monitor);
         this.stateStore = new ModStateStore(this.Helper.DirectoryPath);
@@ -488,6 +501,8 @@ public sealed class ModEntry : Mod
         FarmAnimalContent.EditAsset(e);
         FurnitureContent.LoadAssets(e);
         FurnitureContent.EditAsset(e);
+        MutagenicPoolContent.LoadAssets(e);
+        MutagenicPoolContent.EditAsset(e);
         BuildingContent.EditAsset(e, this.Helper);
     }
 
@@ -525,6 +540,30 @@ public sealed class ModEntry : Mod
             this.Helper.Input.Suppress(e.Button);
             string machineKey = $"{Game1.currentLocation.NameOrUniqueName}:{(int)placedObject.TileLocation.X},{(int)placedObject.TileLocation.Y}";
             Game1.activeClickableMenu = new SlimeBreederMenu(this.registry!, machineKey, this.SaveExternalStateNow, this.CreateEggItem);
+            return;
+        }
+
+        if (Context.IsWorldReady && Game1.activeClickableMenu is null && e.Button.IsActionButton()
+            && Game1.currentLocation.Objects.TryGetValue(e.Cursor.GrabTile, out StardewValley.Object? pool)
+            && pool.QualifiedItemId == MutagenicPoolContent.QualifiedItemId)
+        {
+            if (!this.stateReady || !Context.IsMainPlayer || Context.IsMultiplayer)
+            {
+                this.Monitor.Log("The Mutagenic Pool requires an available external registry in single-player.", LogLevel.Warn);
+                return;
+            }
+
+            StardewValley.Buildings.Building? daycare = Game1.getFarm().buildings.FirstOrDefault(building =>
+                BuildingContent.IsSlimeDaycare(building.buildingType.Value) && building.GetIndoors() == Game1.currentLocation);
+            if (daycare?.GetIndoors() is not StardewValley.AnimalHouse)
+            {
+                this.Monitor.Log("The Mutagenic Pool only works inside the Slime Daycare.", LogLevel.Warn);
+                return;
+            }
+
+            this.Helper.Input.Suppress(e.Button);
+            string machineKey = $"{Game1.currentLocation.NameOrUniqueName}:{(int)pool.TileLocation.X},{(int)pool.TileLocation.Y}";
+            Game1.activeClickableMenu = new MutagenicPoolMenu(this.registry!, machineKey);
             return;
         }
 

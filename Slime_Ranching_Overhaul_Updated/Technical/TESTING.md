@@ -58,7 +58,7 @@ The pair, cycle dates, and resulting egg genome are stored in the mod-folder reg
 3. Start the two-day cycle. Confirm exactly one selected crystal is consumed and the pair's `ChromaticCrystalColor` is written to the mod-folder registry. Save/reload during the cycle and confirm the focus remains attached to that pair.
 4. Collect the egg after two days. Its genome should use the chosen base color and a matching `<Color> Slime` species name; it should be Common, non-shiny, and have no mutation or secondary species. Generation, parent IDs, size, and liked food continue to inherit from the parents.
 5. Incubate the egg and confirm the hatchling keeps the crystal color after save/reload. Repeat without a crystal to check normal inheritance, and cancel a crystal-focused cycle to confirm the already-consumed crystal is not refunded.
-6. Check schema 7 data migrates to schema 8, creates a `.before-chromatic-crystals-v8.bak` backup, and leaves existing cycles and eggs intact.
+6. Check schema 7 data migrates through schema 8 to schema 9, creates a `.before-mutagenic-pool-v9.bak` backup, and leaves existing cycles and eggs intact.
 
 Crystal items currently use vanilla mineral icons and are available only through the testing command; Marnie stock, crafting recipes, unlock levels, and pricing are intentionally undecided. The crystal affects offspring traits only; it does not change the parent genomes.
 
@@ -87,6 +87,19 @@ The probabilities are provisional and listed in `Features/SIZE_AND_MATURITY.md`.
 1. Spawn a Ranch Slime and note its FarmAnimal ID. Run `slime_ranching_set_shiny TaumTest_322865388 <animal ID> true`.
 2. Confirm the slime immediately gets a slightly brighter sprite while keeping the same size, shape, face, and base hue. Check that petting and furniture interactions remain normal.
 3. Save/reload and confirm the shiny appearance persists from the external genome. Set it back with `slime_ranching_set_shiny TaumTest_322865388 <animal ID> false` and confirm its prior base sprite returns.
+
+## Mutagenic Pool prototype
+
+Use the disposable `TaumTest_322865388` save. Back up the installed mod's `data` folder before changing builds; genome, attempt, and pity state lives in that mod-folder registry. The 500 vanilla Slime cost is consumed from player inventory and committed by Stardew's normal save.
+
+1. Buy the Mutagenic Pool from Marnie (provisional default 15,000g) and place it inside the Slime Daycare.
+2. Add at least 500 vanilla Slime `(O)766` to inventory. Open the Pool and scroll the resident list if needed. Confirm juvenile, busy/reserved, and already-mutated slimes are unavailable.
+3. Select a mature slime and start an attempt. Confirm 500 Slime is removed, the job shows a fixed chance and ready day, and that slime can't be assigned to a breeder or second Pool.
+4. Sleep to save the inventory and external job; optionally reload before resolution. Confirm the attempt resumes with the same stored roll and chance. Sleep through its ready day.
+5. Confirm one result notice. Success sets `Genome.MutationTrait` to `Shadow Clone` and resets `MutagenicPoolFailures`; failure leaves the slime alive and increments only that slime's counter. Shadow Clone has no active behavior yet.
+6. Verify another attempt uses +2 percentage points per failure (5% base, 30% cap); a different slime has independent pity. Cost, odds, duration, and shop price are provisional.
+7. Inspect the external registry: `SchemaVersion` should be 9; `MutagenicAttempts` contains active attempt chance/roll; `SlimeRecord` contains `MutagenicPoolFailures` and the genome mutation trait.
+8. Copy an existing schema 8 registry, load it, and confirm `.before-mutagenic-pool-v9.bak` is created and existing egg, breeding, and incubation records are retained.
 
 ## External genome-specific egg identity (prototype)
 
