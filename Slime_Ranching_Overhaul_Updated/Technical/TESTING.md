@@ -76,6 +76,7 @@ The pond currently has no drops or friendship effects. Its 4,500g price is provi
 3. Start a breeder or Mutagenic Pool job with a slime near the swing; confirm the reserved slime does not use it.
 4. Leave the Daycare mid-swing and return. Confirm the draw offset is cleared, the collision tile never moved, and no stats or genome fields changed.
 5. While a slime is already swinging, start a job that reserves it. After closing the menu, confirm the swing stops immediately and the original draw offset is restored.
+6. While a slime is interacting with furniture, pick up that furniture. Confirm the animation stops on the next update and the original draw offset is restored.
 
 The 2,200g shop price is provisional; the interaction is visual-only.
 
