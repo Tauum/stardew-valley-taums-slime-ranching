@@ -8,7 +8,7 @@ using StardewValley.Tools;
 
 namespace taums_slime_ranching.Services;
 
-/// <summary>Gives the incubator a four-by-two placement area and depth-sorted custom art.</summary>
+/// <summary>Gives the incubator a three-by-two placement area and depth-sorted custom art.</summary>
 internal static class IncubatorPlacementGeometry
 {
     public const int TileSize = 64;
@@ -50,8 +50,7 @@ internal static class IncubatorPlacementGeometry
 
     public static void DrawWorld(SpriteBatch batch, Vector2 anchor, float alpha)
     {
-        // The machine artwork is one tile narrower than its 4x2 placement/collision footprint;
-        // keep its left edge anchored and trim the visual bounds on the right.
+        // The art is three tiles wide and five tiles tall; its collision/placement area is 3x2.
         Vector2 worldTopLeft = new(anchor.X * TileSize, (anchor.Y + Height) * TileSize - SpriteHeight);
         Vector2 screenTopLeft = Game1.GlobalToLocal(Game1.viewport, worldTopLeft);
         Rectangle destination = new((int)screenTopLeft.X, (int)screenTopLeft.Y, SpriteWidth, SpriteHeight);
@@ -62,7 +61,9 @@ internal static class IncubatorPlacementGeometry
 
     public static void DrawGhost(SpriteBatch batch, int x, int y, float alpha)
     {
-        Vector2 anchor = new((int)Math.Floor(x / (double)TileSize), (int)Math.Floor(y / (double)TileSize));
+        // x/y are Stardew's live mouse coordinates for the furniture preview. Center the
+        // 3x2 ghost on the same cursor tile as the Nautical Rug placement outline.
+        Vector2 anchor = GetCenteredAnchor(x, y);
         Vector2 worldTopLeft = new(anchor.X * TileSize, (anchor.Y + Height) * TileSize - SpriteHeight);
         Vector2 screenTopLeft = Game1.GlobalToLocal(Game1.viewport, worldTopLeft);
         Rectangle destination = new((int)screenTopLeft.X, (int)screenTopLeft.Y, SpriteWidth, SpriteHeight);
