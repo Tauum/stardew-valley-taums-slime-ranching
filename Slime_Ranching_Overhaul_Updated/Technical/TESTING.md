@@ -102,6 +102,7 @@ This is a new custom farm-animal type in a separate Slime Daycare animal-house b
 1. Deploy the mod to a disposable save, open Robin's construction menu, and build the Slime Daycare.
 2. After construction finishes, run `slime_ranching_spawn_ranch_slime TaumTest_322865388` in the SMAPI console.
 3. Verify the new animal is assigned to the Daycare and can be petted; existing hutch and mine slimes should be unchanged.
+4. Buy a Ranch Slime from Marnie and confirm Robin's follow-up chooser lets you assign it to the base Daycare and each upgrade. Confirm vanilla Barns and Coops still show as invalid homes.
 4. Sleep to save. Check the log for `Added 1 Ranch Slime genome record(s) to the external registry`, then inspect `data/saves/<save name>/slime-registry-v1.json`: the record should have `FarmAnimalId` matching the animal and a `Genome.Id` in that external file.
 5. Reload and save again. Confirm the same `FarmAnimalId` retains the same `Genome.Id` and no duplicate record is added.
 

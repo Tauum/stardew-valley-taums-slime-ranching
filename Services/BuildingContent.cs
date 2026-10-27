@@ -59,7 +59,9 @@ internal static class BuildingContent
             // Visually align the building body with the marked footprint without
             // translating/cropping its roof in the source texture.
             daycare.DrawOffset = new Vector2(3f, 8f);
-            daycare.ValidOccupantTypes = new List<string>();
+            // Explicitly allow this custom animal's House ID. Some animal
+            // placement paths only consult ValidOccupantTypes for modded types.
+            daycare.ValidOccupantTypes = new List<string> { SlimeDaycareBuildingId };
             daycare.AllowAnimalPregnancy = false;
             buildings[SlimeDaycareBuildingId] = daycare;
 
