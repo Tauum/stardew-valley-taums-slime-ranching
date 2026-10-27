@@ -11,10 +11,10 @@ namespace taums_slime_ranching.Services;
 internal static class BuildingContent
 {
     private const int PixelsPerTile = 16;
-    private const int DaycareTextureWidth = 112;
-    private const int DaycareTextureHeight = 64;
-    private const int DaycareFootprintWidth = 7;
-    private const int DaycareFootprintHeight = 4;
+    private const int DaycareFootprintWidth = 8;
+    private const int DaycareFootprintHeight = 5;
+    private const int DaycareTextureWidth = DaycareFootprintWidth * PixelsPerTile;
+    private const int DaycareTextureHeight = DaycareFootprintHeight * PixelsPerTile;
     private const int DesignCellWidth = 384;
     private const string ExteriorTextureAssetPrefix = "Mods/Taum.SlimeRanching/Buildings/SlimeDaycare/";
     private static readonly int[] DesignRowBounds = { 0, 341, 683, 1024 };
