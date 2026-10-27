@@ -6,7 +6,7 @@
 |---|---|---|
 | 1 Foundation | SMAPI setup, external-only genome state, Slime Daycare animal identity, legacy snapshot | Vanilla Hutch and mine/wild slimes unchanged; repeated loads safe; mod-folder backup recovery tested |
 | 2 Fully custom breeding | Select exactly two mature parents; visible enclosure animations; cycle/cooldown; fixed-genome egg identity held externally; hatch juvenile | Breed → egg → hatch → reload succeeds without identity loss |
-| 3 Genetics framework | Fixed color-wheel recipes, hybrid ability identifiers, five inherited sizes, rarity/shiny/mutation fields; use placeholder species | Deterministic test fixtures for inheritance and no rerolls |
+| 3 Genetics framework | Color-only inheritance through fixed color-wheel recipes, matching egg tints, species-derived ability identifiers; other offspring traits use defaults | Color recipes, matching egg/slime tints, ability IDs, and persisted fixed egg genomes |
 | 4 Furniture | Marnie's catalogue, visual enrichment interactions, functional Compost Trough | Placement persists; transient animation offsets always clean up; feeding effects survive reload |
 | 5 Advanced machines | Mutagenic Pool with per-slime pity; breeder Chromatic Crystal consumables; first Gel Refinery recipe | Inputs, job timers, notifications, and outputs survive reload without loss or duplication |
 | 6 Custom companion AI | Slime Core binding; bespoke following/pathfinding/location transitions/target selection/action scheduling/inventory | Companion reliably follows, acts, and never duplicates |

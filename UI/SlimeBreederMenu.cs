@@ -318,7 +318,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
         Rectangle panel = new(this.xPositionOnScreen + 32, this.yPositionOnScreen + 126, this.width - 64, 420);
         DrawPanel(b, panel, new Color(35, 49, 96), new Color(95, 137, 205));
         b.DrawString(Game1.dialogueFont, "OFFSPRING TRAITS", new Vector2(panel.X + 30, panel.Y + 26), new Color(130, 231, 255));
-        string[] lines = { "Colour: inherited from the parents, unless a Chromatic Crystal is used.", "Size, shine, mutations, and liked food are rolled from the parent genomes.", "Hybrid species and exceptional traits are cleared in this prototype.", "A finished egg keeps its generated genome when you close or reopen the menu." };
+        string[] lines = { "Colour: inherited from the parents, unless a Chromatic Crystal is used.", "Abilities follow the offspring species and colour.", "Other offspring traits start at Normal, Common, and non-shiny, with no mutation.", "A finished egg keeps its generated genome when you close or reopen the menu." };
         for (int i = 0; i < lines.Length; i++)
             b.DrawString(Game1.smallFont, lines[i], new Vector2(panel.X + 32, panel.Y + 96 + i * 58), Color.White);
     }

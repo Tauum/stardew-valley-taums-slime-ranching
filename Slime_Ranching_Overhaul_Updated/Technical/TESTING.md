@@ -163,8 +163,8 @@ The pair, cycle dates, and resulting egg genome are stored in the mod-folder reg
 1. In the disposable `TaumTest_322865388` save, run `slime_ranching_give_crystals TaumTest_322865388`. It requires seven free inventory slots and adds one crystal for each base color.
 2. Open a Slime Breeder with two mature Ranch Slimes. Click the crystal panel below the preview until the desired color appears; the panel also cycles through **inherited color**. The chosen crystal must be in the farmer's inventory.
 3. Start the two-day cycle. Confirm exactly one selected crystal is consumed and the pair's `ChromaticCrystalColor` is written to the mod-folder registry. Save/reload during the cycle and confirm the focus remains attached to that pair.
-4. Collect the egg after two days. Its genome should use the chosen base color and a matching `<Color> Slime` species name; it should be Common, non-shiny, and have no mutation or secondary species. Generation, parent IDs, size, and liked food continue to inherit from the parents.
-5. Incubate the egg and confirm the hatchling keeps the crystal color after save/reload. Repeat without a crystal to check normal inheritance, and cancel a crystal-focused cycle to confirm the already-consumed crystal is not refunded.
+4. Collect the egg after two days. Its genome should use the chosen base color and a matching `<Color> Slime` species name; it should be Common, non-shiny, and have no mutation or secondary species. Generation and parent IDs remain as ancestry metadata. Size is Normal, and favorite food is assigned independently; other non-color traits use their default values.
+5. Incubate the egg and confirm the hatchling keeps the crystal color after save/reload. Repeat without a crystal to check the parent-color recipe and matching egg tint, and cancel a crystal-focused cycle to confirm the already-consumed crystal is not refunded.
 6. Check schema 7 data migrates through schema 8 to schema 9, creates a `.before-mutagenic-pool-v9.bak` backup, and leaves existing cycles and eggs intact.
 
 Crystal items currently use vanilla mineral icons and are available only through the testing command; Marnie stock, crafting recipes, unlock levels, and pricing are intentionally undecided. The crystal affects offspring traits only; it does not change the parent genomes.
@@ -179,16 +179,11 @@ Crystal items currently use vanilla mineral icons and are available only through
 
 Primary-pair naming (`Purple` versus `Violet`), fallback behavior, Pink recipes, and exact hybrid sprite blending remain open review items.
 
-## Four-size inheritance prototype
+## Slime size appearance (not inherited)
 
-1. Run `slime_ranching_spawn_ranch_slime <save name>` twice and note each FarmAnimal ID from the console log. Set their external test sizes with `slime_ranching_set_size <save name> <animal ID> <Small|Normal|Large|Giant>`. For example, set both to `Small` for a Small+Small pair.
-2. Prepare known pairs. Breed Small+Small, Large+Large, Small+Large, and Giant+Giant pairs and inspect each egg tooltip's Size value.
-3. Check that every outcome is one of Small, Normal, Large, or Giant, and that size does not change the parents or maturity clock.
-4. Hatch size-varied eggs. Compare trampoline animation profiles: Small highest/fastest, Large below Normal, and Giant lowest/slowest. Cushion, bed, slide, and playground interactions should remain independent of genetic size for now.
-5. Compare all four animal sprite sizes and their ground shadows in the Daycare. The shadow should stay centered under the slime and scale with its size; check feet align to the floor, slimes remain clickable/pettable, and enlarged art does not overlap unrelated objects. Check the breeder chamber preview and every furniture animation for clipping or baseline shifts.
-
-The probabilities are provisional and listed in `Features/SIZE_AND_MATURITY.md`. A few manual samples only check that the categories and inheritance path work; they do not validate statistical balance.
-
+1. Spawn a managed Ranch Slime and note its FarmAnimal ID. Set its visual genome size with `slime_ranching_set_size <save name> <animal ID> <Small|Normal|Large|Giant>`.
+2. Confirm the animal sprite and its ground shadow use the selected size, remain centered, and stay clickable/pettable.
+3. Save/reload and confirm the selected appearance persists. Bred offspring no longer inherit size and start at Normal; use the appearance command to check each size independently.
 ## Shiny sprite variant
 
 1. Spawn a Ranch Slime and note its FarmAnimal ID. Run `slime_ranching_set_shiny TaumTest_322865388 <animal ID> true`.
@@ -226,7 +221,7 @@ Use the disposable `TaumTest_322865388` save. Back up the installed mod's `data`
 
 1. Deploy the current build to the disposable `TaumTest_322865388` save. Make room for two inventory items.
 2. Run `slime_ranching_give_test_eggs TaumTest_322865388` in the SMAPI console. The mod should add two Ranch Slime Eggs with different qualified item IDs.
-3. Inspect `<installed mod folder>/data/saves/TaumTest_322865388/slime-registry-v1.json`. It should now have two entries in `Eggs`; each has an `ItemId` and a genome with a unique `Id`, color, and liked food. Schema version should be 6. The game's save stores the inventory items; the inherited genome details live in this external registry.
+3. Inspect `<installed mod folder>/data/saves/TaumTest_322865388/slime-registry-v1.json`. It should now have two entries in `Eggs`; each has an `ItemId` and a genome with a unique `Id`, color, and liked food. Schema version should be 6. The game's save stores the inventory items; each egg's fixed genome details live in this external registry.
 4. Save, quit to title, and reload the same save. Confirm both eggs are still named separately and recognized. Check the external registry IDs still match each egg's item ID. For the all-save content definitions, the mod reads registered egg IDs from the mod's per-save registry files when `Data/Objects` loads.
 5. Put one egg in a chest and repeat save/reload. Confirm both item identity and registry genome remain stable.
 
@@ -309,10 +304,10 @@ Color test eggs are separate, unique genome items. Exact hybrid tint blending an
 
 1. In the disposable save, make sure two Ranch Slimes are in the Daycare and give/place a Slime Breeder there. Select and reserve the pair, then start the two-day cycle.
 2. Sleep through two days. On the morning it finishes, confirm one SMAPI HUD notification says a Ranch Slime Egg is ready. It should not repeat after reloading that day. Reopen the same breeder; its action button should now say **Collect Egg**.
-3. Collect the egg. It should be a distinct Ranch Slime Egg with a new genome ID. Its genome should have `ParentA`, `ParentB`, and `Generation` fields; generation is one higher than the older parent. Current placeholder inheritance selects each parent's existing value independently and stores the result once.
+3. Collect the egg. It should be a distinct Ranch Slime Egg with a new genome ID. Its genome should have `ParentA`, `ParentB`, and `Generation` fields; generation is one higher than the older parent. The offspring stores the color/species recipe result; its ability IDs are derived from that species. Non-color traits use defaults, while parent IDs and generation remain as ancestry metadata.
 4. Verify the parents are available again. Save, quit to title, and reload. The egg item ID should still resolve to the same external genome in `Eggs`; it must not be rerolled. The two-day timer and egg are tracked in the mod-folder registry.
 
-This is the first fixed-output slice. It does not yet apply color-wheel recipes, species traits, or physical chamber placement. A completed cycle with a full inventory leaves the egg ready in the breeder.
+This test covers the fixed-output breeding cycle. Color-wheel recipes set the offspring color/species and matching egg tint; species abilities are stored as identifiers. Other inherited traits are disabled. A completed cycle with a full inventory leaves the egg ready in the breeder.
 
 ## Slime Egg Converter
 

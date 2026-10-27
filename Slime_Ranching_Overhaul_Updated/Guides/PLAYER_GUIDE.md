@@ -127,10 +127,10 @@ Select the book and press the action button to open it. It is a custom item refe
 ## Features still under development
 
 - **Hatching:** Common and genome-specific Ranch Slime Eggs hatch in the custom incubator; vanilla eggs are unaffected.
-- **Breeding:** The breeder, parent selection, two-day cycle, and fixed-genome egg output work. Five-size inheritance and the specified color-wheel recipes are implemented provisionally; review their outcomes and exceptional traits in game.
+- **Breeding:** The breeder, parent selection, two-day cycle, and fixed-genome egg output work. Offspring inherit color/species only; the egg icon uses the same rendered color variant as the slime, and ability identifiers follow its species. Other offspring traits start at Normal size, Common rarity, non-shiny, no mutation, and a newly assigned favorite food. Parent links and generation remain as lineage metadata.
 - **Egg details:** Hover over a genome-specific Ranch Slime Egg to view its stored species, color, size, rarity, mutation, generation, parent IDs, and favorite food.
 - **Genetics and slime identity:** The registry model can hold genome data. Ranch Slime genomes are keyed to native FarmAnimal IDs; this still needs save/reload verification. Existing GreenSlime monsters are only captured in the first-seen snapshot; they aren't changed or adopted.
-- **Food likes:** Favorite food is stored, inherited, shown in the breeder, and used by the Compost Trough's provisional extra growth bonus.
+- **Food likes:** Favorite food is stored, assigned independently for each offspring, shown in the breeder, and used by the Compost Trough's provisional extra growth bonus.
 - **Furniture:** Trampoline, cushion, playground, slide, and bed animations are active prototypes in the Daycare, with no happiness or breeding effects yet.
 - **Mutations:** The Mutagenic Pool can roll the Shadow Clone trait with per-slime pity. Its temporary Daycare echo is visual only; cloned abilities are not implemented.
 - **Production and companions:** Slime-produced goods and custom companion AI are not active gameplay features yet.
@@ -145,7 +145,7 @@ slime_ranching_spawn_ranch_slime <exact save folder name> <age in days 0-28> [ra
 
 For the current test copy, use `slime_ranching_spawn_ranch_slime TaumTest_322865388 28` to spawn a mature slime, or use `slime_ranching_spawn_ranch_slime TaumTest_322865388 0` to spawn a newborn. Add the optional `random` tag (for example, `slime_ranching_spawn_ranch_slime TaumTest_322865388 0 random`) to keep the chosen age while randomizing the genome traits: primary species/color, a 30% chance of a secondary species, size, rarity, a 10% shiny chance, favorite food, generation (0–6), and a 10% chance of the Shadow Clone mutation. Without the tag, the command uses the default green Ranch Slime genome: no secondary species, Normal size, Common rarity, not shiny, generation 0, and no mutation; the mod assigns its favorite food. Ages 1–27 create juveniles that need the remaining days to reach maturity. The command adds a Ranch Slime without converting or removing any vanilla slimes, and immediately saves its genome to the mod's external registry. The animal itself and standard properties like its name, home, age, and friendship are stored by Stardew when the game saves.
 
-To set up controlled size-inheritance pairs, use `slime_ranching_set_size TaumTest_322865388 <animal ID> <Small|Normal|Large|Giant>`. The command edits only that managed Ranch Slime's external genome record.
+To set a managed Ranch Slime's visual size for testing, use `slime_ranching_set_size TaumTest_322865388 <animal ID> <Small|Normal|Large|Giant>`. This does not affect offspring size; bred offspring currently start at Normal size.
 
 ### Breeder selection preview
 

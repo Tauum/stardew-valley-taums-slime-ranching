@@ -9,38 +9,38 @@ Test save: `TaumTest_322865388` (use this copied save, not the main farm).
 
 Test only the current stage. Reply with the results or issues. I will help resolve those first. When you say **continue**, I will present the next stage and update this file. Do not advance the stage until you say to continue.
 
-## Current stage: 5 - Genome inheritance and visual variants
+## Current stage: 5 - Color inheritance, matching egg tint, and species abilities
 
 **Commits:** `b8c97b3`, `7f8f926`, `d201190`, `1d02049`, `b6d6d9a`, `5170b45`, `3209a32`, `c730ce1`, `4d3939d`, `cc09405`, `9120a7c`.
 
-This stage covers four-size inheritance and sprite scaling, shiny appearance, inherited colors, genome-tinted egg icons, asset caching, and stored species ability identifiers. The size and color results include random rolls, so one offspring doesn't prove every outcome. Companion abilities aren't implemented; this stage checks the stored genome IDs and visible traits only.
+Breeding passes on color/species identity only. The egg icon uses the same rendered color variant as the resulting slime. Ability identifiers are derived from the resulting species. Other offspring traits use fresh defaults: Normal size, Common rarity, non-shiny, no mutation, and a newly assigned favorite food. Parent IDs and generation remain as lineage metadata. Size, shiny, rarity, mutation, and food inheritance are out of scope.
 
 **How to test:**
 
 1. Run **3 Build, Deploy, Run**, load the copied `TaumTest_322865388` save, and enter the Slime Daycare.
-2. Spawn two mature parents and note each ID from the SMAPI output:
+2. Spawn two mature slimes and note their animal IDs:
 
    ```text
    slime_ranching_spawn_ranch_slime TaumTest_322865388 28
    slime_ranching_spawn_ranch_slime TaumTest_322865388 28
    ```
-3. Give them distinct controlled traits, replacing `<red ID>` and `<blue ID>` with the returned IDs:
+3. Set one parent to Red and one to Yellow. Give them different non-color traits so you can confirm those aren't passed to the offspring:
 
    ```text
-   slime_ranching_set_size TaumTest_322865388 <red ID> Small
    slime_ranching_set_color TaumTest_322865388 <red ID> Red
-   slime_ranching_set_shiny TaumTest_322865388 <red ID> false
-   slime_ranching_set_size TaumTest_322865388 <blue ID> Giant
-   slime_ranching_set_color TaumTest_322865388 <blue ID> Blue
-   slime_ranching_set_shiny TaumTest_322865388 <blue ID> true
+   slime_ranching_set_size TaumTest_322865388 <red ID> Giant
+   slime_ranching_set_shiny TaumTest_322865388 <red ID> true
+   slime_ranching_set_color TaumTest_322865388 <yellow ID> Yellow
+   slime_ranching_set_size TaumTest_322865388 <yellow ID> Small
+   slime_ranching_set_shiny TaumTest_322865388 <yellow ID> true
    ```
 
-   Confirm their sprites reflect the selected sizes, colors, and shiny state. Run `slime_ranching_inspect <animal ID>` on each and confirm the genome record agrees.
-4. Open the breeder and select the two parents. Start a cycle and sleep until its two-day timer completes. Collect the egg. Confirm its tooltip shows the parent names and generated genome details, and its icon tint matches the stored offspring color.
-5. Hatch that egg in the incubator. Confirm the resulting slime's visible color, size, and shiny state match the egg's genome. Run `slime_ranching_inspect <new animal ID>` and confirm the genome retains parent links and the expected generation increment.
-6. Save and reload. Confirm the parents and offspring retain their colors, sizes, shiny appearance, and genome details. If a trait roll is unexpected, repeat with a fresh pair/cycle and compare the recorded egg genome; offspring inheritance is randomized.
+   Replace the placeholders with the IDs printed by the spawn commands. Confirm each parent has its chosen color, size, and shiny appearance.
+4. Open the breeder, select both parents, start a cycle, and sleep until it completes. Collect the egg. Red + Yellow should produce an Orange Slime. Confirm the egg icon's visible tint matches the resulting slime's color. Its tooltip should show Orange species/color, Normal size, Common rarity, non-shiny, no mutation, parent links, and generation one higher than its parents.
+5. Hatch the egg. Confirm the slime appears Orange and `slime_ranching_inspect <new animal ID>` reports the Orange species' ability identifier (`Nurturer`). It should remain Normal and non-shiny despite the parents' different sizes and shiny states. Its favorite food is assigned independently of the parents.
+6. Save and reload. Confirm the egg/hatchling's color, ability identifier, and lineage remain stable and the egg icon still uses the same visible color variant as the slime.
 
-**Expected:** offspring receive one parent's color and size-roll outcomes within the implemented inheritance rules; shiny, rarity, and mutation traits are inherited from a parent. The egg icon and hatched sprite reflect the stored genome, which survives reload.
+**Expected:** color/species is the only inherited trait. The egg tint matches the resulting slime's rendered color; ability identifiers follow its species. Other offspring traits use the defaults above, while parent links and generation remain as ancestry metadata.
 
 **Your results / issues:** pending.
 ## Remaining stages (pending your confirmation)
@@ -94,6 +94,6 @@ Readable parent names (including old registered slimes), corrected egg color tex
 
 ## Walkthrough state
 
-- **Current stage:** 5 - Genome inheritance and visual variants.
+- **Current stage:** 5 - Color inheritance, matching egg tint, and species abilities.
 - **Completed stages:** 1, 2, 3, and 4 - Daycare baseline; breeder selection/cycles/placement; incubator workflow; juvenile growth and breeding eligibility.
 - **Next stage:** 6 - Breeder genome details and Chromatic Crystals, after you report Stage 5 results and say **continue**.

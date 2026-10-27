@@ -519,7 +519,6 @@ internal sealed class SlimeRegistry
             || !this.farmAnimalRecords.TryGetValue(pair.ParentBId, out SlimeRecord? parentB))
             return null;
 
-        bool chooseA() => Game1.random.Next(2) == 0;
         SlimeGenome a = parentA.Genome;
         SlimeGenome b = parentB.Genome;
         (string primarySpecies, string? secondarySpecies, string visualColor) = RollOffspringSpecies(a, b);
@@ -534,11 +533,11 @@ internal sealed class SlimeRegistry
             PrimarySpecies = primarySpecies,
             SecondarySpecies = secondarySpecies,
             VisualColor = visualColor,
-            Size = RollOffspringSize(a.Size, b.Size),
-            IsShiny = chooseA() ? a.IsShiny : b.IsShiny,
-            RarityTier = chooseA() ? a.RarityTier : b.RarityTier,
-            MutationTrait = chooseA() ? a.MutationTrait : b.MutationTrait,
-            LikedFoodItemId = chooseA() ? a.LikedFoodItemId : b.LikedFoodItemId
+            Size = "Normal",
+            IsShiny = false,
+            RarityTier = "Common",
+            MutationTrait = null,
+            LikedFoodItemId = FoodLikeCatalog.GetRandomItemId()
         };
 
         if (pair.ChromaticCrystalColor is string crystalColor
@@ -642,45 +641,6 @@ internal sealed class SlimeRegistry
         return new Microsoft.Xna.Framework.Color(red, green, blue);
     }
 
-    private static string RollOffspringSize(string parentA, string parentB)
-    {
-        string[] sizes = { "Small", "Normal", "Large", "Giant" };
-        if (string.Equals(parentA, "Tiny", StringComparison.OrdinalIgnoreCase)) parentA = "Small";
-        if (string.Equals(parentB, "Tiny", StringComparison.OrdinalIgnoreCase)) parentB = "Small";
-        int a = Array.FindIndex(sizes, size => size.Equals(parentA, StringComparison.OrdinalIgnoreCase));
-        int b = Array.FindIndex(sizes, size => size.Equals(parentB, StringComparison.OrdinalIgnoreCase));
-        if (a < 0) a = 2;
-        if (b < 0) b = 2;
-
-        if (a == b)
-        {
-            return a switch
-            {
-                0 => RollWeighted(("Small", 80), ("Normal", 20)),
-                1 => RollWeighted(("Normal", 80), ("Small", 10), ("Large", 10)),
-                2 => RollWeighted(("Large", 75), ("Normal", 15), ("Giant", 10)),
-                _ => RollWeighted(("Giant", 85), ("Large", 15))
-            };
-        }
-
-        int lower = Math.Min(a, b);
-        int upper = Math.Max(a, b);
-        if (upper - lower == 1)
-            return Game1.random.Next(2) == 0 ? sizes[lower] : sizes[upper];
-        if (upper - lower == 2)
-            return RollWeighted((sizes[lower], 20), (sizes[lower + 1], 60), (sizes[upper], 20));
-
-        // Wider gaps keep both parental sizes possible, favoring the middle of the size range.
-        if (Game1.random.Next(4) == 0)
-            return sizes[lower];
-        if (Game1.random.Next(3) == 0)
-            return sizes[upper];
-        int middle = lower + (upper - lower) / 2;
-        if ((upper - lower) % 2 == 1 && Game1.random.Next(2) == 0)
-            middle++;
-        return sizes[middle];
-    }
-
     private static string NormalizeSize(string? size) => size?.ToLowerInvariant() switch
     {
         "tiny" or "small" => "Small",
@@ -689,18 +649,6 @@ internal sealed class SlimeRegistry
         "giant" => "Giant",
         _ => "Normal"
     };
-
-    private static string RollWeighted(params (string Size, int Weight)[] outcomes)
-    {
-        int roll = Game1.random.Next(outcomes.Sum(outcome => outcome.Weight));
-        foreach ((string size, int weight) in outcomes)
-        {
-            if (roll < weight)
-                return size;
-            roll -= weight;
-        }
-        return outcomes[^1].Size;
-    }
 
     public bool FinishBreedingCycle(string machineKey, string eggItemId, int currentDay)
     {

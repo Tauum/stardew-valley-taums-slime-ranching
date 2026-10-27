@@ -2,19 +2,19 @@
 
 **Chromatic Crystal prototype:** One crystal can focus a breeder offspring on a base color and clear hybrid/exceptional traits. Decide acquisition (processing, recipes, Marnie, drops, or progression rewards), cost/rarity, and whether matching species names should stay. Verify the crystal palette against the intended art before balancing.
 
-**Size genetics prototype:** Five size labels, weighted inheritance, and nearest-neighbor sprite scaling now exist. Review the provisional same-size and mixed-size weights in `Features/SIZE_AND_MATURITY.md`; collision, placement, and petting interaction still need in-game validation.
+**Breeding trait scope (decision):** Offspring inherit color/species only. Egg icons use the same rendered color variant, and ability IDs are derived from the offspring species. Other traits use defaults; size remains individually configurable but is not inherited.
 
 **Shiny visual prototype:** `IsShiny` now brightens Ranch Slime sprite pixels by a subtle fixed amount. Decide whether shiny is cosmetic-only or should have separate gameplay effects; avoid coupling it to rarity or size.
 
 **Ability ID foundation:** Base and listed hybrid genomes now carry stable IDs matching the companion concept table. Ability behavior, cooldowns, size scaling, and interaction targeting remain to be implemented.
 
 1. **Pink recipes:** Pink is outside the standard wheel. Which pairings produce Pink or Pink hybrids?
-2. **Undefined breeding pairs:** Current prototype inherits one random parent's complete species/color identity. Decide whether to keep that fallback or block undefined combinations.
+2. **Undefined breeding pairs:** Current prototype inherits one random parent's color/species identity for undefined pairings. Decide whether to keep that fallback or block undefined combinations.
 3. **Primary pair naming:** Primary recipes now produce Orange, Green, and Purple (also called Violet in the design). Confirm the preferred in-game name for Blue+Red's result.
 4. **Hybrid scope:** The six listed tertiary combinations are implemented. Decide whether secret hybrids should follow later.
    - Seven base genome colors currently map to the nearest Red/Orange/Yellow/Green/Blue/Purple/Pink sprite tint. Exact RGB blending for hybrids or arbitrary colors is still undecided.
 5. **Exceptional acquisition:** Can Golden/Prismatic/Black/White appear from breeding, exploration, mutation, or all three? At what rates?
-6. **Shiny inheritance:** Random roll, inherited boost, or both? Exact probability?
+6. **Shiny:** Inheritance is out of scope. Decide separately whether shiny remains purely cosmetic or gains independent gameplay effects.
 7. **Mutagenic Pool:** Shadow Clone is the first data-only trait. Which additional rare traits should be possible? The provisional 500-Slime cost, 5% base chance, +2 points per failure, 30% cap, one-day duration, and 15,000g shop price are configurable for playtesting; decide final values after testing.
 8. **Furniture:** Marnie sells the Converter, Breeder, Incubator, trampoline, cushion, playground, slide, bed, Compost Trough, tunnel, Heated Slime Stone, and pond at configurable provisional prices. Compost Trough affects juvenile growth; the other implemented enrichments are visual-only. Review prices/progression, winter comfort, friendship effects, and whether the Playground already fully covers the separate ball-pit concept before adding duplicate furniture.
 9. **Breeder:** How to obtain the basic machine; cycle-time tuning; whether parents remain in world while shown in machine. A one-day rest after egg collection is implemented provisionally; review the duration after playtesting.

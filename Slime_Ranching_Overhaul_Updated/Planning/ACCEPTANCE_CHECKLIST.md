@@ -45,7 +45,7 @@
 - [ ] Collector inventory survives warps and reloads.
 
 ## Sprint 4: extended alpha
-- [ ] Fixed color recipes, five genetic sizes, shiny/rare/mutation inheritance persist after save/load.
+- [ ] Fixed color recipes, matching slime/egg tints, and species-derived ability IDs persist after save/load; other offspring traits use defaults.
 - [ ] Shadow Clone and Golden/Prismatic abilities are capped and tested.
 - [ ] Black/White time changes either pass day-transition tests or remain disabled.
 - [ ] Uninstall/reinstall instructions and smoke-test results are documented.

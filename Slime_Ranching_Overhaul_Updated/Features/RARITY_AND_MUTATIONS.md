@@ -18,7 +18,7 @@ The first pool prototype is implemented on `feature/mutagenic-pool-safe-failure`
 These numbers and the 15,000g Marnie price are test defaults, not final balance. A first visual echo prototype now draws a temporary translucent copy near mutated slimes in the Daycare. It is only a draw effect: there is no extra FarmAnimal, pathfinding, resource production, breeding, or inherited ability execution yet. The attempt and pity state live in the mod-folder registry. The 500 Slime inventory removal is handled by Stardew's normal save; sleep to persist both it and the external attempt. Test only on a disposable save until reload and crash recovery have been checked.
 
 ## Open balancing
-Acquisition probabilities, shiny inheritance, exceptional breeding rules, pool trait weights, Black/White multiplayer compatibility and Prismatic mounting limits require playtests.
+Acquisition probabilities, independent shiny effects, pool trait weights, Black/White multiplayer compatibility and Prismatic mounting limits require playtests. Shiny inheritance is out of scope.
 
 ## Current locked implementation clarification
 All specified exceptional slime types remain core scope, implemented after fundamentals. Keep shiny, exceptional color and mutation independent. Shadow Clone remains; Black and White change time boundaries, Golden discounts are capped, Prismatic mounts and adapts.
