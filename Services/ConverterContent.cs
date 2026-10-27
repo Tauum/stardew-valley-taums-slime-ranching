@@ -1,4 +1,7 @@
 using StardewModdingAPI.Events;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using StardewValley;
 using StardewValley.GameData.BigCraftables;
 using StardewValley.GameData.Machines;
 using StardewValley.GameData.Objects;
@@ -12,6 +15,7 @@ internal static class ConverterContent
     private const string ConverterItemId = "Taum.SlimeRanching_EggConverter";
     private const string BreederItemId = "Taum.SlimeRanching_SlimeBreeder";
     private const string IncubatorItemId = "Taum.SlimeRanching_SlimeIncubator";
+    private const string IconTextureName = "Mods/Taum.SlimeRanching/Machines/ModMachineIcons";
 
     public const string CommonEggQualifiedId = "(O)" + CommonEggItemId;
     public const string ConverterQualifiedId = "(BC)" + ConverterItemId;
@@ -26,6 +30,12 @@ internal static class ConverterContent
         "(O)439", // Purple
         "(O)857"  // Tiger
     };
+
+    public static void LoadAssets(AssetRequestedEventArgs e)
+    {
+        if (e.NameWithoutLocale.IsEquivalentTo(IconTextureName))
+            e.LoadFrom(() => CreateMachineIcons(Game1.graphics.GraphicsDevice), AssetLoadPriority.Exclusive);
+    }
 
     public static void EditAsset(AssetRequestedEventArgs e)
     {
@@ -67,8 +77,8 @@ internal static class ConverterContent
                         Description = "Turns one vanilla Slime Egg into one Common Slime Egg.",
                         CanBePlacedIndoors = true,
                         CanBePlacedOutdoors = true,
-                        Texture = "TileSheets/Craftables",
-                        SpriteIndex = 158
+                        Texture = IconTextureName,
+                        SpriteIndex = 0
                     };
                 }
 
@@ -81,8 +91,8 @@ internal static class ConverterContent
                         Description = "Select two Ranch Slimes for breeding.",
                         CanBePlacedIndoors = true,
                         CanBePlacedOutdoors = false,
-                        Texture = "TileSheets/Craftables",
-                        SpriteIndex = 158
+                        Texture = IconTextureName,
+                        SpriteIndex = 1
                     };
                 }
 
@@ -95,8 +105,8 @@ internal static class ConverterContent
                         Description = "Hatches a Common or genome-specific Ranch Slime Egg inside the Slime Daycare.",
                         CanBePlacedIndoors = true,
                         CanBePlacedOutdoors = false,
-                        Texture = "TileSheets/Craftables",
-                        SpriteIndex = 158
+                        Texture = IconTextureName,
+                        SpriteIndex = 2
                     };
                 }
             });
@@ -138,4 +148,71 @@ internal static class ConverterContent
             });
         }
     }
+
+    private static Texture2D CreateMachineIcons(GraphicsDevice graphicsDevice)
+    {
+        const int tileWidth = 16;
+        const int tileHeight = 32;
+        const int columns = 3;
+        var pixels = new Color[tileWidth * columns * tileHeight];
+        var texture = new Texture2D(graphicsDevice, tileWidth * columns, tileHeight);
+
+        Color outline = new(28, 25, 48);
+        Color steel = new(107, 113, 155);
+        Color highlight = new(178, 193, 225);
+        Color blue = new(45, 173, 230);
+        Color pink = new(237, 92, 187);
+        Color purple = new(158, 86, 205);
+        Color orange = new(248, 159, 65);
+
+        // Converter: a compact violet press with a bright egg window.
+        DrawMachineBody(pixels, tileWidth * columns, 0, outline, steel, highlight);
+        Fill(pixels, tileWidth * columns, 5, 12, 6, 8, purple);
+        Fill(pixels, tileWidth * columns, 7, 14, 2, 4, new Color(180, 241, 255));
+        Fill(pixels, tileWidth * columns, 5, 22, 6, 2, orange);
+
+        // Breeder: blue and pink chambers under a heart marker.
+        int breederX = tileWidth;
+        DrawMachineBody(pixels, tileWidth * columns, breederX, outline, steel, highlight);
+        Fill(pixels, tileWidth * columns, breederX + 4, 12, 3, 8, blue);
+        Fill(pixels, tileWidth * columns, breederX + 9, 12, 3, 8, pink);
+        Fill(pixels, tileWidth * columns, breederX + 6, 7, 4, 3, pink);
+        Set(pixels, tileWidth * columns, breederX + 7, 6, pink);
+        Set(pixels, tileWidth * columns, breederX + 9, 6, pink);
+        Fill(pixels, tileWidth * columns, breederX + 6, 10, 4, 1, orange);
+
+        // Incubator: a single glowing violet egg chamber.
+        int incubatorX = tileWidth * 2;
+        DrawMachineBody(pixels, tileWidth * columns, incubatorX, outline, steel, highlight);
+        Fill(pixels, tileWidth * columns, incubatorX + 5, 10, 6, 12, purple);
+        Fill(pixels, tileWidth * columns, incubatorX + 6, 12, 4, 8, new Color(77, 207, 244));
+        Fill(pixels, tileWidth * columns, incubatorX + 7, 14, 2, 4, new Color(221, 151, 255));
+        Fill(pixels, tileWidth * columns, incubatorX + 5, 8, 6, 2, highlight);
+        Fill(pixels, tileWidth * columns, incubatorX + 5, 23, 6, 2, orange);
+
+        texture.SetData(pixels);
+        return texture;
+    }
+
+    private static void DrawMachineBody(Color[] pixels, int sheetWidth, int offsetX, Color outline, Color steel, Color highlight)
+    {
+        Fill(pixels, sheetWidth, offsetX + 3, 9, 10, 17, outline);
+        Fill(pixels, sheetWidth, offsetX + 4, 10, 8, 14, steel);
+        Fill(pixels, sheetWidth, offsetX + 5, 11, 6, 1, highlight);
+        Fill(pixels, sheetWidth, offsetX + 2, 25, 12, 3, outline);
+        Fill(pixels, sheetWidth, offsetX + 4, 28, 8, 2, outline);
+        Fill(pixels, sheetWidth, offsetX + 5, 27, 6, 1, steel);
+        Set(pixels, sheetWidth, offsetX + 4, 30, steel);
+        Set(pixels, sheetWidth, offsetX + 11, 30, steel);
+    }
+
+    private static void Fill(Color[] pixels, int sheetWidth, int x, int y, int width, int height, Color color)
+    {
+        for (int dy = 0; dy < height; dy++)
+        for (int dx = 0; dx < width; dx++)
+            Set(pixels, sheetWidth, x + dx, y + dy, color);
+    }
+
+    private static void Set(Color[] pixels, int sheetWidth, int x, int y, Color color) =>
+        pixels[y * sheetWidth + x] = color;
 }
