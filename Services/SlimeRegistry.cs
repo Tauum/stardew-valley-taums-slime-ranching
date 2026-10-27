@@ -1,0 +1,233 @@
+using StardewModdingAPI;
+using StardewValley;
+using taums_slime_ranching.Models;
+
+namespace taums_slime_ranching.Services;
+
+/// <summary>External genome records linked to native Ranch Slime FarmAnimal IDs.</summary>
+internal sealed class SlimeRegistry
+{
+    private readonly IMonitor monitor;
+    private readonly Dictionary<Guid, SlimeRecord> records = new();
+    private readonly Dictionary<long, SlimeRecord> farmAnimalRecords = new();
+    private readonly Dictionary<string, BreedingPairRecord> breedingPairs = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, SlimeEggRecord> eggs = new(StringComparer.Ordinal);
+
+    public SlimeRegistry(IMonitor monitor) => this.monitor = monitor;
+
+    public int Count => this.records.Count;
+    public IReadOnlyCollection<SlimeEggRecord> Eggs => this.eggs.Values;
+    public IReadOnlyCollection<BreedingPairRecord> BreedingPairs => this.breedingPairs.Values;
+
+    public IReadOnlyCollection<long> RanchSlimeFarmAnimalIds => this.farmAnimalRecords.Keys;
+    public IReadOnlyCollection<long> ReservedFarmAnimalIds => this.breedingPairs.Values
+        .SelectMany(pair => new[] { pair.ParentAId, pair.ParentBId })
+        .Distinct()
+        .ToArray();
+
+    public BreedingPairRecord? GetBreedingPair(string machineKey) =>
+        this.breedingPairs.TryGetValue(machineKey, out BreedingPairRecord? pair) ? pair : null;
+
+    public bool IsReserved(long farmAnimalId, string? exceptMachineKey = null) =>
+        this.breedingPairs.Values.Any(pair => pair.MachineKey != exceptMachineKey
+            && (pair.ParentAId == farmAnimalId || pair.ParentBId == farmAnimalId));
+
+    public bool ReservePair(string machineKey, long parentAId, long parentBId)
+    {
+        if (parentAId == parentBId || string.IsNullOrWhiteSpace(machineKey)
+            || !this.farmAnimalRecords.ContainsKey(parentAId) || !this.farmAnimalRecords.ContainsKey(parentBId)
+            || this.IsReserved(parentAId, machineKey) || this.IsReserved(parentBId, machineKey))
+            return false;
+
+        this.breedingPairs[machineKey] = new BreedingPairRecord
+        {
+            MachineKey = machineKey,
+            ParentAId = parentAId,
+            ParentBId = parentBId
+        };
+        return true;
+    }
+
+    public void ReleasePair(string machineKey) => this.breedingPairs.Remove(machineKey);
+
+    public bool StartBreedingCycle(string machineKey, int currentDay)
+    {
+        if (!this.breedingPairs.TryGetValue(machineKey, out BreedingPairRecord? pair) || pair.CycleReadyOnDay > 0)
+            return false;
+
+        pair.CycleStartedOnDay = currentDay;
+        pair.CycleReadyOnDay = currentDay + 2;
+        return true;
+    }
+
+    public bool CancelBreedingCycle(string machineKey)
+    {
+        if (!this.breedingPairs.TryGetValue(machineKey, out BreedingPairRecord? pair)
+            || pair.CycleReadyOnDay <= 0 || pair.OutputEggItemId is not null)
+            return false;
+
+        pair.CycleStartedOnDay = 0;
+        pair.CycleReadyOnDay = 0;
+        return true;
+    }
+
+    public SlimeEggRecord? GetOrCreateBreedingEgg(string machineKey, int currentDay, out bool created)
+    {
+        created = false;
+        if (!this.breedingPairs.TryGetValue(machineKey, out BreedingPairRecord? pair)
+            || pair.CycleReadyOnDay <= 0 || currentDay < pair.CycleReadyOnDay)
+            return null;
+
+        if (pair.OutputEggItemId is not null)
+            return this.eggs.TryGetValue(pair.OutputEggItemId, out SlimeEggRecord? existing) ? existing : null;
+
+        if (!this.farmAnimalRecords.TryGetValue(pair.ParentAId, out SlimeRecord? parentA)
+            || !this.farmAnimalRecords.TryGetValue(pair.ParentBId, out SlimeRecord? parentB))
+            return null;
+
+        bool chooseA() => Game1.random.Next(2) == 0;
+        SlimeGenome a = parentA.Genome;
+        SlimeGenome b = parentB.Genome;
+        var offspring = new SlimeGenome
+        {
+            Id = Guid.NewGuid(),
+            ParentA = a.Id,
+            ParentB = b.Id,
+            Generation = Math.Max(a.Generation, b.Generation) + 1,
+            PrimarySpecies = chooseA() ? a.PrimarySpecies : b.PrimarySpecies,
+            SecondarySpecies = chooseA() ? a.SecondarySpecies : b.SecondarySpecies,
+            VisualColor = chooseA() ? a.VisualColor : b.VisualColor,
+            Size = chooseA() ? a.Size : b.Size,
+            IsShiny = chooseA() ? a.IsShiny : b.IsShiny,
+            RarityTier = chooseA() ? a.RarityTier : b.RarityTier,
+            MutationTrait = chooseA() ? a.MutationTrait : b.MutationTrait,
+            LikedFoodItemId = chooseA() ? a.LikedFoodItemId : b.LikedFoodItemId
+        };
+
+        SlimeEggRecord egg = this.CreateEgg(offspring);
+        pair.OutputEggItemId = egg.ItemId;
+        created = true;
+        return egg;
+    }
+
+    public bool FinishBreedingCycle(string machineKey, string eggItemId)
+    {
+        if (!this.breedingPairs.TryGetValue(machineKey, out BreedingPairRecord? pair)
+            || pair.OutputEggItemId != eggItemId || !this.eggs.ContainsKey(eggItemId))
+            return false;
+
+        this.breedingPairs.Remove(machineKey);
+        return true;
+    }
+
+    public void RestoreBreedingCycle(BreedingPairRecord pair) => this.breedingPairs[pair.MachineKey] = pair;
+
+    public int RegisterRanchSlimes(IEnumerable<FarmAnimal> animals)
+    {
+        int added = 0;
+        foreach (FarmAnimal animal in animals)
+        {
+            if (animal.type.Value != FarmAnimalContent.RanchSlimeTypeId || this.farmAnimalRecords.ContainsKey(animal.myID.Value))
+                continue;
+
+            var record = new SlimeRecord
+            {
+                FarmAnimalId = animal.myID.Value,
+                FarmAnimalTypeId = animal.type.Value,
+                Genome = new Models.SlimeGenome
+                {
+                    Id = Guid.NewGuid(),
+                    PrimarySpecies = "Ranch Slime",
+                    VisualColor = "#00FF00"
+                }
+            };
+
+            if (this.TryAdd(record))
+                added++;
+        }
+
+        return added;
+    }
+
+    public void Load(SlimeSaveData? data, bool logSummary)
+    {
+        this.records.Clear();
+        this.farmAnimalRecords.Clear();
+        this.breedingPairs.Clear();
+        this.eggs.Clear();
+        if (data is not null && data.SchemaVersion != SlimeSaveData.CurrentSchemaVersion)
+            throw new InvalidOperationException($"Unsupported slime data schema {data.SchemaVersion}; expected {SlimeSaveData.CurrentSchemaVersion}.");
+
+        int assignedFoodLikes = 0;
+        foreach (SlimeRecord record in data?.Slimes ?? Enumerable.Empty<SlimeRecord>())
+        {
+            bool alreadyLikedFood = FoodLikeCatalog.IsEligible(record?.Genome?.LikedFoodItemId);
+            if (!this.TryAdd(record))
+            {
+                this.monitor.Log("Skipped a malformed or duplicate external slime record.", LogLevel.Warn);
+                continue;
+            }
+
+            if (!alreadyLikedFood)
+                assignedFoodLikes++;
+        }
+
+        foreach (BreedingPairRecord pair in data?.BreedingPairs ?? Enumerable.Empty<BreedingPairRecord>())
+        {
+            if (pair is null || string.IsNullOrWhiteSpace(pair.MachineKey)
+                || pair.ParentAId == pair.ParentBId || this.IsReserved(pair.ParentAId, pair.MachineKey)
+                || this.IsReserved(pair.ParentBId, pair.MachineKey))
+                continue;
+            this.breedingPairs[pair.MachineKey] = pair;
+        }
+
+        foreach (SlimeEggRecord egg in data?.Eggs ?? Enumerable.Empty<SlimeEggRecord>())
+        {
+            if (egg?.Genome is not { Id: var id } || id == Guid.Empty
+                || string.IsNullOrWhiteSpace(egg.ItemId)
+                || egg.ItemId != SlimeEggContent.GetItemId(id)
+                || !this.eggs.TryAdd(egg.ItemId, egg))
+            {
+                this.monitor.Log("Skipped a malformed or duplicate external slime egg record.", LogLevel.Warn);
+            }
+        }
+
+        if (logSummary)
+            this.monitor.Log($"Loaded {this.records.Count} external Ranch Slime record(s); assigned {assignedFoodLikes} missing or invalid food like(s). Existing vanilla GreenSlime monsters are not managed.", LogLevel.Info);
+    }
+
+    public SlimeSaveData Capture() => new()
+    {
+        Slimes = this.records.Values.OrderBy(record => record.Genome.Id).ToList(),
+        BreedingPairs = this.breedingPairs.Values.OrderBy(pair => pair.MachineKey, StringComparer.Ordinal).ToList(),
+        Eggs = this.eggs.Values.OrderBy(egg => egg.ItemId, StringComparer.Ordinal).ToList()
+    };
+
+    public SlimeEggRecord CreateEgg(SlimeGenome genome)
+    {
+        if (genome.Id == Guid.Empty)
+            throw new ArgumentException("An egg genome must have a unique ID.", nameof(genome));
+
+        string itemId = SlimeEggContent.GetItemId(genome.Id);
+        var egg = new SlimeEggRecord { ItemId = itemId, Genome = genome };
+        this.eggs[itemId] = egg;
+        return egg;
+    }
+
+    public bool TryAdd(SlimeRecord? record)
+    {
+        if (record?.Genome is not { Id: var id } || id == Guid.Empty || !this.records.TryAdd(id, record))
+            return false;
+
+        if (record.FarmAnimalId is long animalId && !this.farmAnimalRecords.TryAdd(animalId, record))
+        {
+            this.records.Remove(id);
+            return false;
+        }
+
+        if (!FoodLikeCatalog.IsEligible(record.Genome.LikedFoodItemId))
+            record.Genome.LikedFoodItemId = FoodLikeCatalog.ForSlime(id);
+
+        return true;
+    }
+}

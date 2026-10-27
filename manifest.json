@@ -1,0 +1,9 @@
+{
+  "Name": "Taum's Slime Ranching",
+  "Author": "Taum",
+  "Version": "0.1.32",
+  "Description": "External-state foundation with a Slime Daycare and Ranch Slime animal prototype.",
+  "UniqueID": "Taum.SlimeRanching",
+  "EntryDll": "taums-slime-ranching.dll",
+  "MinimumApiVersion": "4.1.0"
+}
