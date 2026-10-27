@@ -111,6 +111,7 @@ Use the disposable `TaumTest_322865388` save. Back up the installed mod's `data`
 9. Copy an existing schema 8 registry, load it, and confirm `.before-mutagenic-pool-v9.bak` is created and existing egg, breeding, and incubation records are retained.
 10. Run `slime_ranching_inspect` while inside the Daycare. Confirm the log summary counts local mutated slimes and lists breeder cycles, ready eggs, incubations, and Mutagenic Pool attempts for that room.
 11. With Generic Mod Config Menu installed, open this mod's settings. Change the pool cost/chance/duration and Marnie price, save, and confirm a newly opened pool uses the changes and the shop stock refreshes. Check Reset restores defaults. Active attempts should retain their originally stored chance and ready day.
+12. Change one core-machine price and one enrichment-furniture price, save, reopen Marnie's Animal Shop, and confirm the visible prices update without restarting. Check that zero is accepted and negative JSON values clamp to zero when saved through GMCM.
 
 ## Shadow Clone visual echo
 

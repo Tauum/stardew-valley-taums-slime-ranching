@@ -91,6 +91,16 @@ public sealed class ModEntry : Mod
             return;
 
         api.Register(this.ModManifest, this.ResetConfig, this.SaveConfig);
+        api.AddSectionTitle(this.ModManifest, () => "Ranching equipment prices");
+        api.AddParagraph(this.ModManifest, () => "Changes refresh Marnie's shop after saving these settings.");
+        this.AddShopPriceOption(api, "Egg Converter", "Price of the vanilla Slime Egg converter.", () => this.config.ConverterShopPrice, value => this.config.ConverterShopPrice = value);
+        this.AddShopPriceOption(api, "Slime Breeder", "Price of the Slime Breeder.", () => this.config.BreederShopPrice, value => this.config.BreederShopPrice = value);
+        this.AddShopPriceOption(api, "Slime Incubator", "Price of the Slime Incubator.", () => this.config.IncubatorShopPrice, value => this.config.IncubatorShopPrice = value);
+        this.AddShopPriceOption(api, "Slime Trampoline", "Price of the trampoline enrichment furniture.", () => this.config.TrampolineShopPrice, value => this.config.TrampolineShopPrice = value);
+        this.AddShopPriceOption(api, "Slime Cushion", "Price of the cushion enrichment furniture.", () => this.config.SlimeCushionShopPrice, value => this.config.SlimeCushionShopPrice = value);
+        this.AddShopPriceOption(api, "Slime Playground", "Price of the playground enrichment furniture.", () => this.config.SlimePlaygroundShopPrice, value => this.config.SlimePlaygroundShopPrice = value);
+        this.AddShopPriceOption(api, "Slime Slide", "Price of the slide enrichment furniture.", () => this.config.SlimeSlideShopPrice, value => this.config.SlimeSlideShopPrice = value);
+        this.AddShopPriceOption(api, "Slime Bed", "Price of the bed enrichment furniture.", () => this.config.SlimeBedShopPrice, value => this.config.SlimeBedShopPrice = value);
         api.AddSectionTitle(this.ModManifest, () => "Mutagenic Pool");
         api.AddParagraph(this.ModManifest, () => "Balance values are provisional. Changes apply when you save these settings; active attempts keep their stored chance and ready day.");
         api.AddNumberOption(this.ModManifest,
@@ -128,6 +138,10 @@ public sealed class ModEntry : Mod
             () => "Maximum chance after repeated failures.", 0f, 1f, 0.01f,
             value => $"{value:P0}");
     }
+
+    private void AddShopPriceOption(IGenericModConfigMenuApi api, string name, string tooltip, Func<int> getValue, Action<int> setValue) =>
+        api.AddNumberOption(this.ModManifest, getValue, setValue, () => name, () => tooltip, 0, 999_999, 100,
+            value => $"{value:N0}g");
 
     private void ResetConfig()
     {

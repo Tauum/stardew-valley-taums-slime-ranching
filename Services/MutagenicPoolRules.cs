@@ -37,6 +37,14 @@ internal sealed class MutagenicPoolRules
         config.MutagenicPoolChancePerFailure = rules.PityIncrease;
         config.MutagenicPoolMaximumChance = rules.MaximumChance;
         config.MutagenicPoolDurationDays = rules.DurationDays;
+        config.ConverterShopPrice = Math.Clamp(config.ConverterShopPrice, 0, 999_999);
+        config.BreederShopPrice = Math.Clamp(config.BreederShopPrice, 0, 999_999);
+        config.IncubatorShopPrice = Math.Clamp(config.IncubatorShopPrice, 0, 999_999);
+        config.TrampolineShopPrice = Math.Clamp(config.TrampolineShopPrice, 0, 999_999);
+        config.SlimeCushionShopPrice = Math.Clamp(config.SlimeCushionShopPrice, 0, 999_999);
+        config.SlimePlaygroundShopPrice = Math.Clamp(config.SlimePlaygroundShopPrice, 0, 999_999);
+        config.SlimeSlideShopPrice = Math.Clamp(config.SlimeSlideShopPrice, 0, 999_999);
+        config.SlimeBedShopPrice = Math.Clamp(config.SlimeBedShopPrice, 0, 999_999);
         config.MutagenicPoolShopPrice = Math.Clamp(config.MutagenicPoolShopPrice, 0, 999_999);
     }
 
