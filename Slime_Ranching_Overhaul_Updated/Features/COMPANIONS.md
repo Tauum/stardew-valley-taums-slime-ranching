@@ -22,6 +22,8 @@ Genome records now store stable ability IDs for the seven base species and the i
 - White — +1 hour in morning (proposed 5 AM start).
 - Shadow Clone mutation — temporary clones with reduced inherited ability; no recursive spawning.
 
+The Mutagenic Pool can currently assign the Shadow Clone genome trait. In the Daycare, that trait produces a capped, temporary translucent sprite echo as a visual prototype; it is not a second FarmAnimal and cannot act, breed, or produce items. The planned inherited-ability behavior remains unimplemented.
+
 ## Size / shiny
 Tiny prioritizes movement and activation frequency; Giant prioritizes quantity/radius. Shiny gives small (~10%) performance boost. Golden discounts and Black/White time are capped and don't multiply with size.
 
