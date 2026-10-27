@@ -70,6 +70,7 @@ These command-created genomes are test fixtures only. The user confirmed an egg 
 4. Sleep through the remaining time. At the start of the ready day, confirm a Ranch Slime appears in the Daycare and the HUD reports the hatch. Inspect `SlimeRecord.Genome` in the external registry; it should match the egg genome exactly.
 5. Save and reload after hatching. Confirm the animal ID links back to that genome and any copied item with the same egg ID can't hatch another slime.
 6. Confirm the new animal is visibly young, ages each day, and remains unavailable in the breeder for three days. Save/reload during growth; it should keep its age and become selectable on maturity.
+7. Inspect the mod-folder registry after each sleep. The slime record should advance `AgeDays`, update `AgeLastUpdatedDay`, and remain `AgeClockInitialized: true`. Reload mid-growth and confirm the external age and native maturity stay aligned. Existing mature and juvenile records should migrate from their current native ages without resetting.
 7. Fill the Daycare before a hatch is ready. Confirm the egg stays in the incubator record and hatches after a resident is removed.
 8. Convert a vanilla egg and insert the resulting Common Egg. It should hatch into a Green (`#00FF00`), Normal, Common Ranch Slime. Insert a second Common Egg and confirm it receives a different external genome ID. Vanilla Slime Eggs must remain unaccepted by this incubator; the vanilla Coop Incubator remains untouched.
 

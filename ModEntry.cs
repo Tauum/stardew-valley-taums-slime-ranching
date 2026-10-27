@@ -61,9 +61,10 @@ public sealed class ModEntry : Mod
             if (registeredRanchSlimes > 0)
                 this.Monitor.Log($"Registered {registeredRanchSlimes} Ranch Slime farm animal(s) in the external genome registry.", LogLevel.Info);
             (int detachedAnimals, int cancelledCycles) = this.registry.ReconcileRanchSlimes(GetFarmAnimals());
+            bool maturityChanged = this.registry.SynchronizeMaturity(GetFarmAnimals(), Game1.Date.TotalDays);
             this.stateReady = true;
             this.LogRegistryReconciliation(detachedAnimals, cancelledCycles);
-            if ((recoveredHatches > 0 || detachedAnimals > 0 || cancelledCycles > 0) && !this.SaveExternalStateNow())
+            if ((recoveredHatches > 0 || detachedAnimals > 0 || cancelledCycles > 0 || maturityChanged) && !this.SaveExternalStateNow())
                 this.Monitor.Log("Reconciled Ranch Slime records remain in memory but could not yet be written to the mod-folder registry.", LogLevel.Error);
         }
         catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException or System.Text.Json.JsonException or NotSupportedException)
@@ -82,6 +83,7 @@ public sealed class ModEntry : Mod
             int registeredRanchSlimes = this.registry!.RegisterRanchSlimes(GetFarmAnimals());
             if (registeredRanchSlimes > 0)
                 this.Monitor.Log($"Added {registeredRanchSlimes} Ranch Slime genome record(s) to the external registry.", LogLevel.Info);
+            this.registry.SynchronizeMaturity(GetFarmAnimals(), Game1.Date.TotalDays);
             (int detachedAnimals, int cancelledCycles) = this.registry.ReconcileRanchSlimes(GetFarmAnimals());
             this.LogRegistryReconciliation(detachedAnimals, cancelledCycles);
             this.stateStore!.Save(this.registry!.Capture());
@@ -97,6 +99,7 @@ public sealed class ModEntry : Mod
         if (!this.stateReady || !Context.IsMainPlayer)
             return;
 
+        bool maturityChanged = this.registry!.SynchronizeMaturity(GetFarmAnimals(), Game1.Date.TotalDays);
         var readyToNotify = new List<(taums_slime_ranching.Models.BreedingPairRecord Pair, taums_slime_ranching.Models.SlimeEggRecord Egg)>();
         foreach (taums_slime_ranching.Models.BreedingPairRecord pair in this.registry!.BreedingPairs.ToArray())
         {
@@ -109,9 +112,14 @@ public sealed class ModEntry : Mod
         }
 
         this.ProcessReadyIncubations();
+        maturityChanged |= this.registry.SynchronizeMaturity(GetFarmAnimals(), Game1.Date.TotalDays);
 
         if (readyToNotify.Count == 0)
+        {
+            if (maturityChanged && !this.SaveExternalStateNow())
+                this.Monitor.Log("Could not save the Ranch Slime maturity clock to the mod-folder registry; it will retry at the next save.", LogLevel.Error);
             return;
+        }
 
         if (!this.SaveExternalStateNow())
         {

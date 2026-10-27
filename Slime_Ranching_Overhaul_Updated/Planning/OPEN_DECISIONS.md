@@ -14,7 +14,7 @@
 12. **Gel Refinery:** Conversion recipes, slime fuel costs, progression unlock and cosmetic transmutation feasibility.
 13. **Resource production:** How drops are collected, production interval, caps and exceptional outputs.
 14. **Companion capacity:** One bound active slime at a time? Recommend one initially.
-15. **Maturity:** Ranch Slimes currently mature after three in-game days, matching the hatching-as-juvenile goal. Review this duration and confirm the visual growth steps in game.
+15. **Maturity:** Ranch Slimes currently mature after three in-game days, matching the hatching-as-juvenile goal. Maturity progression is now tracked in the external registry and mirrored to Stardew's native animal age field. Review duration, migration, and visual growth steps in game.
 
 ## Decision log
 | Date | Decision | Status |

@@ -37,6 +37,42 @@ internal sealed class SlimeRegistry
     public string? GetGenomeSize(long farmAnimalId) =>
         this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record) ? record.Genome.Size : null;
 
+    /// <summary>Sync the mod-owned age clock and mirror its value into the native animal field Stardew uses for maturity.</summary>
+    public bool SynchronizeMaturity(IEnumerable<FarmAnimal> animals, int currentDay)
+    {
+        bool changed = false;
+        foreach (FarmAnimal animal in animals)
+        {
+            if (animal.type.Value != FarmAnimalContent.RanchSlimeTypeId
+                || !this.farmAnimalRecords.TryGetValue(animal.myID.Value, out SlimeRecord? record))
+                continue;
+
+            if (!record.AgeClockInitialized)
+            {
+                record.AgeDays = Math.Clamp(animal.age.Value, 0, FarmAnimalContent.RanchSlimeDaysToMature);
+                record.AgeLastUpdatedDay = currentDay;
+                record.AgeClockInitialized = true;
+                changed = true;
+            }
+            else if (currentDay > record.AgeLastUpdatedDay)
+            {
+                int elapsedDays = currentDay - record.AgeLastUpdatedDay;
+                record.AgeDays = Math.Min(FarmAnimalContent.RanchSlimeDaysToMature, record.AgeDays + elapsedDays);
+                record.AgeLastUpdatedDay = currentDay;
+                changed = true;
+            }
+
+            int authoritativeAge = Math.Clamp(record.AgeDays, 0, FarmAnimalContent.RanchSlimeDaysToMature);
+            if (animal.age.Value != authoritativeAge)
+            {
+                animal.age.Value = authoritativeAge;
+                changed = true;
+            }
+        }
+
+        return changed;
+    }
+
     public bool TryGetEgg(string itemId, out SlimeEggRecord egg) => this.eggs.TryGetValue(itemId, out egg!);
 
     public bool CanIncubate(string itemId) => this.eggs.TryGetValue(itemId, out SlimeEggRecord? egg)

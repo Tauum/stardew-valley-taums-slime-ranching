@@ -7,7 +7,7 @@
 - `GeneticsService`: fixed recipe resolution, size and rarity rolls; pure deterministic functions.
 - `BreedingService`: reservations, machine state, egg genome generation.
 - `EggIdentityService`: identify an egg through transfers without game-save metadata, then inspect/hatch it without reroll; feasibility must be proven first.
-- `FurnitureInteractionService`: activity assignment, reservations, animations.
+- `TrampolineInteractionService`: low-frequency nearby-slime assignment, one-slime reservation, size-aware transient bounce animation; broader furniture interactions can build on this.
 - `MutationService`: pool rolls and pity counters.
 - `ProductionService`: item output and refinery conversions.
 - `CompanionService`: bound slime lifecycle, follower and ability activation.
@@ -23,7 +23,7 @@ record SlimeGenome(
     string RarityTier, string? MutationTrait,
     string? LikedFoodItemId);
 ```
-Use a versioned schema and stable IDs in the mod folder. Ranch Slime FarmAnimal records link to Stardew's native animal ID; in-game save/reload validation is still pending. Distinguish genetic size from maturity and species from visual appearance. The external registry holds an egg's genome snapshot, and a prototype distinct item ID links each egg to that snapshot. Verify that identity through item transfers and save/reload. Use stable machine IDs, reserved parent IDs, state and completion day. Avoid duplicating a slime record when transitioning to a companion.
+Use a versioned schema and stable IDs in the mod folder. Ranch Slime FarmAnimal records link to Stardew's native animal ID; in-game save/reload validation is still pending. Maturity age and its day clock are authoritative in the external registry and mirrored to `FarmAnimal.age` for Stardew's normal maturity behavior. Distinguish genetic size from maturity and species from visual appearance. The external registry holds an egg's genome snapshot, and a prototype distinct item ID links each egg to that snapshot. Verify that identity through item transfers and save/reload. Use stable machine IDs, reserved parent IDs, state and completion day. Avoid duplicating a slime record when transitioning to a companion.
 
 ## Host authority
 Host resolves all random rolls and authoritative inventory/machine transactions. Clients display state. Time-altering powers may need to be disabled in multiplayer until verified.

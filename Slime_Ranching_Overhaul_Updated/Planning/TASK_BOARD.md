@@ -29,7 +29,9 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [x] Let converter Common Eggs hatch as base Common Ranch Slimes with a new external genome per inserted egg.
 - [x] Show active incubation egg identity and day-based progress in the incubator menu.
 - [x] Hatch Ranch Slimes as three-day juveniles; prevent growing slimes from entering a breeding pair.
+- [x] Store authoritative maturity age and day clock in the external registry; mirror to native animal age for Stardew maturity behavior.
 - [ ] Verify juvenile appearance, daily growth, save/reload age, and breeder eligibility at maturity.
+- [ ] Verify schema 7 migration preserves existing animals' current native maturity and backs up the previous registry.
 - [ ] Verify incubation start, save/reload recovery, hatch, full-Daycare deferral, and duplicate-egg handling in game.
 - [ ] Verify the incubator progress card at start, after one sleep, and when the egg is ready.
 - [x] Add parent cooldown after egg collection; duration remains provisional.

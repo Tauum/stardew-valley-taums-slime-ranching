@@ -14,6 +14,7 @@
 - [x] A separate Slime Incubator accepts managed genome eggs and creates a Ranch Slime linked to the stored genome; the hatch lifecycle still needs in-game verification.
 - [x] Converter Common Eggs create an external base Common genome when inserted; vanilla eggs remain unaffected.
 - [x] Incubator offspring use Stardew's juvenile age and three-day maturity; the breeder blocks juveniles. Visual and in-game growth checks remain open.
+- [x] Store authoritative maturity age/day state in the external registry and mirror it to native animal age; schema migration and in-game age/reload checks remain open.
 - [x] Converter can be issued with its SMAPI command. Actual conversion still needs a documented end-to-end check.
 
 ## Sprint 1: core alpha

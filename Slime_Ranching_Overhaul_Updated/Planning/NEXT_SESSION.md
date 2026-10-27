@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-10-27  
 **Test save:** `TaumTest_322865388` (disposable copy)  
-**Working tree:** feature branch `feature/furniture-interaction-cooldown`, chained after `feature/trampoline-size-arcs`; the incubator progress panel, Marnie's machine stock, a placeable trampoline, and a size-aware nearby-slime bounce prototype with a per-slime cooldown are implemented. Build passes; latest changes are not tested in game.
+**Working tree:** feature branch `feature/external-maturity-state`, chained after `feature/furniture-interaction-cooldown`; the incubator progress panel, Marnie's machine stock, a placeable trampoline and size-aware bounce prototype, plus externally stored maturity progression are implemented. Build passes; latest changes are not tested in game.
 
 ## Current state
 
@@ -18,6 +18,7 @@
 - A proximity scheduler checks every 30 ticks for nearby Ranch Slimes and free trampolines. Tiny slimes get a higher/faster arc; Giant slimes compress more and get a lower/slower arc; Normal slimes are between them. Active offsets update per tick, reserve the trampoline for one slime, and restore on completion, leaving the Daycare, or returning to title. No pathfinding or sprite impact pose yet; test this interaction on the disposable save.
 - After a trampoline interaction, the slime waits three seconds before becoming eligible again. This temporary cooldown is memory-only and resets when leaving the Daycare; it is a lightweight fairness rule, not persistent relationship data.
 - Hatched slimes now start at FarmAnimal age 0 and take three in-game days to mature. The test spawn command creates mature animals; breeder rows label juveniles and block selection until maturity.
+- Maturity age is now authoritative in each external `SlimeRecord` (`AgeDays`, `AgeLastUpdatedDay`, and `AgeClockInitialized`) and is mirrored to Stardew's native `FarmAnimal.age` so its animal system can apply maturity. The registry schema is version 7 and backs up the prior JSON as `.before-external-maturity-v7.bak` on migration. Verify upgrading existing adult/juvenile test slimes, sleeping and reload progression, and the external fields. This does not add mod metadata to the game save; the native age field remains a compatibility mirror.
 - The user confirmed the egg spawn worked. Its tooltip showed Ranch Slime, green (`#00FF00`), Normal size, Common rarity, no mutation, Generation 1, two parent IDs, and favorite food `Broken CD`.
 - Egg hatching is implemented as a prototype. The registry schema is now version 6; schema upgrades create a neighboring `.before-managed-egg-incubation-v6.bak` copy. Verify egg identity through transfer/reload, then test incubation recovery and genome matching before expanding the hatch system.
 - Building art uses direct nearest-neighbor resized copies of the original images in `assets/Buildings/*_GameTexture.png`. The original full-size source images are preserved. Current frames are Base 160 by 160, Upgrade 1 176 by 160, and Upgrade 2 192 by 160; building widths are 10, 11, and 12 tiles.
@@ -35,7 +36,7 @@
 6. Run `slime_ranching_give_converter TaumTest_322865388` and `slime_ranching_give_incubator TaumTest_322865388`. Convert a vanilla egg, then hatch its Common Egg; expect a green, normal, common Ranch Slime. Repeat with a second Common Egg and confirm a distinct external genome ID.
 7. Save/reload during incubation. Fill the Daycare for another ready hatch and confirm it waits until space is available. Check that vanilla Slime Eggs remain unchanged and unusable in the custom incubator.
    - In the incubator menu, check the progress card immediately after insertion (0%), after one sleep (50%), and when ready (100%). Confirm the status text and genome label fit the panel.
-8. Confirm hatched slimes visibly mature over three days, stay ineligible for breeding while young, and retain their age across reload.
+8. Confirm hatched slimes visibly mature over three days, stay ineligible for breeding while young, and retain their age across reload. Check the external registry's `AgeDays` and day clock fields.
 9. On a disposable copy, remove a parent during an unfinished cycle and verify its genome remains archived while the cycle is cleared. Repeat after the cycle has produced an egg and confirm that egg remains collectable.
 10. Review provisional maturity, hatch duration, and duplicate-item behavior in `Planning/OPEN_DECISIONS.md`; update the acceptance checklist only after in-game confirmation.
 
