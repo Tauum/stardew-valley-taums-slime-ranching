@@ -1,4 +1,3 @@
-using System.Reflection;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -122,26 +121,15 @@ internal static class IncubatorPlacementActionPatch
     }
 }
 
-[HarmonyPatch]
+[HarmonyPatch(typeof(StardewValley.Object), nameof(StardewValley.Object.draw), new[] { typeof(SpriteBatch), typeof(int), typeof(int), typeof(float) })]
 internal static class IncubatorDrawPatch
 {
-    private static IEnumerable<MethodBase> TargetMethods() => typeof(StardewValley.Object)
-        .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-        .Where(method => method.Name == "draw" && method.GetParameters().FirstOrDefault()?.ParameterType == typeof(SpriteBatch)
-            && method.GetParameters().Count(parameter => parameter.ParameterType == typeof(int)) >= 2
-            && !(method.GetParameters() is { Length: 4 } parameters
-                && parameters[1].ParameterType == typeof(int)
-                && parameters[2].ParameterType == typeof(int)
-                && parameters[3].ParameterType == typeof(float)));
-
-    private static bool Prefix(StardewValley.Object __instance, object[] __args)
+    private static bool Prefix(StardewValley.Object __instance, SpriteBatch spriteBatch, float alpha)
     {
         if (!IncubatorPlacementGeometry.IsIncubator(__instance))
             return true;
 
-        SpriteBatch batch = __args.OfType<SpriteBatch>().First();
-        Vector2 anchor = __instance.TileLocation;
-        IncubatorPlacementGeometry.DrawWorld(batch, anchor, 1f);
+        IncubatorPlacementGeometry.DrawWorld(spriteBatch, __instance.TileLocation, alpha);
         return false;
     }
 }
