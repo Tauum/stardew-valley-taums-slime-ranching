@@ -7,15 +7,14 @@ using StardewValley.Tools;
 
 namespace taums_slime_ranching.Services;
 
-/// <summary>Shows and enforces the breeder's full 5x2 placement footprint.</summary>
+/// <summary>Shows and enforces the breeder's full 3x2 placement footprint.</summary>
 internal static class BreederFootprintGeometry
 {
-    // Vanilla Mahogany Dining Table is a placeable 5x2 Furniture item. Its own
-    // placement preview gives us Stardew's native footprint and validity tint.
-    private const string VanillaFiveByTwoFurnitureId = "(F)814";
+    // Vanilla Nautical Rug is placeable furniture with a native 3x2 footprint.
+    private const string VanillaThreeByTwoFurnitureId = "(F)NauticalRug";
     private static Furniture? placementPreview;
     public const int TileSize = 64;
-    public const int Width = 5;
+    public const int Width = 3;
     public const int Height = 2;
     public const int FootprintOffsetY = 0;
     // Treat Stardew's cursor tile as the center of this wide machine, so a tile
@@ -39,7 +38,7 @@ internal static class BreederFootprintGeometry
 
     public static void Draw(SpriteBatch batch, GameLocation location, Vector2 anchor)
     {
-        placementPreview ??= ItemRegistry.Create<Furniture>(VanillaFiveByTwoFurnitureId);
+        placementPreview ??= ItemRegistry.Create<Furniture>(VanillaThreeByTwoFurnitureId);
         placementPreview.TileLocation = anchor;
         placementPreview.drawPlacementBounds(batch, location);
     }

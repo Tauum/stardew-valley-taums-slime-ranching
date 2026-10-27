@@ -12,7 +12,7 @@ namespace taums_slime_ranching.Services;
 internal static class IncubatorPlacementGeometry
 {
     public const int TileSize = 64;
-    public const int Width = 4;
+    public const int Width = 3;
     public const int Height = 2;
     private const int SpriteWidth = 3 * TileSize;
     private const int SpriteHeight = 5 * TileSize;
@@ -41,9 +41,9 @@ internal static class IncubatorPlacementGeometry
 
     public static void DrawPlacement(SpriteBatch batch, GameLocation location, Vector2 anchor)
     {
-        // Large Junimo Hut is a vanilla decor furniture with a native 4x2 footprint.
-        // Use its normal placement preview, just as the breeder uses the 5x2 dining table.
-        placementPreview ??= ItemRegistry.Create<Furniture>("(F)LargeJunimoHut");
+        // Nautical Rug is vanilla placeable furniture with a native 3x2 footprint.
+        // Use its normal placement preview, just as the breeder does.
+        placementPreview ??= ItemRegistry.Create<Furniture>("(F)NauticalRug");
         placementPreview.TileLocation = anchor;
         placementPreview.drawPlacementBounds(batch, location);
     }

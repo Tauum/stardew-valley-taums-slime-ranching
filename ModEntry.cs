@@ -906,7 +906,7 @@ public sealed class ModEntry : Mod
             if (pair.Value.QualifiedItemId != ConverterContent.IncubatorQualifiedId)
                 continue;
 
-            bool insideMachine = clickedTile.X >= pair.Key.X && clickedTile.X < pair.Key.X + 4
+            bool insideMachine = clickedTile.X >= pair.Key.X && clickedTile.X < pair.Key.X + IncubatorPlacementGeometry.Width
                 && clickedTile.Y >= pair.Key.Y - 3 && clickedTile.Y < pair.Key.Y + 2;
             if (!insideMachine)
                 continue;

@@ -10,8 +10,8 @@ namespace taums_slime_ranching.Services;
 internal static class IncubatorFootprintPatches
 {
     private const int TileSize = 64;
-    private const int MaximumFootprintWidth = 6;
-    private const int MaximumFootprintHeight = 4;
+    private const int MaximumFootprintWidth = 3;
+    private const int MaximumFootprintHeight = 2;
 
     private static IEnumerable<MethodBase> TargetMethods() => typeof(GameLocation)
         .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
@@ -40,17 +40,14 @@ internal static class IncubatorFootprintPatches
 
                 int footprintWidth = obj.QualifiedItemId switch
                 {
-                    ConverterContent.IncubatorQualifiedId => 4,
-                    ConverterContent.BreederQualifiedId => 5,
-                    GelRefineryContent.QualifiedItemId => 5,
-                    MutagenicPoolContent.QualifiedItemId => 6,
+                    ConverterContent.ConverterQualifiedId or ConverterContent.IncubatorQualifiedId or ConverterContent.BreederQualifiedId
+                        or GelRefineryContent.QualifiedItemId or MutagenicPoolContent.QualifiedItemId => 3,
                     _ => 0
                 };
                 int footprintHeight = obj.QualifiedItemId switch
                 {
-                    MutagenicPoolContent.QualifiedItemId => 4,
-                    GelRefineryContent.QualifiedItemId => 3,
-                    ConverterContent.IncubatorQualifiedId or ConverterContent.BreederQualifiedId => 2,
+                    ConverterContent.ConverterQualifiedId or ConverterContent.IncubatorQualifiedId or ConverterContent.BreederQualifiedId => 2,
+                    GelRefineryContent.QualifiedItemId or MutagenicPoolContent.QualifiedItemId => 2,
                     _ => 0
                 };
                 if (footprintWidth == 0)

@@ -20,7 +20,7 @@ The newly hatched slime should retain its egg genome and remain in the Daycare a
 **How to test:**
 
 1. Run **3 Build, Deploy, Run**, load `TaumTest_322865388`, and enter the Slime Daycare.
-2. In the SMAPI console, run `slime_ranching_give_test_eggs TaumTest_322865388` and `slime_ranching_give_incubator TaumTest_322865388` if you need test eggs or an incubator. Place the incubator inside the Daycare.
+2. In the SMAPI console, run `slime_ranching_give_test_eggs TaumTest_322865388` and `slime_ranching_give_incubator TaumTest_322865388` if you need test eggs or an incubator. Place the incubator inside the Daycare. Check that its preview, placement, and movement-blocking area cover exactly 3×2 tiles and the custom incubator ghost follows that area.
 
    The egg command still works with just the save name. Optional `key=value` metadata overrides let you control the genomes. For example:
 
