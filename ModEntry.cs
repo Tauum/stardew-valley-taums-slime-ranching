@@ -48,7 +48,7 @@ public sealed class ModEntry : Mod
         helper.Events.Input.ButtonPressed += this.OnButtonPressed;
         helper.ConsoleCommands.Add("slime_ranching_inspect", "Inspect vanilla slime or Ranch Slime counts in the current Slime Hutch or Slime Daycare.", this.OnInspectCommand);
         helper.ConsoleCommands.Add("slime_ranching_backup_external_data", "Back up the current save's external mod data. Usage: slime_ranching_backup_external_data <exact save folder name>.", this.OnBackupExternalDataCommand);
-        helper.ConsoleCommands.Add("slime_ranching_spawn_ranch_slime", $"Spawn one Ranch Slime at a chosen age in the Slime Daycare. Usage: slime_ranching_spawn_ranch_slime <exact save folder name> <age days 0-{FarmAnimalContent.RanchSlimeDaysToMature}>.", this.OnSpawnRanchSlimeCommand);
+        helper.ConsoleCommands.Add("slime_ranching_spawn_ranch_slime", $"Spawn one Ranch Slime at a chosen age in the Slime Daycare, optionally with randomized genome traits. Usage: slime_ranching_spawn_ranch_slime <exact save folder name> <age days 0-{FarmAnimalContent.RanchSlimeDaysToMature}> [random].", this.OnSpawnRanchSlimeCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_size", "Set a managed Ranch Slime's test genome size. Usage: slime_ranching_set_size <exact save folder name> <animal ID> <Small|Normal|Large|Giant>.", this.OnSetSlimeSizeCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_color", "Set a managed Ranch Slime's test base color. Usage: slime_ranching_set_color <exact save folder name> <animal ID> <Red|Orange|Yellow|Green|Blue|Purple|Pink>.", this.OnSetSlimeColorCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_shiny", "Set a managed Ranch Slime's test shiny flag. Usage: slime_ranching_set_shiny <exact save folder name> <animal ID> <true|false>.", this.OnSetSlimeShinyCommand);
@@ -1326,11 +1326,12 @@ public sealed class ModEntry : Mod
         }
 
         string? saveName = Constants.SaveFolderName;
-        if (args.Length != 2 || args[0] != saveName
+        bool randomTraits = args.Length == 3 && args[2].Equals("random", StringComparison.OrdinalIgnoreCase);
+        if ((args.Length != 2 && !randomTraits) || args[0] != saveName
             || !int.TryParse(args[1], out int ageDays)
             || ageDays < 0 || ageDays > FarmAnimalContent.RanchSlimeDaysToMature)
         {
-            this.Monitor.Log($"Usage: slime_ranching_spawn_ranch_slime {saveName} <age days 0-{FarmAnimalContent.RanchSlimeDaysToMature}>.", LogLevel.Warn);
+            this.Monitor.Log($"Usage: slime_ranching_spawn_ranch_slime {saveName} <age days 0-{FarmAnimalContent.RanchSlimeDaysToMature}> [random]. Add 'random' to randomize the genome traits while keeping the chosen age.", LogLevel.Warn);
             return;
         }
 
@@ -1359,13 +1360,43 @@ public sealed class ModEntry : Mod
         // Set the requested age after adoption in case AnimalHouse initializes it.
         // Initialize the mod-owned clock now so the breeder sees the chosen age.
         animal.age.Value = ageDays;
-        this.registry!.RegisterRanchSlimes(new[] { animal });
+        Models.SlimeGenome? genome = randomTraits ? this.CreateRandomRanchSlimeGenome() : null;
+        this.registry!.RegisterRanchSlimes(new[] { animal }, genome);
         this.registry.SynchronizeMaturity(new[] { animal }, Game1.Date.TotalDays);
 
         if (!this.SaveExternalStateNow())
             this.Monitor.Log($"Ranch Slime {animalId} was added, but its external genome record could not be saved yet.", LogLevel.Error);
         else
-            this.Monitor.Log($"Added one {ageDays}-day-old Ranch Slime to the Slime Daycare (FarmAnimal ID {animalId}). It is {(ageDays >= FarmAnimalContent.RanchSlimeDaysToMature ? "mature and ready to select in the breeder" : "still growing") }.", LogLevel.Info);
+            this.Monitor.Log($"Added one {ageDays}-day-old Ranch Slime to the Slime Daycare (FarmAnimal ID {animalId}){(randomTraits ? $" with randomized genome traits ({genome!.PrimarySpecies}, {genome.Size}, {genome.RarityTier}, shiny={genome.IsShiny}, generation={genome.Generation}, mutation={genome.MutationTrait ?? "none"})" : "")}. It is {(ageDays >= FarmAnimalContent.RanchSlimeDaysToMature ? "mature and ready to select in the breeder" : "still growing") }.", LogLevel.Info);
+    }
+
+    private Models.SlimeGenome CreateRandomRanchSlimeGenome()
+    {
+        (string Name, string Hex)[] colors =
+        {
+            ("Red", "#FF0000"), ("Orange", "#FF9500"), ("Yellow", "#FFD60A"),
+            ("Green", "#00FF00"), ("Blue", "#0A84FF"), ("Purple", "#BF5AF2"), ("Pink", "#FF69B4")
+        };
+        string[] sizes = { "Small", "Normal", "Large", "Giant" };
+        string[] rarities = { "Common", "Uncommon", "Rare", "Epic", "Legendary" };
+        var primary = colors[Game1.random.Next(colors.Length)];
+        string? secondary = Game1.random.NextDouble() < 0.3
+            ? $"{colors.Where(color => color.Name != primary.Name).ElementAt(Game1.random.Next(colors.Length - 1)).Name} Slime"
+            : null;
+
+        return new Models.SlimeGenome
+        {
+            Id = Guid.NewGuid(),
+            PrimarySpecies = $"{primary.Name} Slime",
+            SecondarySpecies = secondary,
+            VisualColor = primary.Hex,
+            Size = sizes[Game1.random.Next(sizes.Length)],
+            RarityTier = rarities[Game1.random.Next(rarities.Length)],
+            IsShiny = Game1.random.NextDouble() < 0.1,
+            LikedFoodItemId = Services.FoodLikeCatalog.GetRandomItemId(),
+            Generation = Game1.random.Next(0, 7),
+            MutationTrait = Game1.random.NextDouble() < 0.1 ? "Shadow Clone" : null
+        };
     }
 
     private void OnSetSlimeSizeCommand(string command, string[] args)

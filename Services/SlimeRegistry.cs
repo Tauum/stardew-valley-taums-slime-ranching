@@ -717,7 +717,7 @@ internal sealed class SlimeRegistry
         this.breedingPairs[pair.MachineKey] = pair;
     }
 
-    public int RegisterRanchSlimes(IEnumerable<FarmAnimal> animals)
+    public int RegisterRanchSlimes(IEnumerable<FarmAnimal> animals, SlimeGenome? genomeOverride = null)
     {
         int added = 0;
         foreach (FarmAnimal animal in animals)
@@ -730,12 +730,14 @@ internal sealed class SlimeRegistry
                 FarmAnimalId = animal.myID.Value,
                 FarmAnimalTypeId = animal.type.Value,
                 AnimalName = animal.Name,
-                Genome = new Models.SlimeGenome
-                {
-                    Id = Guid.NewGuid(),
-                    PrimarySpecies = "Ranch Slime",
-                    VisualColor = "#00FF00"
-                }
+                Genome = genomeOverride is null
+                    ? new Models.SlimeGenome
+                    {
+                        Id = Guid.NewGuid(),
+                        PrimarySpecies = "Ranch Slime",
+                        VisualColor = "#00FF00"
+                    }
+                    : genomeOverride
             };
 
             if (this.TryAdd(record))

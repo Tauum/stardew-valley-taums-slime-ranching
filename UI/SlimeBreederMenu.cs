@@ -296,7 +296,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
             int growth = this.GetGrowthDaysRemaining(animal);
             Rectangle row = new(this.xPositionOnScreen + 634, rowY, 322, 41);
             DrawPanel(b, row, growth > 0 || rest > 0 ? new Color(63, 66, 94) : isSelected ? new Color(74, 119, 161) : new Color(46, 67, 121), isSelected ? new Color(151, 220, 255) : new Color(87, 118, 177));
-            string label = growth > 0 ? $"{animal.Name} · growing {growth}d" : rest > 0 ? $"{animal.Name} · resting {rest}d" : $"{(isSelected ? "♥ " : "＋ ")}{animal.Name}";
+            string label = growth > 0 ? $"{animal.Name} · {growth}d to maturity" : rest > 0 ? $"{animal.Name} · resting {rest}d" : $"{(isSelected ? "♥ " : "＋ ")}{animal.Name}";
             b.DrawString(Game1.smallFont, label, new Vector2(row.X + 11, row.Y + 9), Color.White);
         }
         if (this.candidates.Count > visibleCount)

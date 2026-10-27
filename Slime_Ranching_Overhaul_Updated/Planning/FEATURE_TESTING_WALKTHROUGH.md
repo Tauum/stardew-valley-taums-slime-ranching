@@ -1,63 +1,49 @@
 # Today's Feature Testing Walkthrough
 
 Updated: 2026-10-27  
-Current branch: `feature/test-egg-metadata-options`  
-Current HEAD: `9a16303` (`Remove temporary Ranch Slime petting friendship boost`)  
+Current branch: `feature/ranch-slime-size-scaled-shadows`
+Current HEAD: `3799f68` (`Scale Ranch Slime ground shadows by genome size`)
 Test save: `TaumTest_322865388` (use this copied save, not the main farm).
 
 ## How to use this walkthrough
 
 Test only the current stage. Reply with the results or issues. I will help resolve those first. When you say **continue**, I will present the next stage and update this file. Do not advance the stage until you say to continue.
 
-## Current stage: 3 - Incubator workflow, hatch, and naming
-
-**Commits:** `5e851e8`, `65450f5`, `7d72cc7`, `b602304`, `99c7ca5`, `9571b25`, `1d60ec2`, `8ebdc7e`, `b7cb3f9`.
-
-This stage covers Common and genome-specific egg incubation, 
-the two-day job and recovery across menu/game reloads, hatch notifications,  and the Name & Take prompt. 
-The newly hatched slime should retain its egg genome and remain in the Daycare after collection.
-
-**How to test:**
-
-1. Run **3 Build, Deploy, Run**, load `TaumTest_322865388`, and enter the Slime Daycare.
-2. In the SMAPI console, run `slime_ranching_give_test_eggs TaumTest_322865388` and `slime_ranching_give_incubator TaumTest_322865388` if you need test eggs or an incubator. Place the incubator inside the Daycare. Check that its preview, placement, and movement-blocking area cover exactly 3×2 tiles and the custom incubator ghost follows that area.
-
-   The egg command still works with just the save name. Optional `key=value` metadata overrides let you control the genomes. For example:
-
-   ```text
-   slime_ranching_give_test_eggs TaumTest_322865388 species=Mint_Slime secondary=none color=#65DDBB size=Giant rarity=Rare shiny=true food=(O)168 generation=4 mutation=ShadowClone
-   ```
-
-   Options are `species`, `secondary`, `color` (`#RRGGBB`), `size`, `rarity`, `shiny`, `food`, `generation`, and `mutation`. Values apply to both eggs; their genome IDs remain distinct. Food must be an eligible monster-drop or fishing-trash qualified item ID, such as `(O)684` or `(O)168`.
-
-   To instead generate one egg with randomized traits, run the command with the standalone `random` option (don't combine it with `key=value` options):
-
-   ```text
-   slime_ranching_give_test_eggs TaumTest_322865388 random
-   ```
-3. Hold a test egg and use the incubator. Select the egg, start incubation, and confirm the egg leaves your inventory.
-4. Close and reopen the incubator menu. Confirm the job remains active, shows time remaining, and the same egg can't be started in another incubator.
-5. Save and reload the copied save while incubation is active. Reopen the incubator and confirm its progress persisted.
-6. Sleep through the two-day incubation. Check for the ready notification. Confirm the unclaimed hatchling is hidden from the Daycare and breeder list. Open the incubator and choose the ready slime.
-7. Enter a custom name in the naming prompt. Confirm the slime then appears in the Daycare with that name and the incubator becomes available again.
-8. Reopen the incubator and save/reload once more. Confirm the hatchling isn't duplicated and its genome-specific appearance remains.
-
-**Expected:** the incubator consumes one eligible egg, recovers its job and hatchling across reloads, then lets you name and collect exactly one Ranch Slime with the egg's genome.
-
-**Your results / issues:** pending.
-## Remaining stages (pending your confirmation)
-### Stage 4 — Juvenile growth and breeding eligibility
-
-**Commits:** `c46caa9`, `6b4fd17`, `3989b8d`.
-
-Juvenile maturation and the authoritative external age clock. Ranch Slimes mature after 28 in-game days. Test that a newborn grows to maturity and cannot be selected as a breeder parent until it reaches age 28.
-
-### Stage 5 — Genome inheritance and visual variants
+## Current stage: 5 - Genome inheritance and visual variants
 
 **Commits:** `b8c97b3`, `7f8f926`, `d201190`, `1d02049`, `b6d6d9a`, `5170b45`, `3209a32`, `c730ce1`, `4d3939d`, `cc09405`, `9120a7c`.
 
-Five-size inheritance and sprites, shiny appearance, inherited colors, custom egg icon tints, asset caching, and species ability identifiers. Test controlled parent sizes/colors, offspring appearance, egg color art, and save/reload persistence.
+This stage covers four-size inheritance and sprite scaling, shiny appearance, inherited colors, genome-tinted egg icons, asset caching, and stored species ability identifiers. The size and color results include random rolls, so one offspring doesn't prove every outcome. Companion abilities aren't implemented; this stage checks the stored genome IDs and visible traits only.
 
+**How to test:**
+
+1. Run **3 Build, Deploy, Run**, load the copied `TaumTest_322865388` save, and enter the Slime Daycare.
+2. Spawn two mature parents and note each ID from the SMAPI output:
+
+   ```text
+   slime_ranching_spawn_ranch_slime TaumTest_322865388 28
+   slime_ranching_spawn_ranch_slime TaumTest_322865388 28
+   ```
+3. Give them distinct controlled traits, replacing `<red ID>` and `<blue ID>` with the returned IDs:
+
+   ```text
+   slime_ranching_set_size TaumTest_322865388 <red ID> Small
+   slime_ranching_set_color TaumTest_322865388 <red ID> Red
+   slime_ranching_set_shiny TaumTest_322865388 <red ID> false
+   slime_ranching_set_size TaumTest_322865388 <blue ID> Giant
+   slime_ranching_set_color TaumTest_322865388 <blue ID> Blue
+   slime_ranching_set_shiny TaumTest_322865388 <blue ID> true
+   ```
+
+   Confirm their sprites reflect the selected sizes, colors, and shiny state. Run `slime_ranching_inspect <animal ID>` on each and confirm the genome record agrees.
+4. Open the breeder and select the two parents. Start a cycle and sleep until its two-day timer completes. Collect the egg. Confirm its tooltip shows the parent names and generated genome details, and its icon tint matches the stored offspring color.
+5. Hatch that egg in the incubator. Confirm the resulting slime's visible color, size, and shiny state match the egg's genome. Run `slime_ranching_inspect <new animal ID>` and confirm the genome retains parent links and the expected generation increment.
+6. Save and reload. Confirm the parents and offspring retain their colors, sizes, shiny appearance, and genome details. If a trait roll is unexpected, repeat with a fresh pair/cycle and compare the recorded egg genome; offspring inheritance is randomized.
+
+**Expected:** offspring receive one parent's color and size-roll outcomes within the implemented inheritance rules; shiny, rarity, and mutation traits are inherited from a parent. The egg icon and hatched sprite reflect the stored genome, which survives reload.
+
+**Your results / issues:** pending.
+## Remaining stages (pending your confirmation)
 ### Stage 6 — Breeder genome details and Chromatic Crystals
 
 **Commits:** `2c94486`, `42a4a00`, `b74b6cc`.
@@ -108,6 +94,6 @@ Readable parent names (including old registered slimes), corrected egg color tex
 
 ## Walkthrough state
 
-- **Current stage:** 3 - Incubator workflow, hatch, and naming.
-- **Completed stages:** 1 and 2 - Daycare baseline; breeder selection, cycles, placement, and break recovery.
-- **Next stage:** 4 - only after you report Stage 3 results and say **continue**.
+- **Current stage:** 5 - Genome inheritance and visual variants.
+- **Completed stages:** 1, 2, 3, and 4 - Daycare baseline; breeder selection/cycles/placement; incubator workflow; juvenile growth and breeding eligibility.
+- **Next stage:** 6 - Breeder genome details and Chromatic Crystals, after you report Stage 5 results and say **continue**.
