@@ -172,7 +172,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
             return;
 
         long id = this.candidates[index].myID.Value;
-        int growthDays = GetGrowthDaysRemaining(this.candidates[index]);
+        int growthDays = this.GetGrowthDaysRemaining(this.candidates[index]);
         if (growthDays > 0)
         {
             this.statusMessage = $"This young Ranch Slime needs {growthDays} more day(s) to grow before breeding.";
@@ -228,7 +228,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
                 int rowY = this.listTop + (i - this.firstVisibleCandidate) * RowHeight;
                 bool isSelected = this.selected.Contains(animal.myID.Value);
                 int restDays = this.registry.GetBreedingRestDays(animal.myID.Value, Game1.Date.TotalDays);
-                int growthDays = GetGrowthDaysRemaining(animal);
+                int growthDays = this.GetGrowthDaysRemaining(animal);
                 Rectangle row = new(this.xPositionOnScreen + 24, rowY, 382, RowHeight - 4);
                 b.Draw(Game1.staminaRect, row, restDays > 0 || growthDays > 0 ? new Color(210, 210, 210) : isSelected ? new Color(180, 235, 170) : new Color(238, 224, 190));
                 string label = growthDays > 0
@@ -289,8 +289,9 @@ internal sealed class SlimeBreederMenu : IClickableMenu
 
     private int GetVisibleCandidateCount() => Math.Max(1, (this.listBottom - this.listTop) / RowHeight);
 
-    private static int GetGrowthDaysRemaining(FarmAnimal animal) =>
-        Math.Max(0, FarmAnimalContent.RanchSlimeDaysToMature - animal.age.Value);
+    private int GetGrowthDaysRemaining(FarmAnimal animal) =>
+        Math.Max(0, FarmAnimalContent.RanchSlimeDaysToMature
+            - this.registry.GetMaturityAgeDays(animal.myID.Value, animal.age.Value));
 
     private string GetCycleStatus(BreedingPairRecord? pair)
     {

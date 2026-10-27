@@ -30,6 +30,7 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [x] Show active incubation egg identity and day-based progress in the incubator menu.
 - [x] Hatch Ranch Slimes as three-day juveniles; prevent growing slimes from entering a breeding pair.
 - [x] Store authoritative maturity age and day clock in the external registry; mirror to native animal age for Stardew maturity behavior.
+- [x] Use external maturity age for breeder growth labels and selection eligibility.
 - [ ] Verify juvenile appearance, daily growth, save/reload age, and breeder eligibility at maturity.
 - [ ] Verify schema 7 migration preserves existing animals' current native maturity and backs up the previous registry.
 - [ ] Verify incubation start, save/reload recovery, hatch, full-Daycare deferral, and duplicate-egg handling in game.

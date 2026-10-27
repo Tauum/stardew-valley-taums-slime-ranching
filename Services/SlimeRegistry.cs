@@ -37,6 +37,11 @@ internal sealed class SlimeRegistry
     public string? GetGenomeSize(long farmAnimalId) =>
         this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record) ? record.Genome.Size : null;
 
+    public int GetMaturityAgeDays(long farmAnimalId, int fallbackAgeDays) =>
+        this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record) && record.AgeClockInitialized
+            ? Math.Clamp(record.AgeDays, 0, FarmAnimalContent.RanchSlimeDaysToMature)
+            : Math.Clamp(fallbackAgeDays, 0, FarmAnimalContent.RanchSlimeDaysToMature);
+
     /// <summary>Sync the mod-owned age clock and mirror its value into the native animal field Stardew uses for maturity.</summary>
     public bool SynchronizeMaturity(IEnumerable<FarmAnimal> animals, int currentDay)
     {
