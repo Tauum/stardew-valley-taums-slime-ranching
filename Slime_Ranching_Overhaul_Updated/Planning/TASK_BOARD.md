@@ -51,8 +51,7 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [ ] Independent shiny/rarity/mutation flags; store ancestry and hybrid ability IDs.
 
 ## Stage 4 — furniture
-- [ ] Marnie's shop inventory; trampoline animation and interaction framework.
-- [x] Add the existing Converter, Breeder, and Incubator to Marnie's shop; custom placeable enrichment furniture remains unimplemented.
+- [x] Add the existing Converter, Breeder, and Incubator to Marnie's shop; add configurable stock for implemented enrichment furniture.
 - [x] Add a placeable Slime Trampoline with a mod-owned pixel sprite and Marnie stock; nearby Ranch Slimes use a temporary size-aware bounce animation.
 - [x] Add a placeable Slime Cushion with configurable Marnie stock and a gentle reserved squish animation using the enrichment scheduler.
 - [x] Add Slime Playground group play: reserve one playground for two slimes and run their short hops together.
@@ -60,11 +59,12 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [x] Add a low-frequency proximity assignment and temporary bounce offset for Ranch Slimes near a trampoline; tiny, normal, and giant genome sizes now use different arc heights, compression, and durations. Approach/pathing and sprite impact poses remain.
 - [x] Add a short in-memory per-slime cooldown after trampoline use so nearby residents can take turns.
 - [ ] Use each slime's stored liked food when the Compost Trough is implemented; decide its bonus and consume only eligible items.
-- [ ] Beds, slide, tunnel, ball pit, heated stone, pond, compost trough; persistence and QA.
+- [x] Add Slime Bed rest animation with transient draw-offset cleanup.
+- [ ] Tunnel, ball pit, heated stone, Gel Pond, compost trough; persistent gameplay effects and QA.
 
 ## Stage 5 — machines
 - [ ] Mutagenic Pool with per-slime pity and safe failure.
-- [ ] Chromatic Crystals as breeder consumables, **not furniture**.
+- [x] Chromatic Crystals as breeder consumables, **not furniture**; obtainment recipes and unlock progression remain open.
 - [ ] Gel Refinery stored Slime and vanilla-item conversion recipes.
 
 ## Stage 6 — custom companion AI

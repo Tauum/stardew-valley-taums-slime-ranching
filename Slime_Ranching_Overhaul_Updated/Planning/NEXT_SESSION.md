@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-10-27  
 **Test save:** `TaumTest_322865388` (disposable copy)  
-**Working tree:** `feature/slime-slide-interaction`, chained after `feature/slime-playground-group-play`; this branch adds a placeable Slime Slide and low-hop horizontal glide animation to the shared enrichment scheduler. Build passes; latest changes are not tested in game.
+**Working tree:** `feature/slime-bed-rest-animation`, chained after `feature/slime-slide-interaction`; this branch adds a placeable Slime Bed and a short resting pose to the shared enrichment scheduler. Build passes; latest changes are not tested in game.
 
 ## Current state
 
@@ -28,6 +28,7 @@
 - Marnie also sells a Slime Cushion (configurable default 1,500g). Nearby Ranch Slimes can use it for a short gentle squish-and-spring animation. It shares the scheduler's one-user reservation and transient cleanup with trampolines; it grants no happiness or breeding bonus and changes no save data. This branch only passed compilation and needs in-game validation.
 - Marnie also sells a Slime Playground (configurable default 6,000g). Two nearby idle Ranch Slimes are assigned together to one playground and perform synchronized hops; the reserved object cannot start another interaction during the animation. It currently has no friendship/happiness effect. Verify with multiple furniture items and after leaving the room mid-animation.
 - Marnie also sells a Slime Slide (configurable default 3,000g). Nearby idle slimes perform a low hop and glide horizontally across it. The travel direction is fixed and the animation has no gameplay effect; verify offset cleanup and competing furniture reservations.
+- Marnie also sells a Slime Bed (configurable default 1,800g). Nearby slimes lower briefly into a resting pose, then return to their normal offset. It does not change happiness, age, or breeding; verify interruption cleanup.
 - The user confirmed the egg spawn worked. Its tooltip showed Ranch Slime, green (`#00FF00`), Normal size, Common rarity, no mutation, Generation 1, two parent IDs, and favorite food `Broken CD`.
 - Egg hatching is implemented as a prototype. It was introduced in schema 6; the registry is currently schema 8. Verify egg identity through transfer/reload, then test incubation recovery and genome matching.
 - Building art uses direct nearest-neighbor resized copies of the original images in `assets/Buildings/*_GameTexture.png`. The original full-size source images are preserved. Current frames are Base 160 by 160, Upgrade 1 176 by 160, and Upgrade 2 192 by 160; building widths are 10, 11, and 12 tiles.
@@ -53,6 +54,7 @@
 13. Check Marnie's Slime Cushion stock and its indoor placement. Let nearby slimes use a cushion alongside a trampoline; confirm the cushion animation stays low and short, furniture does not get double-booked, and offsets reset when leaving the room.
 14. Check the Slime Playground with zero, one, two, and four nearby slimes. Confirm exactly two use each available playground at a time, group hops synchronize, and the other enrichment objects remain independently available.
 15. Check the Slime Slide animation alongside other furniture, then leave the room mid-glide and confirm position resets.
+16. Check Marnie's Slime Bed stock and the brief rest animation. Leave the Daycare mid-animation and confirm the slime's position resets without affecting age or breeding status.
 
 ## Relevant files
 

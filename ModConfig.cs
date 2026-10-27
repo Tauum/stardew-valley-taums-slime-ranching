@@ -10,4 +10,5 @@ public sealed class ModConfig
     public int SlimeCushionShopPrice { get; set; } = 1500;
     public int SlimePlaygroundShopPrice { get; set; } = 6000;
     public int SlimeSlideShopPrice { get; set; } = 3000;
+    public int SlimeBedShopPrice { get; set; } = 1800;
 }

@@ -77,6 +77,18 @@ internal sealed class TrampolineInteractionService
             }
 
             float compressionProgress = Math.Clamp(bounce.ElapsedSeconds / bounce.CompressionDurationSeconds, 0f, 1f);
+            if (bounce.IsResting)
+            {
+                float restProgress = bounce.ElapsedSeconds / bounce.DurationSeconds;
+                float restAmount = restProgress < 0.2f
+                    ? MathF.Sin(Math.Clamp(restProgress / 0.2f, 0f, 1f) * MathF.PI / 2f)
+                    : restProgress > 0.8f
+                        ? MathF.Sin(Math.Clamp((1f - restProgress) / 0.2f, 0f, 1f) * MathF.PI / 2f)
+                        : 1f;
+                bounce.Animal.drawOffset = bounce.OriginalDrawOffset + new Vector2(0f, bounce.CompressionHeightPixels * restAmount);
+                continue;
+            }
+
             if (bounce.ElapsedSeconds < bounce.CompressionDurationSeconds)
             {
                 bounce.Animal.drawOffset = bounce.OriginalDrawOffset
@@ -112,7 +124,8 @@ internal sealed class TrampolineInteractionService
             .Where(obj => obj.QualifiedItemId == FurnitureContent.TrampolineQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.SlimeCushionQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.SlimePlaygroundQualifiedId
-                || obj.QualifiedItemId == FurnitureContent.SlimeSlideQualifiedId)
+                || obj.QualifiedItemId == FurnitureContent.SlimeSlideQualifiedId
+                || obj.QualifiedItemId == FurnitureContent.SlimeBedQualifiedId)
             .Select(obj => new FurnitureSpot(obj.TileLocation, obj.QualifiedItemId))
             .Where(spot => !this.active.Values.Any(bounce => bounce.TrampolineTile == spot.Tile))
             .ToList();
@@ -165,25 +178,27 @@ internal sealed class TrampolineInteractionService
 
             FurnitureSpot spot = furnitureSpots[nearestIndex];
             furnitureSpots.RemoveAt(nearestIndex);
-            (float duration, float bounceHeight, float compressionHeight, float slideDistance) = spot.QualifiedItemId switch
+            (float duration, float bounceHeight, float compressionHeight, float slideDistance, bool isResting) = spot.QualifiedItemId switch
             {
-                var id when id == FurnitureContent.SlimeCushionQualifiedId => (1.8f, 9f, 10f, 0f),
-                var id when id == FurnitureContent.SlimeSlideQualifiedId => (2.2f, 8f, 3f, 30f),
+                var id when id == FurnitureContent.SlimeCushionQualifiedId => (1.8f, 9f, 10f, 0f, false),
+                var id when id == FurnitureContent.SlimeSlideQualifiedId => (2.2f, 8f, 3f, 30f, false),
+                var id when id == FurnitureContent.SlimeBedQualifiedId => (4f, 0f, 7f, 0f, true),
                 _ => registry.GetGenomeSize(animal.myID.Value)?.ToLowerInvariant() switch
                 {
-                    "tiny" => (1.8f, 36f, 2f, 0f),
-                    "giant" => (3.2f, 21f, 9f, 0f),
-                    _ => (2.4f, 28f, 4f, 0f)
+                    "tiny" => (1.8f, 36f, 2f, 0f, false),
+                    "giant" => (3.2f, 21f, 9f, 0f, false),
+                    _ => (2.4f, 28f, 4f, 0f, false)
                 }
             };
-            this.StartInteraction(animal, spot.Tile, duration, bounceHeight, compressionHeight, slideDistance);
+            this.StartInteraction(animal, spot.Tile, duration, bounceHeight, compressionHeight, slideDistance, isResting);
         }
     }
 
-    private void StartInteraction(FarmAnimal animal, Vector2 furnitureTile, float duration, float bounceHeight, float compressionHeight, float slideDistance = 0f)
+    private void StartInteraction(FarmAnimal animal, Vector2 furnitureTile, float duration, float bounceHeight, float compressionHeight,
+        float slideDistance = 0f, bool isResting = false)
     {
         this.active[animal.myID.Value] = new Bounce(animal, furnitureTile, animal.drawOffset,
-            duration, bounceHeight, compressionHeight, slideDistance);
+            duration, bounceHeight, compressionHeight, slideDistance, isResting);
         this.cooldowns[animal.myID.Value] = this.elapsedSeconds + duration + 3f;
     }
 
@@ -192,7 +207,7 @@ internal sealed class TrampolineInteractionService
     private sealed class Bounce
     {
         public Bounce(FarmAnimal animal, Vector2 trampolineTile, Vector2 originalDrawOffset,
-            float durationSeconds, float bounceHeightPixels, float compressionHeightPixels, float horizontalTravelPixels)
+            float durationSeconds, float bounceHeightPixels, float compressionHeightPixels, float horizontalTravelPixels, bool isResting)
         {
             this.Animal = animal;
             this.TrampolineTile = trampolineTile;
@@ -201,6 +216,7 @@ internal sealed class TrampolineInteractionService
             this.BounceHeightPixels = bounceHeightPixels;
             this.CompressionHeightPixels = compressionHeightPixels;
             this.HorizontalTravelPixels = horizontalTravelPixels;
+            this.IsResting = isResting;
             this.CompressionDurationSeconds = durationSeconds * 0.16f;
         }
 
@@ -211,6 +227,7 @@ internal sealed class TrampolineInteractionService
         public float BounceHeightPixels { get; }
         public float CompressionHeightPixels { get; }
         public float HorizontalTravelPixels { get; }
+        public bool IsResting { get; }
         public float CompressionDurationSeconds { get; }
         public float ElapsedSeconds { get; set; }
     }

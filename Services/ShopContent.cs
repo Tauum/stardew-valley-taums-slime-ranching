@@ -27,6 +27,7 @@ internal static class ShopContent
             AddIfMissing(shop, "SlimeCushion", FurnitureContent.SlimeCushionQualifiedId, config.SlimeCushionShopPrice);
             AddIfMissing(shop, "SlimePlayground", FurnitureContent.SlimePlaygroundQualifiedId, config.SlimePlaygroundShopPrice);
             AddIfMissing(shop, "SlimeSlide", FurnitureContent.SlimeSlideQualifiedId, config.SlimeSlideShopPrice);
+            AddIfMissing(shop, "SlimeBed", FurnitureContent.SlimeBedQualifiedId, config.SlimeBedShopPrice);
         });
     }
 

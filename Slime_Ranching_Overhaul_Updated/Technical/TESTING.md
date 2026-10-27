@@ -90,7 +90,7 @@ The incubator runs inside the Daycare only, consumes Common or genome-specific R
 ## Marnie's ranching machine stock
 
 1. Open Marnie's Ranch shop (or use `shop AnimalShop` in the SMAPI console).
-2. Confirm the Converter, Breeder, Incubator, Slime Trampoline, Slime Cushion, Slime Playground, and Slime Slide appear at their configured prices (defaults: 2,500g, 10,000g, 5,000g, 2,500g, 1,500g, 6,000g, and 3,000g).
+2. Confirm the Converter, Breeder, Incubator, Slime Trampoline, Slime Cushion, Slime Playground, Slime Slide, and Slime Bed appear at their configured prices (defaults: 2,500g, 10,000g, 5,000g, 2,500g, 1,500g, 6,000g, 3,000g, and 1,800g).
 3. Buy a machine and verify its item can be placed and used as described above. Place the trampoline and cushion indoors and outdoors; both should be accepted indoors only. Confirm buying one of each does not affect vanilla animal stock.
 4. Reopen the shop on the same day: each purchased item should be out of stock for that player. Check again after sleeping; stock should reset.
 
@@ -128,6 +128,13 @@ The current prototype assigns only already-nearby slimes; it does not path them 
 2. Wait for a nearby idle Ranch Slime to use it. It should rise slightly, glide horizontally down the slide, then return to its original offset.
 3. Place a slide beside the trampoline, cushion, and playground. Confirm each object keeps its own reservation and no slime receives overlapping animation assignments.
 4. Leave the Daycare during a slide and return; verify the slime returns to its normal position. Confirm regular farm animals and wild/vanilla slimes are unaffected.
+
+## Slime Bed rest interaction
+
+1. Buy a Slime Bed from Marnie and place it inside the Daycare.
+2. Wait for a nearby idle Ranch Slime. It should settle into a small lowered resting pose, hold briefly, and ease back to its normal position.
+3. Place the bed beside other furniture. Confirm only one slime uses it at a time and the scheduler reserves each furniture target independently.
+4. Leave the room during the rest animation; verify the slime's draw offset resets. Confirm the bed does not alter age, happiness, breeding cooldown, or persisted state.
 
 ## Genome-driven slime colors
 

@@ -17,10 +17,13 @@ internal static class FurnitureContent
     public const string SlimePlaygroundQualifiedId = "(BC)" + SlimePlaygroundItemId;
     public const string SlimeSlideItemId = "Taum.SlimeRanching_SlimeSlide";
     public const string SlimeSlideQualifiedId = "(BC)" + SlimeSlideItemId;
+    public const string SlimeBedItemId = "Taum.SlimeRanching_SlimeBed";
+    public const string SlimeBedQualifiedId = "(BC)" + SlimeBedItemId;
     private const string TrampolineTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeTrampoline";
     private const string CushionTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeCushion";
     private const string PlaygroundTexture = "Mods/Taum.SlimeRanching/Furniture/SlimePlayground";
     private const string SlideTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeSlide";
+    private const string BedTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeBed";
 
     public static void LoadAssets(AssetRequestedEventArgs e)
     {
@@ -32,6 +35,8 @@ internal static class FurnitureContent
             e.LoadFrom(() => CreatePlaygroundTexture(Game1.graphics.GraphicsDevice), AssetLoadPriority.Exclusive);
         else if (e.NameWithoutLocale.IsEquivalentTo(SlideTexture))
             e.LoadFrom(() => CreateSlideTexture(Game1.graphics.GraphicsDevice), AssetLoadPriority.Exclusive);
+        else if (e.NameWithoutLocale.IsEquivalentTo(BedTexture))
+            e.LoadFrom(() => CreateBedTexture(Game1.graphics.GraphicsDevice), AssetLoadPriority.Exclusive);
     }
 
     public static void EditAsset(AssetRequestedEventArgs e)
@@ -84,6 +89,17 @@ internal static class FurnitureContent
                 CanBePlacedOutdoors = false,
                 Fragility = 0,
                 Texture = SlideTexture,
+                SpriteIndex = 0
+            });
+            craftables.TryAdd(SlimeBedItemId, new BigCraftableData
+            {
+                Name = "Slime Bed",
+                DisplayName = "Slime Bed",
+                Description = "A cozy bed where Ranch Slimes can curl up for a rest.",
+                CanBePlacedIndoors = true,
+                CanBePlacedOutdoors = false,
+                Fragility = 0,
+                Texture = BedTexture,
                 SpriteIndex = 0
             });
         });
@@ -220,6 +236,37 @@ internal static class FurnitureContent
         SetPixel(pixels, width, 4, 13, new Color(107, 75, 55));
         SetPixel(pixels, width, 11, 13, new Color(107, 75, 55));
         for (int x = 3; x <= 12; x++) SetPixel(pixels, width, x, 14, new Color(67, 43, 56));
+        texture.SetData(pixels);
+        return texture;
+    }
+
+    private static Texture2D CreateBedTexture(GraphicsDevice graphicsDevice)
+    {
+        const int width = 16;
+        const int height = 32;
+        var texture = new Texture2D(graphicsDevice, width, height);
+        var pixels = new Color[width * height];
+        Color outline = new(83, 48, 70);
+        Color wood = new(139, 83, 65);
+        Color blanket = new(199, 96, 151);
+        Color light = new(239, 160, 193);
+        for (int x = 2; x <= 13; x++) SetPixel(pixels, width, x, 10, outline);
+        for (int y = 11; y <= 14; y++)
+        {
+            SetPixel(pixels, width, 1, y, outline);
+            SetPixel(pixels, width, 14, y, outline);
+            for (int x = 2; x <= 13; x++)
+                SetPixel(pixels, width, x, y, x <= 5 ? light : blanket);
+        }
+        for (int x = 2; x <= 13; x++) SetPixel(pixels, width, x, 15, wood);
+        for (int y = 16; y <= 18; y++)
+        {
+            SetPixel(pixels, width, 3, y, outline);
+            SetPixel(pixels, width, 12, y, outline);
+            SetPixel(pixels, width, 4, y, wood);
+            SetPixel(pixels, width, 11, y, wood);
+        }
+        for (int x = 2; x <= 13; x++) SetPixel(pixels, width, x, 19, new Color(67, 43, 56));
         texture.SetData(pixels);
         return texture;
     }

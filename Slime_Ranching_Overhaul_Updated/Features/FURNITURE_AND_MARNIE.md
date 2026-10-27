@@ -27,6 +27,8 @@ The Slime Playground is implemented as group-play furniture: it reserves one pla
 
 The Slime Slide is also available at a configurable 3,000g prototype price. A nearby Ranch Slime performs a low hop and horizontal glide across it. Its travel direction is currently fixed, and it has no gameplay effect beyond the animation.
 
+The Slime Bed is available at a configurable 1,800g prototype price. One nearby slime settles into a lowered resting pose, holds briefly, and eases back upright. It does not advance age, change happiness, or affect breeding eligibility.
+
 ## Interaction architecture
 Furniture exposes a target position, eligible sizes, interaction duration, maximum concurrent users, animation, cooldown and optional happiness delta. A hutch-level scheduler periodically assigns idle slimes to available furniture. Use visual offsets for bouncing rather than moving collision boxes vertically. Reserve targets to avoid multiple slimes deadlocking. Skip or simplify offscreen animations.
 
