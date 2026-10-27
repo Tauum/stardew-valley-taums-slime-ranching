@@ -15,6 +15,7 @@ This guide covers the current early prototype. The Slime Breeder can reserve two
 - Marnie sells a Compost Trough. It can feed juvenile Ranch Slimes eligible monster drops, fishing trash, or algae once per day. A favorite item advances growth more; the growth values are configurable and provisional. Use `slime_ranching_give_compost_trough <save name>` to test it.
 - Marnie also sells a Slime Tunnel. Nearby idle Ranch Slimes can do a short decorative crawl-through; use `slime_ranching_give_tunnel <save name>` to test it. This animation does not change stats or save state.
 - Marnie also sells a Heated Slime Stone. Nearby idle Ranch Slimes can rest beside its ember glow; use `slime_ranching_give_heated_stone <save name>` to test it. It is decorative and does not grant winter or friendship bonuses yet.
+- Marnie also sells a Slime Pond. Nearby idle slimes briefly bob as if swimming; use `slime_ranching_give_pond <save name>` to test it. It currently produces no drops or friendship effects.
 - Chromatic Crystals can focus a breeder cycle on a base offspring color. They are currently test-only items; use the SMAPI command `slime_ranching_give_crystals <save name>` while on a disposable save.
 - Ranch Slime offspring and genome-specific egg icons use a tint selected from the external genome color. The seven base colors and six hybrid recipes are supported; hybrid sprites still use the nearest base tint rather than continuous RGB blending.
 

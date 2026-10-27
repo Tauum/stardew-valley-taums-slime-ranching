@@ -26,4 +26,5 @@ public sealed class ModConfig
     public int CompostTroughLikedFoodBonusDays { get; set; } = 1;
     public int SlimeTunnelShopPrice { get; set; } = 2500;
     public int HeatedSlimeStoneShopPrice { get; set; } = 1800;
+    public int SlimePondShopPrice { get; set; } = 4500;
 }

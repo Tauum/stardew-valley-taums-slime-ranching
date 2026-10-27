@@ -130,7 +130,8 @@ internal sealed class EnrichmentInteractionService
                 || obj.QualifiedItemId == FurnitureContent.SlimeSlideQualifiedId
             || obj.QualifiedItemId == FurnitureContent.SlimeBedQualifiedId
             || obj.QualifiedItemId == FurnitureContent.SlimeTunnelQualifiedId
-            || obj.QualifiedItemId == FurnitureContent.HeatedSlimeStoneQualifiedId)
+            || obj.QualifiedItemId == FurnitureContent.HeatedSlimeStoneQualifiedId
+            || obj.QualifiedItemId == FurnitureContent.SlimePondQualifiedId)
             .Select(obj => new FurnitureSpot(obj.TileLocation, obj.QualifiedItemId))
             .Where(spot => !occupiedTiles.Contains(spot.Tile))
             .ToList();
@@ -193,6 +194,7 @@ internal sealed class EnrichmentInteractionService
                 var id when id == FurnitureContent.SlimeBedQualifiedId => (4f, 0f, 7f, 0f, true),
                 var id when id == FurnitureContent.SlimeTunnelQualifiedId => (2.8f, 5f, 2f, 42f, false),
                 var id when id == FurnitureContent.HeatedSlimeStoneQualifiedId => (4.4f, 0f, 6f, 0f, true),
+                var id when id == FurnitureContent.SlimePondQualifiedId => (3.2f, 4f, 0f, 0f, false),
                 _ => registry.GetGenomeSize(animal.myID.Value)?.ToLowerInvariant() switch
                 {
                     "tiny" => (1.8f, 36f, 2f, 0f, false),

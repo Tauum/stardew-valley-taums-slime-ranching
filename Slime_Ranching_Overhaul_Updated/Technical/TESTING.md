@@ -60,6 +60,15 @@ The animation is local visual state; it does not persist and must clean up on ro
 
 The stone is visual-only. Its 1,800g price is configurable; winter comfort or friendship effects are undecided.
 
+## Slime Pond visual interaction
+
+1. Run `slime_ranching_give_pond TaumTest_322865388` and place the pond inside the Slime Daycare.
+2. Let an idle Ranch Slime approach it. Confirm a brief low swim-bob/splash pose plays and the slime returns to the original floor tile.
+3. Place a heated stone and tunnel nearby. Confirm the scheduler assigns each object only once at a time, and active machine reservations take precedence over furniture.
+4. Leave the Daycare mid-animation and return. Confirm position/draw offset cleanup; inspect the slime and confirm no state or inventory items were generated.
+
+The pond currently has no drops or friendship effects. Its 4,500g price is provisional; do not treat rare drops as implemented until their item pool, interval, and daily cap are decided.
+
 ## Vanilla slime isolation
 
 1. Load the disposable test save and note the vanilla GreenSlime count in its Slime Hutch.

@@ -22,5 +22,6 @@
   "CompostTroughGrowthDays": 1,
   "CompostTroughLikedFoodBonusDays": 1,
   "SlimeTunnelShopPrice": 2500,
-  "HeatedSlimeStoneShopPrice": 1800
+  "HeatedSlimeStoneShopPrice": 1800,
+  "SlimePondShopPrice": 4500
 }

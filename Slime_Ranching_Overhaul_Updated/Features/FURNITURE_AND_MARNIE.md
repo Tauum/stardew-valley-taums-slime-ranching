@@ -37,6 +37,8 @@ The Slime Tunnel is a decorative crawl-through interaction. Nearby idle Ranch Sl
 
 The Heated Slime Stone is a decorative warm resting spot. Nearby idle Ranch Slimes settle beside it for a few seconds, then return to their original pose. It has an ember-glow pixel sprite and a configurable 1,800g test price. It does not change friendship, temperature, health, or maturity; winter-specific comfort mechanics remain undecided.
 
+The Slime Pond is an indoor decorative water feature. Nearby idle slimes bob briefly as if swimming and splashing, then return to their original pose. It has a generated water-basin sprite and a configurable 4,500g test price. No items are produced; whether it should generate rare existing-item drops, and at what capped rate, remains an economy decision.
+
 ## Interaction architecture
 Furniture exposes a target position, eligible sizes, interaction duration, maximum concurrent users, animation, cooldown and optional happiness delta. A hutch-level scheduler periodically assigns idle slimes to available furniture. Use visual offsets for bouncing rather than moving collision boxes vertically. Reserve targets to avoid multiple slimes deadlocking. Skip or simplify offscreen animations.
 

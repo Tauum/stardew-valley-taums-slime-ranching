@@ -33,6 +33,7 @@ internal static class ShopContent
             AddIfMissing(shop, "CompostTrough", FurnitureContent.CompostTroughQualifiedId, config.CompostTroughShopPrice);
             AddIfMissing(shop, "SlimeTunnel", FurnitureContent.SlimeTunnelQualifiedId, config.SlimeTunnelShopPrice);
             AddIfMissing(shop, "HeatedSlimeStone", FurnitureContent.HeatedSlimeStoneQualifiedId, config.HeatedSlimeStoneShopPrice);
+            AddIfMissing(shop, "SlimePond", FurnitureContent.SlimePondQualifiedId, config.SlimePondShopPrice);
         });
     }
 
