@@ -78,8 +78,8 @@ The incubator runs inside the Daycare only, consumes Common or genome-specific R
 ## Marnie's ranching machine stock
 
 1. Open Marnie's Ranch shop (or use `shop AnimalShop` in the SMAPI console).
-2. Confirm the Converter, Breeder, and Incubator each appear at their configured prices (defaults: 2,500g, 10,000g, and 5,000g).
-3. Buy a machine and verify its item can be placed and used as described above. Confirm buying one of each does not affect vanilla animal stock.
+2. Confirm the Converter, Breeder, Incubator, and Slime Trampoline each appear at their configured prices (defaults: 2,500g, 10,000g, 5,000g, and 2,500g).
+3. Buy a machine and verify its item can be placed and used as described above. Place the trampoline indoors and outdoors; it should be accepted indoors only. Confirm buying one of each does not affect vanilla animal stock. Slime interaction is not implemented yet.
 4. Reopen the shop on the same day: each purchased item should be out of stock for that player. Check again after sleeping; stock should reset.
 
 These prices are provisional. This stock is only the core ranching machines; custom enrichment furniture is not implemented yet.

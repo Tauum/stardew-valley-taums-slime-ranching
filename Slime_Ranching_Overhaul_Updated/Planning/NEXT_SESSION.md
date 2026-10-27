@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-10-27  
 **Test save:** `TaumTest_322865388` (disposable copy)  
-**Working tree:** feature branch `feature/incubator-progress-display`, child of `feature/juvenile-maturity`; the incubator now shows egg identity and a day-based progress bar. Build passes; this UI change is not yet tested in game.
+**Working tree:** feature branch `feature/slime-trampoline-placeable`, chained after `feature/marnie-ranching-shop`; the incubator progress panel, Marnie's machine stock, and a placeable trampoline are implemented. Build passes; latest changes are not tested in game.
 
 ## Current state
 
@@ -14,6 +14,7 @@
 - Breeder-ready notice state is persisted. If writing the newly ready egg fails, the notification retries next morning; a successfully recorded notification won't repeat after reload.
 - A separate Slime Incubator accepts Common or genome-specific eggs from inventory, stores a two-day job externally, and spawns a Ranch Slime when ready. Common Eggs receive a fresh Green (`#00FF00`), Normal, Common genome at insertion; breeder eggs keep their stored genome. A full Daycare defers hatching. Hatch ID reservation supports recovery between external and game saves; verify this lifecycle in game.
 - While a job is active, the incubator menu shows the stored egg species/rarity/generation, elapsed and total in-game days, and a progress bar. The concept image's liquid modes and stability meter remain undefined and have no effect.
+- Marnie's shop now sells the Converter (2,500g), Breeder (10,000g), Incubator (5,000g), and Slime Trampoline (2,500g). These prices are configurable in `config.json` and provisional. The trampoline is an indoor placeable BigCraftable with a generated 16x32 pixel sprite; no slime interaction animation exists yet.
 - Hatched slimes now start at FarmAnimal age 0 and take three in-game days to mature. The test spawn command creates mature animals; breeder rows label juveniles and block selection until maturity.
 - The user confirmed the egg spawn worked. Its tooltip showed Ranch Slime, green (`#00FF00`), Normal size, Common rarity, no mutation, Generation 1, two parent IDs, and favorite food `Broken CD`.
 - Egg hatching is implemented as a prototype. The registry schema is now version 6; schema upgrades create a neighboring `.before-managed-egg-incubation-v6.bak` copy. Verify egg identity through transfer/reload, then test incubation recovery and genome matching before expanding the hatch system.

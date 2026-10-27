@@ -23,6 +23,7 @@ internal static class ShopContent
             AddIfMissing(shop, "Converter", ConverterContent.ConverterQualifiedId, config.ConverterShopPrice);
             AddIfMissing(shop, "Breeder", ConverterContent.BreederQualifiedId, config.BreederShopPrice);
             AddIfMissing(shop, "Incubator", ConverterContent.IncubatorQualifiedId, config.IncubatorShopPrice);
+            AddIfMissing(shop, "Trampoline", FurnitureContent.TrampolineQualifiedId, config.TrampolineShopPrice);
         });
     }
 

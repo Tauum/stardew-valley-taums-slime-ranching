@@ -442,6 +442,8 @@ public sealed class ModEntry : Mod
         GuidebookContent.EditAsset(e);
         FarmAnimalContent.LoadAssets(e);
         FarmAnimalContent.EditAsset(e);
+        FurnitureContent.LoadAssets(e);
+        FurnitureContent.EditAsset(e);
         BuildingContent.EditAsset(e, this.Helper);
     }
 

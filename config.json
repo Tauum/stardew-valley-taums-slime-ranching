@@ -2,5 +2,6 @@
   "LogRegistrySummary": true,
   "ConverterShopPrice": 2500,
   "BreederShopPrice": 10000,
-  "IncubatorShopPrice": 5000
+  "IncubatorShopPrice": 5000,
+  "TrampolineShopPrice": 2500
 }

@@ -43,6 +43,7 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 ## Stage 4 — furniture
 - [ ] Marnie's shop inventory; trampoline animation and interaction framework.
 - [x] Add the existing Converter, Breeder, and Incubator to Marnie's shop; custom placeable enrichment furniture remains unimplemented.
+- [x] Add a placeable Slime Trampoline with a mod-owned pixel sprite and Marnie stock; slime use/animation is the next slice.
 - [ ] Use each slime's stored liked food when the Compost Trough is implemented; decide its bonus and consume only eligible items.
 - [ ] Beds, slide, tunnel, ball pit, heated stone, pond, compost trough; persistence and QA.
 
