@@ -766,14 +766,26 @@ public sealed class ModEntry : Mod
             this.incubatorTexture ??= this.Helper.GameContent.Load<Texture2D>("Mods/Taum.SlimeRanching/Machines/SlimeIncubator");
             Game1.activeClickableMenu = new SlimeIncubatorMenu(this.registry!, key,
                 index => this.StartIncubation(key, index),
-                () =>
+                name =>
                 {
                     IncubationRecord? record = this.registry!.GetIncubation(key);
-                    if (record?.HatchAnimalId is null || !this.registry.CompleteIncubation(key))
+                    if (record?.HatchAnimalId is not long animalId)
                         return false;
+                    FarmAnimal? animal = GetFarmAnimals().FirstOrDefault(candidate => candidate.myID.Value == animalId);
+                    if (animal is null)
+                        return false;
+
+                    string previousName = animal.Name;
+                    animal.Name = string.IsNullOrWhiteSpace(name) ? "Ranch Slime" : name.Trim();
+                    if (!this.registry.CompleteIncubation(key))
+                    {
+                        animal.Name = previousName;
+                        return false;
+                    }
                     if (this.SaveExternalStateNow())
                         return true;
                     this.registry.RestoreIncubation(record);
+                    animal.Name = previousName;
                     return false;
                 },
                 this.incubatorTexture);

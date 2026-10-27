@@ -17,7 +17,7 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
     private readonly SlimeRegistry registry;
     private readonly string machineKey;
     private readonly Func<int, bool> startIncubation;
-    private readonly Func<bool> takeHatchedSlime;
+    private readonly Func<string, bool> takeHatchedSlime;
     private readonly Texture2D incubatorTexture;
     private readonly FarmAnimal? hatchedAnimal;
     private readonly List<(int InventoryIndex, string Name, int Stack)> candidates;
@@ -28,7 +28,7 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
     private int? selectedInventoryIndex;
     private string? statusMessage;
 
-    public SlimeIncubatorMenu(SlimeRegistry registry, string machineKey, Func<int, bool> startIncubation, Func<bool> takeHatchedSlime, Texture2D incubatorTexture)
+    public SlimeIncubatorMenu(SlimeRegistry registry, string machineKey, Func<int, bool> startIncubation, Func<string, bool> takeHatchedSlime, Texture2D incubatorTexture)
         : base(Game1.uiViewport.Width / 2 - 450, Game1.uiViewport.Height / 2 - 280, 900, 560)
     {
         this.registry = registry;
@@ -71,10 +71,18 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
         IncubationRecord? active = this.registry.GetIncubation(this.machineKey);
         if (active?.HatchAnimalId is not null && this.actionButton.Contains(x, y))
         {
-            this.statusMessage = this.takeHatchedSlime()
-                ? "Slime added to the Daycare. Incubator ready."
-                : "Could not save the hatch; it remains ready to collect.";
-            Game1.playSound(this.statusMessage.StartsWith("Slime added", StringComparison.Ordinal) ? "smallSelect" : "cancel");
+            string suggestedName = this.hatchedAnimal?.Name ?? "Ranch Slime";
+            Game1.activeClickableMenu = new NamingMenu(name =>
+            {
+                if (!this.takeHatchedSlime(name))
+                {
+                    this.statusMessage = "Could not save the name; the slime remains ready in the incubator.";
+                    Game1.activeClickableMenu = this;
+                    Game1.playSound("cancel");
+                }
+                else
+                    Game1.playSound("smallSelect");
+            }, "Name your new slime", suggestedName);
             return;
         }
 
@@ -148,7 +156,7 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
                 DrawCentered(b, "♥   ♥   ♥", Game1.dialogueFont, new Rectangle(panel.X + 72, panel.Y + 211, panel.Width - 144, 38), new Color(238, 91, 157));
                 DrawCentered(b, eggName, Game1.smallFont, new Rectangle(panel.X + 24, panel.Y + 252, panel.Width - 48, 34), new Color(42, 50, 88));
                 DrawPanel(b, this.actionButton, new Color(46, 153, 78), new Color(145, 239, 134));
-                DrawCentered(b, "TAKE SLIME", Game1.smallFont, this.actionButton, Color.White);
+                DrawCentered(b, "NAME & TAKE", Game1.smallFont, this.actionButton, Color.White);
             }
             else
             {
