@@ -69,6 +69,15 @@ The stone is visual-only. Its 1,800g price is configurable; winter comfort or fr
 
 The pond currently has no drops or friendship effects. Its 4,500g price is provisional; do not treat rare drops as implemented until their item pool, interval, and daily cap are decided.
 
+## Slime Swing visual interaction
+
+1. Run `slime_ranching_give_swing TaumTest_322865388` and place the swing inside the Slime Daycare.
+2. Let an idle Ranch Slime approach it. Confirm the slime gently sways side-to-side for a few seconds and returns to its exact original draw position.
+3. Start a breeder or Mutagenic Pool job with a slime near the swing; confirm the reserved slime does not use it.
+4. Leave the Daycare mid-swing and return. Confirm the draw offset is cleared, the collision tile never moved, and no stats or genome fields changed.
+
+The 2,200g shop price is provisional; the interaction is visual-only.
+
 ## Vanilla slime isolation
 
 1. Load the disposable test save and note the vanilla GreenSlime count in its Slime Hutch.

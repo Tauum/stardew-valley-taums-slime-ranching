@@ -1,6 +1,6 @@
 # Roadmap — fundamentals first, all slime types last
 
-**Current progress:** Stages 1–3 have a playable Ranch Slime/Daycare, external genome registry, breeding/incubation flows, and provisional color/size/shiny/mutation genetics. Stage 4 now includes trampoline, cushion, playground, slide, bed, tunnel, heated stone, pond, and a functional Compost Trough. Stage 5 includes the Mutagenic Pool and a first Gel Refinery recipe. The recent vertical slices compile, but their new in-game persistence, art, and interaction checks are still pending. Stage 6 companion AI and production abilities remain major work. See [`TASK_BOARD.md`](TASK_BOARD.md) and [`NEXT_SESSION.md`](NEXT_SESSION.md) before continuing.
+**Current progress:** Stages 1–3 have a playable Ranch Slime/Daycare, external genome registry, breeding/incubation flows, and provisional color/size/shiny/mutation genetics. Stage 4 now includes trampoline, cushion, playground, slide, bed, tunnel, swing, heated stone, pond, and a functional Compost Trough. Stage 5 includes the Mutagenic Pool and a first Gel Refinery recipe. The recent vertical slices compile, but their new in-game persistence, art, and interaction checks are still pending. Stage 6 companion AI and production abilities remain major work. See [`TASK_BOARD.md`](TASK_BOARD.md) and [`NEXT_SESSION.md`](NEXT_SESSION.md) before continuing.
 
 | Stage | Scope | Exit gate |
 |---|---|---|

@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-10-27  
 **Test save:** `TaumTest_322865388` (disposable copy)  
-**Current branch:** `docs/companion-core-first-slice`, chained after `docs/reconcile-roadmap-current-state` (`a785f3f`). The implementation branches through visual-only Slime Pond are committed and compile. This branch documents the identity-safe Slime Core first slice and remaining decisions; no companion AI or pond drops have been added.
+**Current branch:** `feature/slime-swing-interaction`, chained after `docs/companion-core-first-slice` (`6b423e3`). Gel Refinery, Compost Trough, Tunnel, Heated Stone, Pond, inspection improvements, and the companion first-slice proposal are committed. The Slime Swing animation is implemented and compiles; in-game offset cleanup remains to verify.
 
 ## Current state
 
@@ -50,6 +50,7 @@
 - `slime_ranching_inspect` now shows the external registry schema on disk versus the current target schema and prints per-machine job dates/details. Use it during refinery, incubator, breeder, and mutation reload checks.
 - Heated Slime Stone is a configurable Marnie item with an ember sprite and short resting interaction for idle slimes. It has no friendship, warmth, or maturity effect yet; use `slime_ranching_give_heated_stone <save>` to test. Verify draw-offset cleanup in game.
 - Slime Pond is a configurable Marnie item with a generated water basin and low swim-bob interaction; `slime_ranching_give_pond <save>` grants a test item. It generates no items. Review the open question about its drop pool, interval, and daily cap before adding production.
+- Slime Swing is a configurable Marnie item with generated wooden art and a brief oscillating draw offset for idle slimes; `slime_ranching_give_swing <save>` grants a test item. It does not move collision tiles or change stats. Verify cleanup in game.
 - The next major system is custom companion AI. `Features/COMPANIONS.md` now proposes one active mature Daycare slime, no duplicate FarmAnimal, external-only binding, and same-location following before cross-location transitions. Review Core acquisition, accessory slot, and dismissal/token behavior before implementation.
 - `slime_ranching_inspect` now shows the external registry schema on disk versus the current target schema and prints per-machine job dates/details. Use it during refinery, incubator, breeder, and mutation reload checks.
 - The interaction scheduler is now named `EnrichmentInteractionService`. It handles all five implemented furniture types, caches occupied target tiles once per assignment pass, and computes each playground candidate distance once during sorting. Build passes with only the existing analyzer/compiler version warning; compare behavior/performance with a crowded Daycare in game.

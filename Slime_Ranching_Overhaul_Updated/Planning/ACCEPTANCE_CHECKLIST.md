@@ -19,6 +19,7 @@
 - [x] Gel Refinery has a Broken Glasses + Slime -> Refined Quartz first recipe, external batch record, ready notice, full-inventory deferral, Marnie/GMCM settings, and test command; in-game persistence/economy checks remain open.
 - [x] Compost Trough consumes one eligible item per juvenile per day, applies a favorite-food growth bonus, writes the feed clock externally, and blocks mature/busy slimes; in-game and balance checks remain open.
 - [x] Slime Tunnel, Heated Slime Stone, and Slime Pond have generated sprites and transient enrichment animations; offsets/reservation behavior need in-game verification.
+- [x] Slime Swing has a generated sprite, reversible transient sway, configurable price, and test command; in-game cleanup/reservation checks remain open.
 - [x] `slime_ranching_inspect` reports the external schema and per-machine job details; run it against live jobs after save/reload.
 
 ## Sprint 1: core alpha

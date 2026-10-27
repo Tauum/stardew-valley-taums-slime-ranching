@@ -39,6 +39,8 @@ The Heated Slime Stone is a decorative warm resting spot. Nearby idle Ranch Slim
 
 The Slime Pond is an indoor decorative water feature. Nearby idle slimes bob briefly as if swimming and splashing, then return to their original pose. It has a generated water-basin sprite and a configurable 4,500g test price. No items are produced; whether it should generate rare existing-item drops, and at what capped rate, remains an economy decision.
 
+The Slime Swing is a decorative seat that nearby idle Ranch Slimes can sway on for a few seconds. The animation uses a small reversible horizontal draw offset; it does not move the animal's collision tile or change stats. The generated wooden swing sprite is sold at a configurable 2,200g prototype price.
+
 ## Interaction architecture
 Furniture exposes a target position, eligible sizes, interaction duration, maximum concurrent users, animation, cooldown and optional happiness delta. A hutch-level scheduler periodically assigns idle slimes to available furniture. Use visual offsets for bouncing rather than moving collision boxes vertically. Reserve targets to avoid multiple slimes deadlocking. Skip or simplify offscreen animations.
 

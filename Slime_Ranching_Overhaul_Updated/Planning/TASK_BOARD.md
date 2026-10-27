@@ -66,11 +66,12 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [x] Add a Slime Tunnel with a short low crawl-through animation, generated arch sprite, configurable Marnie stock, and test command.
 - [x] Add a Heated Slime Stone with a resting interaction, ember sprite, configurable Marnie stock, and test command.
 - [x] Add a Slime Pond with a low swim-bob animation, generated water sprite, configurable Marnie stock, and test command.
+- [x] Add a Slime Swing with a reversible oscillating draw offset, generated sprite, configurable Marnie stock, and test command.
 - [x] Prevent Ranch Slimes reserved by breeder, Mutagenic Pool, or other jobs from starting enrichment animations.
 - [x] Use each slime's stored liked food in the Compost Trough and consume only eligible items; review the provisional extra growth-day bonus.
 - [x] Add Slime Bed rest animation with transient draw-offset cleanup.
 - [x] Generalize the trampoline scheduler into an enrichment scheduler and cache occupied target tiles and group-pair distances per assignment pass.
-- [ ] Ball pit; decide whether the visual-only Slime Pond should have capped existing-item drops. Tunnel, Heated Stone, and Pond interactions need in-game cleanup/position checks.
+- [ ] Ball pit; decide whether the visual-only Slime Pond should have capped existing-item drops. Tunnel, Heated Stone, Pond, and Swing interactions need in-game cleanup/position checks.
 
 ## Stage 5 — machines
 - [x] Implement the Compost Trough's one-item-per-juvenile-per-day feeding flow, liked-food bonus, external maturity update, and configurable Marnie price/growth settings.

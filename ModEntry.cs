@@ -54,6 +54,7 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("slime_ranching_give_tunnel", "Give one Slime Tunnel for testing. Usage: slime_ranching_give_tunnel <exact save folder name>.", this.OnGiveTunnelCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_heated_stone", "Give one Heated Slime Stone for testing. Usage: slime_ranching_give_heated_stone <exact save folder name>.", this.OnGiveHeatedStoneCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_pond", "Give one Slime Pond for testing. Usage: slime_ranching_give_pond <exact save folder name>.", this.OnGivePondCommand);
+        helper.ConsoleCommands.Add("slime_ranching_give_swing", "Give one Slime Swing for testing. Usage: slime_ranching_give_swing <exact save folder name>.", this.OnGiveSwingCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_test_eggs", "Create two external-genome test eggs. Usage: slime_ranching_give_test_eggs <exact save folder name>.", this.OnGiveTestEggsCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_color_eggs", "Create seven color test eggs. Usage: slime_ranching_give_color_eggs <exact save folder name>.", this.OnGiveColorEggsCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_crystals", "Give one of each Chromatic Crystal for breeder testing. Usage: slime_ranching_give_crystals <exact save folder name>.", this.OnGiveCrystalsCommand);
@@ -112,6 +113,7 @@ public sealed class ModEntry : Mod
         this.AddShopPriceOption(api, "Slime Tunnel", "Price of the decorative crawl-through tunnel.", () => this.config.SlimeTunnelShopPrice, value => this.config.SlimeTunnelShopPrice = value);
         this.AddShopPriceOption(api, "Heated Slime Stone", "Price of the warm resting stone.", () => this.config.HeatedSlimeStoneShopPrice, value => this.config.HeatedSlimeStoneShopPrice = value);
         this.AddShopPriceOption(api, "Slime Pond", "Price of the decorative slime pond.", () => this.config.SlimePondShopPrice, value => this.config.SlimePondShopPrice = value);
+        this.AddShopPriceOption(api, "Slime Swing", "Price of the decorative slime swing.", () => this.config.SlimeSwingShopPrice, value => this.config.SlimeSwingShopPrice = value);
         api.AddSectionTitle(this.ModManifest, () => "Compost Trough");
         api.AddParagraph(this.ModManifest, () => "Growth advances are provisional. A favorite-food item grants the base days plus the favorite-food bonus.");
         api.AddNumberOption(this.ModManifest,
@@ -1345,6 +1347,31 @@ public sealed class ModEntry : Mod
         }
 
         this.Monitor.Log("Added one Slime Pond. Place it in the Slime Daycare for nearby idle Ranch Slimes to bob in the water.", LogLevel.Info);
+    }
+
+    private void OnGiveSwingCommand(string command, string[] args)
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
+        {
+            this.Monitor.Log("Load a single-player save with available external slime state before requesting a Slime Swing.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 1 || args[0] != saveName)
+        {
+            this.Monitor.Log($"To give a Slime Swing to the currently loaded save, use: slime_ranching_give_swing {saveName}", LogLevel.Warn);
+            return;
+        }
+
+        Item swing = ItemRegistry.Create(FurnitureContent.SlimeSwingQualifiedId);
+        if (!Game1.player.couldInventoryAcceptThisItem(swing) || !Game1.player.addItemToInventoryBool(swing))
+        {
+            this.Monitor.Log("Make room in your inventory for the Slime Swing, then try again.", LogLevel.Warn);
+            return;
+        }
+
+        this.Monitor.Log("Added one Slime Swing. Place it in the Slime Daycare for nearby idle Ranch Slimes to sway on.", LogLevel.Info);
     }
 
     private bool StartRefineryBatch(string machineKey)

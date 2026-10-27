@@ -39,6 +39,7 @@ See `Guides/PLAYER_GUIDE.md` for detailed instructions on the converter, inspect
 - The Slime Tunnel adds a temporary crawl-through interaction for nearby idle slimes; it is visual-only and configurable in Marnie's shop.
 - The Heated Slime Stone adds a short resting interaction beside an ember-glow sprite; winter and friendship effects remain undecided.
 - The Slime Pond adds a short swimming bob; it produces no drops until its economy is decided.
+- The Slime Swing adds a short side-to-side sway for nearby idle slimes; it is visual-only.
 - Chromatic Crystals can focus breeder offspring on one of seven base colors. Crystal acquisition and progression are undecided; a SMAPI command supplies test crystals.
 - AI-assisted/generated artwork is planned; placeholder art first. Generated images will require sprite-sheet preparation and in-game QA.
 - Single-player v1; multiplayer explicitly deferred. Cosmetic item transmutation and elaborate family-tree UI may follow v1.

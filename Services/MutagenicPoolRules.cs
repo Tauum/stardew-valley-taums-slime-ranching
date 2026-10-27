@@ -46,6 +46,7 @@ internal sealed class MutagenicPoolRules
         config.SlimeTunnelShopPrice = Math.Clamp(config.SlimeTunnelShopPrice, 0, 999_999);
         config.HeatedSlimeStoneShopPrice = Math.Clamp(config.HeatedSlimeStoneShopPrice, 0, 999_999);
         config.SlimePondShopPrice = Math.Clamp(config.SlimePondShopPrice, 0, 999_999);
+        config.SlimeSwingShopPrice = Math.Clamp(config.SlimeSwingShopPrice, 0, 999_999);
         config.ConverterShopPrice = Math.Clamp(config.ConverterShopPrice, 0, 999_999);
         config.BreederShopPrice = Math.Clamp(config.BreederShopPrice, 0, 999_999);
         config.IncubatorShopPrice = Math.Clamp(config.IncubatorShopPrice, 0, 999_999);

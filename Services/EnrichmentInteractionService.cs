@@ -76,6 +76,15 @@ internal sealed class EnrichmentInteractionService
                 continue;
             }
 
+            if (bounce.SwingDistancePixels > 0)
+            {
+                float progress = bounce.ElapsedSeconds / bounce.DurationSeconds;
+                float sway = MathF.Sin(progress * MathF.PI * 2f);
+                bounce.Animal.drawOffset = bounce.OriginalDrawOffset
+                    + new Vector2(sway * bounce.SwingDistancePixels, -MathF.Abs(sway) * 2f);
+                continue;
+            }
+
             float compressionProgress = Math.Clamp(bounce.ElapsedSeconds / bounce.CompressionDurationSeconds, 0f, 1f);
             if (bounce.IsResting)
             {
@@ -131,7 +140,8 @@ internal sealed class EnrichmentInteractionService
             || obj.QualifiedItemId == FurnitureContent.SlimeBedQualifiedId
             || obj.QualifiedItemId == FurnitureContent.SlimeTunnelQualifiedId
             || obj.QualifiedItemId == FurnitureContent.HeatedSlimeStoneQualifiedId
-            || obj.QualifiedItemId == FurnitureContent.SlimePondQualifiedId)
+                || obj.QualifiedItemId == FurnitureContent.SlimePondQualifiedId
+                || obj.QualifiedItemId == FurnitureContent.SlimeSwingQualifiedId)
             .Select(obj => new FurnitureSpot(obj.TileLocation, obj.QualifiedItemId))
             .Where(spot => !occupiedTiles.Contains(spot.Tile))
             .ToList();
@@ -187,6 +197,12 @@ internal sealed class EnrichmentInteractionService
 
             FurnitureSpot spot = furnitureSpots[nearestIndex];
             furnitureSpots.RemoveAt(nearestIndex);
+            if (spot.QualifiedItemId == FurnitureContent.SlimeSwingQualifiedId)
+            {
+                this.StartInteraction(animal, spot.Tile, 3.8f, 2f, 0f, swingDistance: 8f);
+                continue;
+            }
+
             (float duration, float bounceHeight, float compressionHeight, float slideDistance, bool isResting) = spot.QualifiedItemId switch
             {
                 var id when id == FurnitureContent.SlimeCushionQualifiedId => (1.8f, 9f, 10f, 0f, false),
@@ -209,10 +225,10 @@ internal sealed class EnrichmentInteractionService
     }
 
     private void StartInteraction(FarmAnimal animal, Vector2 furnitureTile, float duration, float bounceHeight, float compressionHeight,
-        float slideDistance = 0f, bool isResting = false)
+        float slideDistance = 0f, bool isResting = false, float swingDistance = 0f)
     {
         this.active[animal.myID.Value] = new Interaction(animal, furnitureTile, animal.drawOffset,
-            duration, bounceHeight, compressionHeight, slideDistance, isResting);
+            duration, bounceHeight, compressionHeight, slideDistance, isResting, swingDistance);
         this.cooldowns[animal.myID.Value] = this.elapsedSeconds + duration + 3f;
     }
 
@@ -221,7 +237,8 @@ internal sealed class EnrichmentInteractionService
     private sealed class Interaction
     {
         public Interaction(FarmAnimal animal, Vector2 furnitureTile, Vector2 originalDrawOffset,
-            float durationSeconds, float bounceHeightPixels, float compressionHeightPixels, float horizontalTravelPixels, bool isResting)
+            float durationSeconds, float bounceHeightPixels, float compressionHeightPixels, float horizontalTravelPixels,
+            bool isResting, float swingDistancePixels)
         {
             this.Animal = animal;
             this.FurnitureTile = furnitureTile;
@@ -231,6 +248,7 @@ internal sealed class EnrichmentInteractionService
             this.CompressionHeightPixels = compressionHeightPixels;
             this.HorizontalTravelPixels = horizontalTravelPixels;
             this.IsResting = isResting;
+            this.SwingDistancePixels = swingDistancePixels;
             this.CompressionDurationSeconds = durationSeconds * 0.16f;
         }
 
@@ -242,6 +260,7 @@ internal sealed class EnrichmentInteractionService
         public float CompressionHeightPixels { get; }
         public float HorizontalTravelPixels { get; }
         public bool IsResting { get; }
+        public float SwingDistancePixels { get; }
         public float CompressionDurationSeconds { get; }
         public float ElapsedSeconds { get; set; }
     }
