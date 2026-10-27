@@ -13,6 +13,7 @@ internal static class BreederDrawPatch
     private const int TileSize = 64;
     private const int FootprintWidth = 5;
     private const int FootprintHeight = 2;
+    private const int SpriteHeight = 4 * TileSize;
     private const int SourceWidth = 1949;
     private static Texture2D? texture;
 
@@ -32,10 +33,9 @@ internal static class BreederDrawPatch
 
         Vector2 tile = __instance.TileLocation;
         int width = FootprintWidth * TileSize;
-        int height = FootprintHeight * TileSize;
-        Vector2 worldTopLeft = new(tile.X * TileSize, (tile.Y + FootprintHeight) * TileSize - height);
+        Vector2 worldTopLeft = new(tile.X * TileSize, (tile.Y + FootprintHeight) * TileSize - SpriteHeight);
         Vector2 screenTopLeft = Game1.GlobalToLocal(Game1.viewport, worldTopLeft);
-        Rectangle destination = new((int)screenTopLeft.X, (int)screenTopLeft.Y, width, height);
+        Rectangle destination = new((int)screenTopLeft.X, (int)screenTopLeft.Y, width, SpriteHeight);
         Rectangle source = new(0, 0, Math.Min(SourceWidth, texture.Width), texture.Height);
 
         // World sprites use their ground contact point for depth, allowing a character

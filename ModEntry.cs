@@ -899,7 +899,7 @@ public sealed class ModEntry : Mod
                 continue;
 
             if (clickedTile.X < pair.Key.X || clickedTile.X >= pair.Key.X + 5
-                || clickedTile.Y < pair.Key.Y || clickedTile.Y >= pair.Key.Y + 2)
+                || clickedTile.Y < pair.Key.Y - 2 || clickedTile.Y >= pair.Key.Y + 2)
                 continue;
 
             anchor = pair.Key;
