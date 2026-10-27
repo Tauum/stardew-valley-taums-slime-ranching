@@ -40,6 +40,33 @@ internal sealed class SlimeRegistry
     public BreedingPairRecord? GetBreedingPair(string machineKey) =>
         this.breedingPairs.TryGetValue(machineKey, out BreedingPairRecord? pair) ? pair : null;
 
+    public int ReconcileBreederMachineKeys(string locationPrefix, IEnumerable<string> placedMachineKeys)
+    {
+        HashSet<string> placed = placedMachineKeys.ToHashSet(StringComparer.Ordinal);
+        Queue<string> emptyMachines = new(placed
+            .Where(key => !this.breedingPairs.ContainsKey(key))
+            .OrderBy(key => key, StringComparer.Ordinal));
+        int moved = 0;
+        BreedingPairRecord[] missingMachines = this.breedingPairs.Values
+            .Where(pair => pair.MachineKey.StartsWith(locationPrefix, StringComparison.Ordinal)
+                && !placed.Contains(pair.MachineKey))
+            .OrderBy(pair => pair.MachineKey, StringComparer.Ordinal)
+            .ToArray();
+
+        foreach (BreedingPairRecord pair in missingMachines)
+        {
+            if (!emptyMachines.TryDequeue(out string? replacementKey))
+                break;
+
+            this.breedingPairs.Remove(pair.MachineKey);
+            pair.MachineKey = replacementKey;
+            this.breedingPairs[replacementKey] = pair;
+            moved++;
+        }
+
+        return moved;
+    }
+
     public bool TryGetSlimeRecord(long farmAnimalId, out SlimeRecord record) =>
         this.farmAnimalRecords.TryGetValue(farmAnimalId, out record!);
 

@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-10-27  
 **Test save:** `TaumTest_322865388` (disposable copy)  
-**Current branch:** `fix/daycare-occupant-compatibility`, chained after `feature/slime-companion-binding` (`ea6fa43`). Robin's animal chooser showed the custom Daycare as invalid for a purchased Ranch Slime. The base building now explicitly lists its own building ID in `ValidOccupantTypes`; compile passes, but Marnie's purchase-to-assignment flow needs in-game retest. Companion binding groundwork is committed separately; Core item and follower behavior remain unresolved.
+**Current branch:** `fix/breeder-replacement-reservations`, chained after `fix/daycare-occupant-compatibility` (`0d51fdd`). Ranch Slime placement compatibility is fixed in code and needs retesting in Robin's chooser. Breeder records now move to an available replacement breeder in the same Daycare when opened, preserving pair IDs and cycle progress; verify by moving an active breeder to a different tile. Companion binding groundwork is committed separately; Core item and follower behavior remain unresolved.
 
 ## Current state
 

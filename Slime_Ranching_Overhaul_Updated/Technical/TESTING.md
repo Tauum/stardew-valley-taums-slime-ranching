@@ -115,6 +115,15 @@ This is a new custom farm-animal type in a separate Slime Daycare animal-house b
 5. Run `slime_ranching_dismiss_companion TaumTest_322865388`. Confirm `companion false` and that the same animal is eligible for its normal machine interactions again.
 
 The commands are test access only. No Core item, following, ability behavior, or game-save metadata is implemented in this slice.
+
+## Breeder replacement and parent recovery
+
+1. On the disposable save, start a breeder cycle with two mature Ranch Slimes and note both IDs with `slime_ranching_inspect`.
+2. Pick up or break that breeder, then place another Slime Breeder at a different tile in the same Daycare.
+3. Open the replacement breeder. Confirm the same pair and cycle progress appear, then confirm the two parents remain unavailable to other breeders and machines.
+4. Finish or cancel the cycle and confirm both parents return to normal availability after egg collection/release.
+
+The registry reattaches an existing breeder job to a replacement machine in the same Daycare when that machine is opened; it preserves the parent IDs and current cycle dates.
 6. Run `slime_ranching_inspect` in a Slime Hutch and confirm its vanilla slime count has not changed.
 7. Run `slime_ranching_inspect <animal ID>` for a managed Ranch Slime. Confirm the log shows its genome identity, species/color/size, shiny and mutation traits, ability IDs, liked food, external age, mutation pity, and reservation state.
 

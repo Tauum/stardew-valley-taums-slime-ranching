@@ -765,8 +765,15 @@ public sealed class ModEntry : Mod
             && Game1.currentLocation.Objects.TryGetValue(e.Cursor.GrabTile, out StardewValley.Object? placedObject)
             && placedObject.QualifiedItemId == ConverterContent.BreederQualifiedId)
         {
+            if (!this.stateReady || !Context.IsMainPlayer || Context.IsMultiplayer)
+            {
+                this.Monitor.Log("The Slime Breeder requires an available external registry in single-player.", LogLevel.Error);
+                return;
+            }
+
             this.Helper.Input.Suppress(e.Button);
             string machineKey = $"{Game1.currentLocation.NameOrUniqueName}:{(int)placedObject.TileLocation.X},{(int)placedObject.TileLocation.Y}";
+            this.ReconcileBreederMachineKeys(Game1.currentLocation);
             Game1.activeClickableMenu = new SlimeBreederMenu(this.registry!, machineKey, this.SaveExternalStateNow, this.CreateEggItem);
             return;
         }
@@ -803,6 +810,23 @@ public sealed class ModEntry : Mod
 
         this.Helper.Input.Suppress(e.Button);
         Game1.activeClickableMenu = new StardewValley.Menus.LetterViewerMenu(GuidebookContent.Text);
+    }
+
+    private void ReconcileBreederMachineKeys(GameLocation location)
+    {
+        string prefix = location.NameOrUniqueName + ":";
+        string[] placedMachineKeys = location.Objects.Values
+            .Where(obj => obj.QualifiedItemId == ConverterContent.BreederQualifiedId)
+            .Select(obj => $"{prefix}{(int)obj.TileLocation.X},{(int)obj.TileLocation.Y}")
+            .ToArray();
+        int moved = this.registry!.ReconcileBreederMachineKeys(prefix, placedMachineKeys);
+        if (moved == 0)
+            return;
+
+        if (this.SaveExternalStateNow())
+            this.Monitor.Log($"Reattached {moved} existing breeder reservation(s) to replacement machine(s) in {location.NameOrUniqueName}; parent slimes and cycle progress were preserved.", LogLevel.Info);
+        else
+            this.Monitor.Log($"Reattached {moved} breeder reservation(s) in memory, but couldn't save the moved machine keys yet.", LogLevel.Error);
     }
 
     private void OnGiveTestEggsCommand(string command, string[] args)
