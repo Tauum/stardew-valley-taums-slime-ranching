@@ -79,6 +79,7 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [x] Add optional Generic Mod Config Menu sliders for Mutagenic Pool balance; the mod remains usable without GMCM.
 - [x] Expose all ranching machine and enrichment furniture prices in the optional GMCM page.
 - [x] Cache mutated-slime candidates for the Shadow Clone renderer and rotate the four-echo draw budget fairly.
+- [x] Add an optional GMCM toggle for the Shadow Clone visual prototype.
 - [ ] Extend the temporary Shadow Clone visual echo into bounded companion behavior; no clones may breed, produce resources, or recursively clone.
 - [x] Chromatic Crystals as breeder consumables, **not furniture**; obtainment recipes and unlock progression remain open.
 - [ ] Gel Refinery stored Slime and vanilla-item conversion recipes.

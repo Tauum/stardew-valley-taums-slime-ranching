@@ -13,5 +13,6 @@
   "MutagenicPoolBaseChance": 0.05,
   "MutagenicPoolChancePerFailure": 0.02,
   "MutagenicPoolMaximumChance": 0.3,
-  "MutagenicPoolDurationDays": 1
+  "MutagenicPoolDurationDays": 1,
+  "ShowShadowCloneVisualEchoes": true
 }

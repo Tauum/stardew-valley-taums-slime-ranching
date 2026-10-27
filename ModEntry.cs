@@ -104,6 +104,11 @@ public sealed class ModEntry : Mod
         this.AddShopPriceOption(api, "Slime Bed", "Price of the bed enrichment furniture.", () => this.config.SlimeBedShopPrice, value => this.config.SlimeBedShopPrice = value);
         api.AddSectionTitle(this.ModManifest, () => "Mutagenic Pool");
         api.AddParagraph(this.ModManifest, () => "Balance values are provisional. Changes apply when you save these settings; active attempts keep their stored chance and ready day.");
+        api.AddBoolOption(this.ModManifest,
+            () => this.config.ShowShadowCloneVisualEchoes,
+            value => this.config.ShowShadowCloneVisualEchoes = value,
+            () => "Show Shadow Clone echoes",
+            () => "Show the temporary visual duplicate around Shadow Clone slimes in the Daycare.");
         api.AddNumberOption(this.ModManifest,
             () => this.config.MutagenicPoolShopPrice,
             value => this.config.MutagenicPoolShopPrice = value,
@@ -266,7 +271,8 @@ public sealed class ModEntry : Mod
         if (!this.stateReady || !Context.IsMainPlayer)
             return;
 
-        this.shadowCloneVisuals.Draw(Game1.currentLocation, e.SpriteBatch, this.registry!);
+        if (this.config.ShowShadowCloneVisualEchoes)
+            this.shadowCloneVisuals.Draw(Game1.currentLocation, e.SpriteBatch, this.registry!);
         if (Game1.currentLocation != Game1.getFarm())
             return;
 

@@ -17,4 +17,5 @@ public sealed class ModConfig
     public double MutagenicPoolChancePerFailure { get; set; } = 0.02;
     public double MutagenicPoolMaximumChance { get; set; } = 0.30;
     public int MutagenicPoolDurationDays { get; set; } = 1;
+    public bool ShowShadowCloneVisualEchoes { get; set; } = true;
 }
