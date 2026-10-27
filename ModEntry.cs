@@ -390,7 +390,7 @@ public sealed class ModEntry : Mod
             this.Monitor.Log($"Confirmed {recovered} previous Ranch Slime hatch(es) against live animal IDs.", LogLevel.Info);
             if (!this.SaveExternalStateNow())
                 this.Monitor.Log("The confirmed hatch could not be finalized in the external registry; its reserved hatch record will be checked again on reload.", LogLevel.Error);
-            this.Helper.GameContent.InvalidateCache("Data/Objects");
+            this.InvalidateEggObjectData();
         }
 
         foreach (IncubationRecord incubation in this.registry.Incubations
@@ -443,7 +443,7 @@ public sealed class ModEntry : Mod
                 this.Monitor.Log("The animal hatched, but its updated genome link could not yet be written. The reserved external hatch record will recover it after reload.", LogLevel.Error);
             Game1.addHUDMessage(new HUDMessage($"A {animal.Name} hatched in the Slime Daycare!", HUDMessage.newQuest_type));
             this.Monitor.Log($"A Ranch Slime hatched from genome egg {egg.Genome.Id:N} (FarmAnimal ID {animalId}).", LogLevel.Info);
-            this.Helper.GameContent.InvalidateCache("Data/Objects");
+            this.InvalidateEggObjectData();
         }
     }
 
@@ -459,8 +459,14 @@ public sealed class ModEntry : Mod
 
     private Item CreateEggItem(Guid genomeId)
     {
-        this.Helper.GameContent.InvalidateCache("Data/Objects");
+        this.InvalidateEggObjectData();
         return ItemRegistry.Create(SlimeEggContent.GetQualifiedId(genomeId));
+    }
+
+    private void InvalidateEggObjectData()
+    {
+        SlimeEggContent.InvalidateCache();
+        this.Helper.GameContent.InvalidateCache("Data/Objects");
     }
 
     private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
@@ -565,7 +571,7 @@ public sealed class ModEntry : Mod
         {
             if (!this.SaveExternalStateNow())
                 return;
-            this.Helper.GameContent.InvalidateCache("Data/Objects");
+            this.InvalidateEggObjectData();
             foreach (taums_slime_ranching.Models.SlimeEggRecord egg in eggs)
             {
                 Item item = ItemRegistry.Create(SlimeEggContent.GetQualifiedId(egg.Genome.Id));
@@ -622,7 +628,7 @@ public sealed class ModEntry : Mod
         {
             if (!this.SaveExternalStateNow())
                 return;
-            this.Helper.GameContent.InvalidateCache("Data/Objects");
+            this.InvalidateEggObjectData();
             foreach (SlimeEggRecord egg in eggs)
                 Game1.player.addItemToInventoryBool(ItemRegistry.Create(SlimeEggContent.GetQualifiedId(egg.Genome.Id)));
 

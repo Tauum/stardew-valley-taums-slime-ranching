@@ -13,6 +13,14 @@ internal static class SlimeEggContent
 {
     private const string RegistryFileName = "slime-registry-v1.json";
     private const string EggTexturePrefix = "Mods/Taum.SlimeRanching/Objects/RanchSlimeEgg_";
+    private static string? cachedModDirectory;
+    private static List<SlimeEggRecord>? cachedEggs;
+
+    public static void InvalidateCache()
+    {
+        cachedModDirectory = null;
+        cachedEggs = null;
+    }
 
     public static void LoadAssets(AssetRequestedEventArgs e)
     {
@@ -39,7 +47,7 @@ internal static class SlimeEggContent
         e.Edit(asset =>
         {
             var objects = asset.AsDictionary<string, ObjectData>().Data;
-            foreach (SlimeEggRecord egg in LoadEggs(modDirectory))
+            foreach (SlimeEggRecord egg in GetEggs(modDirectory))
             {
                 if (objects.ContainsKey(egg.ItemId))
                     continue;
@@ -146,7 +154,17 @@ internal static class SlimeEggContent
         if (!Directory.Exists(savesDirectory))
             yield break;
 
-        foreach (string path in Directory.EnumerateFiles(savesDirectory, RegistryFileName, SearchOption.AllDirectories))
+        string[] registryPaths;
+        try
+        {
+            registryPaths = Directory.EnumerateFiles(savesDirectory, RegistryFileName, SearchOption.AllDirectories).ToArray();
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            yield break;
+        }
+
+        foreach (string path in registryPaths)
         {
             SlimeSaveData? data;
             try
@@ -165,5 +183,15 @@ internal static class SlimeEggContent
                     yield return egg;
             }
         }
+    }
+
+    private static IReadOnlyList<SlimeEggRecord> GetEggs(string modDirectory)
+    {
+        if (cachedEggs is not null && string.Equals(cachedModDirectory, modDirectory, StringComparison.OrdinalIgnoreCase))
+            return cachedEggs;
+
+        cachedModDirectory = modDirectory;
+        cachedEggs = LoadEggs(modDirectory).ToList();
+        return cachedEggs;
     }
 }
