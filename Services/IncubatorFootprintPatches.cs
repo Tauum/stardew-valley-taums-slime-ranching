@@ -10,7 +10,7 @@ namespace taums_slime_ranching.Services;
 internal static class IncubatorFootprintPatches
 {
     private const int TileSize = 64;
-    private const int FootprintWidth = 4;
+    private const int MaximumFootprintWidth = 5;
     private const int FootprintHeight = 2;
 
     private static IEnumerable<MethodBase> TargetMethods() => typeof(GameLocation)
@@ -27,7 +27,7 @@ internal static class IncubatorFootprintPatches
         Character? character = __args.OfType<Character>().FirstOrDefault();
         Rectangle currentBounds = character?.GetBoundingBox() ?? Rectangle.Empty;
 
-        int firstAnchorX = (int)Math.Floor(position.Left / (double)TileSize) - (FootprintWidth - 1);
+        int firstAnchorX = (int)Math.Floor(position.Left / (double)TileSize) - (MaximumFootprintWidth - 1);
         int lastAnchorX = (int)Math.Floor((position.Right - 1) / (double)TileSize);
         int firstAnchorY = (int)Math.Floor(position.Top / (double)TileSize) - (FootprintHeight - 1);
         int lastAnchorY = (int)Math.Floor((position.Bottom - 1) / (double)TileSize);
@@ -35,12 +35,20 @@ internal static class IncubatorFootprintPatches
         {
             for (int tileX = firstAnchorX; tileX <= lastAnchorX; tileX++)
             {
-                if (!__instance.Objects.TryGetValue(new Vector2(tileX, tileY), out StardewValley.Object? obj)
-                    || obj.QualifiedItemId != ConverterContent.IncubatorQualifiedId)
+                if (!__instance.Objects.TryGetValue(new Vector2(tileX, tileY), out StardewValley.Object? obj))
+                    continue;
+
+                int footprintWidth = obj.QualifiedItemId switch
+                {
+                    ConverterContent.IncubatorQualifiedId => 4,
+                    ConverterContent.BreederQualifiedId => 5,
+                    _ => 0
+                };
+                if (footprintWidth == 0)
                     continue;
 
                 Rectangle footprint = new(tileX * TileSize, tileY * TileSize,
-                    FootprintWidth * TileSize, FootprintHeight * TileSize);
+                    footprintWidth * TileSize, FootprintHeight * TileSize);
                 if (!position.Intersects(footprint))
                     continue;
 

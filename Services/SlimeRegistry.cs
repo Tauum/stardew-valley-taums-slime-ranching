@@ -28,6 +28,7 @@ internal sealed class SlimeRegistry
 
     public IReadOnlyCollection<long> RanchSlimeFarmAnimalIds => this.farmAnimalRecords.Keys;
     public IReadOnlyCollection<long> ReservedFarmAnimalIds => this.breedingPairs.Values
+        .Where(pair => pair.OutputEggItemId is null)
         .SelectMany(pair => new[] { pair.ParentAId, pair.ParentBId })
         .Concat(this.mutagenicAttempts.Values.Select(attempt => attempt.SlimeId))
         .Distinct()
@@ -343,7 +344,7 @@ internal sealed class SlimeRegistry
 
     public bool IsReserved(long farmAnimalId, string? exceptMachineKey = null) =>
         (this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? slime) && slime.IsCompanion)
-        || this.breedingPairs.Values.Any(pair => pair.MachineKey != exceptMachineKey
+        || this.breedingPairs.Values.Any(pair => pair.OutputEggItemId is null && pair.MachineKey != exceptMachineKey
             && (pair.ParentAId == farmAnimalId || pair.ParentBId == farmAnimalId))
         || this.mutagenicAttempts.Values.Any(attempt => attempt.MachineKey != exceptMachineKey && attempt.SlimeId == farmAnimalId);
 
@@ -472,7 +473,10 @@ internal sealed class SlimeRegistry
             return null;
 
         if (pair.OutputEggItemId is not null)
+        {
+            ApplyBreedingRest(pair, pair.CycleReadyOnDay);
             return this.eggs.TryGetValue(pair.OutputEggItemId, out SlimeEggRecord? existing) ? existing : null;
+        }
 
         if (!this.farmAnimalRecords.TryGetValue(pair.ParentAId, out SlimeRecord? parentA)
             || !this.farmAnimalRecords.TryGetValue(pair.ParentBId, out SlimeRecord? parentB))
@@ -511,8 +515,18 @@ internal sealed class SlimeRegistry
 
         SlimeEggRecord egg = this.CreateEgg(offspring);
         pair.OutputEggItemId = egg.ItemId;
+        ApplyBreedingRest(pair, currentDay);
         created = true;
         return egg;
+    }
+
+    private void ApplyBreedingRest(BreedingPairRecord pair, int completedOnDay)
+    {
+        int restingUntilDay = completedOnDay + BreedingRestDays;
+        if (this.farmAnimalRecords.TryGetValue(pair.ParentAId, out SlimeRecord? parentA))
+            parentA.BreedingCooldownUntilDay = Math.Max(parentA.BreedingCooldownUntilDay, restingUntilDay);
+        if (this.farmAnimalRecords.TryGetValue(pair.ParentBId, out SlimeRecord? parentB))
+            parentB.BreedingCooldownUntilDay = Math.Max(parentB.BreedingCooldownUntilDay, restingUntilDay);
     }
 
     private static (string PrimarySpecies, string? SecondarySpecies, string VisualColor) RollOffspringSpecies(SlimeGenome a, SlimeGenome b)
@@ -645,11 +659,6 @@ internal sealed class SlimeRegistry
             || pair.OutputEggItemId != eggItemId || !this.eggs.ContainsKey(eggItemId))
             return false;
 
-        if (this.farmAnimalRecords.TryGetValue(pair.ParentAId, out SlimeRecord? parentA))
-            parentA.BreedingCooldownUntilDay = Math.Max(parentA.BreedingCooldownUntilDay, currentDay + BreedingRestDays);
-        if (this.farmAnimalRecords.TryGetValue(pair.ParentBId, out SlimeRecord? parentB))
-            parentB.BreedingCooldownUntilDay = Math.Max(parentB.BreedingCooldownUntilDay, currentDay + BreedingRestDays);
-
         this.breedingPairs.Remove(machineKey);
         return true;
     }
@@ -657,12 +666,6 @@ internal sealed class SlimeRegistry
     public void RestoreBreedingCycle(BreedingPairRecord pair, int currentDay)
     {
         this.breedingPairs[pair.MachineKey] = pair;
-        if (this.farmAnimalRecords.TryGetValue(pair.ParentAId, out SlimeRecord? parentA)
-            && parentA.BreedingCooldownUntilDay == currentDay + BreedingRestDays)
-            parentA.BreedingCooldownUntilDay = currentDay;
-        if (this.farmAnimalRecords.TryGetValue(pair.ParentBId, out SlimeRecord? parentB)
-            && parentB.BreedingCooldownUntilDay == currentDay + BreedingRestDays)
-            parentB.BreedingCooldownUntilDay = currentDay;
     }
 
     public int RegisterRanchSlimes(IEnumerable<FarmAnimal> animals)

@@ -146,8 +146,10 @@ Common and genome-specific Ranch Slime Eggs can now hatch in the custom Slime In
 4. Click **Start 2-day Cycle**. This should reserve both selected parents automatically, stop their roaming, and start the timer. Confirm another breeder cannot offer them while reserved.
 5. Close and reopen the menu or reload; confirm the timer resumes from the saved day instead of restarting.
 6. Click **Cancel Cycle** and confirm the parents remain reserved. Click **Release Pair** and confirm they move again and return to the available list.
+7. Give and place another breeder. Walk into its base from all four sides and corners; the 5×2 base should block movement.
+8. Reserve a pair, start the cycle, then sleep until the ready notification appears. Confirm the egg remains in the breeder for manual **Collect Egg**, while both parents resume roaming and appear as resting in the available list. Leave the egg uncollected for a day and confirm it stays in the breeder and is not placed in a nearby chest.
 
-The pair, cycle dates, and resulting egg genome are stored in the mod-folder registry, not in game-save metadata. Parents remain in the Daycare and stop moving in place; the chamber is a menu preview, not a physical enclosure. The two-day cycle can produce an egg; verify its ready notification, collection, and persistence in game. The machine currently borrows the vanilla Egg-Press sprite as a visual placeholder.
+The pair, cycle dates, and resulting egg genome are stored in the mod-folder registry, not in game-save metadata. Parents remain in the Daycare; they stop moving only while their cycle is active. The chamber is a menu preview, not a physical enclosure. There is no auto-collect setting; each completed egg remains in its breeder until manually collected. The two-day cycle, parent release, and 5×2 collision boundary still need in-game verification.
 
 ## Breeder parent genome preview
 

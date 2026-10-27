@@ -48,8 +48,11 @@ internal sealed class SlimeBreederMenu : IClickableMenu
         BreedingPairRecord? pair = registry.GetBreedingPair(machineKey);
         if (pair is not null)
         {
-            this.selected.Add(pair.ParentAId);
-            this.selected.Add(pair.ParentBId);
+            if (pair.OutputEggItemId is null)
+            {
+                this.selected.Add(pair.ParentAId);
+                this.selected.Add(pair.ParentBId);
+            }
             this.pairReserved = true;
         }
         this.candidates = (interior?.animals.Values.AsEnumerable() ?? Enumerable.Empty<FarmAnimal>())
@@ -104,7 +107,9 @@ internal sealed class SlimeBreederMenu : IClickableMenu
         if (this.releaseButton.Contains(x, y))
         {
             BreedingPairRecord? pair = this.registry.GetBreedingPair(this.machineKey);
-            if (pair is not null && pair.CycleReadyOnDay > 0)
+            if (pair?.OutputEggItemId is not null)
+                this.statusMessage = "Collect the finished egg before clearing this breeder.";
+            else if (pair is not null && pair.CycleReadyOnDay > 0)
                 this.statusMessage = "Cancel the cycle before releasing the parents.";
             else if (this.pairReserved)
             {
@@ -147,7 +152,9 @@ internal sealed class SlimeBreederMenu : IClickableMenu
             else
             {
                 BreedingPairRecord? pair = this.registry.GetBreedingPair(this.machineKey);
-                if (pair is not null && pair.CycleReadyOnDay > 0)
+                if (pair?.OutputEggItemId is not null)
+                    this.CollectBreedingEgg(pair);
+                else if (pair is not null && pair.CycleReadyOnDay > 0)
                 {
                     if (Game1.Date.TotalDays >= pair.CycleReadyOnDay)
                         this.CollectBreedingEgg(pair);
@@ -260,7 +267,9 @@ internal sealed class SlimeBreederMenu : IClickableMenu
         b.Draw(Game1.staminaRect, this.actionButton, new Color(180, 220, 177));
         BreedingPairRecord? currentPair = this.registry.GetBreedingPair(this.machineKey);
         bool cycleFinished = currentPair?.CycleReadyOnDay > 0 && Game1.Date.TotalDays >= currentPair.CycleReadyOnDay;
-        string buttonText = !this.pairReserved ? "Start 2-day Cycle" : cycleFinished ? "Collect Egg" : currentPair?.CycleReadyOnDay > 0 ? "Cancel Cycle" : "Start 2-day Cycle";
+        string buttonText = !this.pairReserved ? "Start 2-day Cycle"
+            : currentPair?.OutputEggItemId is not null || cycleFinished ? "Collect Egg"
+            : currentPair?.CycleReadyOnDay > 0 ? "Cancel Cycle" : "Start 2-day Cycle";
         b.DrawString(Game1.smallFont, buttonText, new Vector2(this.actionButton.X + 14, this.actionButton.Y + 17), Game1.textColor);
         b.Draw(Game1.staminaRect, this.releaseButton, new Color(221, 196, 158));
         b.DrawString(Game1.smallFont, "Release Pair", new Vector2(this.releaseButton.X + 28, this.releaseButton.Y + 17), Game1.textColor);
@@ -276,6 +285,15 @@ internal sealed class SlimeBreederMenu : IClickableMenu
         b.Draw(Game1.staminaRect, chamber, new Color(191, 222, 222));
         IClickableMenu.drawTextureBox(b, chamber.X, chamber.Y, chamber.Width, chamber.Height, Color.White);
         b.DrawString(Game1.smallFont, "BREEDING CHAMBER", new Vector2(chamber.X + 74, chamber.Y + 12), Game1.textColor);
+        BreedingPairRecord? currentPair = this.registry.GetBreedingPair(this.machineKey);
+        if (currentPair?.OutputEggItemId is not null)
+        {
+            b.DrawString(Game1.dialogueFont, "EGG READY", new Vector2(chamber.X + 88, chamber.Y + 82), Game1.textColor);
+            b.DrawString(Game1.smallFont, "Parents returned to the Daycare.", new Vector2(chamber.X + 47, chamber.Y + 124), Game1.textColor);
+            b.DrawString(Game1.smallFont, "Collect the egg to use this breeder again.", new Vector2(chamber.X + 12, chamber.Y + 154), Game1.textColor);
+            return;
+        }
+
         FarmAnimal[] parents = this.candidates.Where(animal => this.selected.Contains(animal.myID.Value)).Take(2).ToArray();
         if (parents.Length == 0)
         {
@@ -418,7 +436,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
         int remainingDays = pair.CycleReadyOnDay - Game1.Date.TotalDays;
         return remainingDays > 0
             ? $"Cycle: {remainingDays} day(s) remaining."
-            : pair.OutputEggItemId is null ? "Cycle finished. Collect the egg." : "Egg is ready to collect.";
+            : pair.OutputEggItemId is null ? "Egg is forming; parents will return when it is ready." : "Egg ready; parents returned to the Daycare.";
     }
 
     private void CollectBreedingEgg(BreedingPairRecord pair)
