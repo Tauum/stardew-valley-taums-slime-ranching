@@ -402,6 +402,7 @@ public sealed class ModEntry : Mod
                 home = daycare,
                 homeInterior = animalHouse
             };
+            animal.age.Value = 0;
             animalHouse.adoptAnimal(animal);
             if (!this.registry.RegisterIncubationHatch(incubation, animal))
             {
@@ -608,6 +609,7 @@ public sealed class ModEntry : Mod
             home = daycare,
             homeInterior = animalHouse
         };
+        animal.age.Value = FarmAnimalContent.RanchSlimeDaysToMature;
 
         animalHouse.adoptAnimal(animal);
         this.registry!.RegisterRanchSlimes(new[] { animal });

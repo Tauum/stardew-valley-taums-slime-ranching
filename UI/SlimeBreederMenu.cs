@@ -172,6 +172,14 @@ internal sealed class SlimeBreederMenu : IClickableMenu
             return;
 
         long id = this.candidates[index].myID.Value;
+        int growthDays = GetGrowthDaysRemaining(this.candidates[index]);
+        if (growthDays > 0)
+        {
+            this.statusMessage = $"This young Ranch Slime needs {growthDays} more day(s) to grow before breeding.";
+            Game1.playSound("cancel");
+            return;
+        }
+
         int restDays = this.registry.GetBreedingRestDays(id, Game1.Date.TotalDays);
         if (restDays > 0)
         {
@@ -220,9 +228,12 @@ internal sealed class SlimeBreederMenu : IClickableMenu
                 int rowY = this.listTop + (i - this.firstVisibleCandidate) * RowHeight;
                 bool isSelected = this.selected.Contains(animal.myID.Value);
                 int restDays = this.registry.GetBreedingRestDays(animal.myID.Value, Game1.Date.TotalDays);
+                int growthDays = GetGrowthDaysRemaining(animal);
                 Rectangle row = new(this.xPositionOnScreen + 24, rowY, 382, RowHeight - 4);
-                b.Draw(Game1.staminaRect, row, restDays > 0 ? new Color(210, 210, 210) : isSelected ? new Color(180, 235, 170) : new Color(238, 224, 190));
-                string label = restDays > 0
+                b.Draw(Game1.staminaRect, row, restDays > 0 || growthDays > 0 ? new Color(210, 210, 210) : isSelected ? new Color(180, 235, 170) : new Color(238, 224, 190));
+                string label = growthDays > 0
+                    ? $"[GROWING {growthDays}d] {animal.Name}"
+                    : restDays > 0
                     ? $"[RESTING {restDays}d] {animal.Name}"
                     : $"{(isSelected ? "[SELECTED] " : "[  ] ")}{animal.Name}";
                 b.DrawString(Game1.smallFont, label, new Vector2(row.X + 12, row.Y + 14), Game1.textColor);
@@ -277,6 +288,9 @@ internal sealed class SlimeBreederMenu : IClickableMenu
     }
 
     private int GetVisibleCandidateCount() => Math.Max(1, (this.listBottom - this.listTop) / RowHeight);
+
+    private static int GetGrowthDaysRemaining(FarmAnimal animal) =>
+        Math.Max(0, FarmAnimalContent.RanchSlimeDaysToMature - animal.age.Value);
 
     private string GetCycleStatus(BreedingPairRecord? pair)
     {

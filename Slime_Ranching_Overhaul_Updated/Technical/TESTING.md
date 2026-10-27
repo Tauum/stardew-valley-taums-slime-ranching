@@ -68,8 +68,9 @@ These command-created genomes are test fixtures only. The user confirmed an egg 
 3. Reload while the egg is incubating. Confirm the menu reports the remaining days and the egg is not available to a second incubator.
 4. Sleep through the remaining time. At the start of the ready day, confirm a Ranch Slime appears in the Daycare and the HUD reports the hatch. Inspect `SlimeRecord.Genome` in the external registry; it should match the egg genome exactly.
 5. Save and reload after hatching. Confirm the animal ID links back to that genome and any copied item with the same egg ID can't hatch another slime.
-6. Fill the Daycare before a hatch is ready. Confirm the egg stays in the incubator record and hatches after a resident is removed.
-7. Convert a vanilla egg and insert the resulting Common Egg. It should hatch into a Green (`#00FF00`), Normal, Common Ranch Slime. Insert a second Common Egg and confirm it receives a different external genome ID. Vanilla Slime Eggs must remain unaccepted by this incubator; the vanilla Coop Incubator remains untouched.
+6. Confirm the new animal is visibly young, ages each day, and remains unavailable in the breeder for three days. Save/reload during growth; it should keep its age and become selectable on maturity.
+7. Fill the Daycare before a hatch is ready. Confirm the egg stays in the incubator record and hatches after a resident is removed.
+8. Convert a vanilla egg and insert the resulting Common Egg. It should hatch into a Green (`#00FF00`), Normal, Common Ranch Slime. Insert a second Common Egg and confirm it receives a different external genome ID. Vanilla Slime Eggs must remain unaccepted by this incubator; the vanilla Coop Incubator remains untouched.
 
 The incubator runs inside the Daycare only, consumes Common or genome-specific Ranch Slime Eggs from inventory, and targets a two-day cycle. A Common Egg receives a fresh base genome when inserted; a breeder egg uses its existing genome. The incubator spawns the juvenile automatically when the next day begins. If the game and mod-folder state are saved at different moments, the external hatch record reserves the native animal ID and recovers against the next loaded game state. Duration and duplicate-item behavior are provisional and need playtesting.
 

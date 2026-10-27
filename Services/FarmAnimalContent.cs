@@ -10,6 +10,7 @@ namespace taums_slime_ranching.Services;
 internal static class FarmAnimalContent
 {
     public const string RanchSlimeTypeId = "Taum.SlimeRanching_RanchSlime";
+    public const int RanchSlimeDaysToMature = 3;
     private const string RanchSlimeTexture = "Mods/Taum.SlimeRanching/Animals/RanchSlime";
 
     public static void LoadAssets(AssetRequestedEventArgs e)
@@ -36,7 +37,7 @@ internal static class FarmAnimalContent
                     House = BuildingContent.SlimeDaycareBuildingId,
                     PurchasePrice = 1000,
                     SellPrice = 0,
-                    DaysToMature = 0,
+                    DaysToMature = RanchSlimeDaysToMature,
                     CanGetPregnant = false,
                     DaysToProduce = 0,
                     GrassEatAmount = 0,

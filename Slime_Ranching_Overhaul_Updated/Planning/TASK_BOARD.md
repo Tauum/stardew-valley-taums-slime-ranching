@@ -27,6 +27,8 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [ ] Verify different genome eggs remain distinct through inventory, chests, shipping, and machine transfers.
 - [x] Implement a separate incubator for genome-specific eggs; create a Ranch Slime with the stored genome and preserve vanilla egg behavior.
 - [x] Let converter Common Eggs hatch as base Common Ranch Slimes with a new external genome per inserted egg.
+- [x] Hatch Ranch Slimes as three-day juveniles; prevent growing slimes from entering a breeding pair.
+- [ ] Verify juvenile appearance, daily growth, save/reload age, and breeder eligibility at maturity.
 - [ ] Verify incubation start, save/reload recovery, hatch, full-Daycare deferral, and duplicate-egg handling in game.
 - [x] Add parent cooldown after egg collection; duration remains provisional.
 - [ ] Add crash/reload recovery checks and actual in-world enclosure animation beyond the current menu preview.

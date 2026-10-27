@@ -43,6 +43,8 @@ The Slime Incubator accepts a Common Slime Egg or a genome-specific Ranch Slime 
 3. The egg is removed from inventory; sleep to save the incubator job in the mod-folder registry. A Common Egg receives a fresh Green, Normal, Common genome at insertion. A breeder egg keeps its existing genome. Both hatch automatically at the start of the day two days later.
 4. The new Ranch Slime appears in the Daycare with the egg's stored genome. If the Daycare is full, the ready hatch waits until space is available.
 
+Hatched Ranch Slimes grow for three in-game days before becoming breeding candidates. The breeder marks growing slimes in its list and won't let them be selected. The testing spawn command creates mature Ranch Slimes so you can test breeding immediately.
+
 An egg's genome ID can hatch only once, so copied breeder egg items with that same ID become inactive after the first hatch. Each Common Egg insertion creates a separate genome ID. Vanilla eggs are unaffected. The incubator's two-day duration and full-Daycare behavior are provisional for playtesting.
 
 ## Hutch inspection

@@ -14,6 +14,7 @@
 12. **Gel Refinery:** Conversion recipes, slime fuel costs, progression unlock and cosmetic transmutation feasibility.
 13. **Resource production:** How drops are collected, production interval, caps and exceptional outputs.
 14. **Companion capacity:** One bound active slime at a time? Recommend one initially.
+15. **Maturity:** Ranch Slimes currently mature after three in-game days, matching the hatching-as-juvenile goal. Review this duration and confirm the visual growth steps in game.
 
 ## Decision log
 | Date | Decision | Status |
@@ -28,6 +29,7 @@
 | 2026-10-27 | Parents rest for one in-game day after collecting a breeding egg | Provisional implementation; review balance |
 | 2026-10-27 | Managed eggs hatch in a separate two-day Slime Incubator inside the Daycare; a full Daycare defers hatching | Prototype implemented; verify and review balance |
 | 2026-10-27 | Common converter eggs receive a fresh base Common genome when inserted into the incubator | Prototype implemented; verify common egg flow |
+| 2026-10-27 | Ranch Slime juveniles mature after three in-game days and cannot breed while growing | Provisional implementation; verify visual growth and balance |
 
 ## Current decisions locked
 Full custom breeder; external-only mod state; custom companion AI; single-player first; GPT-assisted sprite production. The breeder egg ID to external genome link is prototyped but still needs transfer/reload verification. Remaining design decisions include Pink recipe rules, exceptional acquisition, time-change safeguards, precise mutation and shop balancing.
