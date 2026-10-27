@@ -30,6 +30,9 @@ internal sealed class SlimeRegistry
     public bool IsBreedingParentReserved(long farmAnimalId) => this.breedingPairs.Values
         .Any(pair => pair.OutputEggItemId is null
             && (pair.ParentAId == farmAnimalId || pair.ParentBId == farmAnimalId));
+    public bool IsInActiveBreedingCycle(long farmAnimalId) => this.breedingPairs.Values
+        .Any(pair => pair.CycleReadyOnDay > 0 && pair.OutputEggItemId is null
+            && (pair.ParentAId == farmAnimalId || pair.ParentBId == farmAnimalId));
     public IReadOnlyCollection<long> ReservedFarmAnimalIds => this.breedingPairs.Values
         .Where(pair => pair.OutputEggItemId is null)
         .SelectMany(pair => new[] { pair.ParentAId, pair.ParentBId })
@@ -44,31 +47,36 @@ internal sealed class SlimeRegistry
     public BreedingPairRecord? GetBreedingPair(string machineKey) =>
         this.breedingPairs.TryGetValue(machineKey, out BreedingPairRecord? pair) ? pair : null;
 
-    public int ReconcileBreederMachineKeys(string locationPrefix, IEnumerable<string> placedMachineKeys)
+    public int RemoveBreederPairsForMissingMachines(string locationPrefix, IEnumerable<string> placedMachineKeys)
     {
         HashSet<string> placed = placedMachineKeys.ToHashSet(StringComparer.Ordinal);
-        Queue<string> emptyMachines = new(placed
-            .Where(key => !this.breedingPairs.ContainsKey(key))
-            .OrderBy(key => key, StringComparer.Ordinal));
-        int moved = 0;
         BreedingPairRecord[] missingMachines = this.breedingPairs.Values
             .Where(pair => pair.MachineKey.StartsWith(locationPrefix, StringComparison.Ordinal)
                 && !placed.Contains(pair.MachineKey))
-            .OrderBy(pair => pair.MachineKey, StringComparer.Ordinal)
             .ToArray();
 
         foreach (BreedingPairRecord pair in missingMachines)
         {
-            if (!emptyMachines.TryDequeue(out string? replacementKey))
-                break;
-
             this.breedingPairs.Remove(pair.MachineKey);
-            pair.MachineKey = replacementKey;
-            this.breedingPairs[replacementKey] = pair;
-            moved++;
+            // An egg which hasn't been collected is held by the breeder, so breaking
+            // that machine discards its pending output along with the cycle.
+            if (pair.OutputEggItemId is not null)
+                this.eggs.Remove(pair.OutputEggItemId);
         }
 
-        return moved;
+        return missingMachines.Length;
+    }
+
+    public bool RemoveBreederPair(string machineKey)
+    {
+        if (!this.breedingPairs.Remove(machineKey, out BreedingPairRecord? pair))
+            return false;
+
+        // An uncollected egg is stored by its breeder. Removing that machine also
+        // removes its pending result, while the parent genome records remain intact.
+        if (pair.OutputEggItemId is not null)
+            this.eggs.Remove(pair.OutputEggItemId);
+        return true;
     }
 
     public bool TryGetSlimeRecord(long farmAnimalId, out SlimeRecord record) =>

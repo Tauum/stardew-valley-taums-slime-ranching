@@ -55,7 +55,7 @@ The Slime Incubator accepts a Common Slime Egg or a genome-specific Ranch Slime 
 3. The egg is removed from inventory; sleep to save the incubator job in the mod-folder registry. A Common Egg receives a fresh Green, Normal, Common genome at insertion. A breeder egg keeps its existing genome. Both hatch automatically at the start of the day two days later.
 4. The new Ranch Slime appears in the Daycare with the egg's stored genome. If the Daycare is full, the ready hatch waits until space is available.
 
-Hatched Ranch Slimes grow for three in-game days before becoming breeding candidates. The breeder marks growing slimes in its list and won't let them be selected. The testing spawn command creates mature Ranch Slimes so you can test breeding immediately.
+Ranch Slimes mature after **28 in-game days**. The breeder marks growing slimes in its list and won't let them be selected. The testing spawn command lets you choose an age from 0 to 28 days.
 
 An egg's genome ID can hatch only once, so copied breeder egg items with that same ID become inactive after the first hatch. Each Common Egg insertion creates a separate genome ID. Vanilla eggs are unaffected. The incubator's two-day duration and full-Daycare behavior are provisional for playtesting.
 
@@ -115,10 +115,10 @@ Select the book and press the action button to open it. It is a custom item refe
 The mod now defines a **Slime Daycare**, a separate animal-house building, and a **Ranch Slime** farm-animal type. For testing, the Daycare is free and completes instantly. The exterior uses custom pink, blue, and purple roof art derived from the original pixel images; the interior still uses the Barn map. Ranch Slimes use the game's vanilla Green Slime body frames and face art recomposed as a FarmAnimal sprite sheet. The exterior's final alignment is still being checked in game. Build the Daycare through Robin, then run this mod command in the SMAPI console:
 
 ```text
-slime_ranching_spawn_ranch_slime <exact save folder name>
+slime_ranching_spawn_ranch_slime <exact save folder name> <age in days 0-28>
 ```
 
-For the current test copy, use `slime_ranching_spawn_ranch_slime TaumTest_322865388`. It adds a farm-animal prototype without converting or removing any existing vanilla slimes. Petting, movement, Daycare assignment, and save/reload still need in-game verification. When the game saves, the mod records its genome externally and links it to the animal's native farm-animal ID. Standard animal properties like its name, home, age, and friendship remain part of Stardew's normal animal save data.
+For the current test copy, use `slime_ranching_spawn_ranch_slime TaumTest_322865388 28` to spawn a mature slime, or use `slime_ranching_spawn_ranch_slime TaumTest_322865388 0` to spawn a newborn. Ages 1–27 create juveniles that need the remaining days to reach maturity. The command adds a Ranch Slime without converting or removing any vanilla slimes, and immediately saves its genome to the mod's external registry. The animal itself and standard properties like its name, home, age, and friendship are stored by Stardew when the game saves.
 
 To set up controlled size-inheritance pairs, use `slime_ranching_set_size TaumTest_322865388 <animal ID> <Tiny|Small|Normal|Large|Giant>`. The command edits only that managed Ranch Slime's external genome record.
 

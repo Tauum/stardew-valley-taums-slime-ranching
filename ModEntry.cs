@@ -31,6 +31,7 @@ public sealed class ModEntry : Mod
         BuildingContent.NormalizeConfig(this.config);
         this.registry = new SlimeRegistry(this.Monitor);
         BreederMovementPatch.SetReservationLookup(id => this.registry?.IsBreedingParentReserved(id) == true);
+        BreederParentVisibilityPatch.SetActiveCycleLookup(id => this.registry?.IsInActiveBreedingCycle(id) == true);
         this.stateStore = new ModStateStore(helper.DirectoryPath);
 
         helper.Events.GameLoop.SaveLoaded += this.OnSaveLoaded;
@@ -38,13 +39,14 @@ public sealed class ModEntry : Mod
         helper.Events.GameLoop.DayStarted += this.OnDayStarted;
         helper.Events.GameLoop.Saving += this.OnSaving;
         helper.Events.GameLoop.UpdateTicked += this.OnUpdateTicked;
+        helper.Events.World.ObjectListChanged += this.OnObjectListChanged;
         helper.Events.Display.RenderedWorld += this.OnRenderedWorld;
         helper.Events.GameLoop.ReturnedToTitle += this.OnReturnedToTitle;
         helper.Events.Content.AssetRequested += this.OnAssetRequested;
         helper.Events.Input.ButtonPressed += this.OnButtonPressed;
         helper.ConsoleCommands.Add("slime_ranching_inspect", "Inspect vanilla slime or Ranch Slime counts in the current Slime Hutch or Slime Daycare.", this.OnInspectCommand);
         helper.ConsoleCommands.Add("slime_ranching_backup_external_data", "Back up the current save's external mod data. Usage: slime_ranching_backup_external_data <exact save folder name>.", this.OnBackupExternalDataCommand);
-        helper.ConsoleCommands.Add("slime_ranching_spawn_ranch_slime", "Spawn one Ranch Slime in the Slime Daycare. Usage: slime_ranching_spawn_ranch_slime <exact save folder name>.", this.OnSpawnRanchSlimeCommand);
+        helper.ConsoleCommands.Add("slime_ranching_spawn_ranch_slime", $"Spawn one Ranch Slime at a chosen age in the Slime Daycare. Usage: slime_ranching_spawn_ranch_slime <exact save folder name> <age days 0-{FarmAnimalContent.RanchSlimeDaysToMature}>.", this.OnSpawnRanchSlimeCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_size", "Set a managed Ranch Slime's test genome size. Usage: slime_ranching_set_size <exact save folder name> <animal ID> <Tiny|Small|Normal|Large|Giant>.", this.OnSetSlimeSizeCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_color", "Set a managed Ranch Slime's test base color. Usage: slime_ranching_set_color <exact save folder name> <animal ID> <Red|Orange|Yellow|Green|Blue|Purple|Pink>.", this.OnSetSlimeColorCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_shiny", "Set a managed Ranch Slime's test shiny flag. Usage: slime_ranching_set_shiny <exact save folder name> <animal ID> <true|false>.", this.OnSetSlimeShinyCommand);
@@ -328,6 +330,12 @@ public sealed class ModEntry : Mod
         if (!this.stateReady || !Context.IsMainPlayer)
             return;
 
+        if (e.IsMultipleOf(60) && this.DiscardBreederPairsForMissingMachines())
+        {
+            if (!this.SaveExternalStateNow())
+                this.Monitor.Log("Removed breeder cycles remain cleared in memory, but the external registry could not be saved yet.", LogLevel.Error);
+        }
+
         IReadOnlyCollection<long> reservedIds = this.registry!.ReservedFarmAnimalIds;
         if (reservedIds.Count == 0)
             return;
@@ -338,6 +346,31 @@ public sealed class ModEntry : Mod
             if (reserved.Contains(animal.myID.Value))
                 animal.StopAllActions();
         }
+    }
+
+    private void OnObjectListChanged(object? sender, StardewModdingAPI.Events.ObjectListChangedEventArgs e)
+    {
+        if (!this.stateReady || !Context.IsMainPlayer)
+            return;
+
+        bool removedBreederPair = false;
+        string locationPrefix = e.Location.NameOrUniqueName + ":";
+        foreach (KeyValuePair<Vector2, StardewValley.Object> removed in e.Removed)
+        {
+            if (removed.Value.QualifiedItemId != ConverterContent.BreederQualifiedId)
+                continue;
+
+            string machineKey = $"{locationPrefix}{(int)removed.Key.X},{(int)removed.Key.Y}";
+            removedBreederPair |= this.registry!.RemoveBreederPair(machineKey);
+        }
+
+        if (!removedBreederPair)
+            return;
+
+        if (this.SaveExternalStateNow())
+            this.Monitor.Log("The Slime Breeder was removed; its cycle and pending egg were discarded, and its parents are free to roam. A replacement starts with a blank selection.", LogLevel.Info);
+        else
+            this.Monitor.Log("The Slime Breeder was removed and its parents are free to roam in memory, but the cleared cycle could not yet be saved to the external registry.", LogLevel.Error);
     }
 
     private void OnRenderedWorld(object? sender, StardewModdingAPI.Events.RenderedWorldEventArgs e)
@@ -851,7 +884,8 @@ public sealed class ModEntry : Mod
 
             this.Helper.Input.Suppress(e.Button);
             string machineKey = $"{Game1.currentLocation.NameOrUniqueName}:{(int)breederAnchor.X},{(int)breederAnchor.Y}";
-            this.ReconcileBreederMachineKeys(Game1.currentLocation);
+            if (this.DiscardBreederPairsForMissingMachines(Game1.currentLocation))
+                this.SaveExternalStateNow();
             Game1.activeClickableMenu = new SlimeBreederMenu(this.registry!, machineKey, this.SaveExternalStateNow, this.CreateEggItem);
             return;
         }
@@ -931,21 +965,32 @@ public sealed class ModEntry : Mod
         return false;
     }
 
-    private void ReconcileBreederMachineKeys(GameLocation location)
+    private bool DiscardBreederPairsForMissingMachines(GameLocation? onlyLocation = null)
     {
-        string prefix = location.NameOrUniqueName + ":";
-        string[] placedMachineKeys = location.Objects.Values
-            .Where(obj => obj.QualifiedItemId == ConverterContent.BreederQualifiedId)
-            .Select(obj => $"{prefix}{(int)obj.TileLocation.X},{(int)obj.TileLocation.Y}")
-            .ToArray();
-        int moved = this.registry!.ReconcileBreederMachineKeys(prefix, placedMachineKeys);
-        if (moved == 0)
-            return;
+        if (this.registry is null)
+            return false;
 
-        if (this.SaveExternalStateNow())
-            this.Monitor.Log($"Reattached {moved} existing breeder reservation(s) to replacement machine(s) in {location.NameOrUniqueName}; parent slimes and cycle progress were preserved.", LogLevel.Info);
-        else
-            this.Monitor.Log($"Reattached {moved} breeder reservation(s) in memory, but couldn't save the moved machine keys yet.", LogLevel.Error);
+        int removed = 0;
+        foreach (StardewValley.Buildings.Building building in Game1.getFarm().buildings)
+        {
+            if (!BuildingContent.IsSlimeDaycare(building.buildingType.Value)
+                || building.GetIndoors() is not GameLocation interior
+                || (onlyLocation is not null && interior != onlyLocation))
+                continue;
+
+            string prefix = interior.NameOrUniqueName + ":";
+            string[] placedMachineKeys = interior.Objects.Values
+                .Where(obj => obj.QualifiedItemId == ConverterContent.BreederQualifiedId)
+                .Select(obj => $"{prefix}{(int)obj.TileLocation.X},{(int)obj.TileLocation.Y}")
+                .ToArray();
+            removed += this.registry.RemoveBreederPairsForMissingMachines(prefix, placedMachineKeys);
+        }
+
+        if (removed == 0)
+            return false;
+
+        this.Monitor.Log($"Cleared {removed} breeder cycle(s) because their machine was removed. Parent Ranch Slimes are free to roam; a replacement breeder starts with no selection.", LogLevel.Info);
+        return true;
     }
 
     private void OnGiveTestEggsCommand(string command, string[] args)
@@ -1119,9 +1164,11 @@ public sealed class ModEntry : Mod
         }
 
         string? saveName = Constants.SaveFolderName;
-        if (args.Length != 1 || args[0] != saveName)
+        if (args.Length != 2 || args[0] != saveName
+            || !int.TryParse(args[1], out int ageDays)
+            || ageDays < 0 || ageDays > FarmAnimalContent.RanchSlimeDaysToMature)
         {
-            this.Monitor.Log($"To spawn a Ranch Slime in the currently loaded save, use: slime_ranching_spawn_ranch_slime {saveName}", LogLevel.Warn);
+            this.Monitor.Log($"Usage: slime_ranching_spawn_ranch_slime {saveName} <age days 0-{FarmAnimalContent.RanchSlimeDaysToMature}>.", LogLevel.Warn);
             return;
         }
 
@@ -1146,11 +1193,17 @@ public sealed class ModEntry : Mod
             home = daycare,
             homeInterior = animalHouse
         };
-        animal.age.Value = FarmAnimalContent.RanchSlimeDaysToMature;
-
         animalHouse.adoptAnimal(animal);
+        // Set the requested age after adoption in case AnimalHouse initializes it.
+        // Initialize the mod-owned clock now so the breeder sees the chosen age.
+        animal.age.Value = ageDays;
         this.registry!.RegisterRanchSlimes(new[] { animal });
-        this.Monitor.Log($"Added one Ranch Slime to the Slime Daycare (FarmAnimal ID {animalId}). Sleep to save the animal and its external genome record.", LogLevel.Info);
+        this.registry.SynchronizeMaturity(new[] { animal }, Game1.Date.TotalDays);
+
+        if (!this.SaveExternalStateNow())
+            this.Monitor.Log($"Ranch Slime {animalId} was added, but its external genome record could not be saved yet.", LogLevel.Error);
+        else
+            this.Monitor.Log($"Added one {ageDays}-day-old Ranch Slime to the Slime Daycare (FarmAnimal ID {animalId}). It is {(ageDays >= FarmAnimalContent.RanchSlimeDaysToMature ? "mature and ready to select in the breeder" : "still growing") }.", LogLevel.Info);
     }
 
     private void OnSetSlimeSizeCommand(string command, string[] args)
