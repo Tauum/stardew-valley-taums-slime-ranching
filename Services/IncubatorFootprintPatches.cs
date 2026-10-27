@@ -5,13 +5,13 @@ using StardewValley;
 
 namespace taums_slime_ranching.Services;
 
-/// <summary>Extends movement collision across the incubator's two-by-four base.</summary>
+/// <summary>Extends movement collision across the mod's oversized ranching machines.</summary>
 [HarmonyPatch]
 internal static class IncubatorFootprintPatches
 {
     private const int TileSize = 64;
-    private const int MaximumFootprintWidth = 5;
-    private const int FootprintHeight = 2;
+    private const int MaximumFootprintWidth = 6;
+    private const int MaximumFootprintHeight = 4;
 
     private static IEnumerable<MethodBase> TargetMethods() => typeof(GameLocation)
         .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
@@ -29,7 +29,7 @@ internal static class IncubatorFootprintPatches
 
         int firstAnchorX = (int)Math.Floor(position.Left / (double)TileSize) - (MaximumFootprintWidth - 1);
         int lastAnchorX = (int)Math.Floor((position.Right - 1) / (double)TileSize);
-        int firstAnchorY = (int)Math.Floor(position.Top / (double)TileSize) - (FootprintHeight - 1);
+        int firstAnchorY = (int)Math.Floor(position.Top / (double)TileSize) - (MaximumFootprintHeight - 1);
         int lastAnchorY = (int)Math.Floor((position.Bottom - 1) / (double)TileSize);
         for (int tileY = firstAnchorY; tileY <= lastAnchorY; tileY++)
         {
@@ -42,13 +42,22 @@ internal static class IncubatorFootprintPatches
                 {
                     ConverterContent.IncubatorQualifiedId => 4,
                     ConverterContent.BreederQualifiedId => 5,
+                    GelRefineryContent.QualifiedItemId => 5,
+                    MutagenicPoolContent.QualifiedItemId => 6,
+                    _ => 0
+                };
+                int footprintHeight = obj.QualifiedItemId switch
+                {
+                    MutagenicPoolContent.QualifiedItemId => 4,
+                    GelRefineryContent.QualifiedItemId => 3,
+                    ConverterContent.IncubatorQualifiedId or ConverterContent.BreederQualifiedId => 2,
                     _ => 0
                 };
                 if (footprintWidth == 0)
                     continue;
 
                 Rectangle footprint = new(tileX * TileSize, tileY * TileSize,
-                    footprintWidth * TileSize, FootprintHeight * TileSize);
+                    footprintWidth * TileSize, footprintHeight * TileSize);
                 if (!position.Intersects(footprint))
                     continue;
 

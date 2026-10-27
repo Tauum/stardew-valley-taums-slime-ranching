@@ -17,13 +17,15 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
     private readonly MutagenicPoolRules rules;
     private readonly List<FarmAnimal> candidates;
     private readonly Rectangle actionButton;
+    private readonly Rectangle mutationsButton;
     private readonly Rectangle listBounds;
     private long? selectedSlimeId;
     private string? statusMessage;
     private int firstVisibleIndex;
+    private bool showMutations;
 
     public MutagenicPoolMenu(SlimeRegistry registry, string machineKey, MutagenicPoolRules rules)
-        : base(Game1.uiViewport.Width / 2 - 360, Game1.uiViewport.Height / 2 - 270, 720, 540)
+        : base(Game1.uiViewport.Width / 2 - 400, Game1.uiViewport.Height / 2 - 300, 800, 600)
     {
         this.registry = registry;
         this.machineKey = machineKey;
@@ -37,11 +39,24 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
             .ToList();
         this.listBounds = new Rectangle(this.xPositionOnScreen + 30, this.yPositionOnScreen + 124, 370, 286);
         this.actionButton = new Rectangle(this.xPositionOnScreen + 30, this.yPositionOnScreen + this.height - 84, 270, 52);
+        this.mutationsButton = new Rectangle(this.xPositionOnScreen + 316, this.yPositionOnScreen + this.height - 84, 210, 52);
     }
 
     public override void receiveLeftClick(int x, int y, bool playSound = true)
     {
         base.receiveLeftClick(x, y, playSound);
+        if (this.showMutations)
+        {
+            this.showMutations = false;
+            Game1.playSound("bigDeSelect");
+            return;
+        }
+        if (this.mutationsButton.Contains(x, y))
+        {
+            this.showMutations = true;
+            Game1.playSound("smallSelect");
+            return;
+        }
         if (this.actionButton.Contains(x, y))
         {
             this.StartAttempt();
@@ -132,13 +147,17 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
         b.DrawString(Game1.smallFont, active is null ? $"Start {this.rules.DurationDays}-day Attempt" : $"Processing until day {active.ReadyOnDay}",
             new Vector2(this.actionButton.X + 16, this.actionButton.Y + 16), Game1.textColor);
         string message = this.statusMessage ?? (active is null
-            ? $"Slime in inventory: {CountSlimeItems()}/{this.rules.SlimeCost}. Shadow Clone is the current pool trait."
-            : $"Chance locked at {active.ChanceAtStart:P0}; sleep to resolve the attempt.");
-        b.DrawString(Game1.smallFont, message, new Vector2(this.xPositionOnScreen + 326, this.actionButton.Y + 12), Game1.textColor);
+            ? $"Slime in inventory: {CountSlimeItems()}/{this.rules.SlimeCost}. Cycle: {this.rules.DurationDays} in-game day(s), placeholder."
+            : $"Chance locked at {active.ChanceAtStart:P0}; sleep to resolve.");
+        b.Draw(Game1.staminaRect, this.mutationsButton, new Color(224, 192, 137));
+        b.DrawString(Game1.smallFont, "Possible Mutations", new Vector2(this.mutationsButton.X + 14, this.mutationsButton.Y + 16), Game1.textColor);
+        b.DrawString(Game1.tinyFont, message, new Vector2(this.xPositionOnScreen + 542, this.actionButton.Y + 8), Game1.textColor);
         if (this.candidates.Count > visibleRows)
             b.DrawString(Game1.tinyFont, $"Residents {this.firstVisibleIndex + 1}-{Math.Min(this.firstVisibleIndex + visibleRows, this.candidates.Count)} of {this.candidates.Count} (scroll)",
                 new Vector2(this.listBounds.X, this.listBounds.Bottom + 4), Game1.textColor);
         b.DrawString(Game1.tinyFont, "Esc: close", new Vector2(this.xPositionOnScreen + this.width - 100, this.yPositionOnScreen + this.height - 26), Game1.textColor);
+        if (this.showMutations)
+            this.DrawMutationsModal(b);
         this.drawMouse(b);
     }
 
@@ -166,6 +185,7 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
                 new Vector2(panel.X + 14, panel.Y + 140), Game1.textColor);
             batch.DrawString(Game1.tinyFont, $"Ready on day {active.ReadyOnDay}; sleep to resolve.",
                 new Vector2(panel.X + 14, panel.Y + 164), Game1.textColor);
+            DrawBar(batch, new Rectangle(panel.X + 14, panel.Y + 188, panel.Width - 28, 16), progress, new Color(184, 135, 204));
             return;
         }
 
@@ -175,15 +195,48 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
         {
             int failures = this.registry.GetMutagenicPoolFailures(selectedId);
             batch.DrawString(Game1.tinyFont, $"Selected slime pity: {failures}", new Vector2(panel.X + 14, panel.Y + 78), Game1.textColor);
-            batch.DrawString(Game1.tinyFont, $"Next chance: {this.rules.GetChance(failures):P0}", new Vector2(panel.X + 14, panel.Y + 102), Game1.textColor);
+            double chance = this.rules.GetChance(failures);
+            batch.DrawString(Game1.tinyFont, $"Next mutation chance: {chance:P0}", new Vector2(panel.X + 14, panel.Y + 102), Game1.textColor);
+            DrawBar(batch, new Rectangle(panel.X + 14, panel.Y + 126, panel.Width - 28, 18), (float)chance, new Color(184, 135, 204));
         }
         else
-            batch.DrawString(Game1.tinyFont, $"Base chance: {this.rules.GetChance(0):P0}", new Vector2(panel.X + 14, panel.Y + 78), Game1.textColor);
+        {
+            double chance = this.rules.GetChance(0);
+            batch.DrawString(Game1.tinyFont, $"Base mutation chance: {chance:P0}", new Vector2(panel.X + 14, panel.Y + 78), Game1.textColor);
+            DrawBar(batch, new Rectangle(panel.X + 14, panel.Y + 102, panel.Width - 28, 18), (float)chance, new Color(184, 135, 204));
+        }
 
         batch.DrawString(Game1.tinyFont, "Failure is safe; each miss raises this slime's chance.",
             new Vector2(panel.X + 14, panel.Y + 144), Game1.textColor);
         batch.DrawString(Game1.tinyFont, "Success adds Shadow Clone and resets pity.",
             new Vector2(panel.X + 14, panel.Y + 168), Game1.textColor);
+    }
+
+    private void DrawMutationsModal(SpriteBatch b)
+    {
+        b.Draw(Game1.staminaRect, new Rectangle(this.xPositionOnScreen, this.yPositionOnScreen, this.width, this.height), new Color(0, 0, 0, 160));
+        int width = 570;
+        int height = 330;
+        int x = this.xPositionOnScreen + (this.width - width) / 2;
+        int y = this.yPositionOnScreen + (this.height - height) / 2;
+        IClickableMenu.drawTextureBox(b, x, y, width, height, Color.White);
+        Utility.drawTextWithShadow(b, "Possible Mutations", Game1.dialogueFont, new Vector2(x + 28, y + 22), Game1.textColor);
+        b.DrawString(Game1.smallFont, "Currently implemented", new Vector2(x + 32, y + 86), Game1.textColor);
+        b.DrawString(Game1.dialogueFont, "Shadow Clone", new Vector2(x + 32, y + 122), new Color(111, 83, 142));
+        b.DrawString(Game1.smallFont, "Adds an external mutation trait and a visual shadow companion.", new Vector2(x + 32, y + 166), Game1.textColor);
+        b.DrawString(Game1.smallFont, "Failure is safe: the slime returns unchanged and its next-attempt chance rises.",
+            new Vector2(x + 32, y + 208), Game1.textColor);
+        b.DrawString(Game1.tinyFont, "Spotted, Striped, Starry, Speckled, Glowing, Crystalline, Mossy, and Metallic are design examples only; not implemented yet.",
+            new Vector2(x + 32, y + 260), Game1.textColor);
+        b.DrawString(Game1.tinyFont, "Click anywhere to close", new Vector2(x + width - 174, y + height - 24), Game1.textColor);
+    }
+
+    private static void DrawBar(SpriteBatch batch, Rectangle bounds, float value, Color fill)
+    {
+        batch.Draw(Game1.staminaRect, bounds, new Color(91, 75, 58));
+        int width = (int)((bounds.Width - 4) * Math.Clamp(value, 0f, 1f));
+        if (width > 0)
+            batch.Draw(Game1.staminaRect, new Rectangle(bounds.X + 2, bounds.Y + 2, width, bounds.Height - 4), fill);
     }
 
     private void StartAttempt()
