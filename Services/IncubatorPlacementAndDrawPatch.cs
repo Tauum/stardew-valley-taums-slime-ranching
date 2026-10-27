@@ -40,24 +40,11 @@ internal static class IncubatorPlacementGeometry
 
     public static void DrawPlacement(SpriteBatch batch, GameLocation location, Vector2 anchor)
     {
-        placementPreview ??= ItemRegistry.Create<Furniture>("(F)814");
+        // Large Junimo Hut is a vanilla decor furniture with a native 4x2 footprint.
+        // Use its normal placement preview, just as the breeder uses the 5x2 dining table.
+        placementPreview ??= ItemRegistry.Create<Furniture>("(F)LargeJunimoHut");
         placementPreview.TileLocation = anchor;
         placementPreview.drawPlacementBounds(batch, location);
-
-        Color fill = IsAreaClear(location, anchor) ? new Color(72, 190, 92, 80) : new Color(220, 70, 70, 90);
-        Color edge = IsAreaClear(location, anchor) ? new Color(72, 220, 96, 190) : new Color(240, 80, 80, 210);
-        for (int dy = 0; dy < Height; dy++)
-        for (int dx = 0; dx < Width; dx++)
-        {
-            Vector2 world = (anchor + new Vector2(dx, dy)) * TileSize;
-            Vector2 screen = Game1.GlobalToLocal(Game1.viewport, world);
-            Rectangle tile = new((int)screen.X, (int)screen.Y, TileSize, TileSize);
-            batch.Draw(Game1.staminaRect, tile, fill);
-            batch.Draw(Game1.staminaRect, new Rectangle(tile.X, tile.Y, TileSize, 2), edge);
-            batch.Draw(Game1.staminaRect, new Rectangle(tile.X, tile.Bottom - 2, TileSize, 2), edge);
-            batch.Draw(Game1.staminaRect, new Rectangle(tile.X, tile.Y, 2, TileSize), edge);
-            batch.Draw(Game1.staminaRect, new Rectangle(tile.Right - 2, tile.Y, 2, TileSize), edge);
-        }
     }
 
     public static void DrawWorld(SpriteBatch batch, Vector2 anchor, float alpha)
