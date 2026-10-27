@@ -33,8 +33,10 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
         this.listBottom = this.listTop + VisibleRows * RowHeight;
         this.candidates = Game1.player.Items
             .Select((item, index) => (item, index))
-            .Where(pair => pair.item is not null && pair.item.QualifiedItemId.StartsWith(EggItemPrefix, StringComparison.Ordinal)
-                && registry.CanIncubate(pair.item.QualifiedItemId[3..]))
+            .Where(pair => pair.item is not null
+                && (pair.item.QualifiedItemId == ConverterContent.CommonEggQualifiedId
+                    || (pair.item.QualifiedItemId.StartsWith(EggItemPrefix, StringComparison.Ordinal)
+                        && registry.CanIncubate(pair.item.QualifiedItemId[3..]))))
             .Select(pair => (pair.index, pair.item!.DisplayName, pair.item.Stack))
             .ToList();
     }
@@ -79,7 +81,7 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
         Utility.drawTextWithShadow(b, title, Game1.dialogueFont,
             new Vector2(this.xPositionOnScreen + (this.width - Game1.dialogueFont.MeasureString(title).X) / 2, this.yPositionOnScreen + 28),
             Game1.textColor);
-        b.DrawString(Game1.smallFont, "Choose a genome-specific Ranch Slime Egg. Hatching takes two days.",
+        b.DrawString(Game1.smallFont, "Choose a Common or genome-specific Ranch Slime Egg. Hatching takes two days.",
             new Vector2(this.xPositionOnScreen + 34, this.yPositionOnScreen + 82), Game1.textColor);
 
         IncubationRecord? active = this.registry.GetIncubation(this.machineKey);

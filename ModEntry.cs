@@ -296,13 +296,40 @@ public sealed class ModEntry : Mod
     private bool StartIncubation(string machineKey, int inventoryIndex)
     {
         if (inventoryIndex < 0 || inventoryIndex >= Game1.player.Items.Count
-            || Game1.player.Items[inventoryIndex] is not Item item
-            || !item.QualifiedItemId.StartsWith("(O)Taum.SlimeRanching_Egg_", StringComparison.Ordinal))
+            || Game1.player.Items[inventoryIndex] is not Item item)
             return false;
 
-        string itemId = item.QualifiedItemId[3..];
-        if (!this.registry!.CanIncubate(itemId) || !this.registry.StartIncubation(machineKey, itemId, Game1.Date.TotalDays))
+        SlimeRegistry registry = this.registry!;
+        string eggItemId;
+        bool createdCommonGenome = false;
+        if (item.QualifiedItemId == ConverterContent.CommonEggQualifiedId)
+        {
+            Guid genomeId = Guid.NewGuid();
+            SlimeEggRecord commonEgg = registry.CreateEgg(new SlimeGenome
+            {
+                Id = genomeId,
+                PrimarySpecies = "Ranch Slime",
+                VisualColor = "#00FF00",
+                Size = "Normal",
+                RarityTier = "Common",
+                Generation = 1,
+                LikedFoodItemId = FoodLikeCatalog.ForSlime(genomeId)
+            });
+            eggItemId = commonEgg.ItemId;
+            createdCommonGenome = true;
+        }
+        else if (item.QualifiedItemId.StartsWith("(O)Taum.SlimeRanching_Egg_", StringComparison.Ordinal))
+            eggItemId = item.QualifiedItemId[3..];
+        else
             return false;
+
+        if (!registry.CanIncubate(eggItemId)
+            || !registry.StartIncubation(machineKey, eggItemId, Game1.Date.TotalDays))
+        {
+            if (createdCommonGenome)
+                registry.RemoveUnincubatedEgg(eggItemId);
+            return false;
+        }
 
         item.Stack--;
         if (item.Stack <= 0)
@@ -416,6 +443,12 @@ public sealed class ModEntry : Mod
             && Game1.currentLocation.Objects.TryGetValue(e.Cursor.GrabTile, out StardewValley.Object? incubator)
             && incubator.QualifiedItemId == ConverterContent.IncubatorQualifiedId)
         {
+            if (!this.stateReady)
+            {
+                this.Monitor.Log("The external Ranch Slime registry is unavailable; the incubator is disabled for this save.", LogLevel.Error);
+                return;
+            }
+
             StardewValley.Buildings.Building? daycare = Game1.getFarm().buildings.FirstOrDefault(building =>
                 BuildingContent.IsSlimeDaycare(building.buildingType.Value)
                 && building.GetIndoors() == Game1.currentLocation);

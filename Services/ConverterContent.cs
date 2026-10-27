@@ -40,7 +40,7 @@ internal static class ConverterContent
                     {
                         Name = "Common Slime Egg",
                         DisplayName = "Common Slime Egg",
-                        Description = "A common slime egg made by a converter. Awaiting a ranching incubator.",
+                        Description = "A common Ranch Slime egg made by a converter. Hatches into a base Common Ranch Slime.",
                         Type = "Basic",
                         Price = 1000,
                         Texture = "Maps/springobjects",
@@ -92,7 +92,7 @@ internal static class ConverterContent
                     {
                         Name = "Slime Incubator",
                         DisplayName = "Slime Incubator",
-                        Description = "Hatches a genome-specific Ranch Slime Egg inside the Slime Daycare.",
+                        Description = "Hatches a Common or genome-specific Ranch Slime Egg inside the Slime Daycare.",
                         CanBePlacedIndoors = true,
                         CanBePlacedOutdoors = false,
                         Texture = "TileSheets/Craftables",

@@ -393,6 +393,10 @@ internal sealed class SlimeRegistry
         return egg;
     }
 
+    public bool RemoveUnincubatedEgg(string itemId) =>
+        !this.incubations.Values.Any(record => record.EggItemId == itemId)
+        && this.eggs.Remove(itemId);
+
     public bool TryAdd(SlimeRecord? record)
     {
         if (record?.Genome is not { Id: var id } || id == Guid.Empty || !this.records.TryAdd(id, record))

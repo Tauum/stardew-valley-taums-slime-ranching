@@ -11,6 +11,7 @@
 - [x] Breeder candidate list scrolls so Daycares with more than four slimes can access every resident; in-game verification remains pending.
 - [x] Missing Ranch Slime IDs are detached on load/save without deleting their genome archive; unfinished cycles without an egg are cleared.
 - [x] A separate Slime Incubator accepts managed genome eggs and creates a Ranch Slime linked to the stored genome; the hatch lifecycle still needs in-game verification.
+- [x] Converter Common Eggs create an external base Common genome when inserted; vanilla eggs remain unaffected.
 - [x] Converter can be issued with its SMAPI command. Actual conversion still needs a documented end-to-end check.
 
 ## Sprint 1: core alpha
@@ -26,6 +27,7 @@
 - [ ] Spawn at least five Ranch Slimes and confirm scrolling reaches the last resident and selects the correct two parents.
 - [ ] Verify managed-egg hatching into the recorded genome; keep vanilla eggs and slimes unchanged.
 - [ ] Verify incubator recovery across save/reload, full-Daycare deferral, and one-hatch-per-genome behavior.
+- [ ] Convert vanilla eggs and hatch two Common Eggs; confirm each gets a separate external genome ID.
 - [ ] Marnie sells functional furniture; trampoline bounces slimes.
 - [ ] Mutagenic Pool pity and Gel Refinery item conversion persist.
 

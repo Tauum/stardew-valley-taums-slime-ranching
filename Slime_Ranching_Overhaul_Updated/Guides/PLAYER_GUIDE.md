@@ -32,18 +32,18 @@ Place the converter somewhere you can access. You don't need to be in the Slime 
 
 Put one green, blue, red, purple, or tiger Slime Egg into the converter. Collect the Common Slime Egg when processing finishes. Eggs elsewhere—in inventory, chests, treasure, drops, or the original Slime Egg-Press—remain vanilla eggs unless you put them into this converter.
 
-The Common Slime Egg is not hatchable yet. The vanilla incubator won't produce a modded slime from it at this stage.
+The vanilla Coop Incubator does not hatch mod eggs; use the custom Slime Incubator below.
 
 ## Slime Incubator
 
-The Slime Incubator accepts only a genome-specific Ranch Slime Egg from the player's inventory. The generic Common Slime Egg from the converter has no genome and cannot hatch.
+The Slime Incubator accepts a Common Slime Egg or a genome-specific Ranch Slime Egg from the player's inventory. Vanilla Slime Eggs are not accepted.
 
 1. Request a testing incubator with `slime_ranching_give_incubator <exact save folder name>`.
 2. Place it inside the Slime Daycare. Use it while holding a genome-specific egg in your inventory; select the egg in the menu.
-3. The egg is removed from inventory; sleep to save the incubator job in the mod-folder registry. It hatches automatically at the start of the day two days later.
+3. The egg is removed from inventory; sleep to save the incubator job in the mod-folder registry. A Common Egg receives a fresh Green, Normal, Common genome at insertion. A breeder egg keeps its existing genome. Both hatch automatically at the start of the day two days later.
 4. The new Ranch Slime appears in the Daycare with the egg's stored genome. If the Daycare is full, the ready hatch waits until space is available.
 
-An egg's genome ID can hatch only once, so copied item stacks with that same ID become inactive after the first hatch. Vanilla eggs and the converter's generic Common Slime Egg are unaffected. The incubator's two-day duration and full-Daycare behavior are provisional for playtesting.
+An egg's genome ID can hatch only once, so copied breeder egg items with that same ID become inactive after the first hatch. Each Common Egg insertion creates a separate genome ID. Vanilla eggs are unaffected. The incubator's two-day duration and full-Daycare behavior are provisional for playtesting.
 
 ## Hutch inspection
 
@@ -67,7 +67,7 @@ Select the book and press the action button to open it. It is a custom item refe
 
 ## Features still under development
 
-- **Hatching:** Genome-specific Ranch Slime Eggs hatch in the custom incubator; generic Common Slime Eggs from the converter do not have a genome and remain unhatched.
+- **Hatching:** Common and genome-specific Ranch Slime Eggs hatch in the custom incubator; vanilla eggs are unaffected.
 - **Breeding:** The breeder, parent selection, two-day cycle, and fixed-genome egg output work. Inheritance is a placeholder and needs balancing and in-game verification.
 - **Egg details:** Hover over a genome-specific Ranch Slime Egg to view its stored species, color, size, rarity, mutation, generation, parent IDs, and favorite food.
 - **Genetics and slime identity:** The registry model can hold genome data. Ranch Slime genomes are keyed to native FarmAnimal IDs; this still needs save/reload verification. Existing GreenSlime monsters are only captured in the first-seen snapshot; they aren't changed or adopted.

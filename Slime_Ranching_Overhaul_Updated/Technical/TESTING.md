@@ -29,7 +29,7 @@ This is a new custom farm-animal type in a separate Slime Daycare animal-house b
 5. Reload and save again. Confirm the same `FarmAnimalId` retains the same `Genome.Id` and no duplicate record is added.
 6. Run `slime_ranching_inspect` in a Slime Hutch and confirm its vanilla slime count has not changed.
 
-Genome-specific Ranch Slime Eggs can now hatch in the custom Slime Incubator. The generic Common Slime Egg produced by the converter still has no genome and cannot hatch. Custom exterior art is present; its final in-game alignment is still being checked. The interior still uses the Barn map.
+Common and genome-specific Ranch Slime Eggs can now hatch in the custom Slime Incubator. Each Common Egg receives a fresh base Common genome when inserted. Custom exterior art is present; its final in-game alignment is still being checked. The interior still uses the Barn map.
 
 ## Slime Daycare building art and upgrades
 
@@ -69,9 +69,9 @@ These command-created genomes are test fixtures only. The user confirmed an egg 
 4. Sleep through the remaining time. At the start of the ready day, confirm a Ranch Slime appears in the Daycare and the HUD reports the hatch. Inspect `SlimeRecord.Genome` in the external registry; it should match the egg genome exactly.
 5. Save and reload after hatching. Confirm the animal ID links back to that genome and any copied item with the same egg ID can't hatch another slime.
 6. Fill the Daycare before a hatch is ready. Confirm the egg stays in the incubator record and hatches after a resident is removed.
-7. Try the converter's generic Common Slime Egg. It must remain in inventory and cannot start incubation. Vanilla Slime Eggs and the vanilla Coop Incubator remain untouched.
+7. Convert a vanilla egg and insert the resulting Common Egg. It should hatch into a Green (`#00FF00`), Normal, Common Ranch Slime. Insert a second Common Egg and confirm it receives a different external genome ID. Vanilla Slime Eggs must remain unaccepted by this incubator; the vanilla Coop Incubator remains untouched.
 
-The incubator runs inside the Daycare only, consumes managed eggs from inventory, and targets a two-day cycle. It spawns the juvenile automatically when the next day begins. If the game and mod-folder state are saved at different moments, the external hatch record reserves the native animal ID and recovers against the next loaded game state. Duration and duplicate-item behavior are provisional and need playtesting.
+The incubator runs inside the Daycare only, consumes Common or genome-specific Ranch Slime Eggs from inventory, and targets a two-day cycle. A Common Egg receives a fresh base genome when inserted; a breeder egg uses its existing genome. The incubator spawns the juvenile automatically when the next day begins. If the game and mod-folder state are saved at different moments, the external hatch record reserves the native animal ID and recovers against the next loaded game state. Duration and duplicate-item behavior are provisional and need playtesting.
 
 ## Breeder cycle egg output (prototype)
 
