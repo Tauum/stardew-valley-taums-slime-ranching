@@ -6,6 +6,8 @@
 
 **Shiny visual prototype:** `IsShiny` now brightens Ranch Slime sprite pixels by a subtle fixed amount. Decide whether shiny is cosmetic-only or should have separate gameplay effects; avoid coupling it to rarity or size.
 
+**Ability ID foundation:** Base and listed hybrid genomes now carry stable IDs matching the companion concept table. Ability behavior, cooldowns, size scaling, and interaction targeting remain to be implemented.
+
 1. **Pink recipes:** Pink is outside the standard wheel. Which pairings produce Pink or Pink hybrids?
 2. **Undefined breeding pairs:** Current prototype inherits one random parent's complete species/color identity. Decide whether to keep that fallback or block undefined combinations.
 3. **Primary pair naming:** Primary recipes now produce Orange, Green, and Purple (also called Violet in the design). Confirm the preferred in-game name for Blue+Red's result.

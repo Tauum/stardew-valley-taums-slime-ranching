@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-10-27  
 **Test save:** `TaumTest_322865388` (disposable copy)  
-**Working tree:** `tooling/set-slime-color`, chained after `feature/color-wheel-breeding-recipes`; a setup command now changes a managed Ranch Slime's base species/color externally for recipe testing. The recipe branch builds; verify color commands, recipes, fallback pairings, and hybrid appearance in-game.
+**Working tree:** `feature/genome-ability-identifiers`, chained after `tooling/set-slime-color`; external genome records now map base and hybrid species to stable ability IDs. Build passes; check that IDs match the species/recipe table in the registry before beginning companion actions.
 
 ## Current state
 
@@ -35,6 +35,7 @@
 - The `IsShiny` flag applies a subtle 22% brightness lift on the size/color sprite sheet without changing color mapping or frame size. It is visual-only; the stat/ability impact remains open. `slime_ranching_set_shiny <save> <animal ID> true|false` updates an existing managed slime immediately and persists externally.
 - Breeding now maps Red+Yellow to Orange, Yellow+Blue to Green, and Blue+Red to Purple; the six tertiary recipes in `Features/COLOURS_AND_BREEDING.md` produce two-species hybrids. Undefined pairs, including Pink combinations, inherit one parent's complete species/color. Hybrid genomes store midpoint RGB but render via nearest base tint. Confirm names/fallback and visuals in-game.
 - `slime_ranching_set_color <save> <animal ID> <base color>` now changes a managed slime's base species/color in external state and refreshes its sprite immediately. It restores the original color identity if external saving fails; use it to prepare known recipe pairs quickly.
+- `SlimeGenome.AbilityIds` now contains the base signature ability for known pure species and both IDs for a two-species hybrid. Old records and new eggs derive the list from species/color when loaded or created. This does not add any active companion behavior or change the schema version.
 - `slime_ranching_set_size <save> <animal ID> <Tiny|Small|Normal|Large|Giant>` sets a managed Ranch Slime's size in external state, saves it, and refreshes the current animal's sprite immediately. On external-write failure it restores both the old genome size and sprite.
 - The user confirmed the egg spawn worked. Its tooltip showed Ranch Slime, green (`#00FF00`), Normal size, Common rarity, no mutation, Generation 1, two parent IDs, and favorite food `Broken CD`.
 - Egg hatching is implemented as a prototype. It was introduced in schema 6; the registry is currently schema 8. Verify egg identity through transfer/reload, then test incubation recovery and genome matching.

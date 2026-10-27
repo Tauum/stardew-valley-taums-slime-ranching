@@ -70,6 +70,7 @@ internal sealed class SlimeRegistry
         record.Genome.PrimarySpecies = $"{canonicalName} Slime";
         record.Genome.SecondarySpecies = null;
         record.Genome.VisualColor = colorHex;
+        SlimeAbilityCatalog.Refresh(record.Genome);
         return true;
     }
 
@@ -624,6 +625,7 @@ internal sealed class SlimeRegistry
             throw new ArgumentException("An egg genome must have a unique ID.", nameof(genome));
 
         string itemId = SlimeEggContent.GetItemId(genome.Id);
+        SlimeAbilityCatalog.Refresh(genome);
         var egg = new SlimeEggRecord { ItemId = itemId, Genome = genome };
         this.eggs[itemId] = egg;
         return egg;
@@ -646,6 +648,7 @@ internal sealed class SlimeRegistry
 
         if (!FoodLikeCatalog.IsEligible(record.Genome.LikedFoodItemId))
             record.Genome.LikedFoodItemId = FoodLikeCatalog.ForSlime(id);
+        SlimeAbilityCatalog.Refresh(record.Genome);
 
         return true;
     }

@@ -13,6 +13,8 @@ A rare **Slime Core trinket** binds a real slime from the player's hutch. Equipp
 
 Hybrids use both inherited signature abilities, with independent cooldowns and balance caps.
 
+Genome records now store stable ability IDs for the seven base species and the implemented two-species hybrids. This is a data foundation only; no ability action, cooldown, or companion behavior executes yet.
+
 ## Exceptional abilities
 - Golden — capped merchant discount.
 - Prismatic — rideable (Large/Giant) and Adaptation (temporarily selects/rotates one base ability).

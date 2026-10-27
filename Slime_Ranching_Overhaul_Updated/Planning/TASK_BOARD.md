@@ -51,7 +51,8 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [x] Scale Ranch Slime sprite art by genetic size inside a shared frame canvas.
 - [ ] Validate size-specific animal placement, hitboxes, petting targets, and breeder previews in game.
 - [x] Render the independent shiny flag as a subtle sheen without changing size or base-color assets.
-- [ ] Independent shiny/rarity/mutation flags; store ancestry and hybrid ability IDs.
+- [x] Store base and hybrid ability identifiers in external genomes; execution remains for companion AI.
+- [x] Keep shiny, rarity, and mutation as separate inherited genome fields; their gameplay balancing remains open.
 
 ## Stage 4 — furniture
 - [x] Add the existing Converter, Breeder, and Incubator to Marnie's shop; add configurable stock for implemented enrichment furniture.

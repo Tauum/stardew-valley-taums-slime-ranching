@@ -14,6 +14,8 @@ public sealed class SlimeGenome
     public bool IsShiny { get; set; }
     public string RarityTier { get; set; } = "Common";
     public string? MutationTrait { get; set; }
+    /// <summary>Stable identifiers for the base abilities carried by this species genome.</summary>
+    public List<string> AbilityIds { get; set; } = new();
     /// <summary>Inherited favorite vanilla object, such as (O)168 for Trash.</summary>
     public string? LikedFoodItemId { get; set; }
 }
