@@ -56,6 +56,7 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [x] Add a placeable Slime Trampoline with a mod-owned pixel sprite and Marnie stock; nearby Ranch Slimes use a temporary size-aware bounce animation.
 - [x] Add a placeable Slime Cushion with configurable Marnie stock and a gentle reserved squish animation using the enrichment scheduler.
 - [x] Add Slime Playground group play: reserve one playground for two slimes and run their short hops together.
+- [x] Add a Slime Slide with a low hop and horizontal glide animation; share furniture reservation and cleanup.
 - [x] Add a low-frequency proximity assignment and temporary bounce offset for Ranch Slimes near a trampoline; tiny, normal, and giant genome sizes now use different arc heights, compression, and durations. Approach/pathing and sprite impact poses remain.
 - [x] Add a short in-memory per-slime cooldown after trampoline use so nearby residents can take turns.
 - [ ] Use each slime's stored liked food when the Compost Trough is implemented; decide its bonus and consume only eligible items.

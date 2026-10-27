@@ -90,11 +90,11 @@ The incubator runs inside the Daycare only, consumes Common or genome-specific R
 ## Marnie's ranching machine stock
 
 1. Open Marnie's Ranch shop (or use `shop AnimalShop` in the SMAPI console).
-2. Confirm the Converter, Breeder, Incubator, Slime Trampoline, Slime Cushion, and Slime Playground appear at their configured prices (defaults: 2,500g, 10,000g, 5,000g, 2,500g, 1,500g, and 6,000g).
+2. Confirm the Converter, Breeder, Incubator, Slime Trampoline, Slime Cushion, Slime Playground, and Slime Slide appear at their configured prices (defaults: 2,500g, 10,000g, 5,000g, 2,500g, 1,500g, 6,000g, and 3,000g).
 3. Buy a machine and verify its item can be placed and used as described above. Place the trampoline and cushion indoors and outdoors; both should be accepted indoors only. Confirm buying one of each does not affect vanilla animal stock.
 4. Reopen the shop on the same day: each purchased item should be out of stock for that player. Check again after sleeping; stock should reset.
 
-These prices are provisional. This stock is only the core ranching machines; custom enrichment furniture is not implemented yet.
+These prices are provisional; all listed enrichment furniture is still a visual prototype.
 
 ## Trampoline bounce prototype
 
@@ -121,6 +121,13 @@ The current prototype assigns only already-nearby slimes; it does not path them 
 3. Place a trampoline or cushion nearby. Confirm the same slime pair uses only the playground during the group animation, another furniture item remains available, and the playground cannot start a second group until both users finish.
 4. Repeat with one nearby slime only; the playground should remain idle until a second eligible slime is close enough.
 5. Leave the room during the group animation and verify both offsets reset. Confirm the interaction is visual only and does not change friendship, happiness, or external save data.
+
+## Slime Slide interaction
+
+1. Buy a Slime Slide from Marnie and place it inside the Daycare.
+2. Wait for a nearby idle Ranch Slime to use it. It should rise slightly, glide horizontally down the slide, then return to its original offset.
+3. Place a slide beside the trampoline, cushion, and playground. Confirm each object keeps its own reservation and no slime receives overlapping animation assignments.
+4. Leave the Daycare during a slide and return; verify the slime returns to its normal position. Confirm regular farm animals and wild/vanilla slimes are unaffected.
 
 ## Genome-driven slime colors
 

@@ -30,6 +30,7 @@ See `Guides/PLAYER_GUIDE.md` for detailed instructions on the converter, inspect
 - **Custom companion AI and movement**, including navigation, actions, storage and riding, are mandatory—not a vanilla follower reskin.
 - Marnie sells the core ranching machines plus Slime Trampolines and Cushions at configurable provisional prices. Nearby Ranch Slimes can perform temporary size-aware trampoline bounces or gentle cushion squishes; pathfinding and richer sprite poses remain unfinished.
 - The Slime Playground supports a synchronized two-slime hop interaction. These furniture interactions are visual prototypes and do not yet affect happiness or friendship.
+- A Slime Slide adds a low hop and horizontal glide animation for nearby Ranch Slimes.
 - Chromatic Crystals can focus breeder offspring on one of seven base colors. Crystal acquisition and progression are undecided; a SMAPI command supplies test crystals.
 - AI-assisted/generated artwork is planned; placeholder art first. Generated images will require sprite-sheet preparation and in-game QA.
 - Single-player v1; multiplayer explicitly deferred. Cosmetic item transmutation and elaborate family-tree UI may follow v1.

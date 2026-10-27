@@ -87,7 +87,8 @@ internal sealed class TrampolineInteractionService
             float flightDuration = Math.Max(0.01f, bounce.DurationSeconds - bounce.CompressionDurationSeconds);
             float flightProgress = Math.Clamp((bounce.ElapsedSeconds - bounce.CompressionDurationSeconds) / flightDuration, 0f, 1f);
             float hop = MathF.Sin(flightProgress * MathF.PI);
-            bounce.Animal.drawOffset = bounce.OriginalDrawOffset + new Vector2(0f, -hop * bounce.BounceHeightPixels);
+            float slide = bounce.HorizontalTravelPixels * flightProgress;
+            bounce.Animal.drawOffset = bounce.OriginalDrawOffset + new Vector2(slide, -hop * bounce.BounceHeightPixels);
         }
 
         if (completed is not null)
@@ -110,7 +111,8 @@ internal sealed class TrampolineInteractionService
         var furnitureSpots = house.Objects.Values
             .Where(obj => obj.QualifiedItemId == FurnitureContent.TrampolineQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.SlimeCushionQualifiedId
-                || obj.QualifiedItemId == FurnitureContent.SlimePlaygroundQualifiedId)
+                || obj.QualifiedItemId == FurnitureContent.SlimePlaygroundQualifiedId
+                || obj.QualifiedItemId == FurnitureContent.SlimeSlideQualifiedId)
             .Select(obj => new FurnitureSpot(obj.TileLocation, obj.QualifiedItemId))
             .Where(spot => !this.active.Values.Any(bounce => bounce.TrampolineTile == spot.Tile))
             .ToList();
@@ -163,22 +165,25 @@ internal sealed class TrampolineInteractionService
 
             FurnitureSpot spot = furnitureSpots[nearestIndex];
             furnitureSpots.RemoveAt(nearestIndex);
-            (float duration, float bounceHeight, float compressionHeight) = spot.QualifiedItemId == FurnitureContent.SlimeCushionQualifiedId
-                ? (1.8f, 9f, 10f)
-                : registry.GetGenomeSize(animal.myID.Value)?.ToLowerInvariant() switch
+            (float duration, float bounceHeight, float compressionHeight, float slideDistance) = spot.QualifiedItemId switch
+            {
+                var id when id == FurnitureContent.SlimeCushionQualifiedId => (1.8f, 9f, 10f, 0f),
+                var id when id == FurnitureContent.SlimeSlideQualifiedId => (2.2f, 8f, 3f, 30f),
+                _ => registry.GetGenomeSize(animal.myID.Value)?.ToLowerInvariant() switch
                 {
-                    "tiny" => (1.8f, 36f, 2f),
-                    "giant" => (3.2f, 21f, 9f),
-                    _ => (2.4f, 28f, 4f)
-                };
-            this.StartInteraction(animal, spot.Tile, duration, bounceHeight, compressionHeight);
+                    "tiny" => (1.8f, 36f, 2f, 0f),
+                    "giant" => (3.2f, 21f, 9f, 0f),
+                    _ => (2.4f, 28f, 4f, 0f)
+                }
+            };
+            this.StartInteraction(animal, spot.Tile, duration, bounceHeight, compressionHeight, slideDistance);
         }
     }
 
-    private void StartInteraction(FarmAnimal animal, Vector2 furnitureTile, float duration, float bounceHeight, float compressionHeight)
+    private void StartInteraction(FarmAnimal animal, Vector2 furnitureTile, float duration, float bounceHeight, float compressionHeight, float slideDistance = 0f)
     {
         this.active[animal.myID.Value] = new Bounce(animal, furnitureTile, animal.drawOffset,
-            duration, bounceHeight, compressionHeight);
+            duration, bounceHeight, compressionHeight, slideDistance);
         this.cooldowns[animal.myID.Value] = this.elapsedSeconds + duration + 3f;
     }
 
@@ -187,7 +192,7 @@ internal sealed class TrampolineInteractionService
     private sealed class Bounce
     {
         public Bounce(FarmAnimal animal, Vector2 trampolineTile, Vector2 originalDrawOffset,
-            float durationSeconds, float bounceHeightPixels, float compressionHeightPixels)
+            float durationSeconds, float bounceHeightPixels, float compressionHeightPixels, float horizontalTravelPixels)
         {
             this.Animal = animal;
             this.TrampolineTile = trampolineTile;
@@ -195,6 +200,7 @@ internal sealed class TrampolineInteractionService
             this.DurationSeconds = durationSeconds;
             this.BounceHeightPixels = bounceHeightPixels;
             this.CompressionHeightPixels = compressionHeightPixels;
+            this.HorizontalTravelPixels = horizontalTravelPixels;
             this.CompressionDurationSeconds = durationSeconds * 0.16f;
         }
 
@@ -204,6 +210,7 @@ internal sealed class TrampolineInteractionService
         public float DurationSeconds { get; }
         public float BounceHeightPixels { get; }
         public float CompressionHeightPixels { get; }
+        public float HorizontalTravelPixels { get; }
         public float CompressionDurationSeconds { get; }
         public float ElapsedSeconds { get; set; }
     }
