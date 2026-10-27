@@ -109,6 +109,7 @@ Use the disposable `TaumTest_322865388` save. Back up the installed mod's `data`
 7. For quick safe-failure/success checks, set cost to 1, base and maximum chance to 0 for failure or 1 for success, and duration to 1. Restore defaults when done. Invalid costs, durations, and chances are clamped when opening the Pool.
 8. Inspect the external registry: `SchemaVersion` should be 9; `MutagenicAttempts` contains active attempt chance/roll; `SlimeRecord` contains `MutagenicPoolFailures` and the genome mutation trait.
 9. Copy an existing schema 8 registry, load it, and confirm `.before-mutagenic-pool-v9.bak` is created and existing egg, breeding, and incubation records are retained.
+10. Run `slime_ranching_inspect` while inside the Daycare. Confirm the log summary counts local mutated slimes and lists breeder cycles, ready eggs, incubations, and Mutagenic Pool attempts for that room.
 
 ## Shadow Clone visual echo
 

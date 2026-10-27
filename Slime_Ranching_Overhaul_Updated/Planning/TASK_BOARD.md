@@ -73,6 +73,7 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [x] Make Mutagenic Pool cost, duration, pity step, and chance bounds configurable with runtime clamping.
 - [x] Show the active pool assignment, locked chance, and day progress in a status card.
 - [x] Add a single-player test command that gives the Mutagenic Pool without spending shop gold.
+- [x] Extend `slime_ranching_inspect` to report Daycare mutation and machine-job counts.
 - [x] Cache mutated-slime candidates for the Shadow Clone renderer and rotate the four-echo draw budget fairly.
 - [ ] Extend the temporary Shadow Clone visual echo into bounded companion behavior; no clones may breed, produce resources, or recursively clone.
 - [x] Chromatic Crystals as breeder consumables, **not furniture**; obtainment recipes and unlock progression remain open.
@@ -103,6 +104,7 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [ ] Check the Pool status card with one- and multi-day durations, then reload an active job and confirm the assignment and progress are restored.
 - [ ] Verify schema 8 migrates to schema 9, creates `.before-mutagenic-pool-v9.bak`, and preserves existing genomes, eggs, breeding pairs, and incubations.
 - [ ] On the disposable save, run `slime_ranching_set_mutation TaumTest_322865388 <animal ID> ShadowClone`; confirm a faint temporary duplicate appears near the slime only inside the Daycare. Then use `none` and confirm it stops; reload with Shadow Clone enabled and check it returns.
+- [ ] Use `slime_ranching_inspect` with no jobs and with breeder/incubator/pool jobs active; confirm counts match the current Daycare only.
 - [ ] Deploy current build to `TaumTest_322865388`; check the complete Base roof and confirm its foundation corner touches the blue footprint's bottom-left, then check both upgrades.
 - [ ] Check that hearts are 30 screen pixels higher than their original position, 20% larger, and float on a 4-second cycle.
 - [ ] Continue with breeder-ready notification, egg persistence, and incubator hatching checks.

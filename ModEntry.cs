@@ -1064,9 +1064,20 @@ public sealed class ModEntry : Mod
 
         if (Game1.currentLocation is StardewValley.AnimalHouse animalHouse)
         {
-            int ranchSlimeCount = Game1.getFarm().animals.Values.Count(animal =>
-                animal.type.Value == FarmAnimalContent.RanchSlimeTypeId && animal.homeInterior == animalHouse);
-            this.Monitor.Log($"This animal house contains {ranchSlimeCount} Ranch Slime(s). The external genome registry contains {loadedRegistry.Count} Ranch Slime record(s).", LogLevel.Info);
+            FarmAnimal[] residents = animalHouse.animals.Values
+                .Where(animal => animal.type.Value == FarmAnimalContent.RanchSlimeTypeId)
+                .ToArray();
+            string machinePrefix = animalHouse.NameOrUniqueName + ":";
+            BreedingPairRecord[] roomBreedingPairs = loadedRegistry.BreedingPairs
+                .Where(pair => pair.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal))
+                .ToArray();
+            int activeCycles = roomBreedingPairs.Count(pair => pair.CycleReadyOnDay > 0 && pair.OutputEggItemId is null);
+            int readyEggs = roomBreedingPairs.Count(pair => pair.OutputEggItemId is not null);
+            int activeIncubations = loadedRegistry.Incubations.Count(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal));
+            int activeMutations = loadedRegistry.MutagenicAttempts.Count(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal));
+            int mutatedResidents = residents.Count(animal => loadedRegistry.GetMutationTrait(animal.myID.Value) is not null);
+            this.Monitor.Log($"This animal house contains {residents.Length} Ranch Slime(s), including {mutatedResidents} with mutation traits. The external genome registry contains {loadedRegistry.Count} Ranch Slime record(s).", LogLevel.Info);
+            this.Monitor.Log($"Jobs in this room: {activeCycles} breeder cycle(s), {readyEggs} ready egg(s), {activeIncubations} incubation(s), {activeMutations} Mutagenic Pool attempt(s).", LogLevel.Info);
             return;
         }
 
