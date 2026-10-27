@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-10-27  
 **Test save:** `TaumTest_322865388` (disposable copy)  
-**Current branch:** `docs/reconcile-roadmap-current-state`, chained after `feature/slime-pond-interaction` (`878cd21`). Gel Refinery, Compost Trough, Slime Tunnel, machine inspection, Heated Slime Stone, and the visual-only Slime Pond are committed. This branch reconciles roadmap and acceptance status; latest code build succeeds. No pond drops are enabled.
+**Current branch:** `docs/companion-core-first-slice`, chained after `docs/reconcile-roadmap-current-state` (`a785f3f`). The implementation branches through visual-only Slime Pond are committed and compile. This branch documents the identity-safe Slime Core first slice and remaining decisions; no companion AI or pond drops have been added.
 
 ## Current state
 
@@ -50,6 +50,7 @@
 - `slime_ranching_inspect` now shows the external registry schema on disk versus the current target schema and prints per-machine job dates/details. Use it during refinery, incubator, breeder, and mutation reload checks.
 - Heated Slime Stone is a configurable Marnie item with an ember sprite and short resting interaction for idle slimes. It has no friendship, warmth, or maturity effect yet; use `slime_ranching_give_heated_stone <save>` to test. Verify draw-offset cleanup in game.
 - Slime Pond is a configurable Marnie item with a generated water basin and low swim-bob interaction; `slime_ranching_give_pond <save>` grants a test item. It generates no items. Review the open question about its drop pool, interval, and daily cap before adding production.
+- The next major system is custom companion AI. `Features/COMPANIONS.md` now proposes one active mature Daycare slime, no duplicate FarmAnimal, external-only binding, and same-location following before cross-location transitions. Review Core acquisition, accessory slot, and dismissal/token behavior before implementation.
 - `slime_ranching_inspect` now shows the external registry schema on disk versus the current target schema and prints per-machine job dates/details. Use it during refinery, incubator, breeder, and mutation reload checks.
 - The interaction scheduler is now named `EnrichmentInteractionService`. It handles all five implemented furniture types, caches occupied target tiles once per assignment pass, and computes each playground candidate distance once during sorting. Build passes with only the existing analyzer/compiler version warning; compare behavior/performance with a crowded Daycare in game.
 - Breeder size inheritance now uses Tiny/Small/Normal/Large/Giant categories. The weights specified in the design notes are implemented; provisional defaults cover Tiny+Tiny, Normal+Normal, adjacent pairs, and wider gaps. Unknown legacy labels are treated as Normal only when rolling offspring. Small and Large also have distinct trampoline arcs.

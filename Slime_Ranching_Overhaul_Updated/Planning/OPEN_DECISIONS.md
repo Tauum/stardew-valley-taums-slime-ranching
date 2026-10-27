@@ -25,6 +25,7 @@
 14. **Companion capacity:** One bound active slime at a time? Recommend one initially.
 15. **Maturity:** Ranch Slimes currently mature after three in-game days, matching the hatching-as-juvenile goal. Maturity progression is now tracked in the external registry and mirrored to Stardew's native animal age field. Review duration, migration, and visual growth steps in game.
 16. **Compost Trough:** Current test behavior consumes one eligible trash, algae, or monster-drop item per juvenile per day, advancing one maturity day; matching its favorite adds one more day. Growth amount, liked-food bonus, accepted items, and Marnie unlock/price are provisional; check the three-day maturity cap and feel before finalizing.
+17. **Slime Core:** Review the first-slice proposal in `Features/COMPANIONS.md`: accessory slot versus inventory item, acquisition source/rate, and whether dismissal returns or consumes the binding Core. Current safe defaults are one active companion and Daycare-only binding; no follower AI should start until binding preserves the exact native animal/genome identity.
 
 ## Decision log
 | Date | Decision | Status |

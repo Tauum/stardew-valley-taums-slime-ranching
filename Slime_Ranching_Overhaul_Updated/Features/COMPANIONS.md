@@ -1,6 +1,6 @@
 # Slime Core companions
 
-A rare **Slime Core trinket** binds a real slime from the player's hutch. Equipped: follows player and uses abilities. Unequipped: dismisses; original identity is preserved and cannot be duplicated or bred while bound/active.
+A rare **Slime Core trinket** binds a real managed Ranch Slime from the Slime Daycare. Equipped: follows player and uses abilities. Unequipped: dismisses; original identity is preserved and cannot be duplicated or bred while bound/active.
 
 ## Base signature abilities
 - Red — Fighter: attacks hostile monsters.
@@ -32,3 +32,24 @@ Inventory ownership/overflow, item duplication, location transfers, event scenes
 
 ## Current locked implementation clarification
 Custom AI, movement, pathfinding, action selection and transitions are mandatory. Do not substitute vanilla follower behavior. Void pocket storage merges into Green Collector. Prismatic has both mount and Adaptation; Shadow Clone is retained.
+
+## First implementation slice proposal (review before code)
+
+The foundation should prove identity and ownership before adding movement or abilities:
+
+1. Allow one active Core per farmer in the single-player prototype.
+2. Bind only a mature, managed Ranch Slime that is currently in the Slime Daycare and not reserved by breeding, mutation, or feeding.
+3. Keep one native `FarmAnimal` and one external `SlimeRecord`; binding toggles ownership/active state and never spawns a duplicate slime.
+4. Store the binding and transition state under the installed mod folder. Avoid game-entity `modData`. A unique Core item identifier may carry only the external genome GUID, following the existing genome-egg identity pattern.
+5. Dismissal returns the same animal ID and genome to the Daycare. While active or bound, block breeder, Mutagenic Pool, and Compost Trough selection.
+6. Start movement as same-location follow with safe stuck recovery. Add cross-location transitions only after save/reload recovery proves the native animal and external genome remain linked.
+7. Implement one test action before species abilities, combat, inventory, mounting, and time effects. Each ability needs an explicit cooldown, target, cap, and save-transition rule.
+
+### Decisions to review before the Core prototype
+
+- Use Stardew's accessory/trinket slot for the Core, matching the concept, or begin with a custom inventory item while validating binding?
+- How should a player acquire it: crafting, a Marnie purchase, a rare drop, or a quest reward? If a rare drop, which source and rate?
+- Should a dismissed Core stay in inventory as the binding token, or should dismissal return the animal and consume the Core?
+- The safe starting defaults above are one active companion and Daycare-only binding. Change either before movement work if desired.
+
+Until these are reviewed, the existing `IsCompanion` genome flag remains data-only and no bound/active animal is spawned.
