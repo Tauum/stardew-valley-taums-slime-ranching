@@ -1,3 +1,6 @@
 {
-  "LogRegistrySummary": true
+  "LogRegistrySummary": true,
+  "ConverterShopPrice": 2500,
+  "BreederShopPrice": 10000,
+  "IncubatorShopPrice": 5000
 }

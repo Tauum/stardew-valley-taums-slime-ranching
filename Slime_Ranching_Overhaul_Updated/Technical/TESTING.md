@@ -75,6 +75,15 @@ These command-created genomes are test fixtures only. The user confirmed an egg 
 
 The incubator runs inside the Daycare only, consumes Common or genome-specific Ranch Slime Eggs from inventory, and targets a two-day cycle. A Common Egg receives a fresh base genome when inserted; a breeder egg uses its existing genome. The incubator spawns the juvenile automatically when the next day begins. If the game and mod-folder state are saved at different moments, the external hatch record reserves the native animal ID and recovers against the next loaded game state. Duration and duplicate-item behavior are provisional and need playtesting.
 
+## Marnie's ranching machine stock
+
+1. Open Marnie's Ranch shop (or use `shop AnimalShop` in the SMAPI console).
+2. Confirm the Converter, Breeder, and Incubator each appear at their configured prices (defaults: 2,500g, 10,000g, and 5,000g).
+3. Buy a machine and verify its item can be placed and used as described above. Confirm buying one of each does not affect vanilla animal stock.
+4. Reopen the shop on the same day: each purchased item should be out of stock for that player. Check again after sleeping; stock should reset.
+
+These prices are provisional. This stock is only the core ranching machines; custom enrichment furniture is not implemented yet.
+
 ## Breeder cycle egg output (prototype)
 
 1. In the disposable save, make sure two Ranch Slimes are in the Daycare and give/place a Slime Breeder there. Select and reserve the pair, then start the two-day cycle.

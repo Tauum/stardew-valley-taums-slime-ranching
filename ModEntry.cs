@@ -437,6 +437,7 @@ public sealed class ModEntry : Mod
     private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
     {
         ConverterContent.EditAsset(e);
+        ShopContent.EditAsset(e, this.config);
         SlimeEggContent.EditAsset(e, this.Helper.DirectoryPath);
         GuidebookContent.EditAsset(e);
         FarmAnimalContent.LoadAssets(e);

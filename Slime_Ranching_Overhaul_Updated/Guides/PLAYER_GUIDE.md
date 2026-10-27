@@ -6,7 +6,7 @@ This guide covers the current early prototype. The Slime Breeder can reserve two
 
 - Test on a copied save. The converter itself leaves unused vanilla eggs alone, but its output is a custom mod item saved in the game save.
 - Back up `<installed mod folder>/data` before replacing or removing the mod. It contains the external slime registry and first-seen snapshots.
-- The current converter is supplied by a testing command; there is no crafting recipe or shop source yet.
+- Marnie sells the Converter, Breeder, and Incubator. Their current prices are configurable in `config.json` and are provisional for balancing. Testing commands can still provide the machines directly.
 
 ## Slime Egg Converter
 
@@ -14,7 +14,7 @@ The Slime Egg Converter turns one vanilla Slime Egg into one **Common Slime Egg*
 
 ### Get and place a converter
 
-Open the SMAPI console while the intended single-player save is loaded and run:
+To obtain a Converter through normal play, buy one from Marnie at her Ranch. For a test copy, open the SMAPI console while the save is loaded and run:
 
 ```text
 slime_ranching_give_converter <exact save folder name>
