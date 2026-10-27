@@ -2,6 +2,7 @@ namespace taums_slime_ranching;
 
 public sealed class ModConfig
 {
+    public string SlimeDaycareExteriorDesign { get; set; } = "RedRanch";
     public bool LogRegistrySummary { get; set; } = true;
     public int ConverterShopPrice { get; set; } = 2500;
     public int BreederShopPrice { get; set; } = 10000;

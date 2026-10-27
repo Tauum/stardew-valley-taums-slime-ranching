@@ -25,6 +25,7 @@ public sealed class ModEntry : Mod
     public override void Entry(IModHelper helper)
     {
         this.config = helper.ReadConfig<ModConfig>();
+        BuildingContent.NormalizeConfig(this.config);
         this.registry = new SlimeRegistry(this.Monitor);
         this.stateStore = new ModStateStore(helper.DirectoryPath);
 
@@ -84,6 +85,7 @@ public sealed class ModEntry : Mod
             this.ApplyRanchSlimeAppearances();
             bool maturityChanged = this.registry.SynchronizeMaturity(GetFarmAnimals(), Game1.Date.TotalDays);
             this.stateReady = true;
+            this.ApplyDaycareExteriorDesign();
             this.LogRegistryReconciliation(detachedAnimals, cancelledCycles);
             if ((recoveredHatches > 0 || detachedAnimals > 0 || cancelledCycles > 0 || maturityChanged) && !this.SaveExternalStateNow())
                 this.Monitor.Log("Reconciled Ranch Slime records remain in memory but could not yet be written to the mod-folder registry.", LogLevel.Error);
@@ -101,6 +103,16 @@ public sealed class ModEntry : Mod
             return;
 
         api.Register(this.ModManifest, this.ResetConfig, this.SaveConfig);
+        api.AddSectionTitle(this.ModManifest, () => "Slime Daycare appearance");
+        api.AddParagraph(this.ModManifest, () => "Choose the exterior design shared by the base Daycare and both upgrade tiers. The first red design is the default.");
+        api.AddTextOption(this.ModManifest,
+            () => this.config.SlimeDaycareExteriorDesign,
+            value => this.config.SlimeDaycareExteriorDesign = value,
+            () => "Daycare exterior design",
+            () => "Changes the exterior of all Slime Daycare buildings. Upgrade tiers will keep this same exterior.",
+            BuildingContent.GetExteriorDesignIds(),
+            BuildingContent.GetExteriorDesignName,
+            "SlimeDaycareExteriorDesign");
         api.AddSectionTitle(this.ModManifest, () => "Ranching equipment prices");
         api.AddParagraph(this.ModManifest, () => "Changes refresh Marnie's shop after saving these settings.");
         this.AddShopPriceOption(api, "Egg Converter", "Price of the vanilla Slime Egg converter.", () => this.config.ConverterShopPrice, value => this.config.ConverterShopPrice = value);
@@ -193,6 +205,7 @@ public sealed class ModEntry : Mod
     private void ResetConfig()
     {
         this.config = new ModConfig();
+        this.ApplyDaycareExteriorDesign();
     }
 
     private void SaveConfig()
@@ -200,6 +213,8 @@ public sealed class ModEntry : Mod
         MutagenicPoolRules.NormalizeConfig(this.config);
         this.Helper.WriteConfig(this.config);
         this.Helper.GameContent.InvalidateCache("Data/Shops");
+        this.Helper.GameContent.InvalidateCache("Data/Buildings");
+        this.ApplyDaycareExteriorDesign();
     }
 
     private void OnSaving(object? sender, SavingEventArgs e)
@@ -227,6 +242,8 @@ public sealed class ModEntry : Mod
     {
         if (!this.stateReady || !Context.IsMainPlayer)
             return;
+
+        this.ApplyDaycareExteriorDesign();
 
         bool maturityChanged = this.registry!.SynchronizeMaturity(GetFarmAnimals(), Game1.Date.TotalDays);
         var readyToNotify = new List<(taums_slime_ranching.Models.BreedingPairRecord Pair, taums_slime_ranching.Models.SlimeEggRecord Egg)>();
@@ -669,6 +686,7 @@ public sealed class ModEntry : Mod
 
     private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
     {
+        BuildingContent.LoadAssets(e, this.Helper);
         ConverterContent.EditAsset(e);
         ChromaticCrystalContent.EditAsset(e);
         ShopContent.EditAsset(e, this.config);
@@ -683,7 +701,21 @@ public sealed class ModEntry : Mod
         GelRefineryContent.EditAsset(e);
         MutagenicPoolContent.LoadAssets(e);
         MutagenicPoolContent.EditAsset(e);
-        BuildingContent.EditAsset(e, this.Helper);
+        BuildingContent.EditAsset(e, this.Helper, this.config);
+    }
+
+    private void ApplyDaycareExteriorDesign()
+    {
+        if (!Context.IsWorldReady)
+            return;
+
+        string textureName = BuildingContent.GetExteriorTextureName(this.config.SlimeDaycareExteriorDesign);
+        Texture2D texture = this.Helper.GameContent.Load<Texture2D>(textureName);
+        foreach (Building building in Game1.getFarm().buildings)
+        {
+            if (BuildingContent.IsSlimeDaycare(building.buildingType.Value))
+                building.texture = new Lazy<Texture2D>(() => texture);
+        }
     }
 
     private void OnButtonPressed(object? sender, ButtonPressedEventArgs e)

@@ -9,6 +9,8 @@ For the next-session handoff and current visual state, see [`NEXT_SESSION.md`](N
 - [x] Define versioned per-slime genome IDs and a registry under the installed mod folder. (Full save/reload validation of the live animal-to-genome link remains open.)
 - [x] Build the separate Slime Daycare and spawn a Ranch Slime FarmAnimal into it; the game assigned a native animal ID.
 - [x] Explicitly allow Ranch Slimes to live in the base Daycare using its valid-occupant building ID.
+- [x] Add a 12-design exterior selector in GMCM, default to the top-left design, and keep all exterior tiers identical through upgrades.
+- [ ] Verify all 12 designs in GMCM, plus 112x128 sprite sizing and a 7x4 footprint, in game.
 - [ ] Verify buying a Ranch Slime from Marnie and assigning it to each Daycare tier via Robin's chooser.
 - [ ] Verify petting, movement, and that the native ID keeps the same external genome link across save/reload.
 - [x] Implement idempotent first-install detection and first-seen snapshot of legacy hutch slimes in the mod folder.

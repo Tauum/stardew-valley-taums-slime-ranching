@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-10-27  
 **Test save:** `TaumTest_322865388` (disposable copy)  
-**Current branch:** `fix/breeder-replacement-reservations`, chained after `fix/daycare-occupant-compatibility` (`0d51fdd`). Ranch Slime placement compatibility is fixed in code and needs retesting in Robin's chooser. Breeder records now move to an available replacement breeder in the same Daycare when opened, preserving pair IDs and cycle progress; verify by moving an active breeder to a different tile. Companion binding groundwork is committed separately; Core item and follower behavior remain unresolved.
+**Current branch:** `feature/daycare-exterior-design-setting`, chained after `fix/breeder-replacement-reservations` (`49525c3`). A 12-choice GMCM exterior setting defaults to the top-left red design, uses 112x128 source textures and a 7x4 footprint, and keeps the same exterior through upgrades. Build passes; verify all designs and upgrade behavior in game. Earlier building images remain untouched in `assets/Buildings` for reference.
 
 ## Current state
 
@@ -67,8 +67,8 @@
 - `slime_ranching_set_size <save> <animal ID> <Tiny|Small|Normal|Large|Giant>` sets a managed Ranch Slime's size in external state, saves it, and refreshes the current animal's sprite immediately. On external-write failure it restores both the old genome size and sprite.
 - The user confirmed the egg spawn worked. Its tooltip showed Ranch Slime, green (`#00FF00`), Normal size, Common rarity, no mutation, Generation 1, two parent IDs, and favorite food `Broken CD`.
 - Egg hatching is implemented as a prototype. It was introduced in schema 6; the registry is currently schema 9. Verify egg identity through transfer/reload, then test incubation recovery and genome matching.
-- Building art uses direct nearest-neighbor resized copies of the original images in `assets/Buildings/*_GameTexture.png`. The original full-size source images are preserved. Current frames are Base 160 by 160, Upgrade 1 176 by 160, and Upgrade 2 192 by 160; building widths are 10, 11, and 12 tiles.
-- The Base game texture is shifted 8 source pixels left and 3 down from the directly resized original. `BuildingContent` applies a world draw offset of (3, 8) pixels to the Daycare sprite so its body/foundation can move without cropping the roof. The building's tile footprint/collision is unchanged. Confirm the foundation corner against the blue box in game; fence posts have not been separated or positioned independently.
+- The new Daycare exterior uses twelve designs in `assets/Buildings/SlimeDaycareDesigns.png`; the config defaults to the top-left red ranch. Design textures are cropped and nearest-neighbor resized to 112x128, with a 7x4 tile footprint. All upgrade tiers use the selected exterior and footprint; interior layout differences remain future work. Earlier Base/Upgrade 1/Upgrade 2 art remains unchanged for reference.
+- `BuildingContent` retains the current world draw offset of (3, 8) pixels. Check that the new sprite and common footprint preserve the previous foundation alignment and do not crop the roof; fence placement remains later work.
 - The breeding chimney hearts use a pale heart behind a rose-pink heart. They are now 30 screen pixels above the chimney reference, 20% larger, and use a 4-second float cycle. This revision has compiled but has not yet been checked in game.
 - Latest build succeeded with 0 errors and the existing CS9057 compiler/analyzer version warning. No gameplay tests were run after the latest texture and heart changes.
 

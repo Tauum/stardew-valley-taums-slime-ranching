@@ -131,11 +131,11 @@ Common and genome-specific Ranch Slime Eggs can now hatch in the custom Slime In
 
 ## Slime Daycare building art and upgrades
 
-1. Deploy the current build and ask Robin to build the Slime Daycare. Confirm the base building has the full pink roof and slime crest, rather than Barn art. It remains free and instant for testing.
-2. Ask Robin to upgrade it. Upgrade 1 should complete instantly, change the roof to blue, and increase capacity. Ranch Slimes should remain assigned and the breeder should still recognize the building.
-3. Upgrade again. Upgrade 2 should use the purple roof and larger upper window, retain the animals, and allow the breeder/spawn command to find it.
-4. Confirm regular Barns are unchanged. The original art is preserved; the Daycare loads directly resized game textures from `assets/Buildings`. Building definitions and upgrade links are in `Services/BuildingContent.cs`.
-5. Compare the building foundation's bottom-left corner with the blue footprint reference. Keep the roof fully visible; do not shift the fixed-size texture so far left that its roof is cropped. The fences can be aligned separately later.
+1. Deploy the current build and ask Robin to build the Slime Daycare. Confirm the default exterior is the top-left red ranch design.
+2. Open Generic Mod Config Menu and choose each **Daycare exterior design** option. Save after each change and confirm every existing Daycare tier updates to the selected design.
+3. Ask Robin to upgrade through both tiers. Confirm the exterior and 7-by-4 tile footprint stay the same while upgrade capacity advances.
+4. Confirm regular Barns are unchanged. Earlier Base/Upgrade 1/Upgrade 2 art remains in `assets/Buildings` for reference; the 12-design sheet is `assets/Buildings/SlimeDaycareDesigns.png`.
+5. Confirm the generated exterior texture uses the provided 112x128 source size and is not clipped in-game. Interior layout differences remain future work.
 6. During an active breeder cycle, check that the pale and rose hearts appear 30 screen pixels higher than their original position, are 20% larger, and use a 4-second float cycle. These latest heart changes have only been compiled so far.
 
 ## Breeder pair reservation and cycle timer
