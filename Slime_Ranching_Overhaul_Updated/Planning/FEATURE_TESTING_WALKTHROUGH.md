@@ -38,8 +38,8 @@ The newly hatched slime should retain its egg genome and remain in the Daycare a
 3. Hold a test egg and use the incubator. Select the egg, start incubation, and confirm the egg leaves your inventory.
 4. Close and reopen the incubator menu. Confirm the job remains active, shows time remaining, and the same egg can't be started in another incubator.
 5. Save and reload the copied save while incubation is active. Reopen the incubator and confirm its progress persisted.
-6. Sleep through the two-day incubation. Check for the ready notification and the hatchling in the Daycare. Open the incubator and choose the ready slime.
-7. Enter a custom name in the naming prompt. Confirm the slime is collected into the Daycare with that name and the incubator becomes available again.
+6. Sleep through the two-day incubation. Check for the ready notification. Confirm the unclaimed hatchling is hidden from the Daycare and breeder list. Open the incubator and choose the ready slime.
+7. Enter a custom name in the naming prompt. Confirm the slime then appears in the Daycare with that name and the incubator becomes available again.
 8. Reopen the incubator and save/reload once more. Confirm the hatchling isn't duplicated and its genome-specific appearance remains.
 
 **Expected:** the incubator consumes one eligible egg, recovers its job and hatchling across reloads, then lets you name and collect exactly one Ranch Slime with the egg's genome.

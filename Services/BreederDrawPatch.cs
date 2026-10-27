@@ -11,12 +11,12 @@ namespace taums_slime_ranching.Services;
 internal static class BreederDrawPatch
 {
     private const int TileSize = 64;
-    private const int FootprintWidth = 3;
+    private const int FootprintWidth = 5;
     private const int FootprintHeight = 2;
     private const int SpriteHeight = 4 * TileSize;
     private const int PlacedSpriteOffsetY = 0;
     // Crop the outer transparent glow/pipe margins so the solid breeder frame spans
-    // the three-tile footprint when rendered at the footprint width.
+    // the five-tile footprint when rendered at the footprint width.
     private const int SourceX = 275;
     private const int SourceWidth = 1472;
     private static Texture2D? texture;

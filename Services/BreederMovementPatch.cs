@@ -24,13 +24,15 @@ internal static class BreederMovementPatch
         isBreedingParentReserved?.Invoke(__instance.myID.Value) != true;
 }
 
-/// <summary>Hides active breeding parents while their sprites are represented in the breeder chambers.</summary>
+/// <summary>Hides reserved breeder parents and unclaimed incubator hatchlings from the world.</summary>
 [HarmonyPatch]
 internal static class BreederParentVisibilityPatch
 {
     private static Func<long, bool>? isInActiveBreedingCycle;
+    private static Func<long, bool>? isUnclaimedIncubationHatch;
 
     public static void SetActiveCycleLookup(Func<long, bool> lookup) => isInActiveBreedingCycle = lookup;
+    public static void SetUnclaimedHatchLookup(Func<long, bool> lookup) => isUnclaimedIncubationHatch = lookup;
 
     private static IEnumerable<MethodBase> TargetMethods() => typeof(FarmAnimal)
         .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
@@ -38,5 +40,6 @@ internal static class BreederParentVisibilityPatch
             && method.GetParameters().FirstOrDefault()?.ParameterType == typeof(Microsoft.Xna.Framework.Graphics.SpriteBatch));
 
     private static bool Prefix(FarmAnimal __instance) =>
-        isInActiveBreedingCycle?.Invoke(__instance.myID.Value) != true;
+        isInActiveBreedingCycle?.Invoke(__instance.myID.Value) != true
+        && isUnclaimedIncubationHatch?.Invoke(__instance.myID.Value) != true;
 }

@@ -31,6 +31,7 @@ public sealed class ModEntry : Mod
         this.registry = new SlimeRegistry(this.Monitor);
         BreederMovementPatch.SetReservationLookup(id => this.registry?.IsBreedingParentReserved(id) == true);
         BreederParentVisibilityPatch.SetActiveCycleLookup(id => this.registry?.IsInActiveBreedingCycle(id) == true);
+        BreederParentVisibilityPatch.SetUnclaimedHatchLookup(id => this.registry?.IsUnclaimedIncubationHatch(id) == true);
         this.stateStore = new ModStateStore(helper.DirectoryPath);
 
         helper.Events.GameLoop.SaveLoaded += this.OnSaveLoaded;

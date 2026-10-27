@@ -107,6 +107,9 @@ internal sealed class SlimeRegistry
     public IncubationRecord? GetIncubation(string machineKey) =>
         this.incubations.TryGetValue(machineKey, out IncubationRecord? record) ? record : null;
 
+    public bool IsUnclaimedIncubationHatch(long farmAnimalId) =>
+        this.incubations.Values.Any(incubation => incubation.HatchAnimalId == farmAnimalId);
+
     public string? GetGenomeSize(long farmAnimalId) =>
         this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record) ? record.Genome.Size : null;
 

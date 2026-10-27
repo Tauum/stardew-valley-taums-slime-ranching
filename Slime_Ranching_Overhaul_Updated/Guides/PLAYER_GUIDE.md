@@ -19,7 +19,7 @@ This guide covers the current early prototype. The Slime Breeder can reserve two
 - Marnie also sells a Slime Swing. Nearby idle slimes briefly sway on it; use `slime_ranching_give_swing <save name>` to test it. This is a visual interaction only.
 - Chromatic Crystals can focus a breeder cycle on a base offspring color. They are currently test-only items; use the SMAPI command `slime_ranching_give_crystals <save name>` while on a disposable save.
 - Ranch Slime offspring and genome-specific egg icons use a tint selected from the external genome color. The seven base colors and six hybrid recipes are supported; hybrid sprites still use the nearest base tint rather than continuous RGB blending.
-- Ranching machine placement and collision areas currently use a 3×2 tile footprint. This covers the Egg Converter, Slime Incubator, Slime Breeder, Gel Refinery, and Mutagenic Pool; the larger machines' artwork and menus remain unchanged.
+- The Egg Converter, Slime Incubator, Gel Refinery, and Mutagenic Pool use 3×2 placement and collision areas. The Slime Breeder retains its 5×2 footprint.
 
 ## Slime Egg Converter
 
