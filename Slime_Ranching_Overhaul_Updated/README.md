@@ -41,6 +41,7 @@ See `Guides/PLAYER_GUIDE.md` for detailed instructions on the converter, inspect
 - The Slime Pond adds a short swimming bob; it produces no drops until its economy is decided.
 - The Slime Swing adds a short side-to-side sway for nearby idle slimes; it is visual-only.
 - Slime Fairy Lights are a Daycare decoration with four colored bulbs that glow from 6:00 PM to 2:00 AM; they are visual-only and configurable in Marnie's shop.
+- Companion groundwork can bind one mature Daycare slime externally for identity and machine-exclusion tests; following behavior and the Slime Core item are not implemented yet.
 - Chromatic Crystals can focus breeder offspring on one of seven base colors. Crystal acquisition and progression are undecided; a SMAPI command supplies test crystals.
 - AI-assisted/generated artwork is planned; placeholder art first. Generated images will require sprite-sheet preparation and in-game QA.
 - Single-player v1; multiplayer explicitly deferred. Cosmetic item transmutation and elaborate family-tree UI may follow v1.

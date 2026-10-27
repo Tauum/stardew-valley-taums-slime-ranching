@@ -104,6 +104,16 @@ This is a new custom farm-animal type in a separate Slime Daycare animal-house b
 3. Verify the new animal is assigned to the Daycare and can be petted; existing hutch and mine slimes should be unchanged.
 4. Sleep to save. Check the log for `Added 1 Ranch Slime genome record(s) to the external registry`, then inspect `data/saves/<save name>/slime-registry-v1.json`: the record should have `FarmAnimalId` matching the animal and a `Genome.Id` in that external file.
 5. Reload and save again. Confirm the same `FarmAnimalId` retains the same `Genome.Id` and no duplicate record is added.
+
+## Companion identity binding prototype
+
+1. On `TaumTest_322865388`, use `slime_ranching_inspect` in the Daycare and choose a mature Ranch Slime ID that is not in a breeder or Mutagenic Pool job.
+2. Run `slime_ranching_bind_companion TaumTest_322865388 <animal ID>`. Confirm the log reports the same ID and the animal stays in the Daycare.
+3. Try selecting that slime in the breeder, Mutagenic Pool, and Compost Trough; confirm it is unavailable. Confirm nearby enrichment furniture also skips it.
+4. Run `slime_ranching_inspect <animal ID>`, sleep, reload, and inspect again. Confirm `companion true`, the same FarmAnimal ID, and the same external genome GUID.
+5. Run `slime_ranching_dismiss_companion TaumTest_322865388`. Confirm `companion false` and that the same animal is eligible for its normal machine interactions again.
+
+The commands are test access only. No Core item, following, ability behavior, or game-save metadata is implemented in this slice.
 6. Run `slime_ranching_inspect` in a Slime Hutch and confirm its vanilla slime count has not changed.
 7. Run `slime_ranching_inspect <animal ID>` for a managed Ranch Slime. Confirm the log shows its genome identity, species/color/size, shiny and mutation traits, ability IDs, liked food, external age, mutation pity, and reservation state.
 

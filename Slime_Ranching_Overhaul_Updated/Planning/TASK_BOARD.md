@@ -104,7 +104,9 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 
 ## Stage 6 — custom companion AI
 - [ ] Review the Slime Core first-slice defaults and decide its accessory slot, acquisition, and dismissal/token behavior.
-- [ ] Bind/unbind one existing mature Daycare Ranch Slime without creating or duplicating a FarmAnimal or genome record.
+- [x] Add external-only test binding for one existing mature Daycare Ranch Slime without creating or duplicating a FarmAnimal or genome record.
+- [ ] Verify binding survives save/reload with the same animal ID and genome GUID, and a bound slime is excluded from machine/furniture interactions.
+- [ ] Replace test commands with a reviewed Core acquisition and bind/dismiss item flow.
 - [ ] Slime Core bind/unbind, ownership, transfer and anti-duplication rules.
 - [ ] Custom movement, pathfinding, transitions, stuck recovery, action scheduler.
 - [ ] Inventory, ability targeting, cooldown and size/shiny scaling.

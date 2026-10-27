@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-10-27  
 **Test save:** `TaumTest_322865388` (disposable copy)  
-**Current branch:** `fix/stop-enrichment-when-furniture-removed`, chained after `feature/daycare-fairy-lights` (`debcb2c`). Gel Refinery, Compost Trough, Tunnel, Heated Stone, Pond, Swing, Fairy Lights, reservation-safe interaction cleanup, inspection improvements, and the companion first-slice proposal are committed. The latest interaction-cleanup change cancels an animation if its furniture is picked up; both that behavior and Fairy Lights need in-game verification.
+**Current branch:** `feature/slime-companion-binding`, chained after `fix/stop-enrichment-when-furniture-removed` (`6871880`). Gel Refinery, Compost Trough, Tunnel, Heated Stone, Pond, Swing, Fairy Lights, and reservation-safe interaction cleanup are committed. The companion binding prototype uses the existing external `IsCompanion` flag and console-only bind/dismiss commands; it compiles but needs save/reload and machine-exclusion verification. Core item and follower behavior remain unresolved.
 
 ## Current state
 
@@ -53,6 +53,7 @@
 - Slime Swing is a configurable Marnie item with generated wooden art and a brief oscillating draw offset for idle slimes; `slime_ranching_give_swing <save>` grants a test item. It does not move collision tiles or change stats. Verify cleanup in game.
 - Enrichment animations now terminate immediately if a breeder or mutation job reserves the active slime, restoring the saved draw offset. Verify by starting a job during a tunnel/swing/rest animation.
 - Active enrichment animations also stop and restore the original offset when the furniture is removed; the scheduler checks the furniture tile directly. Verify by picking an item up mid-animation.
+- One mature Daycare slime can be bound/dismissed through test commands. Binding is mod-folder-only and blocks machine/furniture use while preserving the native animal; verify save/reload identity before implementing the Core item or follower.
 - Slime Fairy Lights are sold by Marnie and glow from 6 PM through 2 AM inside the Daycare; `slime_ranching_give_fairy_lights <save>` grants a test set. Verify the time boundaries, correct interior placement, and subtlety in game.
 - The next major system is custom companion AI. `Features/COMPANIONS.md` now proposes one active mature Daycare slime, no duplicate FarmAnimal, external-only binding, and same-location following before cross-location transitions. Review Core acquisition, accessory slot, and dismissal/token behavior before implementation.
 - `slime_ranching_inspect` now shows the external registry schema on disk versus the current target schema and prints per-machine job dates/details. Use it during refinery, incubator, breeder, and mutation reload checks.

@@ -53,3 +53,12 @@ The foundation should prove identity and ownership before adding movement or abi
 - The safe starting defaults above are one active companion and Daycare-only binding. Change either before movement work if desired.
 
 Until these are reviewed, the existing `IsCompanion` genome flag remains data-only and no bound/active animal is spawned.
+
+## Identity-binding prototype
+
+The first binding slice toggles `SlimeRecord.IsCompanion` for one mature, managed Ranch Slime physically inside a Slime Daycare and not reserved by another job. It writes only to the mod-folder registry; it does not create an animal, add item metadata to the game save, or move the animal. While bound, breeder, Mutagenic Pool, Compost Trough, and enrichment interactions treat it as reserved. Test-only commands bind and dismiss the same FarmAnimal ID so save/reload identity can be checked before implementing the Core token or follower movement:
+
+- `slime_ranching_bind_companion <exact save folder name> <animal ID>`
+- `slime_ranching_dismiss_companion <exact save folder name>`
+
+These commands are temporary test access, not the intended player-facing acquisition flow. Accessory slot/inventory token, Core acquisition, and dismissal behavior remain undecided; follower movement and abilities are not implemented.

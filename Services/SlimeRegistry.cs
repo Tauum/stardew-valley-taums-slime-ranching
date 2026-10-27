@@ -32,12 +32,38 @@ internal sealed class SlimeRegistry
         .Concat(this.mutagenicAttempts.Values.Select(attempt => attempt.SlimeId))
         .Distinct()
         .ToArray();
+    public long? ActiveCompanionFarmAnimalId => this.records.Values
+        .Where(record => record.IsCompanion)
+        .Select(record => record.FarmAnimalId)
+        .FirstOrDefault(id => id.HasValue);
 
     public BreedingPairRecord? GetBreedingPair(string machineKey) =>
         this.breedingPairs.TryGetValue(machineKey, out BreedingPairRecord? pair) ? pair : null;
 
     public bool TryGetSlimeRecord(long farmAnimalId, out SlimeRecord record) =>
         this.farmAnimalRecords.TryGetValue(farmAnimalId, out record!);
+
+    public bool BindCompanion(long farmAnimalId)
+    {
+        if (this.records.Values.Any(existing => existing.IsCompanion)
+            || !this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record)
+            || !record.AgeClockInitialized
+            || record.AgeDays < FarmAnimalContent.RanchSlimeDaysToMature
+            || this.IsReserved(farmAnimalId))
+            return false;
+
+        record.IsCompanion = true;
+        return true;
+    }
+
+    public bool UnbindCompanion(long farmAnimalId)
+    {
+        if (!this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record) || !record.IsCompanion)
+            return false;
+
+        record.IsCompanion = false;
+        return true;
+    }
 
     public IncubationRecord? GetIncubation(string machineKey) =>
         this.incubations.TryGetValue(machineKey, out IncubationRecord? record) ? record : null;
@@ -289,7 +315,8 @@ internal sealed class SlimeRegistry
     public bool CompleteIncubation(string machineKey) => this.incubations.Remove(machineKey);
 
     public bool IsReserved(long farmAnimalId, string? exceptMachineKey = null) =>
-        this.breedingPairs.Values.Any(pair => pair.MachineKey != exceptMachineKey
+        (this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? slime) && slime.IsCompanion)
+        || this.breedingPairs.Values.Any(pair => pair.MachineKey != exceptMachineKey
             && (pair.ParentAId == farmAnimalId || pair.ParentBId == farmAnimalId))
         || this.mutagenicAttempts.Values.Any(attempt => attempt.MachineKey != exceptMachineKey && attempt.SlimeId == farmAnimalId);
 

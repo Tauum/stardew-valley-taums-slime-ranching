@@ -44,6 +44,8 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("slime_ranching_set_color", "Set a managed Ranch Slime's test base color. Usage: slime_ranching_set_color <exact save folder name> <animal ID> <Red|Orange|Yellow|Green|Blue|Purple|Pink>.", this.OnSetSlimeColorCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_shiny", "Set a managed Ranch Slime's test shiny flag. Usage: slime_ranching_set_shiny <exact save folder name> <animal ID> <true|false>.", this.OnSetSlimeShinyCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_mutation", "Set a managed Ranch Slime's test mutation. Usage: slime_ranching_set_mutation <exact save folder name> <animal ID> <ShadowClone|none>.", this.OnSetSlimeMutationCommand);
+        helper.ConsoleCommands.Add("slime_ranching_bind_companion", "Bind one mature Daycare Ranch Slime as the external companion test. Usage: slime_ranching_bind_companion <exact save folder name> <animal ID>.", this.OnBindCompanionCommand);
+        helper.ConsoleCommands.Add("slime_ranching_dismiss_companion", "Dismiss the currently bound Ranch Slime companion. Usage: slime_ranching_dismiss_companion <exact save folder name>.", this.OnDismissCompanionCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_converter", "Give one Slime Egg Converter for testing. Usage: slime_ranching_give_converter <exact save folder name>.", this.OnGiveConverterCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_guidebook", "Give the Slime Ranching Field Guide. Usage: slime_ranching_give_guidebook <exact save folder name>.", this.OnGiveGuidebookCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_breeder", "Give one Slime Breeder for testing. Usage: slime_ranching_give_breeder <exact save folder name>.", this.OnGiveBreederCommand);
@@ -1150,6 +1152,72 @@ public sealed class ModEntry : Mod
         this.Monitor.Log($"Changed Ranch Slime {animalId} mutation trait to {this.registry.GetMutationTrait(animalId) ?? "none"} in the mod's external registry.", LogLevel.Info);
     }
 
+    private void OnBindCompanionCommand(string command, string[] args)
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
+        {
+            this.Monitor.Log("Load a single-player save with available external slime state before binding a companion.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 2 || args[0] != saveName || !long.TryParse(args[1], out long animalId))
+        {
+            this.Monitor.Log($"Usage: slime_ranching_bind_companion {saveName} <animal ID>", LogLevel.Warn);
+            return;
+        }
+
+        bool isInDaycare = Game1.getFarm().buildings.Any(building =>
+            BuildingContent.IsSlimeDaycare(building.buildingType.Value)
+            && building.GetIndoors() is StardewValley.AnimalHouse house
+            && house.animals.Values.Any(animal => animal.myID.Value == animalId && animal.type.Value == FarmAnimalContent.RanchSlimeTypeId));
+        if (!isInDaycare || !this.registry!.BindCompanion(animalId))
+        {
+            this.Monitor.Log("Binding failed. Choose one mature managed Ranch Slime in the Daycare that is not assigned to a ranching job; only one companion can be bound.", LogLevel.Warn);
+            return;
+        }
+
+        if (!this.SaveExternalStateNow())
+        {
+            this.registry.UnbindCompanion(animalId);
+            this.Monitor.Log("Could not save the binding to the mod folder; the slime was unbound again.", LogLevel.Error);
+            return;
+        }
+
+        this.Monitor.Log($"Bound Ranch Slime {animalId} as the companion identity test. It remains in the Daycare; follower movement and the Core item are not implemented yet.", LogLevel.Info);
+    }
+
+    private void OnDismissCompanionCommand(string command, string[] args)
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
+        {
+            this.Monitor.Log("Load a single-player save with available external slime state before dismissing a companion.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 1 || args[0] != saveName)
+        {
+            this.Monitor.Log($"Usage: slime_ranching_dismiss_companion {saveName}", LogLevel.Warn);
+            return;
+        }
+
+        if (this.registry!.ActiveCompanionFarmAnimalId is not long animalId || !this.registry.UnbindCompanion(animalId))
+        {
+            this.Monitor.Log("There is no active companion binding to dismiss.", LogLevel.Warn);
+            return;
+        }
+
+        if (!this.SaveExternalStateNow())
+        {
+            this.registry.BindCompanion(animalId);
+            this.Monitor.Log("Could not save the dismissal to the mod folder; the companion binding was restored.", LogLevel.Error);
+            return;
+        }
+
+        this.Monitor.Log($"Dismissed companion Ranch Slime {animalId}. The same animal and genome remain in the Daycare.", LogLevel.Info);
+    }
+
     private void RefreshRanchSlimeAppearance(long animalId)
     {
         FarmAnimal? animal = GetFarmAnimals().FirstOrDefault(candidate => candidate.myID.Value == animalId);
@@ -1592,7 +1660,7 @@ public sealed class ModEntry : Mod
             string likedFood = FoodLikeCatalog.GetDisplayName(genome.LikedFoodItemId);
             int age = record.AgeClockInitialized ? record.AgeDays : GetFarmAnimals().FirstOrDefault(animal => animal.myID.Value == animalId)?.age.Value ?? 0;
             this.Monitor.Log($"Ranch Slime {animalId}: genome {genome.Id:N}, {species}, color {genome.VisualColor}, size {genome.Size}, shiny {genome.IsShiny}, rarity {genome.RarityTier}, mutation {mutation}.", LogLevel.Info);
-            this.Monitor.Log($"Generation {genome.Generation}; abilities [{string.Join(", ", genome.AbilityIds)}]; likes {likedFood}; age {age}/{FarmAnimalContent.RanchSlimeDaysToMature} days; pity {loadedRegistry.GetMutagenicPoolFailures(animalId)}; reserved {loadedRegistry.IsReserved(animalId)}.", LogLevel.Info);
+            this.Monitor.Log($"Generation {genome.Generation}; abilities [{string.Join(", ", genome.AbilityIds)}]; likes {likedFood}; age {age}/{FarmAnimalContent.RanchSlimeDaysToMature} days; pity {loadedRegistry.GetMutagenicPoolFailures(animalId)}; companion {record.IsCompanion}; reserved {loadedRegistry.IsReserved(animalId)}.", LogLevel.Info);
             return;
         }
 
