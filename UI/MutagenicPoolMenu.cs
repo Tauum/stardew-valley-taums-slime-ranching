@@ -11,6 +11,7 @@ namespace taums_slime_ranching.UI;
 internal sealed class MutagenicPoolMenu : IClickableMenu
 {
     private const int SlimeItemId = 766;
+    private static Texture2D? slimePortraitTexture;
     private readonly SlimeRegistry registry;
     private readonly string machineKey;
     private readonly MutagenicPoolRules rules;
@@ -119,6 +120,8 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
             b.DrawString(Game1.smallFont, selected.Name, new Vector2(this.selectedSlimePanel.X + 14, this.selectedSlimePanel.Y + 10), Color.White);
             int age = this.registry.GetMaturityAgeDays(selected.myID.Value, selected.age.Value);
             b.DrawString(Game1.tinyFont, $"Adult · age {age} days", new Vector2(this.selectedSlimePanel.X + 14, this.selectedSlimePanel.Y + 42), Color.White);
+            Rectangle slimeBounds = new(this.selectedSlimePanel.Right - 58, this.selectedSlimePanel.Y + 5, 48, 64);
+            b.Draw(selected.Sprite.Texture, slimeBounds, selected.Sprite.SourceRect, Color.White);
         }
         b.DrawString(Game1.tinyFont, selected is null ? "Use the arrows to choose a resident" : "‹ / › to change selected slime",
             new Vector2(left + 32, top + 258), Color.White);
@@ -158,7 +161,7 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
             int row = i / 4;
             Rectangle tile = new(center + 18 + column * 88, top + 78 + row * 106, 78, 94);
             DrawInset(b, tile, new Color(249, 231, 201));
-            DrawSlimeSwatch(b, new Rectangle(tile.X + 18, tile.Y + 10, 42, 42), mutationColors[i]);
+            DrawSlimePortrait(b, new Rectangle(tile.X + 12, tile.Y + 4, 54, 58), mutationColors[i]);
             b.DrawString(Game1.tinyFont, mutationNames[i], new Vector2(tile.X + 5, tile.Y + 65), Color.White);
         }
         b.DrawString(Game1.tinyFont, "Design examples shown above.", new Vector2(center + 18, top + 300), Color.White);
@@ -277,15 +280,14 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
 
     private static void DrawSlimeIcon(SpriteBatch b, Rectangle bounds)
     {
-        DrawSlimeSwatch(b, bounds, new Color(165, 93, 203));
+        Rectangle source = Game1.getSourceRectForStandardTileSheet(Game1.objectSpriteSheet, SlimeItemId, 16, 16);
+        b.Draw(Game1.objectSpriteSheet, bounds, source, Color.White);
     }
 
-    private static void DrawSlimeSwatch(SpriteBatch b, Rectangle bounds, Color color)
+    private static void DrawSlimePortrait(SpriteBatch b, Rectangle bounds, Color tint)
     {
-        b.Draw(Game1.staminaRect, new Rectangle(bounds.X + 5, bounds.Y + 18, bounds.Width - 10, bounds.Height - 18), color);
-        b.Draw(Game1.staminaRect, new Rectangle(bounds.X + 12, bounds.Y + 9, bounds.Width - 24, 12), color);
-        b.Draw(Game1.staminaRect, new Rectangle(bounds.X + 13, bounds.Y + 28, 4, 4), Color.White);
-        b.Draw(Game1.staminaRect, new Rectangle(bounds.X + bounds.Width - 17, bounds.Y + 28, 4, 4), Color.White);
+        slimePortraitTexture ??= Game1.content.Load<Texture2D>("Characters/Monsters/Green Slime");
+        b.Draw(slimePortraitTexture, bounds, new Rectangle(32, 120, 16, 24), tint);
     }
 
     private static void DrawBar(SpriteBatch batch, Rectangle bounds, float value, Color fill)

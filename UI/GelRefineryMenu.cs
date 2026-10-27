@@ -10,6 +10,7 @@ namespace taums_slime_ranching.UI;
 /// <summary>Runs the provisional Broken Glasses recycling recipe inside the Slime Daycare.</summary>
 internal sealed class GelRefineryMenu : IClickableMenu
 {
+    private const int SlimeItemId = 766;
     private readonly SlimeRegistry registry;
     private readonly string machineKey;
     private readonly GelRefineryRules rules;
@@ -95,7 +96,7 @@ internal sealed class GelRefineryMenu : IClickableMenu
         b.DrawString(Game1.smallFont, "Fuel (Slime)", new Vector2(left + 26, top + 82), Color.White);
         DrawInset(b, new Rectangle(left + 24, top + 110, 350, 82), new Color(224, 196, 147));
         DrawSlimeIcon(b, new Rectangle(left + 38, top + 119, 56, 56));
-        int slimeCount = CountItem("(O)766");
+        int slimeCount = CountItem("(O)" + SlimeItemId);
         b.DrawString(Game1.smallFont, $"{slimeCount} / {this.rules.FuelCost}", new Vector2(left + 112, top + 123), Color.White);
         b.DrawString(Game1.tinyFont, "in inventory; consumed when batch starts", new Vector2(left + 112, top + 151), Color.White);
         DrawProgressBar(b, new Rectangle(left + 215, top + 174, 145, 12), Math.Min(1f, slimeCount / (float)this.rules.FuelCost), "");
@@ -191,10 +192,7 @@ internal sealed class GelRefineryMenu : IClickableMenu
 
     private static void DrawSlimeIcon(SpriteBatch b, Rectangle bounds)
     {
-        b.Draw(Game1.staminaRect, new Rectangle(bounds.X + 5, bounds.Y + 18, bounds.Width - 10, bounds.Height - 18), new Color(191, 103, 229));
-        b.Draw(Game1.staminaRect, new Rectangle(bounds.X + 14, bounds.Y + 8, bounds.Width - 28, 14), new Color(191, 103, 229));
-        b.Draw(Game1.staminaRect, new Rectangle(bounds.X + 20, bounds.Y + 31, 4, 4), new Color(34, 41, 83));
-        b.Draw(Game1.staminaRect, new Rectangle(bounds.X + 34, bounds.Y + 31, 4, 4), new Color(34, 41, 83));
+        DrawObjectIcon(b, SlimeItemId, bounds);
     }
 
     private static void DrawObjectIcon(SpriteBatch b, int index, Rectangle target)
