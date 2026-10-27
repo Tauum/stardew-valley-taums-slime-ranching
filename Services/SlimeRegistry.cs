@@ -34,6 +34,9 @@ internal sealed class SlimeRegistry
     public IncubationRecord? GetIncubation(string machineKey) =>
         this.incubations.TryGetValue(machineKey, out IncubationRecord? record) ? record : null;
 
+    public string? GetGenomeSize(long farmAnimalId) =>
+        this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record) ? record.Genome.Size : null;
+
     public bool TryGetEgg(string itemId, out SlimeEggRecord egg) => this.eggs.TryGetValue(itemId, out egg!);
 
     public bool CanIncubate(string itemId) => this.eggs.TryGetValue(itemId, out SlimeEggRecord? egg)

@@ -140,7 +140,7 @@ public sealed class ModEntry : Mod
     private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
     {
         if (Context.IsWorldReady && Context.IsMainPlayer)
-            this.trampolineInteractions.Update(Game1.currentLocation, Game1.currentGameTime);
+            this.trampolineInteractions.Update(Game1.currentLocation, Game1.currentGameTime, this.registry);
 
         if (!this.stateReady || !Context.IsMainPlayer)
             return;
