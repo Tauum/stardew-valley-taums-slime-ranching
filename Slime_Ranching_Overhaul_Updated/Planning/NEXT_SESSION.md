@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-10-27  
 **Test save:** `TaumTest_322865388` (disposable copy)  
-**Current branch:** `tooling/inspect-ranching-jobs`, chained after `tooling/give-mutagenic-pool`. The `slime_ranching_inspect` command now reports local mutation and machine-job counts while inside an AnimalHouse. Build passes; verify the log output with active and idle machines. Continue feature work afterward.
+**Current branch:** `feature/gmcm-mutagenic-settings`, chained after `tooling/inspect-ranching-jobs`. If Generic Mod Config Menu is installed, the Mutagenic Pool's shop price, cost, duration, base chance, pity increase, and cap now have sliders. Saving invalidates Marnie's shop data; active jobs keep their stored values. Build passes; check GMCM save/reset and live settings in game.
 
 ## Current state
 
@@ -37,6 +37,7 @@
 - Shadow Clone candidate scans are cached for half a second; at most four echoes draw per frame, and the start slot rotates so later residents are not permanently skipped. Confirm the four-echo cap and rotation with five or more mutations.
 - `slime_ranching_give_mutagenic_pool <save>` creates one test Pool item in the current single-player inventory, following the exact-save-name pattern used by the other test commands.
 - `slime_ranching_inspect` now logs resident/mutation counts and this room's breeder cycles, ready eggs, incubations, and pool attempts; use it to inspect reload and completion transitions.
+- GMCM support is optional. When installed, its mod settings page exposes the six Mutagenic Pool balance values; saving clamps/writes the config and invalidates `Data/Shops` so Marnie's price refreshes.
 - The interaction scheduler is now named `EnrichmentInteractionService`. It handles all five implemented furniture types, caches occupied target tiles once per assignment pass, and computes each playground candidate distance once during sorting. Build passes with only the existing analyzer/compiler version warning; compare behavior/performance with a crowded Daycare in game.
 - Breeder size inheritance now uses Tiny/Small/Normal/Large/Giant categories. The weights specified in the design notes are implemented; provisional defaults cover Tiny+Tiny, Normal+Normal, adjacent pairs, and wider gaps. Unknown legacy labels are treated as Normal only when rolling offspring. Small and Large also have distinct trampoline arcs.
 - Ranch Slime sprites now use separate color/size assets in 24x32 frame cells. Normal opaque art remains the original 16x24 pixels; Tiny/Small shrink and Large/Giant enlarge with nearest-neighbor sampling, centered and bottom-aligned. Check floors, petting, breeder previews, furniture animations, and clipping in-game.

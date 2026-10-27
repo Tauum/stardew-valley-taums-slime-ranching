@@ -105,11 +105,12 @@ Use the disposable `TaumTest_322865388` save. Back up the installed mod's `data`
    - The status panel should identify the assigned slime, show the locked chance and day-based progress, and name the ready day. The idle panel should show the selected slime's pity and next chance.
 4. Sleep to save the inventory and external job; optionally reload before resolution. Confirm the attempt resumes with the same stored roll and chance. Sleep through its ready day.
 5. Confirm one result notice. Success sets `Genome.MutationTrait` to `Shadow Clone` and resets `MutagenicPoolFailures`; failure leaves the slime alive and increments only that slime's counter. Shadow Clone has no active behavior yet.
-6. Verify another attempt uses +2 percentage points per failure (5% base, 30% cap); a different slime has independent pity. Defaults are provisional and configurable in the installed mod's `config.json`: `MutagenicPoolSlimeCost`, `MutagenicPoolBaseChance`, `MutagenicPoolChancePerFailure`, `MutagenicPoolMaximumChance`, `MutagenicPoolDurationDays`, and `MutagenicPoolShopPrice`. Restart after editing.
+6. Verify another attempt uses +2 percentage points per failure (5% base, 30% cap); a different slime has independent pity. Defaults are provisional and configurable through Generic Mod Config Menu, or directly in the installed mod's `config.json`: `MutagenicPoolSlimeCost`, `MutagenicPoolBaseChance`, `MutagenicPoolChancePerFailure`, `MutagenicPoolMaximumChance`, `MutagenicPoolDurationDays`, and `MutagenicPoolShopPrice`. GMCM changes apply when saved; restart after editing JSON directly.
 7. For quick safe-failure/success checks, set cost to 1, base and maximum chance to 0 for failure or 1 for success, and duration to 1. Restore defaults when done. Invalid costs, durations, and chances are clamped when opening the Pool.
 8. Inspect the external registry: `SchemaVersion` should be 9; `MutagenicAttempts` contains active attempt chance/roll; `SlimeRecord` contains `MutagenicPoolFailures` and the genome mutation trait.
 9. Copy an existing schema 8 registry, load it, and confirm `.before-mutagenic-pool-v9.bak` is created and existing egg, breeding, and incubation records are retained.
 10. Run `slime_ranching_inspect` while inside the Daycare. Confirm the log summary counts local mutated slimes and lists breeder cycles, ready eggs, incubations, and Mutagenic Pool attempts for that room.
+11. With Generic Mod Config Menu installed, open this mod's settings. Change the pool cost/chance/duration and Marnie price, save, and confirm a newly opened pool uses the changes and the shop stock refreshes. Check Reset restores defaults. Active attempts should retain their originally stored chance and ready day.
 
 ## Shadow Clone visual echo
 

@@ -29,6 +29,17 @@ internal sealed class MutagenicPoolRules
             Math.Clamp(config.MutagenicPoolDurationDays, 1, 28));
     }
 
+    public static void NormalizeConfig(ModConfig config)
+    {
+        MutagenicPoolRules rules = FromConfig(config);
+        config.MutagenicPoolSlimeCost = rules.SlimeCost;
+        config.MutagenicPoolBaseChance = rules.BaseChance;
+        config.MutagenicPoolChancePerFailure = rules.PityIncrease;
+        config.MutagenicPoolMaximumChance = rules.MaximumChance;
+        config.MutagenicPoolDurationDays = rules.DurationDays;
+        config.MutagenicPoolShopPrice = Math.Clamp(config.MutagenicPoolShopPrice, 0, 999_999);
+    }
+
     public double GetChance(int previousFailures) =>
         Math.Min(this.MaximumChance, this.BaseChance + this.PityIncrease * Math.Clamp(previousFailures, 0, 9_999));
 }

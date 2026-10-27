@@ -29,6 +29,7 @@ public sealed class ModEntry : Mod
         this.stateStore = new ModStateStore(helper.DirectoryPath);
 
         helper.Events.GameLoop.SaveLoaded += this.OnSaveLoaded;
+        helper.Events.GameLoop.GameLaunched += this.OnGameLaunched;
         helper.Events.GameLoop.DayStarted += this.OnDayStarted;
         helper.Events.GameLoop.Saving += this.OnSaving;
         helper.Events.GameLoop.UpdateTicked += this.OnUpdateTicked;
@@ -81,6 +82,63 @@ public sealed class ModEntry : Mod
         {
             this.Monitor.Log($"External slime state is disabled for this save: {exception.Message}", LogLevel.Error);
         }
+    }
+
+    private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
+    {
+        IGenericModConfigMenuApi? api = this.Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
+        if (api is null)
+            return;
+
+        api.Register(this.ModManifest, this.ResetConfig, this.SaveConfig);
+        api.AddSectionTitle(this.ModManifest, () => "Mutagenic Pool");
+        api.AddParagraph(this.ModManifest, () => "Balance values are provisional. Changes apply when you save these settings; active attempts keep their stored chance and ready day.");
+        api.AddNumberOption(this.ModManifest,
+            () => this.config.MutagenicPoolShopPrice,
+            value => this.config.MutagenicPoolShopPrice = value,
+            () => "Shop price",
+            () => "Gold price at Marnie's shop.", 0, 999_999, 100);
+        api.AddNumberOption(this.ModManifest,
+            () => this.config.MutagenicPoolSlimeCost,
+            value => this.config.MutagenicPoolSlimeCost = value,
+            () => "Slime cost",
+            () => "Vanilla Slime consumed per attempt.", 1, 999_999, 25);
+        api.AddNumberOption(this.ModManifest,
+            () => (float)this.config.MutagenicPoolDurationDays,
+            value => this.config.MutagenicPoolDurationDays = (int)MathF.Round(value),
+            () => "Processing days",
+            () => "Whole in-game days per attempt (1–28).", 1f, 28f, 1f,
+            value => $"{MathF.Round(value):0} day(s)");
+        api.AddNumberOption(this.ModManifest,
+            () => (float)this.config.MutagenicPoolBaseChance,
+            value => this.config.MutagenicPoolBaseChance = value,
+            () => "Base chance",
+            () => "Chance before this slime has any failed attempts.", 0f, 1f, 0.01f,
+            value => $"{value:P0}");
+        api.AddNumberOption(this.ModManifest,
+            () => (float)this.config.MutagenicPoolChancePerFailure,
+            value => this.config.MutagenicPoolChancePerFailure = value,
+            () => "Pity increase",
+            () => "Chance added after each failed attempt for that slime.", 0f, 1f, 0.01f,
+            value => $"+{value:P0}");
+        api.AddNumberOption(this.ModManifest,
+            () => (float)this.config.MutagenicPoolMaximumChance,
+            value => this.config.MutagenicPoolMaximumChance = value,
+            () => "Chance cap",
+            () => "Maximum chance after repeated failures.", 0f, 1f, 0.01f,
+            value => $"{value:P0}");
+    }
+
+    private void ResetConfig()
+    {
+        this.config = new ModConfig();
+    }
+
+    private void SaveConfig()
+    {
+        MutagenicPoolRules.NormalizeConfig(this.config);
+        this.Helper.WriteConfig(this.config);
+        this.Helper.GameContent.InvalidateCache("Data/Shops");
     }
 
     private void OnSaving(object? sender, SavingEventArgs e)
