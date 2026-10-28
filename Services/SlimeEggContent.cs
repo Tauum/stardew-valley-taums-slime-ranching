@@ -16,7 +16,7 @@ internal static class SlimeEggContent
     public const string EggIdModDataKey = "Taum.SlimeRanching/egg-id";
     public const string EggRecordModDataKey = "Taum.SlimeRanching/egg-record";
     private const string EggTexturePrefix = "Mods/Taum.SlimeRanching/Objects/RanchSlimeEgg_";
-    private const string DomesticatedSlimeEggName = "Domesticated Slime Egg";
+    internal const string DomesticatedSlimeEggName = "Domesticated Slime Egg";
     private static readonly string[] EggColors = { "Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Pink" };
     private static string? cachedModDirectory;
     private static List<SlimeEggRecord>? cachedEggs;
