@@ -72,7 +72,7 @@ internal static class IncubatorPlacementGeometry
             0f, Vector2.Zero, SpriteEffects.None, depth);
     }
 
-    public static bool IsIncubator(StardewValley.Object obj) => obj.QualifiedItemId == ConverterContent.IncubatorQualifiedId;
+    public static bool IsIncubator(StardewValley.Object obj) => obj.QualifiedItemId == RanchingItemContent.IncubatorQualifiedId;
     public static bool IsPlacementPreview(Furniture furniture) => ReferenceEquals(furniture, placementPreview);
 }
 

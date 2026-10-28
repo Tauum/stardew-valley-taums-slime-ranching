@@ -45,7 +45,7 @@ internal static class BreederDrawPatch
 
     private static bool Prefix(StardewValley.Object __instance, object[] __args)
     {
-        if (__instance.QualifiedItemId != ConverterContent.BreederQualifiedId)
+        if (__instance.QualifiedItemId != RanchingItemContent.BreederQualifiedId)
             return true;
 
         SpriteBatch batch = __args.OfType<SpriteBatch>().First();

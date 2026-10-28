@@ -127,7 +127,7 @@ The registry reattaches an existing breeder job to a replacement machine in the 
 6. Run `slime_ranching_inspect` in a Slime Hutch and confirm its vanilla slime count has not changed.
 7. Run `slime_ranching_inspect <animal ID>` for a managed Ranch Slime. Confirm the log shows its genome identity, species/color/size, shiny and mutation traits, ability IDs, liked food, external age, mutation pity, and reservation state.
 
-Common and genome-specific Ranch Slime Eggs can now hatch in the custom Slime Incubator. Each Common Egg receives a fresh base Common genome when inserted. Custom exterior art is present; its final in-game alignment is still being checked. The interior still uses the Barn map.
+Genome-specific Ranch Slime Eggs hatch in the custom Slime Incubator using their stored genome. Custom exterior art is present; its final in-game alignment is still being checked. The interior still uses the Barn map.
 
 ## Slime Daycare building art and upgrades
 
@@ -225,7 +225,7 @@ Use the disposable `TaumTest_322865388` save. Back up the installed mod's `data`
 4. Save, quit to title, and reload the same save. Confirm both eggs are still named separately and recognized. Check the external registry IDs still match each egg's item ID. For the all-save content definitions, the mod reads registered egg IDs from the mod's per-save registry files when `Data/Objects` loads.
 5. Put one egg in a chest and repeat save/reload. Confirm both item identity and registry genome remain stable.
 
-These command-created genomes are test fixtures only. The user confirmed an egg spawned successfully and its tooltip displayed color, size, rarity, mutation, generation, parent IDs, and favorite food. Save/reload, chest transfer, and incubator hatching remain to be verified. The converter still produces the generic Common Slime Egg. Back up the installed mod's `data` folder before testing if you need to preserve its external registry.
+These command-created genomes are test fixtures only. The user confirmed an egg spawned successfully and its tooltip displayed color, size, rarity, mutation, generation, parent IDs, and favorite food. Save/reload, chest transfer, and incubator hatching remain to be verified. Back up the installed mod's `data` folder before testing if you need to preserve its external registry.
 
 ## Genome-specific egg incubation and hatching (prototype)
 
@@ -238,14 +238,14 @@ These command-created genomes are test fixtures only. The user confirmed an egg 
 6. Confirm the new animal is visibly young, ages each day, and remains unavailable in the breeder for three days. Save/reload during growth; it should keep its age and become selectable on maturity.
 7. Inspect the mod-folder registry after each sleep. The slime record should advance `AgeDays`, update `AgeLastUpdatedDay`, and remain `AgeClockInitialized: true`. Reload mid-growth and confirm the external age and native maturity stay aligned. The breeder's growing-day label and selection blocking should agree with external `AgeDays`. Existing mature and juvenile records should migrate from their current native ages without resetting.
 7. Fill the Daycare before a hatch is ready. Confirm the egg stays in the incubator record and hatches after a resident is removed.
-8. Convert a vanilla egg and insert the resulting Common Egg. It should hatch into a Green (`#00FF00`), Normal, Common Ranch Slime. Insert a second Common Egg and confirm it receives a different external genome ID. Vanilla Slime Eggs must remain unaccepted by this incubator; the vanilla Coop Incubator remains untouched.
+8. Confirm vanilla Slime Eggs are not accepted by the Ranch Slime Incubator and the vanilla Coop Incubator remains untouched.
 
-The incubator runs inside the Daycare only, consumes Common or genome-specific Ranch Slime Eggs from inventory, and defaults to a 15-day cycle. The duration can be configured from 1 to 28 days for new cycles. A Common Egg receives a fresh base genome when inserted; a breeder egg uses its existing genome. The incubator spawns the juvenile automatically when the next day begins. If the game and mod-folder state are saved at different moments, the external hatch record reserves the native animal ID and recovers against the next loaded game state. Duration and duplicate-item behavior are provisional and need playtesting.
+The incubator runs inside the Daycare only, consumes genome-specific Ranch Slime Eggs from inventory, and defaults to a 15-day cycle. The duration can be configured from 1 to 28 days for new cycles. The stored genome is used as-is. The incubator spawns the juvenile automatically when the next day begins. If the game and mod-folder state are saved at different moments, the external hatch record reserves the native animal ID and recovers against the next loaded game state. Duration and duplicate-item behavior are provisional and need playtesting.
 
 ## Marnie's ranching machine stock
 
 1. Open Marnie's Ranch shop (or use `shop AnimalShop` in the SMAPI console).
-2. Confirm the Converter, Breeder, Incubator, Slime Trampoline, Slime Cushion, Slime Playground, Slime Slide, and Slime Bed appear at their configured prices (defaults: 2,500g, 10,000g, 5,000g, 2,500g, 1,500g, 6,000g, 3,000g, and 1,800g).
+2. Confirm the Breeder, Incubator, Slime Trampoline, Slime Cushion, Slime Playground, Slime Slide, and Slime Bed appear at their configured prices (defaults: 10,000g, 5,000g, 2,500g, 1,500g, 6,000g, 3,000g, and 1,800g).
 3. Buy a machine and verify its item can be placed and used as described above. Place the trampoline and cushion indoors and outdoors; both should be accepted indoors only. Confirm buying one of each does not affect vanilla animal stock.
 4. Reopen the shop on the same day: each purchased item should be out of stock for that player. Check again after sleeping; stock should reset.
 
@@ -308,16 +308,6 @@ Color test eggs are separate, unique genome items. Exact hybrid tint blending an
 4. Verify the parents are available again. Save, quit to title, and reload. The egg item ID should still resolve to the same external genome in `Eggs`; it must not be rerolled. The two-day timer and egg are tracked in the mod-folder registry.
 
 This test covers the fixed-output breeding cycle. Color-wheel recipes set the offspring color/species and matching egg tint; species abilities are stored as identifiers. Other inherited traits are disabled. A completed cycle with a full inventory leaves the egg ready in the breeder.
-
-## Slime Egg Converter
-
-The new converter is a distinct big craftable `(BC)Taum.SlimeRanching_EggConverter`. It accepts one green `(O)680`, blue `(O)413`, red `(O)437`, purple `(O)439`, or tiger `(O)857` vanilla Slime Egg and produces one mod Common Slime Egg after ten in-game minutes. It uses the vanilla Slime Egg-Press sprite as a placeholder. Existing vanilla eggs in inventory, chests, treasure, drops, and the old press remain unchanged until deliberately inserted. The output is a custom item ID stored in the game save; removing the mod while it remains in the save leaves an Error Item.
-
-1. Build the Slime Daycare in the disposable `TaumTest_322865388` save. Run `slime_ranching_give_converter TaumTest_322865388` in the SMAPI console and place the machine in the Daycare.
-2. Leave a vanilla egg in inventory and another in a chest. Sleep and reload: both must retain their original colors and item IDs.
-3. The hutch's existing Slime Egg-Press has a Red Slime Egg ready. Collect it and verify it remains red. Insert it into the new converter. After ten in-game minutes, collect one mod Common Slime Egg.
-4. Try inserting a non-egg item and the produced mod Common Slime Egg; neither should be consumed. Check that the old Slime Egg-Press still accepts Slime and that slain slimes still use vanilla egg drops.
-5. Sleep and reload with the converter placed and a mod egg in inventory or chest. The machine and mod egg should still be recognized while the mod is installed. The generic converter egg has no genome record and is not incubatable.
 
 ## Field Guide book
 

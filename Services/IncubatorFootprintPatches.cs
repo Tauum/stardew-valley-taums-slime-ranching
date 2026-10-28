@@ -40,21 +40,21 @@ internal static class IncubatorFootprintPatches
 
                 int footprintWidth = obj.QualifiedItemId switch
                 {
-                    ConverterContent.ConverterQualifiedId or ConverterContent.IncubatorQualifiedId
-                        or GelRefineryContent.QualifiedItemId or MutagenicPoolContent.QualifiedItemId => 3,
-                    ConverterContent.BreederQualifiedId => 5,
+                    RanchingItemContent.IncubatorQualifiedId or GelRefineryContent.QualifiedItemId
+                        or MutagenicPoolContent.QualifiedItemId => 3,
+                    RanchingItemContent.BreederQualifiedId => 5,
                     _ => 0
                 };
                 int footprintHeight = obj.QualifiedItemId switch
                 {
-                    ConverterContent.ConverterQualifiedId or ConverterContent.IncubatorQualifiedId or ConverterContent.BreederQualifiedId => 2,
+                    RanchingItemContent.IncubatorQualifiedId or RanchingItemContent.BreederQualifiedId => 2,
                     GelRefineryContent.QualifiedItemId or MutagenicPoolContent.QualifiedItemId => 2,
                     _ => 0
                 };
                 if (footprintWidth == 0)
                     continue;
 
-                int footprintTopY = tileY + (obj.QualifiedItemId == ConverterContent.BreederQualifiedId
+                int footprintTopY = tileY + (obj.QualifiedItemId == RanchingItemContent.BreederQualifiedId
                     ? BreederFootprintGeometry.FootprintOffsetY
                     : 0);
                 Rectangle footprint = new(tileX * TileSize, footprintTopY * TileSize,

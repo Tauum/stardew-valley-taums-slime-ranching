@@ -20,9 +20,8 @@ internal static class ShopContent
                 return;
 
             shop.Items ??= new List<ShopItemData>();
-            AddIfMissing(shop, "Converter", ConverterContent.ConverterQualifiedId, config.ConverterShopPrice);
-            AddIfMissing(shop, "Breeder", ConverterContent.BreederQualifiedId, config.BreederShopPrice);
-            AddIfMissing(shop, "Incubator", ConverterContent.IncubatorQualifiedId, config.IncubatorShopPrice);
+            AddIfMissing(shop, "Breeder", RanchingItemContent.BreederQualifiedId, config.BreederShopPrice);
+            AddIfMissing(shop, "Incubator", RanchingItemContent.IncubatorQualifiedId, config.IncubatorShopPrice);
             AddIfMissing(shop, "Trampoline", FurnitureContent.TrampolineQualifiedId, config.TrampolineShopPrice);
             AddIfMissing(shop, "SlimeCushion", FurnitureContent.SlimeCushionQualifiedId, config.SlimeCushionShopPrice);
             AddIfMissing(shop, "SlimePlayground", FurnitureContent.SlimePlaygroundQualifiedId, config.SlimePlaygroundShopPrice);

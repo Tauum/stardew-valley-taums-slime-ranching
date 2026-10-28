@@ -17,8 +17,7 @@ internal static class OtherMachinePlacementGeometry
     private static Furniture? footprintPreview;
     private static StardewValley.Object? currentMachine;
 
-    public static bool IsSupported(StardewValley.Object obj) => obj.QualifiedItemId == ConverterContent.ConverterQualifiedId
-        || obj.QualifiedItemId == GelRefineryContent.QualifiedItemId
+    public static bool IsSupported(StardewValley.Object obj) => obj.QualifiedItemId == GelRefineryContent.QualifiedItemId
         || obj.QualifiedItemId == MutagenicPoolContent.QualifiedItemId;
 
     public static bool IsFootprintPreview(Furniture furniture) => ReferenceEquals(furniture, footprintPreview);
@@ -39,7 +38,6 @@ internal static class OtherMachinePlacementGeometry
 
         string textureAsset = currentMachine.QualifiedItemId switch
         {
-            var id when id == ConverterContent.ConverterQualifiedId => "Mods/Taum.SlimeRanching/Machines/ModMachineIcons",
             var id when id == GelRefineryContent.QualifiedItemId => "Mods/Taum.SlimeRanching/Machines/GelRefinery",
             _ => "Mods/Taum.SlimeRanching/Machines/MutagenicPool"
         };
@@ -49,9 +47,7 @@ internal static class OtherMachinePlacementGeometry
         Vector2 screen = Game1.GlobalToLocal(Game1.viewport, world);
         Rectangle destination = new((int)screen.X, (int)screen.Y, TileSize, 2 * TileSize);
         float depth = Math.Clamp(((anchor.Y + Height) * TileSize - 8) / 10000f, 0f, 0.999f);
-        Rectangle source = currentMachine.QualifiedItemId == ConverterContent.ConverterQualifiedId
-            ? new Rectangle(0, 0, 16, 32)
-            : new Rectangle(0, 0, texture.Width, texture.Height);
+        Rectangle source = new(0, 0, texture.Width, texture.Height);
         batch.Draw(texture, destination, source, Color.White * alpha,
             0f, Vector2.Zero, SpriteEffects.None, depth);
     }

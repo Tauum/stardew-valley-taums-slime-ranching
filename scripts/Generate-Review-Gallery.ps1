@@ -9,8 +9,9 @@ New-Item -ItemType Directory -Path $previewDirectory -Force | Out-Null
 
 $imageFiles = @(
     Get-ChildItem -LiteralPath (Join-Path $projectRoot 'assets') -Recurse -File -ErrorAction SilentlyContinue
+    Get-ChildItem -LiteralPath (Join-Path $previewDirectory 'ui') -Recurse -File -ErrorAction SilentlyContinue
     Get-ChildItem -LiteralPath $referenceRoot -Recurse -File -ErrorAction SilentlyContinue
-) | Where-Object { $_.Extension -match '^\.(png|jpe?g|webp|gif)$' }
+) | Where-Object { $_.Extension -match '^\.(png|jpe?g|webp|gif|svg)$' }
 $skippedLongPaths = @($imageFiles | Where-Object { $_.FullName.Length -ge 250 })
 $imageFiles = @($imageFiles | Where-Object { $_.FullName.Length -lt 250 })
 
@@ -24,7 +25,9 @@ $cards = foreach ($file in $imageFiles) {
     $name = [IO.Path]::GetFileNameWithoutExtension($file.Name)
     $categories = [Collections.Generic.List[string]]::new()
     $isActive = $relativePath.StartsWith('assets/', [StringComparison]::OrdinalIgnoreCase)
+    $isCurrentUiPreview = $relativePath.StartsWith('preview/ui/', [StringComparison]::OrdinalIgnoreCase)
 
+    if ($isCurrentUiPreview) { $categories.Add('UI') }
     if ($relativePath -match '(?i)^assets/Buildings/') { $categories.Add('Buildings') }
     if ($relativePath -match '(?i)^assets/Machines/') { $categories.Add('Machines') }
     if ($relativePath -match '(?i)^assets/Furniture/') { $categories.Add('Furniture') }
@@ -33,18 +36,18 @@ $cards = foreach ($file in $imageFiles) {
     if ($relativePath -match '(?i)redesigns.*old|building|barn|daycare|interior layout') {
         $categories.Add('Buildings')
     }
-    if ($name -match '(?i)furnature|furniture|feeding trough|trampoline|cushion|slide|tunnel|pond|swing|bed') {
+    if (-not $isCurrentUiPreview -and $name -match '(?i)furnature|furniture|feeding trough|trampoline|cushion|slide|tunnel|pond|swing|bed') {
         $categories.Add('Furniture')
     }
-    if ($name -match '(?i)breeder|incubat|machine|crystal|mutagenic|refinery|converter') {
+    if (-not $isCurrentUiPreview -and $name -match '(?i)breeder|incubat|machine|crystal|mutagenic|refinery') {
         $categories.Add('Machines')
         $categories.Add('UI')
         $categories.Add('Slimes')
     }
-    if ($name -match '(?i)ui|interface|menu|interaction|stages') {
+    if (-not $isCurrentUiPreview -and $name -match '(?i)ui|interface|menu|interaction|stages') {
         $categories.Add('UI')
     }
-    if (-not $isActive -and $name -match '(?i)slime|furnature|furniture|feeding trough|machines') {
+    if (-not $isActive -and -not $isCurrentUiPreview -and $name -match '(?i)slime|furnature|furniture|feeding trough|machines') {
         $categories.Add('Slimes')
     }
 
@@ -53,7 +56,8 @@ $cards = foreach ($file in $imageFiles) {
         $categories = @('Reference')
     }
 
-    $status = if ($isActive) { 'Active asset' }
+    $status = if ($isCurrentUiPreview) { 'Current UI preview' }
+        elseif ($isActive) { 'Active asset' }
         elseif ($relativePath -match '(?i)redesigns.*old') { 'Archived reference' }
         else { 'Concept / reference' }
 
@@ -133,7 +137,7 @@ $template = @'
 <body>
   <header>
     <h1>Taum's Slime Ranching - Review Gallery</h1>
-    <p>Browse current mod assets and concept references without launching Stardew Valley. Active assets are marked in green; concepts and archived references are labelled separately. Run <code>scripts/Generate-Review-Gallery.ps1</code> to refresh this page after adding or changing artwork.</p>
+    <p>Browse current mod assets and concept references without launching Stardew Valley. The UI section includes static previews of the implemented C# menu layouts and text; game texture boxes, fonts, and live slime sprites are represented schematically. Active assets are marked in green; concepts and archived references are labelled separately. Run <code>scripts/Generate-Review-Gallery.ps1</code> to refresh this page after adding or changing artwork.</p>
     <div class="toolbar">
       <nav class="filters" aria-label="Asset sections">
         <button class="filter active" data-filter="All">All</button>

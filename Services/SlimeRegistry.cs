@@ -1,13 +1,15 @@
+using System.Text.Json;
 using StardewModdingAPI;
 using StardewValley;
 using taums_slime_ranching.Models;
 
 namespace taums_slime_ranching.Services;
 
-/// <summary>External genome records linked to native Ranch Slime FarmAnimal IDs.</summary>
+/// <summary>Ranch Slime records linked to native FarmAnimal entities, plus active facility jobs.</summary>
 internal sealed class SlimeRegistry
 {
     private const int BreedingRestDays = 1;
+    private const string SlimeRecordModDataKey = "Taum.SlimeRanching/record";
     private readonly IMonitor monitor;
     private readonly Dictionary<Guid, SlimeRecord> records = new();
     private readonly Dictionary<long, SlimeRecord> farmAnimalRecords = new();
@@ -16,6 +18,8 @@ internal sealed class SlimeRegistry
     private readonly Dictionary<string, IncubationRecord> incubations = new(StringComparer.Ordinal);
     private readonly Dictionary<string, MutagenicAttemptRecord> mutagenicAttempts = new(StringComparer.Ordinal);
     private readonly Dictionary<string, RefineryJobRecord> refineryJobs = new(StringComparer.Ordinal);
+    private readonly HashSet<string> hatchedEggIds = new(StringComparer.Ordinal);
+    private long? activeCompanionFarmAnimalId;
 
     public SlimeRegistry(IMonitor monitor) => this.monitor = monitor;
 
@@ -39,10 +43,7 @@ internal sealed class SlimeRegistry
         .Concat(this.mutagenicAttempts.Values.Select(attempt => attempt.SlimeId))
         .Distinct()
         .ToArray();
-    public long? ActiveCompanionFarmAnimalId => this.records.Values
-        .Where(record => record.IsCompanion)
-        .Select(record => record.FarmAnimalId)
-        .FirstOrDefault(id => id.HasValue);
+    public long? ActiveCompanionFarmAnimalId => this.activeCompanionFarmAnimalId;
 
     public BreedingPairRecord? GetBreedingPair(string machineKey) =>
         this.breedingPairs.TryGetValue(machineKey, out BreedingPairRecord? pair) ? pair : null;
@@ -84,7 +85,7 @@ internal sealed class SlimeRegistry
 
     public bool BindCompanion(long farmAnimalId)
     {
-        if (this.records.Values.Any(existing => existing.IsCompanion)
+        if (this.activeCompanionFarmAnimalId is not null
             || !this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record)
             || !record.AgeClockInitialized
             || record.AgeDays < FarmAnimalContent.RanchSlimeDaysToMature
@@ -92,6 +93,7 @@ internal sealed class SlimeRegistry
             return false;
 
         record.IsCompanion = true;
+        this.activeCompanionFarmAnimalId = farmAnimalId;
         return true;
     }
 
@@ -101,6 +103,7 @@ internal sealed class SlimeRegistry
             return false;
 
         record.IsCompanion = false;
+        this.activeCompanionFarmAnimalId = null;
         return true;
     }
 
@@ -240,8 +243,24 @@ internal sealed class SlimeRegistry
 
     public bool TryGetEgg(string itemId, out SlimeEggRecord egg) => this.eggs.TryGetValue(itemId, out egg!);
 
+    public bool RegisterEggItem(SlimeEggRecord egg)
+    {
+        if (egg.Genome.Id == Guid.Empty || egg.EggId != egg.Genome.Id.ToString("N"))
+            return false;
+        if (this.hatchedEggIds.Contains(egg.EggId))
+            return false;
+
+        egg.ItemId = SlimeEggContent.GetItemId(egg.Genome);
+        if (this.eggs.TryGetValue(egg.EggId, out SlimeEggRecord? existing))
+            return existing.Genome.Id == egg.Genome.Id && existing.HatchedAnimalId == egg.HatchedAnimalId;
+
+        this.eggs.Add(egg.EggId, egg);
+        return true;
+    }
+
     public bool CanIncubate(string itemId) => this.eggs.TryGetValue(itemId, out SlimeEggRecord? egg)
         && egg.HatchedAnimalId is null
+        && !this.hatchedEggIds.Contains(egg.EggId)
         && !this.incubations.Values.Any(record => record.EggItemId == itemId);
 
     public bool StartIncubation(string machineKey, string eggItemId, int currentDay, int durationDays)
@@ -254,6 +273,7 @@ internal sealed class SlimeRegistry
         {
             MachineKey = machineKey,
             EggItemId = eggItemId,
+            EggGenome = this.eggs[eggItemId].Genome,
             StartedOnDay = currentDay,
             ReadyOnDay = currentDay + durationDays
         };
@@ -359,7 +379,14 @@ internal sealed class SlimeRegistry
         return true;
     }
 
-    public bool CompleteIncubation(string machineKey) => this.incubations.Remove(machineKey);
+    public bool CompleteIncubation(string machineKey)
+    {
+        if (!this.incubations.Remove(machineKey, out IncubationRecord? record))
+            return false;
+
+        this.hatchedEggIds.Add(record.EggItemId);
+        return true;
+    }
 
     public bool RestoreIncubation(IncubationRecord record)
     {
@@ -368,12 +395,13 @@ internal sealed class SlimeRegistry
             || !this.eggs.ContainsKey(record.EggItemId))
             return false;
 
+        this.hatchedEggIds.Remove(record.EggItemId);
         this.incubations.Add(record.MachineKey, record);
         return true;
     }
 
     public bool IsReserved(long farmAnimalId, string? exceptMachineKey = null) =>
-        (this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? slime) && slime.IsCompanion)
+        this.activeCompanionFarmAnimalId == farmAnimalId
         || this.incubations.Values.Any(incubation => incubation.HatchAnimalId == farmAnimalId)
         || this.breedingPairs.Values.Any(pair => pair.OutputEggItemId is null && pair.MachineKey != exceptMachineKey
             && (pair.ParentAId == farmAnimalId || pair.ParentBId == farmAnimalId))
@@ -552,7 +580,8 @@ internal sealed class SlimeRegistry
         }
 
         SlimeEggRecord egg = this.CreateEgg(offspring);
-        pair.OutputEggItemId = egg.ItemId;
+        pair.OutputEggItemId = egg.EggId;
+        pair.OutputEggGenome = egg.Genome;
         ApplyBreedingRest(pair, currentDay);
         created = true;
         return egg;
@@ -670,8 +699,50 @@ internal sealed class SlimeRegistry
         int added = 0;
         foreach (FarmAnimal animal in animals)
         {
-            if (animal.type.Value != FarmAnimalContent.RanchSlimeTypeId || this.farmAnimalRecords.ContainsKey(animal.myID.Value))
+            if (animal.type.Value != FarmAnimalContent.RanchSlimeTypeId)
                 continue;
+
+            SlimeRecord? entityRecord = ReadEntityRecord(animal);
+            if (this.farmAnimalRecords.TryGetValue(animal.myID.Value, out SlimeRecord? existing))
+            {
+                if (entityRecord is not null && entityRecord.Genome.Id != existing.Genome.Id)
+                {
+                    if (this.records.TryGetValue(entityRecord.Genome.Id, out SlimeRecord? duplicate)
+                        && duplicate.FarmAnimalId != animal.myID.Value)
+                    {
+                        this.monitor.Log($"Ignored Ranch Slime modData for FarmAnimal {animal.myID.Value}: genome ID {entityRecord.Genome.Id:N} is already linked to another animal.", LogLevel.Warn);
+                    }
+                    else
+                    {
+                        this.records.Remove(existing.Genome.Id);
+                        entityRecord.FarmAnimalId = animal.myID.Value;
+                        entityRecord.FarmAnimalTypeId = animal.type.Value;
+                        entityRecord.AnimalName = animal.Name;
+                        this.records[entityRecord.Genome.Id] = entityRecord;
+                        this.farmAnimalRecords[animal.myID.Value] = entityRecord;
+                    }
+                }
+                else if (entityRecord is not null)
+                {
+                    CopyRecord(entityRecord, existing);
+                }
+                existing.AnimalName = animal.Name;
+                if (entityRecord?.IsCompanion == true && this.activeCompanionFarmAnimalId is null)
+                    this.activeCompanionFarmAnimalId = animal.myID.Value;
+                continue;
+            }
+
+            if (entityRecord is not null)
+            {
+                entityRecord.FarmAnimalId = animal.myID.Value;
+                entityRecord.FarmAnimalTypeId = animal.type.Value;
+                entityRecord.AnimalName = animal.Name;
+                if (entityRecord.IsCompanion && this.activeCompanionFarmAnimalId is null)
+                    this.activeCompanionFarmAnimalId = animal.myID.Value;
+                if (this.TryAdd(entityRecord))
+                    added++;
+                continue;
+            }
 
             var record = new SlimeRecord
             {
@@ -693,6 +764,61 @@ internal sealed class SlimeRegistry
         }
 
         return added;
+    }
+
+    public void WriteEntityModData(IEnumerable<FarmAnimal> animals)
+    {
+        foreach (FarmAnimal animal in animals)
+        {
+            if (animal.type.Value != FarmAnimalContent.RanchSlimeTypeId
+                || !this.farmAnimalRecords.TryGetValue(animal.myID.Value, out SlimeRecord? record))
+                continue;
+
+            record.AnimalName = animal.Name;
+            record.FarmAnimalId = animal.myID.Value;
+            record.FarmAnimalTypeId = animal.type.Value;
+            animal.modData[SlimeRecordModDataKey] = JsonSerializer.Serialize(record);
+        }
+    }
+
+    private static SlimeRecord? ReadEntityRecord(FarmAnimal animal)
+    {
+        if (!animal.modData.TryGetValue(SlimeRecordModDataKey, out string? raw))
+            return null;
+
+        try
+        {
+            SlimeRecord? record = JsonSerializer.Deserialize<SlimeRecord>(raw);
+            if (record?.Genome is not { Id: var id } || id == Guid.Empty)
+                return null;
+
+            record.Genome.Size = NormalizeSize(record.Genome.Size);
+            record.LastCompostFeedDay = Math.Clamp(record.LastCompostFeedDay, -1, Math.Max(0, record.AgeLastUpdatedDay));
+            return record;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static void CopyRecord(SlimeRecord source, SlimeRecord target)
+    {
+        target.Genome = source.Genome;
+        target.FarmAnimalId = source.FarmAnimalId;
+        target.FarmAnimalTypeId = source.FarmAnimalTypeId;
+        target.AnimalName = source.AnimalName;
+        target.AgeDays = source.AgeDays;
+        target.AgeLastUpdatedDay = source.AgeLastUpdatedDay;
+        target.AgeClockInitialized = source.AgeClockInitialized;
+        target.BreedingCooldownUntilDay = source.BreedingCooldownUntilDay;
+        target.MutagenicPoolFailures = source.MutagenicPoolFailures;
+        target.LastCompostFeedDay = source.LastCompostFeedDay;
+        target.EnrichmentActivityDay = source.EnrichmentActivityDay;
+        target.EnrichmentActivitiesToday = source.EnrichmentActivitiesToday;
+        target.NextEnrichmentCheckMinute = source.NextEnrichmentCheckMinute;
+        target.LastHutchName = source.LastHutchName;
+        target.IsCompanion = source.IsCompanion;
     }
 
     /// <summary>Detach removed animals while keeping their genome archive; abandon only cycles with no saved egg.</summary>
@@ -733,6 +859,9 @@ internal sealed class SlimeRegistry
         foreach (string machineKey in abandonedCycles)
             this.breedingPairs.Remove(machineKey);
 
+        if (this.activeCompanionFarmAnimalId is long companionId && !this.farmAnimalRecords.ContainsKey(companionId))
+            this.activeCompanionFarmAnimalId = null;
+
         return (missing.Length, abandonedCycles.Length);
     }
 
@@ -745,6 +874,14 @@ internal sealed class SlimeRegistry
         this.incubations.Clear();
         this.mutagenicAttempts.Clear();
         this.refineryJobs.Clear();
+        this.hatchedEggIds.Clear();
+        this.activeCompanionFarmAnimalId = data?.ActiveCompanionFarmAnimalId;
+        foreach (string eggId in data?.HatchedEggIds ?? Enumerable.Empty<string>())
+        {
+            string normalizedEggId = NormalizeEggToken(eggId);
+            if (Guid.TryParseExact(normalizedEggId, "N", out _))
+                this.hatchedEggIds.Add(normalizedEggId);
+        }
         if (data is not null && data.SchemaVersion != SlimeSaveData.CurrentSchemaVersion)
             throw new InvalidOperationException($"Unsupported slime data schema {data.SchemaVersion}; expected {SlimeSaveData.CurrentSchemaVersion}.");
 
@@ -773,6 +910,8 @@ internal sealed class SlimeRegistry
                 || pair.ParentAId == pair.ParentBId || this.IsReserved(pair.ParentAId, pair.MachineKey)
                 || this.IsReserved(pair.ParentBId, pair.MachineKey))
                 continue;
+            if (pair.OutputEggItemId is not null)
+                pair.OutputEggItemId = NormalizeEggToken(pair.OutputEggItemId);
             this.breedingPairs[pair.MachineKey] = pair;
         }
 
@@ -780,18 +919,45 @@ internal sealed class SlimeRegistry
         {
             if (egg?.Genome is not null)
                 egg.Genome.Size = NormalizeSize(egg.Genome.Size);
-            if (egg?.Genome is not { Id: var id } || id == Guid.Empty
-                || string.IsNullOrWhiteSpace(egg.ItemId)
-                || egg.ItemId != SlimeEggContent.GetItemId(id)
-                || !this.eggs.TryAdd(egg.ItemId, egg))
+            if (egg?.Genome is not { Id: var id } || id == Guid.Empty)
             {
                 this.monitor.Log("Skipped a malformed or duplicate external slime egg record.", LogLevel.Warn);
+                continue;
             }
+
+            egg.EggId = id.ToString("N");
+            egg.ItemId = SlimeEggContent.GetItemId(egg.Genome);
+            if (egg.HatchedAnimalId is not null)
+                this.hatchedEggIds.Add(egg.EggId);
+            if (!this.eggs.TryAdd(egg.EggId, egg))
+                this.monitor.Log("Skipped a malformed or duplicate external slime egg record.", LogLevel.Warn);
         }
 
         foreach (IncubationRecord incubation in data?.Incubations ?? Enumerable.Empty<IncubationRecord>())
         {
-            if (incubation is null || string.IsNullOrWhiteSpace(incubation.MachineKey)
+            if (incubation is null)
+            {
+                this.monitor.Log("Skipped a malformed Ranch Slime incubation record.", LogLevel.Warn);
+                continue;
+            }
+
+            incubation.EggItemId = NormalizeEggToken(incubation.EggItemId);
+            if (incubation.EggGenome is null && this.eggs.TryGetValue(incubation.EggItemId, out SlimeEggRecord? migratedEgg))
+                incubation.EggGenome = migratedEgg.Genome;
+            if (incubation.EggGenome is not null && !this.eggs.ContainsKey(incubation.EggItemId))
+            {
+                var heldEgg = new SlimeEggRecord
+                {
+                    EggId = incubation.EggItemId,
+                    ItemId = SlimeEggContent.GetItemId(incubation.EggGenome),
+                    Genome = incubation.EggGenome,
+                    HatchedAnimalId = incubation.HatchAnimalId
+                };
+                this.eggs[heldEgg.EggId] = heldEgg;
+            }
+            if (this.eggs.TryGetValue(incubation.EggItemId, out SlimeEggRecord? heldRecord))
+                heldRecord.HatchedAnimalId = incubation.HatchAnimalId;
+            if (string.IsNullOrWhiteSpace(incubation.MachineKey)
                 || incubation.StartedOnDay < 0 || incubation.ReadyOnDay < incubation.StartedOnDay
                 || !this.eggs.TryGetValue(incubation.EggItemId, out SlimeEggRecord? egg)
                 || incubation.HatchAnimalId != egg.HatchedAnimalId
@@ -804,6 +970,25 @@ internal sealed class SlimeRegistry
 
             this.incubations.Add(incubation.MachineKey, incubation);
         }
+
+        foreach (BreedingPairRecord pair in this.breedingPairs.Values.Where(pair => pair.OutputEggItemId is not null))
+        {
+            string eggId = pair.OutputEggItemId!;
+            if (pair.OutputEggGenome is null && this.eggs.TryGetValue(eggId, out SlimeEggRecord? migratedEgg))
+                pair.OutputEggGenome = migratedEgg.Genome;
+            if (pair.OutputEggGenome is not null && !this.eggs.ContainsKey(eggId))
+            {
+                this.eggs[eggId] = new SlimeEggRecord
+                {
+                    EggId = eggId,
+                    ItemId = SlimeEggContent.GetItemId(pair.OutputEggGenome),
+                    Genome = pair.OutputEggGenome
+                };
+            }
+        }
+
+        if (this.activeCompanionFarmAnimalId is null)
+            this.activeCompanionFarmAnimalId = this.records.Values.FirstOrDefault(record => record.IsCompanion)?.FarmAnimalId;
 
         foreach (MutagenicAttemptRecord attempt in data?.MutagenicAttempts ?? Enumerable.Empty<MutagenicAttemptRecord>())
         {
@@ -836,17 +1021,17 @@ internal sealed class SlimeRegistry
         }
 
         if (logSummary)
-            this.monitor.Log($"Loaded {this.records.Count} external Ranch Slime record(s); assigned {assignedFoodLikes} missing or invalid food like(s). Existing vanilla GreenSlime monsters are not managed.", LogLevel.Info);
+            this.monitor.Log($"Loaded {this.records.Count} Ranch Slime record(s); assigned {assignedFoodLikes} missing or invalid food like(s). Existing vanilla GreenSlime monsters are not managed.", LogLevel.Info);
     }
 
     public SlimeSaveData Capture() => new()
     {
-        Slimes = this.records.Values.OrderBy(record => record.Genome.Id).ToList(),
         BreedingPairs = this.breedingPairs.Values.OrderBy(pair => pair.MachineKey, StringComparer.Ordinal).ToList(),
-        Eggs = this.eggs.Values.OrderBy(egg => egg.ItemId, StringComparer.Ordinal).ToList(),
         Incubations = this.incubations.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList(),
         MutagenicAttempts = this.mutagenicAttempts.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList(),
-        RefineryJobs = this.refineryJobs.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList()
+        RefineryJobs = this.refineryJobs.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList(),
+        ActiveCompanionFarmAnimalId = this.activeCompanionFarmAnimalId,
+        HatchedEggIds = this.hatchedEggIds.OrderBy(id => id, StringComparer.Ordinal).ToList()
     };
 
     public SlimeEggRecord CreateEgg(SlimeGenome genome)
@@ -855,16 +1040,21 @@ internal sealed class SlimeRegistry
             throw new ArgumentException("An egg genome must have a unique ID.", nameof(genome));
 
         genome.Size = NormalizeSize(genome.Size);
-        string itemId = SlimeEggContent.GetItemId(genome.Id);
+        string eggId = genome.Id.ToString("N");
+        string itemId = SlimeEggContent.GetItemId(genome);
         SlimeAbilityCatalog.Refresh(genome);
-        var egg = new SlimeEggRecord { ItemId = itemId, Genome = genome };
-        this.eggs[itemId] = egg;
+        var egg = new SlimeEggRecord { EggId = eggId, ItemId = itemId, Genome = genome };
+        this.eggs[eggId] = egg;
         return egg;
     }
 
-    public bool RemoveUnincubatedEgg(string itemId) =>
-        !this.incubations.Values.Any(record => record.EggItemId == itemId)
-        && this.eggs.Remove(itemId);
+    private static string NormalizeEggToken(string value)
+    {
+        const string legacyPrefix = "Taum.SlimeRanching_Egg_";
+        if (value.StartsWith(legacyPrefix, StringComparison.Ordinal))
+            value = value[legacyPrefix.Length..];
+        return Guid.TryParseExact(value, "N", out Guid id) ? id.ToString("N") : value;
+    }
 
     public bool TryAdd(SlimeRecord? record)
     {

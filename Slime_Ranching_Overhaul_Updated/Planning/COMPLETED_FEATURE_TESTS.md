@@ -2,6 +2,14 @@
 
 This file keeps completed test stages and their outcomes for reference. The active stage stays at the top of [FEATURE_TESTING_WALKTHROUGH.md](FEATURE_TESTING_WALKTHROUGH.md).
 
+## Stage 5 - Color inheritance, matching egg tint, and species abilities
+
+**Commits:** `b8c97b3`, `7f8f926`, `d201190`, `1d02049`, `b6d6d9a`, `5170b45`, `3209a32`, `c730ce1`, `4d3939d`, `cc09405`, `9120a7c`.
+
+**What this group does:** breeding passes on color/species identity only. The egg icon uses the same rendered color variant as the resulting slime, and the ability identifier follows the offspring species. Other offspring traits start at Normal size, Common rarity, non-shiny, and no mutation; favorite food is assigned independently. Parent IDs and generation remain as lineage metadata.
+
+**Recorded results:** the user configured Red/Giant/shiny and Yellow/Small/shiny parents. Their egg tooltip showed Orange Slime, Orange color, Normal size, Common rarity, no mutation, and Generation 1. The user hatched it and ran `slime_ranching_inspect 2635086060066083871`; it reported Orange Slime, color `#FF9500`, Normal, non-shiny, Common, no mutation, Generation 1, `[Nurturer]`, Joja Cola, and age `1/28` days. This confirms the offspring genome defaults and species ability. The user then directed that Stage 5 be closed and Stage 6 started; egg-icon visual comparison and reload persistence were not reported.
+
 ## Stage 1 — Daycare and Ranch Slime baseline
 
 **Commits:** `05208aa`, `5f5e7f0`, `bde7553`, `d18fd18`, `f9a33ed`, `0d51fdd`, `853d144`.

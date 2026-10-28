@@ -31,7 +31,6 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [x] Add a one-day post-collection rest for both parents; the duration is provisional pending balance review.
 - [ ] Verify different genome eggs remain distinct through inventory, chests, shipping, and machine transfers.
 - [x] Implement a separate incubator for genome-specific eggs; create a Ranch Slime with the stored genome and preserve vanilla egg behavior.
-- [x] Let converter Common Eggs hatch as base Common Ranch Slimes with a new external genome per inserted egg.
 - [x] Show active incubation egg identity and day-based progress in the incubator menu.
 - [x] Hatch Ranch Slimes as three-day juveniles; prevent growing slimes from entering a breeding pair.
 - [x] Store authoritative maturity age and day clock in the external registry; mirror to native animal age for Stardew maturity behavior.
@@ -60,7 +59,6 @@ The first-seen load/save/hutch-inspection smoke check passed on the disposable `
 - [x] Restrict breeding inheritance to color/species and species-derived ability IDs; offspring use defaults for other traits.
 
 ## Stage 4 — furniture
-- [x] Add the existing Converter, Breeder, and Incubator to Marnie's shop; add configurable stock for implemented enrichment furniture.
 - [x] Add a placeable Slime Trampoline with a mod-owned pixel sprite and Marnie stock; nearby Ranch Slimes use a temporary size-aware bounce animation.
 - [x] Add a placeable Slime Cushion with configurable Marnie stock and a gentle reserved squish animation using the enrichment scheduler.
 - [x] Add Slime Playground group play: reserve one playground for two slimes and run their short hops together.

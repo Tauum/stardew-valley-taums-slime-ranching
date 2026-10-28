@@ -8,11 +8,15 @@ using taums_slime_ranching.Models;
 
 namespace taums_slime_ranching.Services;
 
-/// <summary>Registers unique egg item IDs from the mod-folder external registries.</summary>
+/// <summary>Registers stable colored egg item types; each item's unique genome lives in its modData.</summary>
 internal static class SlimeEggContent
 {
     private const string RegistryFileName = "slime-registry-v1.json";
+    private const string LegacyEggItemPrefix = "Taum.SlimeRanching_Egg_";
+    public const string EggIdModDataKey = "Taum.SlimeRanching/egg-id";
+    public const string EggRecordModDataKey = "Taum.SlimeRanching/egg-record";
     private const string EggTexturePrefix = "Mods/Taum.SlimeRanching/Objects/RanchSlimeEgg_";
+    private static readonly string[] EggColors = { "Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Pink" };
     private static string? cachedModDirectory;
     private static List<SlimeEggRecord>? cachedEggs;
     private static Color[]? springObjectPixels;
@@ -38,8 +42,72 @@ internal static class SlimeEggContent
         e.LoadFrom(() => CreateEggIcon(Game1.graphics.GraphicsDevice, tint), AssetLoadPriority.Exclusive);
     }
 
-    public static string GetItemId(Guid genomeId) => $"Taum.SlimeRanching_Egg_{genomeId:N}";
-    public static string GetQualifiedId(Guid genomeId) => "(O)" + GetItemId(genomeId);
+    public static string GetItemId(SlimeGenome genome) => $"Taum.SlimeRanching_Egg_{FarmAnimalContent.GetClosestVariantName(genome.VisualColor)}";
+    public static string GetQualifiedId(SlimeGenome genome) => "(O)" + GetItemId(genome);
+    public static string GetLegacyItemId(Guid genomeId) => $"{LegacyEggItemPrefix}{genomeId:N}";
+
+    public static bool TryGetEggId(Item item, out string eggId)
+    {
+        if (item.modData.TryGetValue(EggIdModDataKey, out string? storedId)
+            && Guid.TryParseExact(storedId, "N", out Guid storedGuid) && storedGuid != Guid.Empty)
+        {
+            eggId = storedGuid.ToString("N");
+            return true;
+        }
+
+        string itemId = item.ItemId;
+        if (itemId.StartsWith(LegacyEggItemPrefix, StringComparison.Ordinal)
+            && Guid.TryParseExact(itemId[LegacyEggItemPrefix.Length..], "N", out Guid legacyGuid)
+            && legacyGuid != Guid.Empty)
+        {
+            eggId = legacyGuid.ToString("N");
+            return true;
+        }
+
+        eggId = "";
+        return false;
+    }
+
+    public static bool TryReadRecord(Item item, out SlimeEggRecord egg)
+    {
+        egg = null!;
+        if (!item.modData.TryGetValue(EggRecordModDataKey, out string? serialized)
+            || string.IsNullOrWhiteSpace(serialized))
+            return false;
+
+        try
+        {
+            SlimeEggRecord? parsed = JsonSerializer.Deserialize<SlimeEggRecord>(serialized);
+            if (parsed?.Genome is not { Id: var genomeId } || genomeId == Guid.Empty
+                || !TryGetEggId(item, out string eggId)
+                || !string.Equals(eggId, parsed.EggId, StringComparison.Ordinal)
+                || !string.Equals(eggId, genomeId.ToString("N"), StringComparison.Ordinal))
+                return false;
+
+            parsed.ItemId = GetItemId(parsed.Genome);
+            egg = parsed;
+            return true;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
+    public static void AttachRecord(Item item, SlimeEggRecord egg)
+    {
+        item.modData[EggIdModDataKey] = egg.EggId;
+        item.modData[EggRecordModDataKey] = JsonSerializer.Serialize(egg);
+        if (item is StardewValley.Object obj)
+            obj.displayNameFormat = $"{DisplayOrUnknown(egg.Genome.PrimarySpecies)} Egg";
+    }
+
+    public static Item CreateItem(SlimeEggRecord egg)
+    {
+        Item item = ItemRegistry.Create(GetQualifiedId(egg.Genome));
+        AttachRecord(item, egg);
+        return item;
+    }
 
     public static void EditAsset(AssetRequestedEventArgs e, string modDirectory)
     {
@@ -49,6 +117,26 @@ internal static class SlimeEggContent
         e.Edit(asset =>
         {
             var objects = asset.AsDictionary<string, ObjectData>().Data;
+            foreach (string color in EggColors)
+            {
+                string itemId = $"Taum.SlimeRanching_Egg_{color}";
+                objects[itemId] = new ObjectData
+                {
+                    Name = $"{color} Ranch Slime Egg",
+                    DisplayName = $"{color} Ranch Slime Egg",
+                    Description = "- Place in a Slime Incubator to hatch.\nA unique Ranch Slime egg. Its genome is carried with the item.",
+                    Type = "Basic",
+                    Price = 0,
+                    Texture = EggTexturePrefix + color,
+                    SpriteIndex = 0,
+                    CanBeGivenAsGift = false,
+                    CanBeTrashed = true,
+                    ExcludeFromShippingCollection = true,
+                    ContextTags = new List<string> { "taum_ranch_slime_egg", $"taum_ranch_slime_egg_color_{color.ToLowerInvariant()}" }
+                };
+            }
+
+            // Keep old genome-specific IDs resolvable while existing saves migrate their egg items.
             foreach (SlimeEggRecord egg in GetEggs(modDirectory))
             {
                 if (objects.ContainsKey(egg.ItemId))
@@ -119,7 +207,7 @@ internal static class SlimeEggContent
         return springObjectPixels;
     }
 
-    private static string CreateDescription(SlimeGenome genome, long? hatchedAnimalId)
+    internal static string CreateDescription(SlimeGenome genome, long? hatchedAnimalId)
     {
         string parents = genome.ParentA is Guid && genome.ParentB is Guid
             ? $"Parents: {DisplayOrUnknown(genome.ParentAName)} / {DisplayOrUnknown(genome.ParentBName)}"
@@ -198,7 +286,7 @@ internal static class SlimeEggContent
                 .ToDictionary(group => group.Key, group => group.First().AnimalName!);
             foreach (SlimeEggRecord egg in data?.Eggs ?? Enumerable.Empty<SlimeEggRecord>())
             {
-                if (egg?.Genome is not { Id: var id } genome || id == Guid.Empty || egg.ItemId != GetItemId(id))
+                if (egg?.Genome is not { Id: var id } genome || id == Guid.Empty || egg.ItemId != GetLegacyItemId(id))
                     continue;
 
                 if (genome.ParentA is Guid parentA && string.IsNullOrWhiteSpace(genome.ParentAName)

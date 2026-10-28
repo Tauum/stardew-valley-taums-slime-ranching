@@ -2,7 +2,7 @@ namespace taums_slime_ranching.Models;
 
 public sealed class SlimeSaveData
 {
-    public const int CurrentSchemaVersion = 11;
+    public const int CurrentSchemaVersion = 12;
 
     public int SchemaVersion { get; set; } = CurrentSchemaVersion;
     public List<SlimeRecord> Slimes { get; set; } = new();
@@ -11,4 +11,6 @@ public sealed class SlimeSaveData
     public List<IncubationRecord> Incubations { get; set; } = new();
     public List<MutagenicAttemptRecord> MutagenicAttempts { get; set; } = new();
     public List<RefineryJobRecord> RefineryJobs { get; set; } = new();
+    public long? ActiveCompanionFarmAnimalId { get; set; }
+    public List<string> HatchedEggIds { get; set; } = new();
 }

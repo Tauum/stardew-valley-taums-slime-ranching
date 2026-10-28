@@ -6,26 +6,70 @@ using taums_slime_ranching.Models;
 
 namespace taums_slime_ranching.Services;
 
-/// <summary>Versioned per-save state located entirely under the installed mod folder.</summary>
+/// <summary>Stores active state in SMAPI's per-save data and imports the previous mod-folder registry once.</summary>
 internal sealed class ModStateStore
 {
+    private const string SaveDataKey = "slime-ranching-state";
     private const string RegistryFileName = "slime-registry-v1.json";
+    private readonly IDataHelper data;
     private readonly string modDirectory;
     private string? registryPath;
-    private bool legacyFoodLikeMoved;
-    private bool schemaMigrated;
-    private string schemaBackupSuffix = ".before-compost-trough-v11.bak";
 
     public int? LoadedSchemaVersion { get; private set; }
+    public bool ImportedLegacyData { get; private set; }
+    public bool MigratedSaveData { get; private set; }
 
-    public ModStateStore(string modDirectory) => this.modDirectory = modDirectory;
+    public ModStateStore(IDataHelper data, string modDirectory)
+    {
+        this.data = data;
+        this.modDirectory = modDirectory;
+    }
 
     public SlimeSaveData? Load()
     {
-        this.legacyFoodLikeMoved = false;
-        this.schemaMigrated = false;
+        this.ImportedLegacyData = false;
+        this.MigratedSaveData = false;
+        SlimeSaveData? saveData = this.data.ReadSaveData<SlimeSaveData>(SaveDataKey);
+        if (saveData is not null)
+        {
+            this.LoadedSchemaVersion = saveData.SchemaVersion;
+            if (saveData.SchemaVersion == 11)
+            {
+                foreach (SlimeEggRecord egg in saveData.Eggs)
+                {
+                    if (egg?.Genome is not { Id: var id } || id == Guid.Empty)
+                        continue;
+
+                    egg.EggId = id.ToString("N");
+                    egg.ItemId = SlimeEggContent.GetItemId(egg.Genome);
+                    if (egg.HatchedAnimalId is not null && !saveData.HatchedEggIds.Contains(egg.EggId, StringComparer.Ordinal))
+                        saveData.HatchedEggIds.Add(egg.EggId);
+                }
+                foreach (BreedingPairRecord pair in saveData.BreedingPairs)
+                {
+                    if (pair.OutputEggItemId is not null)
+                        pair.OutputEggItemId = NormalizeEggToken(pair.OutputEggItemId);
+                }
+                foreach (IncubationRecord incubation in saveData.Incubations)
+                {
+                    incubation.EggItemId = NormalizeEggToken(incubation.EggItemId);
+                    if (incubation.EggGenome is null)
+                        incubation.EggGenome = saveData.Eggs.FirstOrDefault(egg => egg.EggId == incubation.EggItemId)?.Genome;
+                }
+                saveData.SchemaVersion = SlimeSaveData.CurrentSchemaVersion;
+                this.MigratedSaveData = true;
+            }
+            return saveData;
+        }
+
+        return this.LoadLegacyExternalData();
+    }
+
+    private SlimeSaveData? LoadLegacyExternalData()
+    {
+        this.ImportedLegacyData = false;
+        this.MigratedSaveData = false;
         this.LoadedSchemaVersion = null;
-        this.schemaBackupSuffix = ".before-compost-trough-v11.bak";
         this.registryPath = Path.Combine(GetSaveDirectory(this.modDirectory), RegistryFileName);
         if (!File.Exists(this.registryPath))
             return null;
@@ -39,75 +83,62 @@ internal sealed class ModStateStore
         {
             rootObject["SchemaVersion"] = 2;
             rootObject["BreedingPairs"] = new JsonArray();
-            this.schemaMigrated = true;
         }
 
         if (root is JsonObject schemaTwo && schemaTwo["SchemaVersion"]?.GetValue<int>() == 2)
         {
             schemaTwo["SchemaVersion"] = 3;
             schemaTwo["Eggs"] = new JsonArray();
-            this.schemaMigrated = true;
         }
 
         if (root is JsonObject schemaThree && schemaThree["SchemaVersion"]?.GetValue<int>() == 3)
         {
             schemaThree["SchemaVersion"] = 4;
-            this.schemaBackupSuffix = ".before-breeding-output-v4.bak";
-            this.schemaMigrated = true;
         }
 
         if (root is JsonObject schemaFour && schemaFour["SchemaVersion"]?.GetValue<int>() == 4)
         {
             schemaFour["SchemaVersion"] = 5;
-            this.schemaBackupSuffix = ".before-breeding-cooldown-v5.bak";
-            this.schemaMigrated = true;
         }
 
         if (root is JsonObject schemaFive && schemaFive["SchemaVersion"]?.GetValue<int>() == 5)
         {
             schemaFive["SchemaVersion"] = 6;
-            this.schemaBackupSuffix = ".before-managed-egg-incubation-v6.bak";
-            this.schemaMigrated = true;
         }
 
         if (root is JsonObject schemaSix && schemaSix["SchemaVersion"]?.GetValue<int>() == 6)
         {
             schemaSix["SchemaVersion"] = 7;
-            this.schemaBackupSuffix = ".before-external-maturity-v7.bak";
-            this.schemaMigrated = true;
         }
 
         if (root is JsonObject schemaSeven && schemaSeven["SchemaVersion"]?.GetValue<int>() == 7)
         {
             schemaSeven["SchemaVersion"] = 8;
-            this.schemaBackupSuffix = ".before-chromatic-crystals-v8.bak";
-            this.schemaMigrated = true;
         }
 
         if (root is JsonObject schemaEight && schemaEight["SchemaVersion"]?.GetValue<int>() == 8)
         {
             schemaEight["SchemaVersion"] = 9;
             schemaEight["MutagenicAttempts"] = new JsonArray();
-            this.schemaBackupSuffix = ".before-mutagenic-pool-v9.bak";
-            this.schemaMigrated = true;
         }
 
         if (root is JsonObject schemaNine && schemaNine["SchemaVersion"]?.GetValue<int>() == 9)
         {
             schemaNine["SchemaVersion"] = 10;
             schemaNine["RefineryJobs"] = new JsonArray();
-            this.schemaBackupSuffix = ".before-gel-refinery-v10.bak";
-            this.schemaMigrated = true;
         }
 
         if (root is JsonObject schemaTen && schemaTen["SchemaVersion"]?.GetValue<int>() == 10)
         {
             schemaTen["SchemaVersion"] = SlimeSaveData.CurrentSchemaVersion;
-            this.schemaBackupSuffix = ".before-compost-trough-v11.bak";
-            this.schemaMigrated = true;
         }
 
-        if (root is JsonObject data && data["Slimes"] is JsonArray slimes)
+        if (root is JsonObject schemaEleven && schemaEleven["SchemaVersion"]?.GetValue<int>() == 11)
+        {
+            schemaEleven["SchemaVersion"] = SlimeSaveData.CurrentSchemaVersion;
+        }
+
+        if (root is JsonObject jsonData && jsonData["Slimes"] is JsonArray slimes)
         {
             foreach (JsonNode? slimeNode in slimes)
             {
@@ -118,45 +149,20 @@ internal sealed class ModStateStore
                     genome["LikedFoodItemId"] = JsonNode.Parse(oldLike.ToJsonString());
 
                 record.Remove("LikedFoodItemId");
-                this.legacyFoodLikeMoved = true;
             }
         }
 
-        return root?.Deserialize<SlimeSaveData>()
-            ?? throw new InvalidDataException($"External slime registry '{this.registryPath}' is empty or invalid.");
+        SlimeSaveData? data = root?.Deserialize<SlimeSaveData>()
+            ?? throw new InvalidDataException($"Legacy slime registry '{this.registryPath}' is empty or invalid.");
+        this.ImportedLegacyData = true;
+        return data;
     }
 
     public void Save(SlimeSaveData data)
     {
-        string path = this.registryPath
-            ?? throw new InvalidOperationException("The external slime registry has not been loaded for a save.");
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-
-        if (this.legacyFoodLikeMoved && File.Exists(path))
-        {
-            string backupPath = path + ".before-food-like-move.bak";
-            if (!File.Exists(backupPath))
-                File.Copy(path, backupPath);
-        }
-
-        if (this.schemaMigrated && File.Exists(path))
-        {
-            string backupPath = path + this.schemaBackupSuffix;
-            if (!File.Exists(backupPath))
-                File.Copy(path, backupPath);
-        }
-
-        string pendingPath = path + ".pending";
-        using (var stream = new FileStream(pendingPath, FileMode.Create, FileAccess.Write, FileShare.None))
-        {
-            JsonSerializer.Serialize(stream, data, new JsonSerializerOptions { WriteIndented = true });
-            stream.Flush(flushToDisk: true);
-        }
-
-        File.Move(pendingPath, path, overwrite: true);
+        this.data.WriteSaveData(SaveDataKey, data);
         this.LoadedSchemaVersion = data.SchemaVersion;
-        this.legacyFoodLikeMoved = false;
-        this.schemaMigrated = false;
+        this.ImportedLegacyData = false;
     }
 
     public string? CreateExternalDataBackup()
@@ -183,5 +189,13 @@ internal sealed class ModStateStore
             throw new InvalidOperationException("The current save name is not a safe folder name.");
 
         return Path.Combine(modDirectory, "data", "saves", saveName);
+    }
+
+    private static string NormalizeEggToken(string value)
+    {
+        const string legacyPrefix = "Taum.SlimeRanching_Egg_";
+        if (value.StartsWith(legacyPrefix, StringComparison.Ordinal))
+            value = value[legacyPrefix.Length..];
+        return Guid.TryParseExact(value, "N", out Guid id) ? id.ToString("N") : value;
     }
 }

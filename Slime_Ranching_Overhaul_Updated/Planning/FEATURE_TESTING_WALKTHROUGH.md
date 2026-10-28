@@ -1,55 +1,54 @@
 # Today's Feature Testing Walkthrough
 
 Updated: 2026-10-27  
-Current branch: `feature/ranch-slime-size-scaled-shadows`
-Current HEAD: `3799f68` (`Scale Ranch Slime ground shadows by genome size`)
+Paused test checkpoint: `feature/ranch-slime-size-scaled-shadows` at `3799f68` (`Scale Ranch Slime ground shadows by genome size`; now merged into `master`)
 Test save: `TaumTest_322865388` (use this copied save, not the main farm).
+Status: **Paused** at Stage 6 on 2026-10-28 during the 2.0 design pivot. Resume this stage only when requested.
+
+The separate 2.0 implementation sequence is tracked in `DEVELOPMENT_NOTES_2.0.md`. Feature 1, save-safe data foundation, is in progress on `feature/2.0-save-data`; it does not resume or replace this paused 1.x testing stage.
 
 ## How to use this walkthrough
 
 Test only the current stage. Reply with the results or issues. I will help resolve those first. When you say **continue**, I will present the next stage and update this file. Do not advance the stage until you say to continue.
 
-## Current stage: 5 - Color inheritance, matching egg tint, and species abilities
+## Current stage: 6 - Breeder genome details and Chromatic Crystals
 
-**Commits:** `b8c97b3`, `7f8f926`, `d201190`, `1d02049`, `b6d6d9a`, `5170b45`, `3209a32`, `c730ce1`, `4d3939d`, `cc09405`, `9120a7c`.
+**Commits:** `2c94486`, `42a4a00`, `b74b6cc`.
 
-Breeding passes on color/species identity only. The egg icon uses the same rendered color variant as the resulting slime. Ability identifiers are derived from the resulting species. Other offspring traits use fresh defaults: Normal size, Common rarity, non-shiny, no mutation, and a newly assigned favorite food. Parent IDs and generation remain as lineage metadata. Size, shiny, rarity, mutation, and food inheritance are out of scope.
+This stage covers the parent genome details shown in the breeder and Chromatic Crystals, which focus a breeding cycle on a chosen offspring color. The crystal is consumed when the cycle starts. Without one, offspring color follows the normal parent-color breeding result.
 
 **How to test:**
 
 1. Run **3 Build, Deploy, Run**, load the copied `TaumTest_322865388` save, and enter the Slime Daycare.
-2. Spawn two mature slimes and note their animal IDs:
+2. Spawn two mature Ranch Slimes and note their IDs:
 
    ```text
    slime_ranching_spawn_ranch_slime TaumTest_322865388 28
    slime_ranching_spawn_ranch_slime TaumTest_322865388 28
    ```
-3. Set one parent to Red and one to Yellow. Give them different non-color traits so you can confirm those aren't passed to the offspring:
+
+3. Give the parents distinct colors and traits, replacing the ID placeholders with the IDs printed above:
 
    ```text
-   slime_ranching_set_color TaumTest_322865388 <red ID> Red
-   slime_ranching_set_size TaumTest_322865388 <red ID> Giant
-   slime_ranching_set_shiny TaumTest_322865388 <red ID> true
-   slime_ranching_set_color TaumTest_322865388 <yellow ID> Yellow
-   slime_ranching_set_size TaumTest_322865388 <yellow ID> Small
-   slime_ranching_set_shiny TaumTest_322865388 <yellow ID> true
+   slime_ranching_set_color TaumTest_322865388 <first ID> Blue
+   slime_ranching_set_size TaumTest_322865388 <first ID> Giant
+   slime_ranching_set_shiny TaumTest_322865388 <first ID> true
+   slime_ranching_set_color TaumTest_322865388 <second ID> Yellow
+   slime_ranching_set_size TaumTest_322865388 <second ID> Small
    ```
 
-   Replace the placeholders with the IDs printed by the spawn commands. Confirm each parent has its chosen color, size, and shiny appearance.
-4. Open the breeder, select both parents, start a cycle, and sleep until it completes. Collect the egg. Red + Yellow should produce an Orange Slime. Confirm the egg icon's visible tint matches the resulting slime's color. Its tooltip should show Orange species/color, Normal size, Common rarity, non-shiny, no mutation, parent links, and generation one higher than its parents.
-5. Hatch the egg. Confirm the slime appears Orange and `slime_ranching_inspect <new animal ID>` reports the Orange species' ability identifier (`Nurturer`). It should remain Normal and non-shiny despite the parents' different sizes and shiny states. Its favorite food is assigned independently of the parents.
-6. Save and reload. Confirm the egg/hatchling's color, ability identifier, and lineage remain stable and the egg icon still uses the same visible color variant as the slime.
+4. Give yourself the seven test crystals. Make room for seven inventory items first:
 
-**Expected:** color/species is the only inherited trait. The egg tint matches the resulting slime's rendered color; ability identifiers follow its species. Other offspring traits use the defaults above, while parent links and generation remain as ancestry metadata.
+   ```text
+   slime_ranching_give_crystals TaumTest_322865388
+   ```
 
-**Your results / issues:** pending.
+5. Open the breeder and select the two parents. Confirm the pod and parent details show their names/species, colors, sizes, and shiny state correctly. Change to the breeder's **Settings** tab and confirm the color-focus selector is visible and usable.
+6. Return to **Breeding**. Click the crystal selector until it says **Red**, then start the cycle. Confirm one Red Chromatic Crystal is consumed. Sleep until the cycle completes and collect the egg. Its tooltip and visible egg tint should identify a Red Slime, overriding the parents' Blue/Yellow color result.
+7. Open the breeder again and check that the selected parents' genome details remain correct. Optionally hatch the egg and run `slime_ranching_inspect <new animal ID>` to confirm the offspring is Red and its ability follows Red Slime.
+
+**Expected:** parent genome details are readable and match the configured parents. Selecting a crystal shows the focused color, consumes exactly one matching crystal when the cycle starts, and produces an egg of that color.
 ## Remaining stages (pending your confirmation)
-### Stage 6 — Breeder genome details and Chromatic Crystals
-
-**Commits:** `2c94486`, `42a4a00`, `b74b6cc`.
-
-Color-focused breeding, color setup command, and parent genome details in the breeder. Test the crystal selector and confirm the selected color is reflected by the offspring; inspect the displayed parent genomes.
-
 ### Stage 7 — Enrichment furniture and autonomous activity schedule
 
 **Commits:** `00304d2`, `b9bab98`, `6d90a7a`, `3638e64`, `e288119`, `bdafd45`, `17e0ade`, `6ce4b08`, `467a0e0`, `4159065`, `b8f4253`, `7df791a`, `debcb2c`, `7931c85`, `6871880`, `afe4cfb`, `878cd21`, `8b6e8b2`, `e6783a7`.
@@ -94,6 +93,6 @@ Readable parent names (including old registered slimes), corrected egg color tex
 
 ## Walkthrough state
 
-- **Current stage:** 5 - Color inheritance, matching egg tint, and species abilities.
-- **Completed stages:** 1, 2, 3, and 4 - Daycare baseline; breeder selection/cycles/placement; incubator workflow; juvenile growth and breeding eligibility.
-- **Next stage:** 6 - Breeder genome details and Chromatic Crystals, after you report Stage 5 results and say **continue**.
+- **Current stage:** 6 - Breeder genome details and Chromatic Crystals.
+- **Completed stages:** 1, 2, 3, 4, and 5 - Daycare baseline; breeder selection/cycles/placement; incubator workflow; juvenile growth and breeding eligibility; color/species inheritance and offspring defaults.
+- **Next stage:** 7 - Enrichment furniture and autonomous activity schedule, after you report Stage 6 results and say **continue**.

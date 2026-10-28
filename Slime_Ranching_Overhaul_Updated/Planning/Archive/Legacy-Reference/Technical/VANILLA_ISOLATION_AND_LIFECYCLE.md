@@ -9,13 +9,13 @@ Modded slime genetics, breeding, AI/furniture behavior and egg handling apply **
 1. Detect no first-seen marker for the current save in the installed mod folder.
 2. Create and verify a versioned snapshot in that folder by reading, but not changing, the game save.
 3. Leave legacy hutch slimes and all other game entities untouched on load. No automatic cleanup or adoption occurs.
-4. Keep first-seen creation idempotent. Existing Slime Hutch monsters are never removed, adopted, or converted. Vanilla Slime Eggs stay unchanged in inventories, chests, drops, treasure, and the old press. Only placing one in the separate Slime Egg Converter consumes it and produces a mod Common Slime Egg.
+4. Keep first-seen creation idempotent. Existing Slime Hutch monsters are never removed, adopted, or converted. Vanilla Slime Eggs stay unchanged in inventories, chests, drops, treasure, and the old press. Ranch Slime Eggs are created only by the domesticated breeding and story systems.
 
 ## Normal save/load
 Maintain stable IDs and a versioned per-save registry under `<installed mod folder>/data/saves/<save name>/` for genomes, eggs, breeders, reservations, mutations, furniture and companions. Validate data, migrate old schemas and never reroll egg genetics on reload. Ranch Slime native IDs are reconciled against live FarmAnimals on load and save: removed animals lose the active ID link, while their genome is preserved as an archive. An unfinished cycle with a missing parent is cleared; a cycle with an already-created, registered egg remains collectable. `config.json` holds preferences only. Do not use SMAPI `WriteSaveData` or game entity/item `modData` for mod state.
 
 ## Uninstall reality
-A removed mod cannot run cleanup or migration. Back up the installed mod folder's `data` directory before updating or uninstalling; deleting it deletes the external registry. The new converter and Common Slime Egg are custom item IDs saved by Stardew, so they will be Error Items if the mod is removed while those items remain in a save. Their future genomes and other mod-owned state must still stay in the external registry; do not put that data in item or entity `modData`.
+A removed mod cannot run cleanup or migration. Back up the installed mod folder's `data` directory before updating or uninstalling; deleting it deletes the external registry. Ranching machines, field-guide items, and genome-specific eggs are custom item IDs saved by Stardew, so they will be Error Items if the mod is removed while they remain in a save. Their genome details and other mod-owned state stay in the external registry; do not put that data in item or entity `modData`.
 
 ## Reinstall
 If the mod folder's versioned registry remains, detect it and reconcile with any changes made while the mod was absent. Never silently overwrite current hutch slimes or restore duplicates. Reinstall cannot recover data deleted along with the mod folder unless the user kept a copy of its `data` directory.

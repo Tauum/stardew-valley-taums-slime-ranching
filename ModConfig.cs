@@ -4,7 +4,6 @@ public sealed class ModConfig
 {
     public string SlimeDaycareExteriorDesign { get; set; } = "RedRanch";
     public bool LogRegistrySummary { get; set; } = true;
-    public int ConverterShopPrice { get; set; } = 2500;
     public int BreederShopPrice { get; set; } = 10000;
     public int IncubatorShopPrice { get; set; } = 5000;
     public int IncubatorDurationDays { get; set; } = 15;
