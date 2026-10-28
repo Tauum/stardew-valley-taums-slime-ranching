@@ -16,6 +16,7 @@ internal static class SlimeEggContent
     public const string EggIdModDataKey = "Taum.SlimeRanching/egg-id";
     public const string EggRecordModDataKey = "Taum.SlimeRanching/egg-record";
     private const string EggTexturePrefix = "Mods/Taum.SlimeRanching/Objects/RanchSlimeEgg_";
+    private const string DomesticatedSlimeEggName = "Domesticated Slime Egg";
     private static readonly string[] EggColors = { "Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Pink" };
     private static string? cachedModDirectory;
     private static List<SlimeEggRecord>? cachedEggs;
@@ -99,7 +100,7 @@ internal static class SlimeEggContent
         item.modData[EggIdModDataKey] = egg.EggId;
         item.modData[EggRecordModDataKey] = JsonSerializer.Serialize(egg);
         if (item is StardewValley.Object obj)
-            obj.displayNameFormat = $"{DisplayOrUnknown(egg.Genome.PrimarySpecies)} Egg";
+            obj.displayNameFormat = DomesticatedSlimeEggName;
     }
 
     public static Item CreateItem(SlimeEggRecord egg)
@@ -122,9 +123,9 @@ internal static class SlimeEggContent
                 string itemId = $"Taum.SlimeRanching_Egg_{color}";
                 objects[itemId] = new ObjectData
                 {
-                    Name = $"{color} Ranch Slime Egg",
-                    DisplayName = $"{color} Ranch Slime Egg",
-                    Description = "- Place in a Slime Incubator to hatch.\nA unique Ranch Slime egg. Its genome is carried with the item.",
+                    Name = DomesticatedSlimeEggName,
+                    DisplayName = DomesticatedSlimeEggName,
+                    Description = "- Place in a Slime Incubator to hatch.",
                     Type = "Basic",
                     Price = 0,
                     Texture = EggTexturePrefix + color,
@@ -146,8 +147,8 @@ internal static class SlimeEggContent
                 string texture = EggTexturePrefix + FarmAnimalContent.GetClosestVariantName(genome.VisualColor);
                 objects[egg.ItemId] = new ObjectData
                 {
-                    Name = $"{DisplayOrUnknown(genome.PrimarySpecies)} Egg",
-                    DisplayName = $"{DisplayOrUnknown(genome.PrimarySpecies)} Egg",
+                    Name = DomesticatedSlimeEggName,
+                    DisplayName = DomesticatedSlimeEggName,
                     Description = CreateDescription(genome, egg.HatchedAnimalId),
                     Type = "Basic",
                     Price = 0,
@@ -219,14 +220,10 @@ internal static class SlimeEggContent
             ? "\nThis egg has already hatched."
             : "";
         return $"- Place in a Slime Incubator to hatch.\n"
-            + $"A unique Ranch Slime Egg.\n"
-            + $"Species: {DisplayOrUnknown(genome.PrimarySpecies)}"
-            + (string.IsNullOrWhiteSpace(genome.SecondarySpecies) ? "" : $" / {genome.SecondarySpecies}") + "\n"
             + $"Color: {FarmAnimalContent.GetClosestVariantName(genome.VisualColor)}\n"
-            + $"Genetic size: {DisplayOrUnknown(genome.Size)}\n"
+            + $"Size: {DisplayOrUnknown(genome.Size)}\n"
             + $"Rarity: {DisplayOrUnknown(genome.RarityTier)}{(genome.IsShiny ? " (Shiny)" : "")}\n"
             + $"Mutation: {mutation}\n"
-            + $"Generation: {genome.Generation}\n"
             + $"{parents}\n"
             + $"Favorite food: {likedFood}"
             + hatchStatus;
