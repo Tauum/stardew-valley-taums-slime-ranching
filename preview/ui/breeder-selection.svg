@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="560" viewBox="0 0 800 560" role="img" aria-labelledby="title desc">
+  <title id="title">Current Slime Breeder selection menu</title>
+  <desc id="desc">Static offline representation of the implemented 800 by 560 SlimeBreederMenu draw layout.</desc>
+  <defs>
+    <linearGradient id="frame" x2="0" y2="1"><stop stop-color="#f2e6c8"/><stop offset=".18" stop-color="#9b7950"/><stop offset=".5" stop-color="#e8d7b6"/><stop offset=".82" stop-color="#9b7950"/><stop offset="1" stop-color="#e9ddc2"/></linearGradient>
+    <style>.t{font-family:Georgia,serif;fill:#493523}.s{font-family:Arial,sans-serif;fill:#493523}.small{font-size:15px}.tiny{font-size:12px}.box{stroke:#8d704e;stroke-width:5;fill:#efe3c5}.panel{stroke:#9b7950;stroke-width:3;fill:#bfddde}</style>
+  </defs>
+  <rect width="800" height="560" rx="16" fill="#17131a"/>
+  <rect x="10" y="10" width="780" height="540" rx="18" fill="url(#frame)" stroke="#65482e" stroke-width="7"/>
+  <text class="t" x="400" y="51" text-anchor="middle" font-size="30">Slime Breeder</text>
+  <text class="s small" x="40" y="92">Choose two parents, then start the cycle to reserve them. Scroll the list for more.</text>
+  <g class="s small">
+    <rect class="box" x="24" y="112" width="382" height="44" rx="5" fill="#b4e5ac"/><text x="38" y="140">[SELECTED] Azure Slime</text>
+    <rect class="box" x="24" y="160" width="382" height="44" rx="5" fill="#b4e5ac"/><text x="38" y="188">[SELECTED] Rose Slime</text>
+    <rect class="box" x="24" y="208" width="382" height="44" rx="5" fill="#efe3c5"/><text x="38" y="236">[  ] Green Slime</text>
+    <rect class="box" x="24" y="256" width="382" height="44" rx="5" fill="#d2d0c5"/><text x="38" y="284">[RESTING 1d] Gold Slime</text>
+    <text class="tiny" x="320" y="317">1-4 of 4</text>
+  </g>
+  <rect class="panel" x="424" y="112" width="342" height="214" rx="10" stroke="#8d704e"/>
+  <text class="s small" x="595" y="145" text-anchor="middle" font-weight="bold">BREEDING CHAMBER</text>
+  <g stroke="#38556a" stroke-width="3">
+    <path d="M476 194h75v78h-75z" fill="#7bcbe6"/><path d="M607 194h75v78h-75z" fill="#e78bbb"/>
+    <path d="M463 185h100v12H463zM594 185h100v12H594z" fill="#7e8a99"/>
+  </g>
+  <path d="M503 251c-20-14-13-41 8-43 10-1 16 4 19 12 4-8 10-13 20-12 21 2 28 29 8 43l-28 16z" fill="#12a8da" stroke="#0876ab" stroke-width="4"/>
+  <path d="M634 251c-20-14-13-41 8-43 10-1 16 4 19 12 4-8 10-13 20-12 21 2 28 29 8 43l-28 16z" fill="#f08bb8" stroke="#bd4c7e" stroke-width="4"/>
+  <text class="s tiny" x="513" y="292" text-anchor="middle">Parent A</text><text class="s tiny" x="644" y="292" text-anchor="middle">Parent B</text>
+  <text class="s tiny" x="513" y="310" text-anchor="middle">Azure / Normal</text><text class="s tiny" x="644" y="310" text-anchor="middle">Rose / Normal</text>
+  <rect class="box" x="430" y="338" width="336" height="72" rx="8" fill="#f4e0b0"/>
+  <text class="s small" x="446" y="367">Offspring color: inherited</text><text class="s tiny" x="446" y="393">Click to choose a Chromatic Crystal.</text>
+  <rect x="34" y="470" width="190" height="56" rx="10" fill="#b4dcae" stroke="#79976f" stroke-width="4"/>
+  <text class="s small" x="129" y="505" text-anchor="middle" font-weight="bold">Start 2-day Cycle</text>
+  <rect x="236" y="470" width="180" height="56" rx="10" fill="#ddc49d" stroke="#9b7950" stroke-width="4"/>
+  <text class="s small" x="326" y="505" text-anchor="middle">Release Pair</text>
+  <text class="s small" x="430" y="500">Selected: 2/2</text><text class="s tiny" x="430" y="522">Esc: close</text>
+  <text x="16" y="547" font-family="Arial" font-size="10" fill="#665643">OFFLINE PREVIEW OF CURRENT IMPLEMENTED MENU</text>
+</svg>
