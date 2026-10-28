@@ -46,10 +46,21 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
         this.actionButton = new Rectangle(this.xPositionOnScreen + 660, this.yPositionOnScreen + this.height - 88, 204, 58);
         this.candidates = Game1.player.Items
             .Select((item, index) => (item, index))
-            .Where(pair => pair.item is not null
-                && (pair.item.QualifiedItemId == ConverterContent.CommonEggQualifiedId
-                    || (pair.item.QualifiedItemId.StartsWith(EggItemPrefix, StringComparison.Ordinal)
-                        && registry.CanIncubate(pair.item.QualifiedItemId[3..]))))
+            .Where(pair =>
+            {
+                Item? item = pair.item;
+                if (item is null
+                    || !(item.QualifiedItemId.StartsWith(EggItemPrefix, StringComparison.Ordinal)
+                        || item.modData.ContainsKey(SlimeEggContent.EggIdModDataKey))
+                    || !SlimeEggContent.TryGetEggId(item, out string eggId))
+                    return false;
+
+                if (SlimeEggContent.TryReadRecord(item, out SlimeEggRecord egg)
+                    && !registry.RegisterEggItem(egg))
+                    return false;
+
+                return registry.CanIncubate(eggId);
+            })
             .Select(pair => (pair.index, pair.item!.DisplayName, pair.item.Stack))
             .ToList();
     }

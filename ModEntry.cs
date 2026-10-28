@@ -34,7 +34,7 @@ public sealed class ModEntry : Mod
         BreederMovementPatch.SetReservationLookup(id => this.registry?.IsBreedingParentReserved(id) == true);
         BreederParentVisibilityPatch.SetActiveCycleLookup(id => this.registry?.IsInActiveBreedingCycle(id) == true);
         BreederParentVisibilityPatch.SetUnclaimedHatchLookup(id => this.registry?.IsUnclaimedIncubationHatch(id) == true);
-        this.stateStore = new ModStateStore(helper.DirectoryPath);
+        this.stateStore = new ModStateStore(helper.Data, helper.DirectoryPath);
 
         helper.Events.GameLoop.SaveLoaded += this.OnSaveLoaded;
         helper.Events.GameLoop.GameLaunched += this.OnGameLaunched;
@@ -55,7 +55,6 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("slime_ranching_set_mutation", "Set a managed Ranch Slime's test mutation. Usage: slime_ranching_set_mutation <exact save folder name> <animal ID> <ShadowClone|none>.", this.OnSetSlimeMutationCommand);
         helper.ConsoleCommands.Add("slime_ranching_bind_companion", "Bind one mature Daycare Ranch Slime as the external companion test. Usage: slime_ranching_bind_companion <exact save folder name> <animal ID>.", this.OnBindCompanionCommand);
         helper.ConsoleCommands.Add("slime_ranching_dismiss_companion", "Dismiss the currently bound Ranch Slime companion. Usage: slime_ranching_dismiss_companion <exact save folder name>.", this.OnDismissCompanionCommand);
-        helper.ConsoleCommands.Add("slime_ranching_give_converter", "Give one Slime Egg Converter for testing. Usage: slime_ranching_give_converter <exact save folder name>.", this.OnGiveConverterCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_guidebook", "Give the Slime Ranching Field Guide. Usage: slime_ranching_give_guidebook <exact save folder name>.", this.OnGiveGuidebookCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_breeder", "Give one Slime Breeder for testing. Usage: slime_ranching_give_breeder <exact save folder name>.", this.OnGiveBreederCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_incubator", "Give one Slime Incubator for testing. Usage: slime_ranching_give_incubator <exact save folder name>.", this.OnGiveIncubatorCommand);
@@ -80,24 +79,27 @@ public sealed class ModEntry : Mod
 
         try
         {
-            string backupPath = FirstSeenSnapshot.EnsureCreated(this.Helper.DirectoryPath);
-            this.Monitor.Log($"Mod-folder first-seen snapshot verified at {backupPath}.", LogLevel.Trace);
             this.registry!.Load(this.stateStore!.Load(), this.config.LogRegistrySummary);
+            bool needsPersistenceMigration = this.stateStore.ImportedLegacyData || this.stateStore.MigratedSaveData;
             int recoveredHatches = this.registry.RecoverPendingHatches(GetFarmAnimals());
             if (recoveredHatches > 0)
-                this.Monitor.Log($"Recovered {recoveredHatches} saved Ranch Slime hatch(es) from the external incubator registry.", LogLevel.Info);
+                this.Monitor.Log($"Recovered {recoveredHatches} saved Ranch Slime hatch(es) from save data.", LogLevel.Info);
             int registeredRanchSlimes = this.registry.RegisterRanchSlimes(GetFarmAnimals());
             if (registeredRanchSlimes > 0)
-                this.Monitor.Log($"Registered {registeredRanchSlimes} Ranch Slime farm animal(s) in the external genome registry.", LogLevel.Info);
+                this.Monitor.Log($"Registered {registeredRanchSlimes} Ranch Slime farm animal(s) from entity metadata.", LogLevel.Info);
             (int detachedAnimals, int cancelledCycles) = this.registry.ReconcileRanchSlimes(GetFarmAnimals());
             this.ApplyRanchSlimeAppearances();
             bool maturityChanged = this.registry.SynchronizeMaturity(GetFarmAnimals(), Game1.Date.TotalDays);
             this.stateReady = true;
             this.LogRegistryReconciliation(detachedAnimals, cancelledCycles);
-            if (recoveredHatches > 0 || detachedAnimals > 0 || cancelledCycles > 0 || maturityChanged)
+            if (this.stateStore.ImportedLegacyData)
+                this.Monitor.Log("Imported the previous mod-folder slime registry into this save. The original legacy file was left untouched.", LogLevel.Info);
+            if (this.stateStore.MigratedSaveData)
+                this.Monitor.Log("Migrated the saved Ranch Slime data to the current schema.", LogLevel.Info);
+            if (needsPersistenceMigration || registeredRanchSlimes > 0 || recoveredHatches > 0 || detachedAnimals > 0 || cancelledCycles > 0 || maturityChanged)
             {
                 if (!this.SaveExternalStateNow())
-                    this.Monitor.Log("Reconciled Ranch Slime records remain in memory but could not yet be written to the mod-folder registry.", LogLevel.Error);
+                    this.Monitor.Log("Imported or reconciled Ranch Slime state remains in memory but could not yet be written to the current save.", LogLevel.Error);
                 else if (maturityChanged)
                     this.InvalidateEggObjectData();
             }
@@ -117,7 +119,6 @@ public sealed class ModEntry : Mod
         api.Register(this.ModManifest, this.ResetConfig, this.SaveConfig);
         api.AddSectionTitle(this.ModManifest, () => "Ranching equipment prices");
         api.AddParagraph(this.ModManifest, () => "Changes refresh Marnie's shop after saving these settings.");
-        this.AddShopPriceOption(api, "Egg Converter", "Price of the vanilla Slime Egg converter.", () => this.config.ConverterShopPrice, value => this.config.ConverterShopPrice = value);
         this.AddShopPriceOption(api, "Slime Breeder", "Price of the Slime Breeder.", () => this.config.BreederShopPrice, value => this.config.BreederShopPrice = value);
         this.AddShopPriceOption(api, "Slime Incubator", "Price of the Slime Incubator.", () => this.config.IncubatorShopPrice, value => this.config.IncubatorShopPrice = value);
         api.AddSectionTitle(this.ModManifest, () => "Slime Incubator");
@@ -233,10 +234,11 @@ public sealed class ModEntry : Mod
         {
             int registeredRanchSlimes = this.registry!.RegisterRanchSlimes(GetFarmAnimals());
             if (registeredRanchSlimes > 0)
-                this.Monitor.Log($"Added {registeredRanchSlimes} Ranch Slime genome record(s) to the external registry.", LogLevel.Info);
+                this.Monitor.Log($"Registered {registeredRanchSlimes} Ranch Slime entity record(s).", LogLevel.Info);
             this.registry.SynchronizeMaturity(GetFarmAnimals(), Game1.Date.TotalDays);
             (int detachedAnimals, int cancelledCycles) = this.registry.ReconcileRanchSlimes(GetFarmAnimals());
             this.LogRegistryReconciliation(detachedAnimals, cancelledCycles);
+            this.registry.WriteEntityModData(GetFarmAnimals());
             this.stateStore!.Save(this.registry!.Capture());
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
@@ -328,7 +330,7 @@ public sealed class ModEntry : Mod
         this.pendingMutagenicNotifications.Clear();
         this.stateReady = false;
         this.registry = new SlimeRegistry(this.Monitor);
-        this.stateStore = new ModStateStore(this.Helper.DirectoryPath);
+        this.stateStore = new ModStateStore(this.Helper.Data, this.Helper.DirectoryPath);
     }
 
     private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
@@ -342,7 +344,7 @@ public sealed class ModEntry : Mod
         if (e.IsMultipleOf(60) && this.DiscardBreederPairsForMissingMachines())
         {
             if (!this.SaveExternalStateNow())
-                this.Monitor.Log("Removed breeder cycles remain cleared in memory, but the external registry could not be saved yet.", LogLevel.Error);
+                this.Monitor.Log("Removed breeder cycles remain cleared in memory, but save data could not be written yet.", LogLevel.Error);
         }
 
         IReadOnlyCollection<long> reservedIds = this.registry!.ReservedFarmAnimalIds;
@@ -366,7 +368,7 @@ public sealed class ModEntry : Mod
         string locationPrefix = e.Location.NameOrUniqueName + ":";
         foreach (KeyValuePair<Vector2, StardewValley.Object> removed in e.Removed)
         {
-            if (removed.Value.QualifiedItemId != ConverterContent.BreederQualifiedId)
+            if (removed.Value.QualifiedItemId != RanchingItemContent.BreederQualifiedId)
                 continue;
 
             string machineKey = $"{locationPrefix}{(int)removed.Key.X},{(int)removed.Key.Y}";
@@ -379,7 +381,7 @@ public sealed class ModEntry : Mod
         if (this.SaveExternalStateNow())
             this.Monitor.Log("The Slime Breeder was removed; its cycle and pending egg were discarded, and its parents are free to roam. A replacement starts with a blank selection.", LogLevel.Info);
         else
-            this.Monitor.Log("The Slime Breeder was removed and its parents are free to roam in memory, but the cleared cycle could not yet be saved to the external registry.", LogLevel.Error);
+            this.Monitor.Log("The Slime Breeder was removed and its parents are free to roam in memory, but the cleared cycle could not yet be saved.", LogLevel.Error);
     }
 
     private void OnRenderedWorld(object? sender, StardewModdingAPI.Events.RenderedWorldEventArgs e)
@@ -572,6 +574,7 @@ public sealed class ModEntry : Mod
 
         try
         {
+            this.registry!.WriteEntityModData(GetFarmAnimals());
             this.stateStore!.Save(this.registry!.Capture());
             return true;
         }
@@ -589,34 +592,16 @@ public sealed class ModEntry : Mod
             return false;
 
         SlimeRegistry registry = this.registry!;
-        string eggItemId;
-        bool createdCommonGenome = false;
-        if (item.QualifiedItemId == ConverterContent.CommonEggQualifiedId)
-        {
-            Guid genomeId = Guid.NewGuid();
-            SlimeEggRecord commonEgg = registry.CreateEgg(new SlimeGenome
-            {
-                Id = genomeId,
-                PrimarySpecies = "Ranch Slime",
-                VisualColor = "#00FF00",
-                Size = "Normal",
-                RarityTier = "Common",
-                Generation = 1,
-                LikedFoodItemId = FoodLikeCatalog.ForSlime(genomeId)
-            });
-            eggItemId = commonEgg.ItemId;
-            createdCommonGenome = true;
-        }
-        else if (item.QualifiedItemId.StartsWith("(O)Taum.SlimeRanching_Egg_", StringComparison.Ordinal))
-            eggItemId = item.QualifiedItemId[3..];
-        else
+        if (!SlimeEggContent.TryGetEggId(item, out string eggItemId))
+            return false;
+
+        if (SlimeEggContent.TryReadRecord(item, out SlimeEggRecord itemEgg)
+            && !registry.RegisterEggItem(itemEgg))
             return false;
 
         if (!registry.CanIncubate(eggItemId)
             || !registry.StartIncubation(machineKey, eggItemId, Game1.Date.TotalDays, this.config.IncubatorDurationDays))
         {
-            if (createdCommonGenome)
-                registry.RemoveUnincubatedEgg(eggItemId);
             return false;
         }
 
@@ -644,7 +629,7 @@ public sealed class ModEntry : Mod
         {
             this.Monitor.Log($"Confirmed {recovered} previous Ranch Slime hatch(es) against live animal IDs.", LogLevel.Info);
             if (!this.SaveExternalStateNow())
-                this.Monitor.Log("The confirmed hatch could not be finalized in the external registry; its reserved hatch record will be checked again on reload.", LogLevel.Error);
+                this.Monitor.Log("The confirmed hatch could not be finalized in save data; its reserved hatch record will be checked again on reload.", LogLevel.Error);
             this.InvalidateEggObjectData();
         }
 
@@ -725,8 +710,10 @@ public sealed class ModEntry : Mod
 
     private Item CreateEggItem(Guid genomeId)
     {
-        this.InvalidateEggObjectData();
-        return ItemRegistry.Create(SlimeEggContent.GetQualifiedId(genomeId));
+        string eggId = genomeId.ToString("N");
+        if (this.registry is null || !this.registry.TryGetEgg(eggId, out SlimeEggRecord egg))
+            throw new InvalidOperationException($"No stored egg genome exists for {eggId}.");
+        return SlimeEggContent.CreateItem(egg);
     }
 
     private void InvalidateEggObjectData()
@@ -737,13 +724,13 @@ public sealed class ModEntry : Mod
 
     private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
     {
-        ConverterContent.LoadAssets(e);
+        RanchingItemContent.LoadAssets(e);
         if (e.NameWithoutLocale.IsEquivalentTo("Mods/Taum.SlimeRanching/Machines/SlimeIncubator"))
             e.LoadFromModFile<Texture2D>("assets/Machines/SlimeIncubator.png", AssetLoadPriority.Medium);
         else if (e.NameWithoutLocale.IsEquivalentTo("Mods/Taum.SlimeRanching/Machines/SlimeBreeder"))
             e.LoadFromModFile<Texture2D>("assets/Machines/SlimeBreeder.png", AssetLoadPriority.Medium);
         BuildingContent.LoadAssets(e, this.Helper);
-        ConverterContent.EditAsset(e);
+        RanchingItemContent.EditAsset(e);
         ChromaticCrystalContent.EditAsset(e);
         ShopContent.EditAsset(e, this.config);
         SlimeEggContent.LoadAssets(e);
@@ -816,7 +803,7 @@ public sealed class ModEntry : Mod
         {
             if (!this.stateReady || !Context.IsMainPlayer || Context.IsMultiplayer)
             {
-                this.Monitor.Log("The Gel Refinery requires an available external registry in single-player.", LogLevel.Warn);
+                this.Monitor.Log("The Gel Refinery requires loaded mod save data in single-player.", LogLevel.Warn);
                 return;
             }
 
@@ -841,7 +828,7 @@ public sealed class ModEntry : Mod
         {
             if (!this.stateReady || !Context.IsMainPlayer || Context.IsMultiplayer)
             {
-                this.Monitor.Log("The Compost Trough requires an available external registry in single-player.", LogLevel.Warn);
+                this.Monitor.Log("The Compost Trough requires loaded mod save data in single-player.", LogLevel.Warn);
                 return;
             }
 
@@ -863,7 +850,7 @@ public sealed class ModEntry : Mod
         {
             if (!this.stateReady || !Context.IsMainPlayer || Context.IsMultiplayer)
             {
-                this.Monitor.Log("The Slime Breeder requires an available external registry in single-player.", LogLevel.Error);
+                this.Monitor.Log("The Slime Breeder requires loaded mod save data in single-player.", LogLevel.Error);
                 return;
             }
 
@@ -881,7 +868,7 @@ public sealed class ModEntry : Mod
         {
             if (!this.stateReady || !Context.IsMainPlayer || Context.IsMultiplayer)
             {
-                this.Monitor.Log("The Mutagenic Pool requires an available external registry in single-player.", LogLevel.Warn);
+                this.Monitor.Log("The Mutagenic Pool requires loaded mod save data in single-player.", LogLevel.Warn);
                 return;
             }
 
@@ -913,7 +900,7 @@ public sealed class ModEntry : Mod
     {
         foreach (KeyValuePair<Vector2, StardewValley.Object> pair in Game1.currentLocation.Objects.Pairs)
         {
-            if (pair.Value.QualifiedItemId != ConverterContent.IncubatorQualifiedId)
+            if (pair.Value.QualifiedItemId != RanchingItemContent.IncubatorQualifiedId)
                 continue;
 
             bool insideMachine = clickedTile.X >= pair.Key.X && clickedTile.X < pair.Key.X + IncubatorPlacementGeometry.Width
@@ -935,7 +922,7 @@ public sealed class ModEntry : Mod
     {
         foreach (KeyValuePair<Vector2, StardewValley.Object> pair in Game1.currentLocation.Objects.Pairs)
         {
-            if (pair.Value.QualifiedItemId != ConverterContent.BreederQualifiedId)
+            if (pair.Value.QualifiedItemId != RanchingItemContent.BreederQualifiedId)
                 continue;
 
             if (clickedTile.X < pair.Key.X || clickedTile.X >= pair.Key.X + 5
@@ -965,7 +952,7 @@ public sealed class ModEntry : Mod
 
             string prefix = interior.NameOrUniqueName + ":";
             string[] placedMachineKeys = interior.Objects.Values
-                .Where(obj => obj.QualifiedItemId == ConverterContent.BreederQualifiedId)
+                .Where(obj => obj.QualifiedItemId == RanchingItemContent.BreederQualifiedId)
                 .Select(obj => $"{prefix}{(int)obj.TileLocation.X},{(int)obj.TileLocation.Y}")
                 .ToArray();
             removed += this.registry.RemoveBreederPairsForMissingMachines(prefix, placedMachineKeys);
@@ -1055,12 +1042,12 @@ public sealed class ModEntry : Mod
             this.InvalidateEggObjectData();
             foreach (taums_slime_ranching.Models.SlimeEggRecord egg in eggs)
             {
-                Item item = ItemRegistry.Create(SlimeEggContent.GetQualifiedId(egg.Genome.Id));
+                Item item = SlimeEggContent.CreateItem(egg);
                 if (!Game1.player.addItemToInventoryBool(item))
                     throw new InvalidOperationException("Inventory space changed while the test eggs were being added.");
             }
 
-            this.Monitor.Log($"Added {description}. Their genome records are in the mod's external registry.", LogLevel.Info);
+            this.Monitor.Log($"Added {description}. Egg identity is stored on each item.", LogLevel.Info);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException)
         {
@@ -1255,7 +1242,7 @@ public sealed class ModEntry : Mod
                 return;
             this.InvalidateEggObjectData();
             foreach (SlimeEggRecord egg in eggs)
-                Game1.player.addItemToInventoryBool(ItemRegistry.Create(SlimeEggContent.GetQualifiedId(egg.Genome.Id)));
+                Game1.player.addItemToInventoryBool(SlimeEggContent.CreateItem(egg));
 
             this.Monitor.Log("Added Red, Orange, Yellow, Green, Blue, Purple, and Pink genome-specific test eggs. Hatch them in the Daycare to compare sprite colors.", LogLevel.Info);
         }
@@ -1290,31 +1277,6 @@ public sealed class ModEntry : Mod
         foreach (string color in colors)
             Game1.player.addItemToInventoryBool(ItemRegistry.Create("(O)" + ChromaticCrystalContent.GetItemId(color)));
         this.Monitor.Log("Added one Red, Orange, Yellow, Green, Blue, Purple, and Pink Chromatic Crystal.", LogLevel.Info);
-    }
-
-    private void OnGiveConverterCommand(string command, string[] args)
-    {
-        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
-        {
-            this.Monitor.Log("Load a single-player save with available external slime state before requesting a converter.", LogLevel.Warn);
-            return;
-        }
-
-        string? saveName = Constants.SaveFolderName;
-        if (args.Length != 1 || args[0] != saveName)
-        {
-            this.Monitor.Log($"To give a converter to the currently loaded save, use: slime_ranching_give_converter {saveName}", LogLevel.Warn);
-            return;
-        }
-
-        Item converter = ItemRegistry.Create(ConverterContent.ConverterQualifiedId);
-        if (!Game1.player.couldInventoryAcceptThisItem(converter) || !Game1.player.addItemToInventoryBool(converter))
-        {
-            this.Monitor.Log("Make room in your inventory for the Slime Egg Converter, then try again.", LogLevel.Warn);
-            return;
-        }
-
-        this.Monitor.Log("Added one Slime Egg Converter to your inventory.", LogLevel.Info);
     }
 
     private void OnSpawnRanchSlimeCommand(string command, string[] args)
@@ -1365,7 +1327,7 @@ public sealed class ModEntry : Mod
         this.registry.SynchronizeMaturity(new[] { animal }, Game1.Date.TotalDays);
 
         if (!this.SaveExternalStateNow())
-            this.Monitor.Log($"Ranch Slime {animalId} was added, but its external genome record could not be saved yet.", LogLevel.Error);
+            this.Monitor.Log($"Ranch Slime {animalId} was added, but its entity metadata could not be saved yet.", LogLevel.Error);
         else
             this.Monitor.Log($"Added one {ageDays}-day-old Ranch Slime to the Slime Daycare (FarmAnimal ID {animalId}){(randomTraits ? $" with randomized genome traits ({genome!.PrimarySpecies}, {genome.Size}, {genome.RarityTier}, shiny={genome.IsShiny}, generation={genome.Generation}, mutation={genome.MutationTrait ?? "none"})" : "")}. It is {(ageDays >= FarmAnimalContent.RanchSlimeDaysToMature ? "mature and ready to select in the breeder" : "still growing") }.", LogLevel.Info);
     }
@@ -1436,7 +1398,7 @@ public sealed class ModEntry : Mod
         if (animalToUpdate is not null)
             FarmAnimalContent.ApplyAppearance(animalToUpdate,
                 this.registry.GetGenomeColor(animalId), this.registry.GetGenomeSize(animalId), this.registry.GetGenomeIsShiny(animalId));
-        this.Monitor.Log($"Changed Ranch Slime {animalId} genome size from {oldSize} to {this.registry.GetGenomeSize(animalId)} in the mod's external registry.", LogLevel.Info);
+        this.Monitor.Log($"Changed Ranch Slime {animalId} genome size from {oldSize} to {this.registry.GetGenomeSize(animalId)}.", LogLevel.Info);
     }
 
     private void OnSetSlimeShinyCommand(string command, string[] args)
@@ -1471,7 +1433,7 @@ public sealed class ModEntry : Mod
         }
 
         this.RefreshRanchSlimeAppearance(animalId);
-        this.Monitor.Log($"Changed Ranch Slime {animalId} shiny flag to {isShiny} in the mod's external registry.", LogLevel.Info);
+        this.Monitor.Log($"Changed Ranch Slime {animalId} shiny flag to {isShiny}.", LogLevel.Info);
     }
 
     private void OnSetSlimeColorCommand(string command, string[] args)
@@ -1505,7 +1467,7 @@ public sealed class ModEntry : Mod
         }
 
         this.RefreshRanchSlimeAppearance(animalId);
-        this.Monitor.Log($"Changed Ranch Slime {animalId} base color and species to {this.registry.GetGenomeColorState(animalId)?.PrimarySpecies} in the mod's external registry.", LogLevel.Info);
+        this.Monitor.Log($"Changed Ranch Slime {animalId} base color and species to {this.registry.GetGenomeColorState(animalId)?.PrimarySpecies}.", LogLevel.Info);
     }
 
     private void OnSetSlimeMutationCommand(string command, string[] args)
@@ -1538,7 +1500,7 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        this.Monitor.Log($"Changed Ranch Slime {animalId} mutation trait to {this.registry.GetMutationTrait(animalId) ?? "none"} in the mod's external registry.", LogLevel.Info);
+        this.Monitor.Log($"Changed Ranch Slime {animalId} mutation trait to {this.registry.GetMutationTrait(animalId) ?? "none"}.", LogLevel.Info);
     }
 
     private void OnBindCompanionCommand(string command, string[] args)
@@ -1569,7 +1531,7 @@ public sealed class ModEntry : Mod
         if (!this.SaveExternalStateNow())
         {
             this.registry.UnbindCompanion(animalId);
-            this.Monitor.Log("Could not save the binding to the mod folder; the slime was unbound again.", LogLevel.Error);
+            this.Monitor.Log("Could not save the binding to mod save data; the slime was unbound again.", LogLevel.Error);
             return;
         }
 
@@ -1600,7 +1562,7 @@ public sealed class ModEntry : Mod
         if (!this.SaveExternalStateNow())
         {
             this.registry.BindCompanion(animalId);
-            this.Monitor.Log("Could not save the dismissal to the mod folder; the companion binding was restored.", LogLevel.Error);
+            this.Monitor.Log("Could not save the dismissal to mod save data; the companion binding was restored.", LogLevel.Error);
             return;
         }
 
@@ -1655,7 +1617,7 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        Item breeder = ItemRegistry.Create(ConverterContent.BreederQualifiedId);
+        Item breeder = ItemRegistry.Create(RanchingItemContent.BreederQualifiedId);
         if (!Game1.player.couldInventoryAcceptThisItem(breeder) || !Game1.player.addItemToInventoryBool(breeder))
         {
             this.Monitor.Log("Make room in your inventory for the Slime Breeder, then try again.", LogLevel.Warn);
@@ -1680,7 +1642,7 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        Item incubator = ItemRegistry.Create(ConverterContent.IncubatorQualifiedId);
+        Item incubator = ItemRegistry.Create(RanchingItemContent.IncubatorQualifiedId);
         if (!Game1.player.couldInventoryAcceptThisItem(incubator) || !Game1.player.addItemToInventoryBool(incubator))
         {
             this.Monitor.Log("Make room in your inventory for the Slime Incubator, then try again.", LogLevel.Warn);
@@ -2032,7 +1994,7 @@ public sealed class ModEntry : Mod
         }
 
         string schemaVersion = this.stateStore!.LoadedSchemaVersion?.ToString() ?? "not written yet";
-        this.Monitor.Log($"External registry schema on disk: {schemaVersion}; target for this build: {SlimeSaveData.CurrentSchemaVersion}.", LogLevel.Info);
+        this.Monitor.Log($"SMAPI save-data schema: {schemaVersion}; target for this build: {SlimeSaveData.CurrentSchemaVersion}.", LogLevel.Info);
 
         if (args.Length == 1)
         {
@@ -2056,7 +2018,7 @@ public sealed class ModEntry : Mod
         if (Game1.currentLocation is SlimeHutch hutch)
         {
             int slimeCount = hutch.characters.OfType<GreenSlime>().Count();
-            this.Monitor.Log($"This vanilla Slime Hutch contains {slimeCount} GreenSlime monster(s), all left unchanged. Ranch Slimes live in the separate Slime Daycare; the external registry contains {loadedRegistry.Count} Ranch Slime genome record(s).", LogLevel.Info);
+            this.Monitor.Log($"This vanilla Slime Hutch contains {slimeCount} GreenSlime monster(s), all left unchanged. Ranch Slimes live in the separate Slime Daycare; save data contains {loadedRegistry.Count} Ranch Slime record(s).", LogLevel.Info);
             return;
         }
 
@@ -2075,7 +2037,7 @@ public sealed class ModEntry : Mod
             int activeMutations = loadedRegistry.MutagenicAttempts.Count(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal));
             int activeRefineryBatches = loadedRegistry.RefineryJobs.Count(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal));
             int mutatedResidents = residents.Count(animal => loadedRegistry.GetMutationTrait(animal.myID.Value) is not null);
-            this.Monitor.Log($"This animal house contains {residents.Length} Ranch Slime(s), including {mutatedResidents} with mutation traits. The external genome registry contains {loadedRegistry.Count} Ranch Slime record(s).", LogLevel.Info);
+            this.Monitor.Log($"This animal house contains {residents.Length} Ranch Slime(s), including {mutatedResidents} with mutation traits. Save data contains {loadedRegistry.Count} Ranch Slime record(s).", LogLevel.Info);
             this.Monitor.Log($"Jobs in this room: {activeCycles} breeder cycle(s), {readyEggs} ready egg(s), {activeIncubations} incubation(s), {activeMutations} Mutagenic Pool attempt(s), {activeRefineryBatches} Gel Refinery batch(es).", LogLevel.Info);
 
             foreach (BreedingPairRecord pair in roomBreedingPairs)

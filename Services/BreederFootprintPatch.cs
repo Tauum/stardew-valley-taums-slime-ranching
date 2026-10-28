@@ -51,7 +51,7 @@ internal static class BreederPlacementBoundsPatch
 {
     private static bool Prefix(StardewValley.Object __instance, SpriteBatch spriteBatch, GameLocation location)
     {
-        if (__instance.QualifiedItemId != ConverterContent.BreederQualifiedId)
+        if (__instance.QualifiedItemId != RanchingItemContent.BreederQualifiedId)
             return true;
 
         Vector2 anchor = __instance.TileLocation + new Vector2(BreederFootprintGeometry.AnchorOffsetX, 0);
@@ -65,7 +65,7 @@ internal static class BreederPlacementActionPatch
 {
     private static bool Prefix(StardewValley.Object __instance, GameLocation location, ref int x, ref int y, Farmer who, ref bool __result)
     {
-        if (__instance.QualifiedItemId != ConverterContent.BreederQualifiedId)
+        if (__instance.QualifiedItemId != RanchingItemContent.BreederQualifiedId)
             return true;
 
         int cursorTileX = (int)Math.Floor(x / (double)BreederFootprintGeometry.TileSize);
@@ -124,7 +124,7 @@ internal static class BreederToolRemovalGeometry
                 continue;
 
             if (!location.Objects.TryGetValue(anchor, out StardewValley.Object? obj)
-                || obj.QualifiedItemId != ConverterContent.BreederQualifiedId)
+                || obj.QualifiedItemId != RanchingItemContent.BreederQualifiedId)
                 continue;
 
             // Axe and pickaxe resolve the object using the tile derived from x/y.

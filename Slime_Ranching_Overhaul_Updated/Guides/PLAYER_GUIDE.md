@@ -1,12 +1,14 @@
 # Slime Ranching Overhaul — Player Guide
 
+> **2.0 redesign in progress:** the current 1.x build still uses the storage and prototype behavior described below. The `feature/2.0-save-data` branch is not deployed yet. Its intended storage is per-save SMAPI data for facility jobs, Ranch Slime entity metadata for slime identity/genomes, and item metadata for each egg. The old install-folder registry is retained read-only during migration. Test this branch only on a copied save; this guide will be revised after migration is verified.
+
 This guide covers the current early prototype. The Slime Breeder can reserve two Ranch Slimes, run a two-day cycle, and produce an externally registered egg. A genome-specific egg can hatch in the Slime Incubator; managed slime behavior beyond breeding and basic animal behavior is still under development.
 
 ## Before you start
 
-- Test on a copied save. The converter itself leaves unused vanilla eggs alone, but its output is a custom mod item saved in the game save.
+- Test on a copied save. Vanilla Slime Eggs remain unchanged; Ranch Slime Eggs are created by the domesticated breeding system.
 - Back up `<installed mod folder>/data` before replacing or removing the mod. It contains the external slime registry and first-seen snapshots.
-- Marnie sells the Converter, Breeder, Incubator, Slime Trampoline, and Slime Cushion. Prices are configurable in `config.json` and provisional. Nearby Ranch Slimes may bounce on trampolines or briefly squish on cushions; these animations are decorative and do not change happiness or breeding outcomes.
+- The prototype shop sells the Breeder, Incubator, Slime Trampoline, and Slime Cushion. Prices are configurable in `config.json` and provisional. Nearby Ranch Slimes may bounce on trampolines or briefly squish on cushions; these animations are decorative and do not change happiness or breeding outcomes.
 - Marnie also sells a Slime Playground. Two nearby Ranch Slimes can hop together on it; the interaction is decorative and currently grants no friendship or happiness bonus.
 - Marnie also sells a Slime Slide. Nearby Ranch Slimes can do a small hop and horizontal glide down it; the effect is decorative.
 - Marnie also sells a Slime Bed. Nearby Ranch Slimes can settle briefly into a resting pose; it has no gameplay effect yet.
@@ -19,46 +21,20 @@ This guide covers the current early prototype. The Slime Breeder can reserve two
 - Marnie also sells a Slime Swing. Nearby idle slimes briefly sway on it; use `slime_ranching_give_swing <save name>` to test it. This is a visual interaction only.
 - Chromatic Crystals can focus a breeder cycle on a base offspring color. They are currently test-only items; use the SMAPI command `slime_ranching_give_crystals <save name>` while on a disposable save.
 - Ranch Slime offspring and genome-specific egg icons use a tint selected from the external genome color. The seven base colors and six hybrid recipes are supported; hybrid sprites still use the nearest base tint rather than continuous RGB blending.
-- The Egg Converter, Slime Incubator, Gel Refinery, and Mutagenic Pool use 3×2 placement and collision areas. The Slime Breeder retains its 5×2 footprint.
-
-## Slime Egg Converter
-
-The Slime Egg Converter turns one vanilla Slime Egg into one **Common Slime Egg** after ten in-game minutes.
-
-### Get and place a converter
-
-To obtain a Converter through normal play, buy one from Marnie at her Ranch. For a test copy, open the SMAPI console while the save is loaded and run:
-
-```text
-slime_ranching_give_converter <exact save folder name>
-```
-
-For the test copy used during development:
-
-```text
-slime_ranching_give_converter TaumTest_322865388
-```
-
-Place the converter somewhere you can access. You don't need to be in the Slime Hutch.
-
-### Convert an egg
-
-Put one green, blue, red, purple, or tiger Slime Egg into the converter. Collect the Common Slime Egg when processing finishes. Eggs elsewhere—in inventory, chests, treasure, drops, or the original Slime Egg-Press—remain vanilla eggs unless you put them into this converter.
-
-The vanilla Coop Incubator does not hatch mod eggs; use the custom Slime Incubator below.
+- The Slime Incubator, Gel Refinery, and Mutagenic Pool use 3×2 placement and collision areas. The Slime Breeder retains its 5×2 footprint.
 
 ## Slime Incubator
 
-The Slime Incubator accepts a Common Slime Egg or a genome-specific Ranch Slime Egg from the player's inventory. Vanilla Slime Eggs are not accepted.
+The Slime Incubator accepts a genome-specific Ranch Slime Egg from the player's inventory. Vanilla Slime Eggs are not accepted.
 
 1. Request a testing incubator with `slime_ranching_give_incubator <exact save folder name>`.
 2. Place it inside the Slime Daycare. Use it while holding a genome-specific egg in your inventory; select the egg in the menu.
-3. The egg is removed from inventory; sleep to save the incubator job in the mod-folder registry. A Common Egg receives a fresh Green, Normal, Common genome at insertion. A breeder egg keeps its existing genome. Both hatch automatically at the start of the day after 15 days by default. The incubation duration can be changed in the mod settings; active cycles keep the ready date they started with.
+3. The egg is removed from inventory; sleep to save the incubator job in the mod-folder registry. Its stored genome is preserved and hatches automatically at the start of the day after 15 days by default. The incubation duration can be changed in the mod settings; active cycles keep the ready date they started with.
 4. The new Ranch Slime appears in the Daycare with the egg's stored genome. If the Daycare is full, the ready hatch waits until space is available.
 
 Ranch Slimes mature after **28 in-game days**. The breeder marks growing slimes in its list and won't let them be selected. The testing spawn command lets you choose an age from 0 to 28 days.
 
-An egg's genome ID can hatch only once, so copied breeder egg items with that same ID become inactive after the first hatch. Each Common Egg insertion creates a separate genome ID. Vanilla eggs are unaffected. The incubator's 15-day default duration and full-Daycare behavior are provisional for playtesting.
+An egg's genome ID can hatch only once, so copied breeder egg items with that same ID become inactive after the first hatch. Vanilla eggs are unaffected. The incubator's 15-day default duration and full-Daycare behavior are provisional for playtesting.
 
 ### Test egg command
 
@@ -167,7 +143,7 @@ slime_ranching_backup_external_data <exact save folder name>
 
 The archive is written under `<installed mod folder>/data/backups/`. It contains the external registry and first-seen snapshot, not the vanilla Stardew save. Keep making normal game-save backups separately.
 
-The converter, Field Guide, and Common Slime Egg are custom item references in the Stardew save. If the mod is removed while one remains in a save, Stardew will show it as an Error Item. The Slime Daycare building and Ranch Slime animals are native game entities saved by Stardew. Existing `GreenSlime` monsters are not matched or changed. Ranch Slime genome records are stored externally and keyed by the native FarmAnimal ID; normal farm-animal properties remain in the save.
+The Field Guide, Slime Breeder, Slime Incubator, and genome-specific Ranch Slime Eggs are custom item references in the Stardew save. If the mod is removed while one remains in a save, Stardew will show it as an Error Item. The Slime Daycare building and Ranch Slime animals are native game entities saved by Stardew. Existing `GreenSlime` monsters are not matched or changed. Ranch Slime genome records are stored externally and keyed by the native FarmAnimal ID; normal farm-animal properties remain in the save.
 
 ## Development book status
 

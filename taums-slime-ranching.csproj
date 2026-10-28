@@ -13,4 +13,9 @@
         <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.4.0" />
     </ItemGroup>
 
+    <!-- The junction is a read-only reference tree, never part of the mod build. -->
+    <ItemGroup>
+        <Compile Remove="decompiled game/**/*.cs" />
+    </ItemGroup>
+
 </Project>
