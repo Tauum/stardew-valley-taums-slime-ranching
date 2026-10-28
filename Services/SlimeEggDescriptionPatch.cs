@@ -17,3 +17,13 @@ internal static class SlimeEggDescriptionPatch
         __result = Game1.parseText(description, Game1.smallFont, tooltipWidth);
     }
 }
+
+[HarmonyPatch(typeof(StardewValley.Object), "loadDisplayName")]
+internal static class SlimeEggNamePatch
+{
+    private static void Postfix(StardewValley.Object __instance, ref string __result)
+    {
+        if (SlimeEggContent.TryReadRecord(__instance, out _))
+            __result = SlimeEggContent.DomesticatedSlimeEggName;
+    }
+}
