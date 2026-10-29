@@ -251,11 +251,14 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             ? genome.PrimarySpecies
             : $"{genome.PrimarySpecies} / {genome.SecondarySpecies}";
         int ageDays = selectedRecord.AgeClockInitialized ? selectedRecord.AgeDays : selectedAnimal.age.Value;
+        string parentA = FormatParent(genome.ParentAName, genome.ParentA);
+        string parentB = FormatParent(genome.ParentBName, genome.ParentB);
         string[] details =
         {
             $"FarmAnimal ID: {selectedAnimal.myID.Value}",
             $"Species: {speciesName}",
             $"Genome ID: {genome.Id:N}",
+            $"Parents: {parentA} + {parentB}",
             $"Generation {genome.Generation} | abilities: {(genome.AbilityIds.Count == 0 ? "none" : string.Join(" + ", genome.AbilityIds))}",
             $"Color {genome.VisualColor} | size {genome.Size} | rarity {genome.RarityTier} | shiny {genome.IsShiny}",
             $"Mutation: {genome.MutationTrait ?? "none"}",
@@ -386,6 +389,14 @@ internal sealed class DaycareManagementMenu : IClickableMenu
 
     private int CountPlaced(string qualifiedItemId) =>
         this.daycare.Objects.Values.Count(obj => obj.QualifiedItemId == qualifiedItemId);
+
+    private static string FormatParent(string? name, Guid? genomeId)
+    {
+        if (genomeId is Guid id && id != Guid.Empty)
+            return string.IsNullOrWhiteSpace(name) ? $"ID {id:N}" : $"{name} [{id:N}]";
+
+        return string.IsNullOrWhiteSpace(name) ? "unrecorded" : name;
+    }
 
     private List<WikiEntry> GetVisibleWikiEntries() =>
         WikiEntries.Where(entry => entry.Category == this.activeWikiCategory).ToList();
