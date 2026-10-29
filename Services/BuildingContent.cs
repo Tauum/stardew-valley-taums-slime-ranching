@@ -86,7 +86,7 @@ internal static class BuildingContent
             upgrade1.BuildCondition = "";
             upgrade1.Name = "Slime Daycare - Upgrade 1";
             upgrade1.NameForGeneralType = "Slime Daycare";
-            upgrade1.Description = "An expanded interior with room for more Ranch Slimes.";
+            upgrade1.Description = "Expands the farmhouse-style interior for up to 20 Ranch Slimes.";
             upgrade1.BuildingToUpgrade = SlimeDaycareBuildingId;
             upgrade1.IndoorMap = "FarmHouse1";
             upgrade1.MaxOccupants = 20;
@@ -99,7 +99,7 @@ internal static class BuildingContent
             upgrade2.BuildCondition = "";
             upgrade2.Name = "Slime Daycare - Upgrade 2";
             upgrade2.NameForGeneralType = "Slime Daycare";
-            upgrade2.Description = "The largest interior, with room for even more Ranch Slimes.";
+            upgrade2.Description = "Rebuilds the main floor in the largest farmhouse-style layout; capacity stays at 20.";
             upgrade2.BuildingToUpgrade = SlimeDaycareUpgrade1Id;
             upgrade2.IndoorMap = "FarmHouse2";
             upgrade2.MaxOccupants = 20;
@@ -112,7 +112,7 @@ internal static class BuildingContent
             upgrade3.BuildCondition = "";
             upgrade3.Name = "Slime Daycare - Cellar";
             upgrade3.NameForGeneralType = "Slime Daycare";
-            upgrade3.Description = "Adds the farmhouse cellar beneath the Daycare.";
+            upgrade3.Description = "Adds the cellar and raises the Daycare's capacity to 30 Ranch Slimes.";
             upgrade3.BuildingToUpgrade = SlimeDaycareUpgrade2Id;
             upgrade3.IndoorMap = "FarmHouse2";
             upgrade3.MaxOccupants = 30;
