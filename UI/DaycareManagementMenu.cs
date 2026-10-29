@@ -277,6 +277,9 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         {
             this.firstResident = Math.Clamp(this.firstResident + (direction < 0 ? 1 : -1),
                 0, Math.Max(0, this.residents.Count - VisibleRows));
+            if (this.selectedResidentIndex < this.firstResident
+                || this.selectedResidentIndex >= this.firstResident + VisibleRows)
+                this.selectedResidentIndex = this.firstResident;
         }
         else if (this.activeSection == "SLIME WIKI" && this.wikiRows.Contains(mouseX, mouseY))
         {
