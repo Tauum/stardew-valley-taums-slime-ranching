@@ -302,16 +302,16 @@ internal sealed class SlimeBreederMenu : IClickableMenu
             FarmAnimal animal = this.candidates[i];
             int rowY = this.listTop + (i - this.firstVisibleCandidate) * 46;
             bool isSelected = this.selected.Contains(animal.myID.Value);
-            bool canBreed = this.registry.TryGetSlimeRecord(animal.myID.Value, out SlimeRecord record)
-                && BreedingRules.IsBreedable(record.Genome);
+            bool hasGenome = this.registry.TryGetSlimeRecord(animal.myID.Value, out SlimeRecord record);
+            bool canBreed = hasGenome && BreedingRules.IsBreedable(record.Genome);
             int rest = this.registry.GetBreedingRestDays(animal.myID.Value, Game1.Date.TotalDays);
             int growth = this.GetGrowthDaysRemaining(animal);
             Rectangle row = new(this.xPositionOnScreen + 634, rowY, 322, 41);
             DrawPanel(b, row, !canBreed || growth > 0 || rest > 0 ? new Color(63, 66, 94) : isSelected ? new Color(74, 119, 161) : new Color(46, 67, 121), isSelected ? new Color(151, 220, 255) : new Color(87, 118, 177));
             string label = growth > 0 ? $"{animal.Name} · {growth}d to maturity" : rest > 0 ? $"{animal.Name} · resting {rest}d" : $"{(isSelected ? "♥ " : "＋ ")}{animal.Name}";
             b.DrawString(Game1.smallFont, label, new Vector2(row.X + 11, row.Y + 9), Color.White);
-            if (!canBreed)
-                b.DrawString(Game1.tinyFont, "Cannot breed", new Vector2(row.X + 11, row.Y + 25), new Color(245, 173, 151));
+            string detail = hasGenome ? FormatCandidateGenome(record.Genome, canBreed) : "Cannot breed - genome unavailable";
+            DrawFittedText(b, detail, new Rectangle(row.X + 8, row.Y + 25, row.Width - 16, 14));
         }
         if (this.candidates.Count > visibleCount)
             b.DrawString(Game1.tinyFont, $"Scroll · {this.firstVisibleCandidate + 1}-{end} / {this.candidates.Count}", new Vector2(this.xPositionOnScreen + 738, this.listBottom - 14), Color.LightBlue);
@@ -548,6 +548,23 @@ internal sealed class SlimeBreederMenu : IClickableMenu
             new Vector2(bounds.Center.X - measured.X * scale / 2f, bounds.Center.Y - measured.Y * scale / 2f), Game1.textColor,
             0f, Vector2.Zero, scale, SpriteEffects.None, 0.999f);
     }
+
+    private static string FormatCandidateGenome(SlimeGenome genome, bool canBreed)
+    {
+        string primary = RemoveSlimeSuffix(genome.PrimarySpecies);
+        string species = genome.SecondarySpecies is string secondary
+            ? $"{primary}/{RemoveSlimeSuffix(secondary)} Hybrid"
+            : genome.PrimarySpecies;
+        if (!canBreed)
+            return $"Cannot breed - {species}";
+
+        IReadOnlyList<string> abilities = SlimeAbilityCatalog.GetAbilityNames(
+            genome.PrimarySpecies, genome.SecondarySpecies, genome.VisualColor);
+        return abilities.Count == 0 ? $"{species} - no ability" : $"{species} - {string.Join(" + ", abilities)}";
+    }
+
+    private static string RemoveSlimeSuffix(string species) =>
+        species.EndsWith(" Slime", StringComparison.OrdinalIgnoreCase) ? species[..^6] : species;
 
     private void DrawCrystalSelector(SpriteBatch b)
     {
