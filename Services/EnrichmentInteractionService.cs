@@ -44,7 +44,10 @@ internal sealed class EnrichmentInteractionService
             this.StopActiveInteractions();
             this.activeDay = Game1.Date.TotalDays;
         }
-        this.UpdateActiveInteractions(house, (float)time.ElapsedGameTime.TotalSeconds * (10f / 7f), registry);
+        float elapsedGameMinutes = Game1.shouldTimePass()
+            ? (float)time.ElapsedGameTime.TotalSeconds * (10f / 7f)
+            : 0f;
+        this.UpdateActiveInteractions(house, elapsedGameMinutes, registry);
         if (++this.assignmentTicks < AssignmentIntervalTicks)
             return;
         this.assignmentTicks = 0;
