@@ -46,10 +46,14 @@ internal sealed class EnrichmentInteractionService
         }
         int millisecondsPerGameTenMinutes = Game1.realMilliSecondsPerGameTenMinutes
             + house.ExtraMillisecondsPerInGameMinute * 10;
-        float elapsedGameMinutes = Game1.shouldTimePass() && millisecondsPerGameTenMinutes > 0
+        bool clockAdvancing = Game1.shouldTimePass();
+        float elapsedGameMinutes = clockAdvancing && millisecondsPerGameTenMinutes > 0
             ? (float)time.ElapsedGameTime.TotalMilliseconds * (10f / millisecondsPerGameTenMinutes)
             : 0f;
         this.UpdateActiveInteractions(house, elapsedGameMinutes, registry);
+        if (!clockAdvancing)
+            return;
+
         if (++this.assignmentTicks < AssignmentIntervalTicks)
             return;
         this.assignmentTicks = 0;
