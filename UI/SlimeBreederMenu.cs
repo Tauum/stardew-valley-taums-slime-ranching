@@ -16,7 +16,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
     private readonly HashSet<long> selected = new();
     private readonly SlimeRegistry registry;
     private readonly string machineKey;
-    private readonly Func<bool> saveExternalState;
+    private readonly Func<bool> saveCurrentSaveData;
     private readonly Func<Guid, Item> createEggItem;
     private readonly int cycleDurationDays;
     private readonly int listTop;
@@ -35,7 +35,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
     {
         this.registry = registry;
         this.machineKey = machineKey;
-        this.saveExternalState = saveExternalState;
+        this.saveCurrentSaveData = saveExternalState;
         this.createEggItem = createEggItem;
         this.cycleDurationDays = Math.Max(1, cycleDurationDays);
         StardewValley.Buildings.Building? daycare = Game1.getFarm().buildings.FirstOrDefault(building =>
@@ -159,7 +159,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
                     {
                         if (this.registry.CancelBreedingCycle(this.machineKey))
                         {
-                            if (this.saveExternalState())
+                            if (this.saveCurrentSaveData())
                             {
                                 this.selected.Clear();
                                 this.pairReserved = false;
@@ -645,7 +645,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
                 Game1.player.Items[crystalSlot] = null;
         }
 
-        if (this.saveExternalState())
+        if (this.saveCurrentSaveData())
             return true;
 
         this.registry.CancelBreedingCycle(this.machineKey);
@@ -695,14 +695,14 @@ internal sealed class SlimeBreederMenu : IClickableMenu
             string? parentBName = this.candidates.FirstOrDefault(animal => animal.myID.Value == pair.ParentBId)?.Name;
             SlimeEggRecord? egg = this.registry.GetOrCreateBreedingEgg(
                 this.machineKey, Game1.Date.TotalDays, parentAName, parentBName, out _);
-            if (egg is null || !this.saveExternalState())
+            if (egg is null || !this.saveCurrentSaveData())
             {
                 this.statusMessage = "Could not save the fixed offspring genome; try again.";
                 return;
             }
 
             Item item = this.createEggItem(egg.Genome.Id);
-            if (!this.registry.FinishBreedingCycle(this.machineKey, egg.ItemId, Game1.Date.TotalDays) || !this.saveExternalState())
+            if (!this.registry.FinishBreedingCycle(this.machineKey, egg.ItemId, Game1.Date.TotalDays) || !this.saveCurrentSaveData())
             {
                 this.registry.RestoreBreedingCycle(pair, Game1.Date.TotalDays);
                 this.statusMessage = "Could not save egg collection; the egg remains ready in the breeder.";
@@ -712,7 +712,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
             if (!Game1.player.addItemToInventoryBool(item))
             {
                 this.registry.RestoreBreedingCycle(pair, Game1.Date.TotalDays);
-                this.saveExternalState();
+                this.saveCurrentSaveData();
                 this.statusMessage = "Inventory is full; the egg remains ready in the breeder.";
                 return;
             }

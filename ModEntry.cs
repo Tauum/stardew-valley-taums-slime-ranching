@@ -132,7 +132,7 @@ public sealed class ModEntry : Mod
                 this.Monitor.Log("Migrated the saved Ranch Slime data to the current schema.", LogLevel.Info);
             if (needsPersistenceMigration || registeredRanchSlimes > 0 || recoveredHatches > 0 || detachedAnimals > 0 || cancelledCycles > 0 || maturityChanged || rareLabProgressionChanged || eggCryoLabRecordsChanged || repairTransactionRecovered || incubationCancellationRecovered || mutagenicContributionRecovered || rareLabContributionRecovered || rareLabCatalystRecovered || refineryTransactionRecovered || constructionProgressChanged || repairQuestProgressChanged)
             {
-                if (!this.SaveExternalStateNow())
+                if (!this.SaveCurrentSaveDataNow())
                     this.Monitor.Log("Imported or reconciled Ranch Slime state remains in memory but could not yet be written to the current save.", LogLevel.Error);
                 else
                 {
@@ -278,7 +278,7 @@ public sealed class ModEntry : Mod
                 || refineryTransactionRecovered || constructionProgressChanged || repairQuestProgressChanged;
             if (needsSave)
             {
-                if (!this.SaveExternalStateNow())
+                if (!this.SaveCurrentSaveDataNow())
                     this.Monitor.Log("Could not save Ranch Slime or Sanctuary quest progress; it will retry at the next save.", LogLevel.Error);
                 else
                 {
@@ -296,7 +296,7 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        if (!this.SaveExternalStateNow())
+        if (!this.SaveCurrentSaveDataNow())
         {
             foreach (var ready in readyToNotify)
                 ready.Pair.ReadyNotificationSent = false;
@@ -405,7 +405,7 @@ public sealed class ModEntry : Mod
             return false;
 
         this.registry.SanctuaryQuest.MaruRepairQuestAvailableOnDay = Game1.Date.TotalDays + 1;
-        if (this.SaveExternalStateNow())
+        if (this.SaveCurrentSaveDataNow())
             return true;
 
         this.registry.RemoveSanctuaryMilestone(SanctuaryQuestProgression.RobinPoolPrompt);
@@ -423,7 +423,7 @@ public sealed class ModEntry : Mod
 
         Game1.player.modData[SanctuaryQuestContent.RepairDeliveryReceiptKey] = "1";
         if (!this.registry.TryCompleteSanctuaryMilestone(SanctuaryQuestProgression.MaruRepairCompleted)
-            || !this.SaveExternalStateNow())
+            || !this.SaveCurrentSaveDataNow())
         {
             Game1.player.modData.Remove(SanctuaryQuestContent.RepairDeliveryReceiptKey);
             this.registry.RemoveSanctuaryMilestone(SanctuaryQuestProgression.MaruRepairCompleted);
@@ -667,7 +667,7 @@ public sealed class ModEntry : Mod
         string? transactionId = this.registry.BeginMutagenicContribution(machineKey, MutagenicPoolRules.Instance);
         if (transactionId is null)
             return false;
-        if (!this.SaveExternalStateNow())
+        if (!this.SaveCurrentSaveDataNow())
         {
             this.registry.FinalizeMutagenicContribution(transactionId);
             return false;
@@ -681,13 +681,13 @@ public sealed class ModEntry : Mod
         string receiptKey = MutagenicContributionReceiptPrefix + transactionId;
         if (applied)
             Game1.player.modData[receiptKey] = "1";
-        if (applied && this.SaveExternalStateNow())
+        if (applied && this.SaveCurrentSaveDataNow())
             return true;
 
         this.registry.RollbackMutagenicContribution(transactionId);
         Game1.player.modData.Remove(receiptKey);
         RestoreInventorySnapshot(inventorySnapshot);
-        if (!this.SaveExternalStateNow())
+        if (!this.SaveCurrentSaveDataNow())
             this.Monitor.Log("Could not persist the rollback after a Mutagenic Pool contribution save failure; the prior chance and inventory were restored in memory and will be reconciled on reload.", LogLevel.Error);
         return false;
     }
@@ -701,7 +701,7 @@ public sealed class ModEntry : Mod
         string? transactionId = this.registry.BeginRareLabContribution(machineKey, Game1.Date.TotalDays);
         if (transactionId is null)
             return false;
-        if (!this.SaveExternalStateNow())
+        if (!this.SaveCurrentSaveDataNow())
         {
             this.registry.FinalizeRareLabContribution(transactionId);
             return false;
@@ -715,13 +715,13 @@ public sealed class ModEntry : Mod
         string receiptKey = RareLabContributionReceiptPrefix + transactionId;
         if (applied)
             Game1.player.modData[receiptKey] = "1";
-        if (applied && this.SaveExternalStateNow())
+        if (applied && this.SaveCurrentSaveDataNow())
             return true;
 
         this.registry.RollbackRareLabContribution(transactionId);
         Game1.player.modData.Remove(receiptKey);
         RestoreInventorySnapshot(inventorySnapshot);
-        if (!this.SaveExternalStateNow())
+        if (!this.SaveCurrentSaveDataNow())
             this.Monitor.Log("Could not persist the rollback after a Rare Lab contribution save failure; the prior chance and inventory were restored in memory and will be reconciled on reload.", LogLevel.Error);
         return false;
     }
@@ -736,7 +736,7 @@ public sealed class ModEntry : Mod
             machineKey, RareLabRules.GoldCatalystSpecies, Game1.Date.TotalDays);
         if (transactionId is null)
             return false;
-        if (!this.SaveExternalStateNow())
+        if (!this.SaveCurrentSaveDataNow())
         {
             this.registry.FinalizeRareLabCatalystTransaction(transactionId);
             return false;
@@ -750,13 +750,13 @@ public sealed class ModEntry : Mod
         string receiptKey = RareLabCatalystReceiptPrefix + transactionId;
         if (applied)
             Game1.player.modData[receiptKey] = "1";
-        if (applied && this.SaveExternalStateNow())
+        if (applied && this.SaveCurrentSaveDataNow())
             return true;
 
         this.registry.RollbackRareLabCatalystTransaction(transactionId);
         Game1.player.modData.Remove(receiptKey);
         RestoreInventorySnapshot(inventorySnapshot);
-        if (!this.SaveExternalStateNow())
+        if (!this.SaveCurrentSaveDataNow())
             this.Monitor.Log("Could not persist the rollback after a Rare Lab catalyst save failure; the catalyst and inventory were restored in memory and will be reconciled on reload.", LogLevel.Error);
         return false;
     }
@@ -866,7 +866,7 @@ public sealed class ModEntry : Mod
 
         if (e.IsMultipleOf(60) && this.DiscardBreederPairsForMissingMachines())
         {
-            if (!this.SaveExternalStateNow())
+            if (!this.SaveCurrentSaveDataNow())
                 this.Monitor.Log("Removed breeder cycles remain cleared in memory, but save data could not be written yet.", LogLevel.Error);
         }
 
@@ -902,7 +902,7 @@ public sealed class ModEntry : Mod
         if (!removedBreederPair && !rareLabProgressionChanged)
             return;
 
-        if (this.SaveExternalStateNow())
+        if (this.SaveCurrentSaveDataNow())
         {
             if (removedBreederPair)
                 this.Monitor.Log("The Slime Breeder was removed; its cycle and pending egg were discarded, and its parents are free to roam. A replacement starts with a blank selection.", LogLevel.Info);
@@ -1149,7 +1149,7 @@ public sealed class ModEntry : Mod
         return this.registry!.SynchronizeRareLabs(incubatorMachineKeys, BuildingContent.GetUpgradeTier(buildingType));
     }
 
-    private bool SaveExternalStateNow()
+    private bool SaveCurrentSaveDataNow()
     {
         if (!this.stateReady || !Context.IsMainPlayer)
             return false;
@@ -1250,7 +1250,7 @@ public sealed class ModEntry : Mod
 
         string receiptKey = IncubationCancellationReceiptPrefix + cancelled.EggItemId;
         Game1.player.modData[receiptKey] = "1";
-        if (this.SaveExternalStateNow())
+        if (this.SaveCurrentSaveDataNow())
         {
             Game1.playSound("smallSelect");
             return true;
@@ -1259,7 +1259,7 @@ public sealed class ModEntry : Mod
         bool restored = this.registry.RestoreCancelledIncubation(cancelled);
         Game1.player.modData.Remove(receiptKey);
         RestoreInventorySnapshot(inventorySnapshot);
-        if (!this.SaveExternalStateNow())
+        if (!this.SaveCurrentSaveDataNow())
             this.Monitor.Log("Could not persist the rollback after an incubator cancellation save failure; the incubation was restored in memory and will be retried on the next save.", LogLevel.Error);
         if (!restored)
             this.Monitor.Log($"Could not restore cancelled incubation '{machineKey}' after a save failure.", LogLevel.Error);
@@ -1292,7 +1292,7 @@ public sealed class ModEntry : Mod
         if (recovered > 0)
         {
             this.Monitor.Log($"Confirmed {recovered} previous Ranch Slime hatch(es) against live animal IDs.", LogLevel.Info);
-            if (!this.SaveExternalStateNow())
+            if (!this.SaveCurrentSaveDataNow())
                 this.Monitor.Log("The confirmed hatch could not be finalized in save data; its reserved hatch record will be checked again on reload.", LogLevel.Error);
             this.InvalidateEggObjectData();
         }
@@ -1330,10 +1330,10 @@ public sealed class ModEntry : Mod
                     continue;
                 }
 
-                if (!this.SaveExternalStateNow())
+                if (!this.SaveCurrentSaveDataNow())
                 {
                     this.registry.RollbackIncubationOutcome(incubation.MachineKey, previousLab);
-                    if (!this.SaveExternalStateNow())
+                    if (!this.SaveCurrentSaveDataNow())
                         this.Monitor.Log($"Could not persist the rollback after a Rare Lab outcome save failure for incubator '{incubation.MachineKey}'. Its chance state was restored in memory; reconciliation will retry on reload.", LogLevel.Error);
                     else
                         this.Monitor.Log($"Could not persist the Rare Lab outcome for incubator '{incubation.MachineKey}'. Its chance state was restored and the roll will retry later.", LogLevel.Error);
@@ -1354,7 +1354,7 @@ public sealed class ModEntry : Mod
             if (incubation.HatchAnimalId is null)
             {
                 if (!this.registry.AssignHatchAnimalId(incubation.MachineKey, animalId)
-                    || !this.SaveExternalStateNow())
+                    || !this.SaveCurrentSaveDataNow())
                 {
                     this.registry.ClearHatchAnimalId(incubation.MachineKey);
                     this.Monitor.Log("Could not reserve an external native ID for a ready Ranch Slime hatch; it will retry tomorrow.", LogLevel.Error);
@@ -1365,7 +1365,7 @@ public sealed class ModEntry : Mod
             if (GetFarmAnimals().Any(animal => animal.myID.Value == animalId))
             {
                 this.registry.ClearHatchAnimalId(incubation.MachineKey);
-                this.SaveExternalStateNow();
+                this.SaveCurrentSaveDataNow();
                 this.Monitor.Log($"Could not hatch genome {egg.Genome.Id:N}: reserved FarmAnimal ID {animalId} is already in use. Cleared it so the incubator can retry with a new ID.", LogLevel.Error);
                 continue;
             }
@@ -1386,7 +1386,7 @@ public sealed class ModEntry : Mod
                 continue;
             }
 
-            if (!this.SaveExternalStateNow())
+            if (!this.SaveCurrentSaveDataNow())
                 this.Monitor.Log("The animal hatched, but its updated genome link could not yet be written. The reserved external hatch record will recover it after reload.", LogLevel.Error);
             Game1.addHUDMessage(new HUDMessage($"A {animal.Name} hatched in the Slime Daycare!", HUDMessage.newQuest_type));
             this.Monitor.Log($"A Ranch Slime hatched from genome egg {egg.Genome.Id:N} (FarmAnimal ID {animalId}).", LogLevel.Info);
@@ -1506,7 +1506,7 @@ public sealed class ModEntry : Mod
                 return;
             }
 
-            if (this.SynchronizeRareLabProgression(daycare) && !this.SaveExternalStateNow())
+            if (this.SynchronizeRareLabProgression(daycare) && !this.SaveCurrentSaveDataNow())
                 this.Monitor.Log("The incubator's Rare Lab progression changed in memory but could not yet be saved.", LogLevel.Error);
 
             this.Helper.Input.Suppress(e.Button);
@@ -1529,7 +1529,7 @@ public sealed class ModEntry : Mod
                         animal.Name = previousName;
                         return false;
                     }
-                    if (this.SaveExternalStateNow())
+                    if (this.SaveCurrentSaveDataNow())
                         return true;
                     this.registry.RestoreIncubation(record);
                     animal.Name = previousName;
@@ -1582,12 +1582,12 @@ public sealed class ModEntry : Mod
             this.Helper.Input.Suppress(e.Button);
             string machineKey = $"{Game1.currentLocation.NameOrUniqueName}:{(int)breederAnchor.X},{(int)breederAnchor.Y}";
             if (this.DiscardBreederPairsForMissingMachines(Game1.currentLocation))
-                this.SaveExternalStateNow();
+                this.SaveCurrentSaveDataNow();
             Building? daycare = Game1.getFarm().buildings.FirstOrDefault(building =>
                 BuildingContent.IsSlimeDaycare(building.buildingType.Value)
                 && building.GetIndoors() == Game1.currentLocation);
             int cycleDurationDays = BreedingRules.GetCycleDurationDays(daycare?.buildingType.Value);
-            Game1.activeClickableMenu = new SlimeBreederMenu(this.registry!, machineKey, this.SaveExternalStateNow,
+            Game1.activeClickableMenu = new SlimeBreederMenu(this.registry!, machineKey, this.SaveCurrentSaveDataNow,
                 this.CreateEggItem, cycleDurationDays);
             return;
         }
@@ -1698,7 +1698,7 @@ public sealed class ModEntry : Mod
                 changed |= !wasRegistered;
         }
 
-        if (changed && !this.SaveExternalStateNow())
+        if (changed && !this.SaveCurrentSaveDataNow())
             this.Monitor.Log("Stored Slime Egg records were recovered from the Egg CryoLab chest in memory but could not yet be saved.", LogLevel.Error);
         return changed;
     }
@@ -1743,7 +1743,7 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        if (!this.SaveExternalStateNow())
+        if (!this.SaveCurrentSaveDataNow())
             this.Monitor.Log("An Egg CryoLab transfer is saved with the native chest; its Ranch Slime Egg record can be rebuilt from item metadata if needed.", LogLevel.Warn);
         Game1.playSound("Ship");
         this.OpenEggCryoLabMenu(chest);
@@ -1929,7 +1929,7 @@ public sealed class ModEntry : Mod
 
         try
         {
-            if (!this.SaveExternalStateNow())
+            if (!this.SaveCurrentSaveDataNow())
                 return;
             this.InvalidateEggObjectData();
             foreach (taums_slime_ranching.Models.SlimeEggRecord egg in eggs)
@@ -2136,7 +2136,7 @@ public sealed class ModEntry : Mod
 
         try
         {
-            if (!this.SaveExternalStateNow())
+            if (!this.SaveCurrentSaveDataNow())
                 return;
             this.InvalidateEggObjectData();
             foreach (SlimeEggRecord egg in eggs)
@@ -2224,7 +2224,7 @@ public sealed class ModEntry : Mod
         this.registry!.RegisterRanchSlimes(new[] { animal }, genome);
         this.registry.SynchronizeMaturity(new[] { animal }, Game1.Date.TotalDays);
 
-        if (!this.SaveExternalStateNow())
+        if (!this.SaveCurrentSaveDataNow())
             this.Monitor.Log($"Ranch Slime {animalId} was added, but its entity metadata could not be saved yet.", LogLevel.Error);
         else
             this.Monitor.Log($"Added one {ageDays}-day-old Ranch Slime to the Slime Daycare (FarmAnimal ID {animalId}){(randomTraits ? $" with randomized genome traits ({genome!.PrimarySpecies}, {genome.Size}, {genome.RarityTier}, shiny={genome.IsShiny}, generation={genome.Generation}, mutation={genome.MutationTrait ?? "none"})" : "")}. It is {(ageDays >= FarmAnimalContent.RanchSlimeDaysToMature ? "mature and ready to select in the breeder" : "still growing") }.", LogLevel.Info);
@@ -2315,7 +2315,7 @@ public sealed class ModEntry : Mod
         int previousContribution = lab.ContributionPoints;
         lab.PityPoints = pityPoints;
         lab.ContributionPoints = contributionPoints;
-        if (!this.SaveExternalStateNow())
+        if (!this.SaveCurrentSaveDataNow())
         {
             lab.PityPoints = previousPity;
             lab.ContributionPoints = previousContribution;
@@ -2372,7 +2372,7 @@ public sealed class ModEntry : Mod
         double oldContribution = slime.MutagenicPoolContribution;
         slime.MutagenicPoolFailures = failurePoints;
         slime.MutagenicPoolContribution = contributionPoints / 100.0;
-        if (!this.SaveExternalStateNow())
+        if (!this.SaveCurrentSaveDataNow())
         {
             slime.MutagenicPoolFailures = oldFailures;
             slime.MutagenicPoolContribution = oldContribution;
@@ -2406,7 +2406,7 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        if (!this.SaveExternalStateNow())
+        if (!this.SaveCurrentSaveDataNow())
         {
             this.registry.SetGenomeSize(animalId, oldSize);
             FarmAnimal? animalToRestore = GetFarmAnimals().FirstOrDefault(candidate => candidate.myID.Value == animalId);
@@ -2447,7 +2447,7 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        if (!this.SaveExternalStateNow())
+        if (!this.SaveCurrentSaveDataNow())
         {
             this.registry.SetGenomeShiny(animalId, oldValue);
             this.RefreshRanchSlimeAppearance(animalId);
@@ -2481,7 +2481,7 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        if (!this.SaveExternalStateNow())
+        if (!this.SaveCurrentSaveDataNow())
         {
             this.registry.RestoreGenomeColorState(animalId, oldState.Value);
             this.RefreshRanchSlimeAppearance(animalId);
@@ -2521,7 +2521,7 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        if (!this.SaveExternalStateNow())
+        if (!this.SaveCurrentSaveDataNow())
         {
             this.registry.SetMutationTrait(animalId, oldTrait);
             this.Monitor.Log("Could not save Ranch Slime save data; the original mutation trait was restored.", LogLevel.Error);
@@ -2556,7 +2556,7 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        if (!this.SaveExternalStateNow())
+        if (!this.SaveCurrentSaveDataNow())
         {
             this.registry.UnbindCompanion(animalId);
             this.Monitor.Log("Could not save the binding to mod save data; the slime was unbound again.", LogLevel.Error);
@@ -2587,7 +2587,7 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        if (!this.SaveExternalStateNow())
+        if (!this.SaveCurrentSaveDataNow())
         {
             this.registry.BindCompanion(animalId);
             this.Monitor.Log("Could not save the dismissal to mod save data; the companion binding was restored.", LogLevel.Error);
@@ -3057,13 +3057,13 @@ public sealed class ModEntry : Mod
 
         string receiptKey = RefineryTransactionReceiptPrefix + transaction.Id;
         Game1.player.modData[receiptKey] = System.Text.Json.JsonSerializer.Serialize(transaction);
-        if (this.SaveExternalStateNow())
+        if (this.SaveCurrentSaveDataNow())
             return true;
 
         registry.ResolveRefineryTransaction(transaction.Id, nativeSaveCommitted: false);
         Game1.player.modData.Remove(receiptKey);
         RestoreInventoryItems(removed);
-        if (!this.SaveExternalStateNow())
+        if (!this.SaveCurrentSaveDataNow())
             this.Monitor.Log("Could not persist the Gel Refinery start rollback; inputs and the prior machine state were restored in memory.", LogLevel.Error);
         return false;
     }
@@ -3093,13 +3093,13 @@ public sealed class ModEntry : Mod
 
         string receiptKey = RefineryTransactionReceiptPrefix + transaction.Id;
         Game1.player.modData[receiptKey] = System.Text.Json.JsonSerializer.Serialize(transaction);
-        if (this.SaveExternalStateNow())
+        if (this.SaveCurrentSaveDataNow())
             return true;
 
         registry.ResolveRefineryTransaction(transaction.Id, nativeSaveCommitted: false);
         Game1.player.modData.Remove(receiptKey);
         RestoreInventorySnapshot(inventorySnapshot);
-        if (!this.SaveExternalStateNow())
+        if (!this.SaveCurrentSaveDataNow())
             this.Monitor.Log("Could not persist the Gel Refinery collection rollback; the output and ready batch were restored in memory.", LogLevel.Error);
         return false;
     }
@@ -3450,7 +3450,7 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        if (!this.SaveExternalStateNow())
+        if (!this.SaveCurrentSaveDataNow())
         {
             this.registry.SanctuaryQuest.CompletedMilestones = previousMilestones;
             this.registry.SanctuaryQuest.MaruRepairQuestAvailableOnDay = previousAvailabilityDay;
