@@ -142,6 +142,16 @@ slime_ranching_give_guidebook <exact save folder name>
 
 Select the book and press the action button to open it. It is a custom item reference in the game save, so keep the mod installed while the book remains in that save. This markdown guide has the fuller usage details.
 
+## Daycare Management Desk tester preview
+
+The Registry, Progression, and Slime Wiki sections have a read-only tester preview. To open it, stand inside the Slime Daycare with no other menu open and run this in the SMAPI console, replacing the placeholder with the exact loaded save folder name:
+
+```text
+slime_ranching_open_management_desk <exact save folder name>
+```
+
+The Registry lists resident Ranch Slimes and their genome, status, and current activity. Progression shows the building tier and facilities found in that Daycare. Slime Wiki browses base, hybrid, and rare types; its ability effects are planned companion directions and do not activate in normal play. Press Escape to close the preview. It does not change the save. Furniture editing and opening the menu from a placed desk are still under development.
+
 ## Features still under development
 
 - **Hatching:** Common and genome-specific Ranch Slime Eggs hatch in the custom incubator; vanilla eggs are unaffected.

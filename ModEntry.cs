@@ -60,6 +60,7 @@ public sealed class ModEntry : Mod
         helper.Events.Content.AssetRequested += this.OnAssetRequested;
         helper.Events.Input.ButtonPressed += this.OnButtonPressed;
         helper.ConsoleCommands.Add("slime_ranching_inspect", "Inspect vanilla slime or Ranch Slime counts in the current Slime Hutch or Slime Daycare.", this.OnInspectCommand);
+        helper.ConsoleCommands.Add("slime_ranching_open_management_desk", "Open a read-only tester preview of the Daycare Management Desk. Usage: slime_ranching_open_management_desk <exact save folder name>.", this.OnOpenManagementDeskCommand);
         helper.ConsoleCommands.Add("slime_ranching_quest_status", "Report saved Sanctuary introduction milestones for the current save.", this.OnSanctuaryQuestStatusCommand);
         helper.ConsoleCommands.Add("slime_ranching_test_maru_repair", "On a disposable save with a completed Daycare, seed the prerequisites for testing Robin's Maru repair handoff. Usage: slime_ranching_test_maru_repair <exact save folder name>.", this.OnTestMaruRepairCommand);
         helper.ConsoleCommands.Add("slime_ranching_backup_external_data", "Back up the current save's external mod data. Usage: slime_ranching_backup_external_data <exact save folder name>.", this.OnBackupExternalDataCommand);
@@ -2515,6 +2516,41 @@ public sealed class ModEntry : Mod
         if (animal is not null && this.registry is not null)
             FarmAnimalContent.ApplyAppearance(animal, this.registry.GetGenomeColor(animalId),
                 this.registry.GetGenomeSize(animalId), this.registry.GetGenomeIsShiny(animalId));
+    }
+
+    private void OnOpenManagementDeskCommand(string command, string[] args)
+    {
+        SlimeRegistry? currentRegistry = this.registry;
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady || currentRegistry is null)
+        {
+            this.Monitor.Log("Load a single-player save with available external slime state before opening the Daycare Management Desk preview.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 1 || args[0] != saveName)
+        {
+            this.Monitor.Log($"To open the Daycare Management Desk preview for the current save, use: slime_ranching_open_management_desk {saveName}", LogLevel.Warn);
+            return;
+        }
+
+        if (Game1.activeClickableMenu is not null)
+        {
+            this.Monitor.Log("Close the current menu before opening the Daycare Management Desk preview.", LogLevel.Warn);
+            return;
+        }
+
+        if (Game1.currentLocation is not AnimalHouse daycare
+            || !BuildingContent.IsSlimeDaycare(daycare.ParentBuilding?.buildingType.Value))
+        {
+            this.Monitor.Log("Enter the Slime Daycare before opening its Management Desk preview.", LogLevel.Warn);
+            return;
+        }
+
+        int tier = BuildingContent.GetUpgradeTier(daycare.ParentBuilding?.buildingType.Value);
+        Game1.activeClickableMenu = new DaycareManagementMenu(daycare, currentRegistry, tier,
+            this.trampolineInteractions.GetActiveActivitySummary);
+        this.Monitor.Log("Opened the read-only Daycare Management Desk tester preview.", LogLevel.Info);
     }
 
     private void OnGiveGuidebookCommand(string command, string[] args)
