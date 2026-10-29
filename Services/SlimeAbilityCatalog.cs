@@ -19,11 +19,16 @@ internal static class SlimeAbilityCatalog
 
     public static void Refresh(SlimeGenome genome)
     {
+        genome.AbilityIds = GetAbilityNames(genome.PrimarySpecies, genome.SecondarySpecies, genome.VisualColor).ToList();
+    }
+
+    public static IReadOnlyList<string> GetAbilityNames(string primarySpecies, string? secondarySpecies, string? visualColor)
+    {
         var abilities = new List<string>(2);
-        AddAbility(genome.PrimarySpecies, genome.VisualColor, abilities);
-        if (!string.IsNullOrWhiteSpace(genome.SecondarySpecies))
-            AddAbility(genome.SecondarySpecies, genome.VisualColor, abilities);
-        genome.AbilityIds = abilities.Distinct(StringComparer.Ordinal).ToList();
+        AddAbility(primarySpecies, visualColor, abilities);
+        if (!string.IsNullOrWhiteSpace(secondarySpecies))
+            AddAbility(secondarySpecies, visualColor, abilities);
+        return abilities.Distinct(StringComparer.Ordinal).ToArray();
     }
 
     private static void AddAbility(string species, string? visualColor, List<string> output)

@@ -60,7 +60,7 @@ Reply with any collision, sizing, or warp issues and a screenshot if the room di
 
 ## 2.0 bulk-test check — Feature 5: basic breeder timing
 
-**Status:** New basic-tier cycles use the approved 18-day duration. Existing cycle dates remain unchanged. In-game timing, cancellation, output, and reload checks are pending.
+**Status:** New basic-tier cycles use the approved 18-day duration. Pairing now follows the recorded base/hybrid rules, rare species are rejected, and the menu previews offspring probabilities and abilities. Existing cycle dates remain unchanged. In-game timing, pairing, cancellation, output, and reload checks are pending.
 
 1. On a disposable single-player save with a completed Daycare, run `slime_ranching_spawn_ranch_slime <exact save folder name> 7` twice and note both animal IDs. Run `slime_ranching_give_breeder <exact save folder name>`, place the Breeder in the Daycare, and open it.
 2. Select the two mature Ranch Slimes. Confirm both appear as the selected parents and the basic cycle displays **18 Days**.
@@ -68,6 +68,12 @@ Reply with any collision, sizing, or warp issues and a screenshot if the room di
 4. Sleep five nights. Confirm 13 days remain. Save, return to title, reload, and confirm the same ready date and remaining time are shown.
 5. Before the ready day, cancel the cycle. Confirm no egg is created, both parents are selectable again, and starting a new cycle sets a new 18-day ready date.
 6. Let the replacement cycle reach its ready day. Confirm the egg-ready notice appears, both parents are released into the Daycare, the egg remains collectible once, and the saved genome remains available after reload.
+7. On a disposable copy, spawn two mature parents and set both to Red with `slime_ranching_set_color <exact save folder name> <animal ID> Red`. Select them and verify the preview shows 100% Red with Fighter. Start the cycle and verify the saved egg remains Red.
+8. Reset the parents to Red and Yellow. Verify the preview shows a Red/Yellow hybrid with Fighter and Revealer. Complete the cycle and confirm the egg stores both species and both abilities. Repeat with two different base colors that were absent from the old six-recipe table; they must also form a hybrid.
+9. Create matching hybrid test eggs with `slime_ranching_give_test_eggs <exact save folder name> species=Red secondary=Yellow`. Hatch two distinct eggs in turn, let both Ranch Slimes mature, and breed them. Verify the preview and offspring retain the same Red/Yellow hybrid without adding another ability.
+10. Pair a Red/Yellow hybrid with a mature Blue base slime. Verify the preview lists only the Blue base or the same Red/Yellow hybrid at 50% each; collect several offspring over repeat cycles and confirm each result is one of those two outcomes. Test two different hybrids, Red/Blue and Red/Yellow: the preview should give Red 50%, Blue 25%, and Yellow 25%; all outcomes are single base types.
+11. Create and hatch a `Void` test egg using `slime_ranching_give_test_eggs <exact save folder name> species=Void color=#111111`, then let it mature. Confirm its breeder row says **Cannot breed**, it cannot be selected, and it cannot be reserved through the breeding service. Confirm all ordinary base and hybrid pairings remain available.
+12. Select a Chromatic Crystal for an eligible hybrid pairing. Verify the preview changes to 100% of the chosen base species and its single ability; confirm one crystal is consumed when the cycle starts and the offspring is not hybrid or exceptional.
 
 ## 2.0 bulk-test check — Feature 6: fixed incubator timing and capacity
 

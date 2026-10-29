@@ -27,8 +27,9 @@ This guide covers the current early prototype. The Slime Breeder can reserve two
 - Marnie also sells a Heated Slime Stone. Nearby idle Ranch Slimes can rest beside its ember glow; use `slime_ranching_give_heated_stone <save name>` to test it. It is decorative and does not grant winter or friendship bonuses yet.
 - Marnie also sells a Slime Pond. Nearby idle slimes briefly bob as if swimming; use `slime_ranching_give_pond <save name>` to test it. It currently produces no drops or friendship effects.
 - Marnie also sells a Slime Swing. Nearby idle slimes briefly sway on it; use `slime_ranching_give_swing <save name>` to test it. This is a visual interaction only.
-- Chromatic Crystals can focus a breeder cycle on a base offspring color. They are currently test-only items; use the SMAPI command `slime_ranching_give_crystals <save name>` while on a disposable save.
-- Ranch Slime offspring and genome-specific egg icons use a tint selected from the external genome color. The seven base colors and six hybrid recipes are supported; hybrid sprites still use the nearest base tint rather than continuous RGB blending.
+- Chromatic Crystals can focus a breeder cycle on one base offspring color. They are currently test-only items; use the SMAPI command `slime_ranching_give_crystals <save name>` while on a disposable save. A crystal does not create a hybrid or an exceptional species.
+- Breeding previews show the possible offspring and abilities. Two same-color base slimes produce that base type; two different base types produce a two-ability hybrid. Matching hybrids produce the same hybrid, a hybrid/base pairing has equal odds of either type, and different hybrids choose from their four base contributors. Rare or exceptional species cannot breed.
+- Ranch Slime offspring and genome-specific egg icons use a tint selected from the genome color. Hybrid genomes store a blend of their two base colors; the current sprite resolves that blend to the nearest base tint.
 - The Slime Incubator, Gel Refinery, and Mutagenic Pool use 3Ã—2 placement and collision areas. The Slime Breeder retains its 5Ã—2 footprint.
 
 ## Slime Incubator

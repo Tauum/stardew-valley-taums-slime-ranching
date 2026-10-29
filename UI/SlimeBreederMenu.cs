@@ -198,6 +198,14 @@ internal sealed class SlimeBreederMenu : IClickableMenu
             return;
 
         long id = this.candidates[index].myID.Value;
+        if (!this.registry.TryGetSlimeRecord(id, out SlimeRecord selectedRecord)
+            || !BreedingRules.IsBreedable(selectedRecord.Genome))
+        {
+            this.statusMessage = "Rare and exceptional Ranch Slimes cannot breed.";
+            Game1.playSound("cancel");
+            return;
+        }
+
         int growthDays = this.GetGrowthDaysRemaining(this.candidates[index]);
         if (growthDays > 0)
         {
@@ -276,6 +284,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
         DrawCentered(b, buttonText, Game1.smallFont, this.actionButton, Color.White);
         string status = this.statusMessage ?? GetCycleStatus(pair);
         b.DrawString(Game1.tinyFont, status, new Vector2(this.xPositionOnScreen + 34, this.yPositionOnScreen + this.height - 65), Color.White);
+        this.DrawPairingPreview(b);
     }
 
     private void DrawCandidateRows(SpriteBatch b)
@@ -293,12 +302,16 @@ internal sealed class SlimeBreederMenu : IClickableMenu
             FarmAnimal animal = this.candidates[i];
             int rowY = this.listTop + (i - this.firstVisibleCandidate) * 46;
             bool isSelected = this.selected.Contains(animal.myID.Value);
+            bool canBreed = this.registry.TryGetSlimeRecord(animal.myID.Value, out SlimeRecord record)
+                && BreedingRules.IsBreedable(record.Genome);
             int rest = this.registry.GetBreedingRestDays(animal.myID.Value, Game1.Date.TotalDays);
             int growth = this.GetGrowthDaysRemaining(animal);
             Rectangle row = new(this.xPositionOnScreen + 634, rowY, 322, 41);
-            DrawPanel(b, row, growth > 0 || rest > 0 ? new Color(63, 66, 94) : isSelected ? new Color(74, 119, 161) : new Color(46, 67, 121), isSelected ? new Color(151, 220, 255) : new Color(87, 118, 177));
+            DrawPanel(b, row, !canBreed || growth > 0 || rest > 0 ? new Color(63, 66, 94) : isSelected ? new Color(74, 119, 161) : new Color(46, 67, 121), isSelected ? new Color(151, 220, 255) : new Color(87, 118, 177));
             string label = growth > 0 ? $"{animal.Name} · {growth}d to maturity" : rest > 0 ? $"{animal.Name} · resting {rest}d" : $"{(isSelected ? "♥ " : "＋ ")}{animal.Name}";
             b.DrawString(Game1.smallFont, label, new Vector2(row.X + 11, row.Y + 9), Color.White);
+            if (!canBreed)
+                b.DrawString(Game1.tinyFont, "Cannot breed", new Vector2(row.X + 11, row.Y + 25), new Color(245, 173, 151));
         }
         if (this.candidates.Count > visibleCount)
             b.DrawString(Game1.tinyFont, $"Scroll · {this.firstVisibleCandidate + 1}-{end} / {this.candidates.Count}", new Vector2(this.xPositionOnScreen + 738, this.listBottom - 14), Color.LightBlue);
@@ -312,6 +325,53 @@ internal sealed class SlimeBreederMenu : IClickableMenu
             b.DrawString(Game1.dialogueFont, i < count ? "♥" : hearts[i], new Vector2(this.xPositionOnScreen + 656 + i * 36, this.yPositionOnScreen + 418), i < count ? new Color(255, 115, 173) : new Color(135, 158, 206));
         string label = this.selected.Count == 2 || pair is not null ? "PAIR READY" : "CHOOSE TWO PARENTS";
         b.DrawString(Game1.tinyFont, label, new Vector2(this.xPositionOnScreen + 802, this.yPositionOnScreen + 430), new Color(135, 255, 176));
+    }
+
+    private void DrawPairingPreview(SpriteBatch b)
+    {
+        Rectangle panel = new(this.xPositionOnScreen + 634, this.yPositionOnScreen + 532, 322, 38);
+        DrawPanel(b, panel, new Color(34, 46, 86), new Color(94, 130, 193));
+        string resultLine;
+        string abilityLine;
+        if (this.selected.Count != 2)
+        {
+            resultLine = this.selected.Count == 0 ? "Choose two parents to preview." : "Choose one more parent to preview.";
+            abilityLine = "Rare and exceptional slimes cannot breed.";
+        }
+        else
+        {
+            SlimeGenome[] parents = this.selected
+                .Select(id => this.registry.TryGetSlimeRecord(id, out SlimeRecord record) ? record.Genome : null)
+                .Where(genome => genome is not null)
+                .Cast<SlimeGenome>()
+                .ToArray();
+            IReadOnlyList<BreedingRules.Offspring> outcomes = parents.Length == 2
+                ? BreedingRules.GetPossibleOffspring(parents[0], parents[1])
+                : Array.Empty<BreedingRules.Offspring>();
+            if (outcomes.Count > 0 && this.selectedCrystalColor is string crystalColor)
+                outcomes = new[] { new BreedingRules.Offspring($"{crystalColor} Slime", null, FarmAnimalContent.GetReferenceHex(crystalColor)) };
+            if (outcomes.Count == 0)
+            {
+                resultLine = "This pairing is not eligible.";
+                abilityLine = "Rare and exceptional slimes cannot breed.";
+            }
+            else
+            {
+                var groups = outcomes.GroupBy(outcome => (outcome.PrimarySpecies, outcome.SecondarySpecies)).ToArray();
+                resultLine = "Offspring: " + string.Join("; ", groups.Select(group =>
+                    $"{group.Count() * 100 / outcomes.Count}% {BreedingRules.Describe(group.First())}"));
+                abilityLine = "Abilities: " + string.Join("; ", groups.Select(group =>
+                {
+                    BreedingRules.Offspring outcome = group.First();
+                    string abilities = string.Join(" + ", SlimeAbilityCatalog.GetAbilityNames(
+                        outcome.PrimarySpecies, outcome.SecondarySpecies, outcome.VisualColor));
+                    return $"{group.Count() * 100 / outcomes.Count}% {(abilities.Length == 0 ? "none" : abilities)}";
+                }));
+            }
+        }
+
+        DrawFittedText(b, resultLine, new Rectangle(panel.X + 6, panel.Y + 3, panel.Width - 12, 16));
+        DrawFittedText(b, abilityLine, new Rectangle(panel.X + 6, panel.Y + 19, panel.Width - 12, 16));
     }
 
     private void DrawRecipesTab(SpriteBatch b)
@@ -460,6 +520,15 @@ internal sealed class SlimeBreederMenu : IClickableMenu
         float scale = Math.Min(1f, 148f / Math.Max(1f, measured.X));
         batch.DrawString(Game1.tinyFont, text,
             new Vector2(centerX - measured.X * scale / 2f, y), Game1.textColor,
+            0f, Vector2.Zero, scale, SpriteEffects.None, 0.999f);
+    }
+
+    private static void DrawFittedText(SpriteBatch batch, string text, Rectangle bounds)
+    {
+        Vector2 measured = Game1.tinyFont.MeasureString(text);
+        float scale = Math.Min(1f, Math.Min((bounds.Width - 8) / Math.Max(1f, measured.X), (bounds.Height - 2) / Math.Max(1f, measured.Y)));
+        batch.DrawString(Game1.tinyFont, text,
+            new Vector2(bounds.Center.X - measured.X * scale / 2f, bounds.Center.Y - measured.Y * scale / 2f), Game1.textColor,
             0f, Vector2.Zero, scale, SpriteEffects.None, 0.999f);
     }
 
