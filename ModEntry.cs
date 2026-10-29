@@ -3,6 +3,8 @@ using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Buildings;
 using StardewValley.Monsters;
+using StardewValley.Menus;
+using StardewValley.Objects;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -72,6 +74,7 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("slime_ranching_give_guidebook", "Give the Slime Ranching Field Guide. Usage: slime_ranching_give_guidebook <exact save folder name>.", this.OnGiveGuidebookCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_breeder", "Give one Slime Breeder for testing. Usage: slime_ranching_give_breeder <exact save folder name>.", this.OnGiveBreederCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_incubator", "Give one Slime Incubator for testing. Usage: slime_ranching_give_incubator <exact save folder name>.", this.OnGiveIncubatorCommand);
+        helper.ConsoleCommands.Add("slime_ranching_give_cryolab", "Give one tester Egg CryoLab chest. Usage: slime_ranching_give_cryolab <exact save folder name>.", this.OnGiveCryoLabCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_mutagenic_pool", "Give one Mutagenic Pool for testing. Usage: slime_ranching_give_mutagenic_pool <exact save folder name>.", this.OnGiveMutagenicPoolCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_gel_refinery", "Give one Gel Refinery for testing. Usage: slime_ranching_give_gel_refinery <exact save folder name>.", this.OnGiveGelRefineryCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_tunnel", "Give one Slime Tunnel for testing. Usage: slime_ranching_give_tunnel <exact save folder name>.", this.OnGiveTunnelCommand);
@@ -107,6 +110,7 @@ public sealed class ModEntry : Mod
             bool maturityChanged = this.registry.SynchronizeMaturity(GetFarmAnimals(), Game1.Date.TotalDays);
             this.stateReady = true;
             bool rareLabProgressionChanged = this.SynchronizeRareLabProgression();
+            bool eggCryoLabRecordsChanged = this.SynchronizeEggCryoLabRecords();
             bool repairTransactionRecovered = this.ReconcileMaruRepairDelivery();
             bool incubationCancellationRecovered = this.ReconcileIncubationCancellations();
             bool mutagenicContributionRecovered = this.ReconcileMutagenicContributionTransactions();
@@ -120,7 +124,7 @@ public sealed class ModEntry : Mod
                 this.Monitor.Log("Imported the previous mod-folder slime registry into this save. The original legacy file was left untouched.", LogLevel.Info);
             if (this.stateStore.MigratedSaveData)
                 this.Monitor.Log("Migrated the saved Ranch Slime data to the current schema.", LogLevel.Info);
-            if (needsPersistenceMigration || registeredRanchSlimes > 0 || recoveredHatches > 0 || detachedAnimals > 0 || cancelledCycles > 0 || maturityChanged || rareLabProgressionChanged || repairTransactionRecovered || incubationCancellationRecovered || mutagenicContributionRecovered || rareLabContributionRecovered || rareLabCatalystRecovered || refineryTransactionRecovered || constructionProgressChanged || repairQuestProgressChanged)
+            if (needsPersistenceMigration || registeredRanchSlimes > 0 || recoveredHatches > 0 || detachedAnimals > 0 || cancelledCycles > 0 || maturityChanged || rareLabProgressionChanged || eggCryoLabRecordsChanged || repairTransactionRecovered || incubationCancellationRecovered || mutagenicContributionRecovered || rareLabContributionRecovered || rareLabCatalystRecovered || refineryTransactionRecovered || constructionProgressChanged || repairQuestProgressChanged)
             {
                 if (!this.SaveExternalStateNow())
                     this.Monitor.Log("Imported or reconciled Ranch Slime state remains in memory but could not yet be written to the current save.", LogLevel.Error);
@@ -231,6 +235,7 @@ public sealed class ModEntry : Mod
         bool rareLabCatalystRecovered = this.ReconcileRareLabCatalystTransactions();
         bool refineryTransactionRecovered = this.ReconcileRefineryTransactions();
         bool rareLabProgressionChanged = this.SynchronizeRareLabProgression();
+        bool eggCryoLabRecordsChanged = this.SynchronizeEggCryoLabRecords();
         bool constructionProgressChanged = this.TryRecordCompletedDaycareConstruction();
         bool repairQuestProgressChanged = this.TryStartMaruRepairQuest();
         bool maturityChanged = this.registry!.SynchronizeMaturity(GetFarmAnimals(), Game1.Date.TotalDays);
@@ -261,7 +266,7 @@ public sealed class ModEntry : Mod
 
         if (readyToNotify.Count == 0 && refineryReady.Count == 0 && this.pendingMutagenicNotifications.Count == 0)
         {
-            bool needsSave = maturityChanged || rareLabProgressionChanged || repairTransactionRecovered || mutagenicContributionRecovered || rareLabContributionRecovered || rareLabCatalystRecovered
+            bool needsSave = maturityChanged || rareLabProgressionChanged || eggCryoLabRecordsChanged || repairTransactionRecovered || mutagenicContributionRecovered || rareLabContributionRecovered || rareLabCatalystRecovered
                 || refineryTransactionRecovered || constructionProgressChanged || repairQuestProgressChanged;
             if (needsSave)
             {
@@ -1443,6 +1448,31 @@ public sealed class ModEntry : Mod
         }
 
         if (Context.IsWorldReady && Game1.activeClickableMenu is null && e.Button.IsActionButton()
+            && Game1.currentLocation.Objects.TryGetValue(e.Cursor.GrabTile, out StardewValley.Object? cryoLabObject)
+            && cryoLabObject is Chest cryoLab && EggCryoLabContent.IsEggCryoLab(cryoLab))
+        {
+            this.Helper.Input.Suppress(e.Button);
+            if (!this.stateReady || !Context.IsMainPlayer || Context.IsMultiplayer || this.registry is null)
+            {
+                this.Monitor.Log("The Egg CryoLab requires loaded mod save data in single-player.", LogLevel.Warn);
+                return;
+            }
+
+            Building? daycare = Game1.getFarm().buildings.FirstOrDefault(building =>
+                BuildingContent.IsSlimeDaycare(building.buildingType.Value)
+                && building.GetIndoors() == Game1.currentLocation);
+            if (daycare?.GetIndoors() is not AnimalHouse || BuildingContent.GetUpgradeTier(daycare.buildingType.Value) < 1)
+            {
+                Game1.showRedMessage("The Egg CryoLab only works inside an upgraded Slime Daycare.");
+                return;
+            }
+
+            this.RegisterEggCryoLabContents(cryoLab);
+            this.OpenEggCryoLabMenu(cryoLab);
+            return;
+        }
+
+        if (Context.IsWorldReady && Game1.activeClickableMenu is null && e.Button.IsActionButton()
             && this.TryHandleRobinPoolRepairPrompt(e.Button, e.Cursor.GrabTile))
             return;
 
@@ -1613,6 +1643,131 @@ public sealed class ModEntry : Mod
 
         anchor = Vector2.Zero;
         return false;
+    }
+
+    private bool SynchronizeEggCryoLabRecords()
+    {
+        if (this.registry is null || !Context.IsWorldReady)
+            return false;
+
+        bool changed = false;
+        foreach (Building building in Game1.getFarm().buildings)
+        {
+            if (!BuildingContent.IsSlimeDaycare(building.buildingType.Value)
+                || building.GetIndoors() is not AnimalHouse daycare)
+                continue;
+
+            foreach (Chest chest in daycare.Objects.Values.OfType<Chest>().Where(EggCryoLabContent.IsEggCryoLab))
+                changed |= this.RegisterEggCryoLabContents(chest);
+        }
+
+        return changed;
+    }
+
+    private bool RegisterEggCryoLabContents(Chest chest)
+    {
+        if (this.registry is null)
+            return false;
+
+        bool changed = false;
+        foreach (Item item in chest.GetItemsForPlayer())
+        {
+            if (item is null || !SlimeEggContent.TryReadRecord(item, out SlimeEggRecord egg)
+                || !SlimeEggContent.TryGetEggId(item, out string eggId)
+                || egg.EggId != eggId)
+                continue;
+
+            bool wasRegistered = this.registry.TryGetEgg(eggId, out _);
+            if (this.registry.RegisterEggItem(egg))
+                changed |= !wasRegistered;
+        }
+
+        if (changed && !this.SaveExternalStateNow())
+            this.Monitor.Log("Stored Slime Egg records were recovered from the Egg CryoLab chest in memory but could not yet be saved.", LogLevel.Error);
+        return changed;
+    }
+
+    private void OpenEggCryoLabMenu(Chest chest)
+    {
+        Game1.activeClickableMenu = new ItemGrabMenu(
+            chest.GetItemsForPlayer(),
+            reverseGrab: false,
+            showReceivingMenu: true,
+            highlightFunction: InventoryMenu.highlightAllItems,
+            behaviorOnItemSelectFunction: (item, who) => this.StoreEggInCryoLab(chest, item, who),
+            message: "Ranch Slime Eggs only · 36 storage slots",
+            behaviorOnItemGrab: (item, who) => this.TakeEggFromCryoLab(chest, item, who),
+            snapToBottom: false,
+            canBeExitedWithKey: true,
+            playRightClickSound: true,
+            allowRightClick: true,
+            showOrganizeButton: false,
+            source: 1,
+            sourceItem: chest,
+            whichSpecialButton: -1,
+            context: chest);
+    }
+
+    private void StoreEggInCryoLab(Chest chest, Item item, Farmer who)
+    {
+        if (this.registry is null || !this.IsEligibleCryoLabEgg(chest, item, who, out _))
+        {
+            Game1.playSound("cancel");
+            Game1.showRedMessage("The Egg CryoLab accepts unused Ranch Slime Eggs only.");
+            return;
+        }
+
+        Item? remainder = chest.addItem(item);
+        if (remainder is not null)
+        {
+            Game1.playSound("cancel");
+            Game1.showRedMessage("The Egg CryoLab is full.");
+            if (Game1.activeClickableMenu is ItemGrabMenu fullMenu)
+                fullMenu.heldItem = remainder;
+            return;
+        }
+
+        if (!this.SaveExternalStateNow())
+            this.Monitor.Log("An Egg CryoLab transfer is saved with the native chest; its external Slime Egg record will be recovered from item metadata when needed.", LogLevel.Warn);
+        Game1.playSound("Ship");
+        this.OpenEggCryoLabMenu(chest);
+    }
+
+    private void TakeEggFromCryoLab(Chest chest, Item item, Farmer who)
+    {
+        if (this.registry is not null && this.IsEligibleCryoLabEgg(chest, item, who, out _))
+            return;
+
+        chest.addItem(item);
+        if (Game1.activeClickableMenu is ItemGrabMenu menu)
+            menu.heldItem = null;
+        this.OpenEggCryoLabMenu(chest);
+        Game1.playSound("cancel");
+        Game1.showRedMessage("That egg is invalid or already exists outside the Egg CryoLab.");
+    }
+
+    private bool IsEligibleCryoLabEgg(Chest chest, Item item, Farmer who, out string eggId)
+    {
+        eggId = string.Empty;
+        if (this.registry is null || !SlimeEggContent.TryReadRecord(item, out SlimeEggRecord egg)
+            || !SlimeEggContent.TryGetEggId(item, out eggId)
+            || egg.EggId != eggId)
+            return false;
+
+        string candidateEggId = eggId;
+        if (!this.registry.RegisterEggItem(egg)
+            || !this.registry.CanIncubate(candidateEggId)
+            || this.registry.BreedingPairs.Any(pair => pair.OutputEggItemId == candidateEggId)
+            || who.Items.Any(existing => existing is not null
+                && SlimeEggContent.TryGetEggId(existing, out string existingId) && existingId == candidateEggId)
+            || Game1.currentLocation.Objects.Values.OfType<Chest>()
+                .Where(EggCryoLabContent.IsEggCryoLab)
+                .SelectMany(existingChest => existingChest.GetItemsForPlayer())
+                .Any(existing => existing is not null
+                    && SlimeEggContent.TryGetEggId(existing, out string existingId) && existingId == candidateEggId))
+            return false;
+
+        return true;
     }
 
     private bool TryGetBreederAt(Vector2 clickedTile, out Vector2 anchor)
@@ -2426,6 +2581,31 @@ public sealed class ModEntry : Mod
         this.Monitor.Log("Added one Slime Incubator. Place it inside the Slime Daycare and use it with a genome-specific Ranch Slime Egg in your inventory.", LogLevel.Info);
     }
 
+    private void OnGiveCryoLabCommand(string command, string[] args)
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
+        {
+            this.Monitor.Log("Load a single-player save with available external slime state before requesting an Egg CryoLab tester chest.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 1 || args[0] != saveName)
+        {
+            this.Monitor.Log($"To give an Egg CryoLab tester chest to the currently loaded save, use: slime_ranching_give_cryolab {saveName}", LogLevel.Warn);
+            return;
+        }
+
+        Chest cryoLab = EggCryoLabContent.CreateTestingChest();
+        if (!Game1.player.couldInventoryAcceptThisItem(cryoLab) || !Game1.player.addItemToInventoryBool(cryoLab))
+        {
+            this.Monitor.Log("Make room in your inventory for the Egg CryoLab tester chest, then try again.", LogLevel.Warn);
+            return;
+        }
+
+        this.Monitor.Log("Added a tester Egg CryoLab chest. Place it in a tier-1-or-higher Slime Daycare; it stores eligible Ranch Slime Eggs without starting incubation.", LogLevel.Info);
+    }
+
     private void OnGiveMutagenicPoolCommand(string command, string[] args)
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
@@ -2803,6 +2983,9 @@ public sealed class ModEntry : Mod
             RareLabRecord[] roomRareLabs = isDaycare
                 ? loadedRegistry.RareLabs.Where(lab => lab.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal)).ToArray()
                 : Array.Empty<RareLabRecord>();
+            Chest[] roomCryoLabs = isDaycare
+                ? animalHouse.Objects.Values.OfType<Chest>().Where(EggCryoLabContent.IsEggCryoLab).ToArray()
+                : Array.Empty<Chest>();
             KeyValuePair<Vector2, StardewValley.Object>[] roomIncubators = isDaycare
                 ? animalHouse.Objects.Pairs
                     .Where(pair => pair.Value.QualifiedItemId == RanchingItemContent.IncubatorQualifiedId)
@@ -2826,6 +3009,7 @@ public sealed class ModEntry : Mod
             if (isDaycare)
             {
                 this.Monitor.Log($"Slime Incubators placed in this Daycare: {roomIncubatorMachineKeys.Length}.", LogLevel.Info);
+                this.Monitor.Log($"Egg CryoLab tester chests: {roomCryoLabs.Length}; stored Ranch Slime Eggs: {roomCryoLabs.Sum(chest => chest.GetItemsForPlayer().Count(item => item is not null))}/36 slots each.", LogLevel.Info);
                 this.Monitor.Log($"Rare Labs saved in this Daycare: {roomRareLabs.Length}.", LogLevel.Info);
                 var placedIncubatorKeys = new HashSet<string>(roomIncubatorMachineKeys, StringComparer.Ordinal);
                 for (int index = 0; index < roomIncubators.Length; index++)
