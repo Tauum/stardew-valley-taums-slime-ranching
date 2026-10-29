@@ -100,6 +100,15 @@ Reply with any collision, sizing, or warp issues and a screenshot if the room di
 4. Repeat the new-cycle preview at upgrade tiers 2 and 3; each should remain **14 Days**. On a separate copy, start an 18-day cycle before upgrading and, if its breeder record survives the building upgrade, confirm the saved ready day is unchanged afterward.
 5. Save/reload the tiered copies and confirm the active cycle's ready day remains unchanged. Keep Feature 8 acceptance pending until capacity, construction costs, furniture/facility progression, and all upgrade behavior pass their in-game checks.
 
+## 2.0 bulk-test check — Feature 9 partial: resident assignment status
+
+**Status:** Resident status and assignment eligibility now share one source of truth for breeding, Pool attempts, incubator hatch recovery, and companions. `slime_ranching_inspect` reports each Ranch Slime's assignment and native friendship, happiness, and fullness. Fixed water amenities and Feeding Trough behavior are not implemented yet; no juvenile-growth or feeding balance has been chosen.
+
+1. On a disposable save, spawn four mature Ranch Slimes with `slime_ranching_spawn_ranch_slime <exact save folder name> 7`; record their IDs. Run `slime_ranching_inspect <animal ID>` for each and confirm each reports **Available** and shows its native friendship/happiness/fullness values.
+2. Use the Breeder to select two slimes without starting a cycle. Inspect both and confirm **Selected for breeding**. Start the cycle and inspect them again; confirm **Breeding**. Open a second Breeder and a companion selection on a separate copy to confirm these residents cannot be assigned to another machine or as a companion.
+3. On a separate copy with Maru's Pool repair complete, start a Mutagenic Pool attempt with a third slime. Confirm its status is **Mutagenic Pool** and another machine or companion selection cannot claim it. On another copy, run `slime_ranching_bind_companion <exact save folder name> <animal ID>` for the fourth slime and confirm its status is **Companion** and Pool/breeder assignment is blocked.
+4. In the Daycare, run `slime_ranching_inspect` with no ID and confirm the status totals match the four residents as their assignments change. Keep Feature 9 pending until the status checks and the later water/feeding/happiness checks pass in-game.
+
 ## 2.0 bulk-test check — Feature 11: Mutagenic Pool rules and safe contributions
 
 **Status:** Fixed two-day attempts, contribution and pity rules, cancellation, approved mutation IDs, save-receipt recovery, and distinct rendered accents for all twelve approved mutations are implemented. All in-game checks remain pending for the bulk test pass.

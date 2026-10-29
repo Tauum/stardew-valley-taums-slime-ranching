@@ -78,9 +78,9 @@ Enter the Slime Daycare or a vanilla Slime Hutch and run:
 slime_ranching_inspect
 ```
 
-In the Daycare, this reports the Ranch Slime count and external genome record count. In the vanilla Slime Hutch, it reports the monster slime count and confirms those slimes remain unchanged.
+In the Daycare, this reports the Ranch Slime count, genome record count, and assignment-status totals. In the vanilla Slime Hutch, it reports the monster slime count and confirms those slimes remain unchanged.
 
-Add an animal ID to inspect one managed Ranch Slime's genome, favorite food, maturity, mutation pity, and reservation status:
+Add an animal ID to inspect one managed Ranch Slime's genome, favorite food, maturity, mutation pity, assignment status, and native friendship/happiness/fullness values:
 
 ```text
 slime_ranching_inspect <Ranch Slime animal ID>

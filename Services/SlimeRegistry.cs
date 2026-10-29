@@ -5,6 +5,16 @@ using taums_slime_ranching.Models;
 
 namespace taums_slime_ranching.Services;
 
+internal enum SlimeResidentStatus
+{
+    Available,
+    SelectedForBreeding,
+    Breeding,
+    MutagenicPool,
+    IncubatorHatch,
+    Companion
+}
+
 /// <summary>Ranch Slime records linked to native FarmAnimal entities, plus active facility jobs.</summary>
 internal sealed class SlimeRegistry
 {
@@ -40,17 +50,46 @@ internal sealed class SlimeRegistry
     public IReadOnlyCollection<RefineryJobRecord> RefineryJobs => this.refineryJobs.Values;
 
     public IReadOnlyCollection<long> RanchSlimeFarmAnimalIds => this.farmAnimalRecords.Keys;
+    public SlimeResidentStatus GetResidentStatus(long farmAnimalId, string? exceptMachineKey = null)
+    {
+        if (this.activeCompanionFarmAnimalId == farmAnimalId
+            || (this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record) && record.IsCompanion))
+            return SlimeResidentStatus.Companion;
+
+        if (this.incubations.Values.Any(incubation => incubation.HatchAnimalId == farmAnimalId))
+            return SlimeResidentStatus.IncubatorHatch;
+
+        BreedingPairRecord? pair = this.breedingPairs.Values.FirstOrDefault(candidate =>
+            candidate.OutputEggItemId is null && candidate.MachineKey != exceptMachineKey
+            && (candidate.ParentAId == farmAnimalId || candidate.ParentBId == farmAnimalId));
+        if (pair is not null)
+            return pair.CycleReadyOnDay > 0 ? SlimeResidentStatus.Breeding : SlimeResidentStatus.SelectedForBreeding;
+
+        if (this.mutagenicAttempts.Values.Any(attempt =>
+                attempt.MachineKey != exceptMachineKey && attempt.SlimeId == farmAnimalId))
+            return SlimeResidentStatus.MutagenicPool;
+
+        return SlimeResidentStatus.Available;
+    }
+
+    public static string GetResidentStatusLabel(SlimeResidentStatus status) => status switch
+    {
+        SlimeResidentStatus.SelectedForBreeding => "Selected for breeding",
+        SlimeResidentStatus.Breeding => "Breeding",
+        SlimeResidentStatus.MutagenicPool => "Mutagenic Pool",
+        SlimeResidentStatus.IncubatorHatch => "Incubator hatch",
+        SlimeResidentStatus.Companion => "Companion",
+        _ => "Available"
+    };
+
     public bool IsBreedingParentReserved(long farmAnimalId) => this.breedingPairs.Values
         .Any(pair => pair.OutputEggItemId is null
             && (pair.ParentAId == farmAnimalId || pair.ParentBId == farmAnimalId));
     public bool IsInActiveBreedingCycle(long farmAnimalId) => this.breedingPairs.Values
         .Any(pair => pair.CycleReadyOnDay > 0 && pair.OutputEggItemId is null
             && (pair.ParentAId == farmAnimalId || pair.ParentBId == farmAnimalId));
-    public IReadOnlyCollection<long> ReservedFarmAnimalIds => this.breedingPairs.Values
-        .Where(pair => pair.OutputEggItemId is null)
-        .SelectMany(pair => new[] { pair.ParentAId, pair.ParentBId })
-        .Concat(this.mutagenicAttempts.Values.Select(attempt => attempt.SlimeId))
-        .Distinct()
+    public IReadOnlyCollection<long> ReservedFarmAnimalIds => this.farmAnimalRecords.Keys
+        .Where(farmAnimalId => this.IsReserved(farmAnimalId))
         .ToArray();
     public long? ActiveCompanionFarmAnimalId => this.activeCompanionFarmAnimalId;
     public SanctuaryQuestRecord SanctuaryQuest => this.sanctuaryQuest;
@@ -516,11 +555,7 @@ internal sealed class SlimeRegistry
     }
 
     public bool IsReserved(long farmAnimalId, string? exceptMachineKey = null) =>
-        this.activeCompanionFarmAnimalId == farmAnimalId
-        || this.incubations.Values.Any(incubation => incubation.HatchAnimalId == farmAnimalId)
-        || this.breedingPairs.Values.Any(pair => pair.OutputEggItemId is null && pair.MachineKey != exceptMachineKey
-            && (pair.ParentAId == farmAnimalId || pair.ParentBId == farmAnimalId))
-        || this.mutagenicAttempts.Values.Any(attempt => attempt.MachineKey != exceptMachineKey && attempt.SlimeId == farmAnimalId);
+        this.GetResidentStatus(farmAnimalId, exceptMachineKey) != SlimeResidentStatus.Available;
 
     public MutagenicAttemptRecord? GetMutagenicAttempt(string machineKey) =>
         this.mutagenicAttempts.TryGetValue(machineKey, out MutagenicAttemptRecord? attempt) ? attempt : null;

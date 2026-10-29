@@ -2434,9 +2434,11 @@ public sealed class ModEntry : Mod
             string species = genome.SecondarySpecies is null ? genome.PrimarySpecies : $"{genome.PrimarySpecies} / {genome.SecondarySpecies}";
             string mutation = genome.MutationTrait ?? "none";
             string likedFood = FoodLikeCatalog.GetDisplayName(genome.LikedFoodItemId);
-            int age = record.AgeClockInitialized ? record.AgeDays : GetFarmAnimals().FirstOrDefault(animal => animal.myID.Value == animalId)?.age.Value ?? 0;
+            FarmAnimal? resident = GetFarmAnimals().FirstOrDefault(animal => animal.myID.Value == animalId);
+            int age = record.AgeClockInitialized ? record.AgeDays : resident?.age.Value ?? 0;
+            string residentStatus = SlimeRegistry.GetResidentStatusLabel(loadedRegistry.GetResidentStatus(animalId));
             this.Monitor.Log($"Ranch Slime {animalId}: genome {genome.Id:N}, {species}, color {genome.VisualColor}, size {genome.Size}, shiny {genome.IsShiny}, rarity {genome.RarityTier}, mutation {mutation}.", LogLevel.Info);
-            this.Monitor.Log($"Generation {genome.Generation}; abilities [{string.Join(", ", genome.AbilityIds)}]; likes {likedFood}; age {age}/{FarmAnimalContent.RanchSlimeDaysToMature} days; Pool pity {loadedRegistry.GetMutagenicPoolFailures(animalId)}, contribution {loadedRegistry.GetMutagenicPoolContribution(animalId):P0}; companion {record.IsCompanion}; reserved {loadedRegistry.IsReserved(animalId)}.", LogLevel.Info);
+            this.Monitor.Log($"Generation {genome.Generation}; abilities [{string.Join(", ", genome.AbilityIds)}]; likes {likedFood}; age {age}/{FarmAnimalContent.RanchSlimeDaysToMature} days; friendship {resident?.friendshipTowardFarmer.Value ?? 0}/1000; happiness {resident?.happiness.Value ?? 0}/255; fullness {resident?.fullness.Value ?? 0}/255; Pool pity {loadedRegistry.GetMutagenicPoolFailures(animalId)}, contribution {loadedRegistry.GetMutagenicPoolContribution(animalId):P0}; assignment {residentStatus}.", LogLevel.Info);
             return;
         }
 
@@ -2462,7 +2464,12 @@ public sealed class ModEntry : Mod
             int activeMutations = loadedRegistry.MutagenicAttempts.Count(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal));
             int activeRefineryBatches = loadedRegistry.RefineryJobs.Count(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal));
             int mutatedResidents = residents.Count(animal => loadedRegistry.GetMutationTrait(animal.myID.Value) is not null);
+            string residentStatuses = string.Join(", ", Enum.GetValues<SlimeResidentStatus>()
+                .Select(status => (Label: SlimeRegistry.GetResidentStatusLabel(status), Count: residents.Count(animal => loadedRegistry.GetResidentStatus(animal.myID.Value) == status)))
+                .Where(status => status.Count > 0)
+                .Select(status => $"{status.Label}: {status.Count}"));
             this.Monitor.Log($"This animal house contains {residents.Length} Ranch Slime(s), including {mutatedResidents} with mutation traits. Save data contains {loadedRegistry.Count} Ranch Slime record(s).", LogLevel.Info);
+            this.Monitor.Log($"Ranch Slime assignment status: {residentStatuses}.", LogLevel.Info);
             this.Monitor.Log($"Jobs in this room: {activeCycles} breeder cycle(s), {readyEggs} ready egg(s), {activeIncubations} incubation(s), {activeMutations} Mutagenic Pool attempt(s), {activeRefineryBatches} Gel Refinery batch(es).", LogLevel.Info);
 
             foreach (BreedingPairRecord pair in roomBreedingPairs)
