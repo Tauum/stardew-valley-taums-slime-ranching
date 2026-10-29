@@ -510,14 +510,15 @@ internal sealed class SlimeRegistry
 
     public void ReleasePair(string machineKey) => this.breedingPairs.Remove(machineKey);
 
-    public bool StartBreedingCycle(string machineKey, int currentDay, string? chromaticCrystalColor = null)
+    public bool StartBreedingCycle(string machineKey, int currentDay, int durationDays, string? chromaticCrystalColor = null)
     {
         if (!this.breedingPairs.TryGetValue(machineKey, out BreedingPairRecord? pair) || pair.CycleReadyOnDay > 0
+            || durationDays <= 0
             || (chromaticCrystalColor is not null && !ChromaticCrystalContent.IsColorName(chromaticCrystalColor)))
             return false;
 
         pair.CycleStartedOnDay = currentDay;
-        pair.CycleReadyOnDay = currentDay + 2;
+        pair.CycleReadyOnDay = currentDay + durationDays;
         pair.ChromaticCrystalColor = chromaticCrystalColor;
         return true;
     }

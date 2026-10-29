@@ -58,6 +58,17 @@ Reply with any collision, sizing, or warp issues and a screenshot if the room di
 5. Save, return to title, and reload. Confirm age remains `7/7`, the slime stays mature, and vanilla farm animals retain their normal maturity behavior.
 6. On a separate disposable copy with an existing Ranch Slime older than seven days under the former 28-day prototype, confirm it remains mature after load and its age is normalized to `7/7`.
 
+## 2.0 bulk-test check — Feature 5: basic breeder timing
+
+**Status:** New basic-tier cycles use the approved 18-day duration. Existing cycle dates remain unchanged. In-game timing, cancellation, output, and reload checks are pending.
+
+1. On a disposable single-player save with a completed Daycare, run `slime_ranching_spawn_ranch_slime <exact save folder name> 7` twice and note both animal IDs. Run `slime_ranching_give_breeder <exact save folder name>`, place the Breeder in the Daycare, and open it.
+2. Select the two mature Ranch Slimes. Confirm both appear as the selected parents and the basic cycle displays **18 Days**.
+3. Start breeding. Confirm the UI reports 18 days remaining and the parent reservations persist after closing and reopening the menu.
+4. Sleep five nights. Confirm 13 days remain. Save, return to title, reload, and confirm the same ready date and remaining time are shown.
+5. Before the ready day, cancel the cycle. Confirm no egg is created, both parents are selectable again, and starting a new cycle sets a new 18-day ready date.
+6. Let the replacement cycle reach its ready day. Confirm the egg-ready notice appears, both parents are released into the Daycare, the egg remains collectible once, and the saved genome remains available after reload.
+
 ## How to use this walkthrough
 
 The 2.0 checks are being collected for one bulk test pass at Taum's request. Run the checks marked ready on disposable copied saves, then report results and issues together. Keep each feature's acceptance pending until its in-game checks pass. The separate 1.x sequence remains paused at Stage 6; resume it only if requested.

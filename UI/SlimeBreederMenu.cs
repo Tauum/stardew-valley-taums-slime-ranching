@@ -18,6 +18,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
     private readonly string machineKey;
     private readonly Func<bool> saveExternalState;
     private readonly Func<Guid, Item> createEggItem;
+    private readonly int cycleDurationDays;
     private readonly int listTop;
     private readonly int listBottom;
     private int firstVisibleCandidate;
@@ -28,13 +29,15 @@ internal sealed class SlimeBreederMenu : IClickableMenu
     private string? statusMessage;
     private string activeTab = "BREEDING";
 
-    public SlimeBreederMenu(SlimeRegistry registry, string machineKey, Func<bool> saveExternalState, Func<Guid, Item> createEggItem)
+    public SlimeBreederMenu(SlimeRegistry registry, string machineKey, Func<bool> saveExternalState, Func<Guid, Item> createEggItem,
+        int cycleDurationDays = BreedingRules.BasicCycleDurationDays)
         : base(Game1.uiViewport.Width / 2 - 500, Game1.uiViewport.Height / 2 - 330, 1000, 660)
     {
         this.registry = registry;
         this.machineKey = machineKey;
         this.saveExternalState = saveExternalState;
         this.createEggItem = createEggItem;
+        this.cycleDurationDays = Math.Max(1, cycleDurationDays);
         StardewValley.Buildings.Building? daycare = Game1.getFarm().buildings.FirstOrDefault(building =>
             BuildingContent.IsSlimeDaycare(building.buildingType.Value) && building.GetIndoors() is StardewValley.AnimalHouse);
         StardewValley.AnimalHouse? interior = daycare?.GetIndoors() as StardewValley.AnimalHouse;
@@ -261,8 +264,8 @@ internal sealed class SlimeBreederMenu : IClickableMenu
         BreedingPairRecord? pair = this.registry.GetBreedingPair(this.machineKey);
         this.DrawCompatibility(b, pair);
         DrawPanel(b, new Rectangle(pod.X + 10, pod.Bottom - 82, 314, 66), new Color(74, 105, 172), new Color(129, 169, 235));
-        b.DrawString(Game1.smallFont, "INCUBATION TIME", new Vector2(pod.X + 32, pod.Bottom - 76), Color.White);
-        b.DrawString(Game1.dialogueFont, "2 Days", new Vector2(pod.X + 92, pod.Bottom - 52), new Color(242, 246, 255));
+        b.DrawString(Game1.smallFont, "CYCLE DURATION", new Vector2(pod.X + 32, pod.Bottom - 76), Color.White);
+        b.DrawString(Game1.dialogueFont, $"{this.GetCycleDuration(pair)} Days", new Vector2(pod.X + 92, pod.Bottom - 52), new Color(242, 246, 255));
         DrawProgress(b, new Rectangle(pod.X + 20, pod.Bottom - 23, 286, 8), pair);
 
         bool ready = pair?.OutputEggItemId is not null || pair?.CycleReadyOnDay > 0 && Game1.Date.TotalDays >= pair.CycleReadyOnDay;
@@ -326,8 +329,8 @@ internal sealed class SlimeBreederMenu : IClickableMenu
         Rectangle panel = new(this.xPositionOnScreen + 32, this.yPositionOnScreen + 126, this.width - 64, 420);
         DrawPanel(b, panel, new Color(35, 49, 96), new Color(95, 137, 205));
         b.DrawString(Game1.dialogueFont, "BREEDING SETTINGS", new Vector2(panel.X + 30, panel.Y + 26), new Color(130, 231, 255));
-        b.DrawString(Game1.smallFont, "Incubation time", new Vector2(panel.X + 36, panel.Y + 104), Color.White);
-        b.DrawString(Game1.dialogueFont, "2 Days", new Vector2(panel.X + 36, panel.Y + 137), new Color(249, 210, 104));
+        b.DrawString(Game1.smallFont, "Breeding cycle", new Vector2(panel.X + 36, panel.Y + 104), Color.White);
+        b.DrawString(Game1.dialogueFont, $"{this.cycleDurationDays} Days", new Vector2(panel.X + 36, panel.Y + 137), new Color(249, 210, 104));
         b.DrawString(Game1.smallFont, "Breeding mode", new Vector2(panel.X + 36, panel.Y + 215), Color.White);
         b.DrawString(Game1.smallFont, "Normal · inherited traits with a chance of variation", new Vector2(panel.X + 36, panel.Y + 250), Color.White);
         b.DrawString(Game1.smallFont, "Colour focus (consumes one Chromatic Crystal)", new Vector2(panel.X + 36, panel.Y + 320), Color.White);
@@ -336,6 +339,12 @@ internal sealed class SlimeBreederMenu : IClickableMenu
         string value = this.selectedCrystalColor is null ? "Inherited colour · click to select crystal" : $"{this.selectedCrystalColor} · click to change";
         DrawCentered(b, value, Game1.smallFont, selector, Color.White);
     }
+
+    private int GetCycleDuration(BreedingPairRecord? pair) => pair is not null
+        && pair.CycleStartedOnDay >= 0
+        && pair.CycleReadyOnDay > pair.CycleStartedOnDay
+            ? pair.CycleReadyOnDay - pair.CycleStartedOnDay
+            : this.cycleDurationDays;
 
     private void DrawTabs(SpriteBatch b)
     {
@@ -379,7 +388,10 @@ internal sealed class SlimeBreederMenu : IClickableMenu
     private static void DrawProgress(SpriteBatch b, Rectangle bounds, BreedingPairRecord? pair)
     {
         b.Draw(Game1.staminaRect, bounds, new Color(19, 29, 61));
-        float progress = pair is null || pair.CycleReadyOnDay <= 0 ? 0f : Math.Clamp(1f - (pair.CycleReadyOnDay - Game1.Date.TotalDays) / 2f, 0f, 1f);
+        int duration = pair is null ? 0 : pair.CycleReadyOnDay - pair.CycleStartedOnDay;
+        float progress = pair is null || pair.CycleReadyOnDay <= 0 || duration <= 0
+            ? 0f
+            : Math.Clamp(1f - (pair.CycleReadyOnDay - Game1.Date.TotalDays) / (float)duration, 0f, 1f);
         int width = (int)(bounds.Width * progress);
         if (width > 0) b.Draw(Game1.staminaRect, new Rectangle(bounds.X, bounds.Y, width, bounds.Height), new Color(255, 79, 159));
     }
@@ -508,7 +520,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
             crystalItem = Game1.player.Items[crystalSlot];
         }
 
-        if (!this.registry.StartBreedingCycle(this.machineKey, Game1.Date.TotalDays, this.selectedCrystalColor))
+        if (!this.registry.StartBreedingCycle(this.machineKey, Game1.Date.TotalDays, this.cycleDurationDays, this.selectedCrystalColor))
             return false;
 
         bool firstBreedingAlreadyRecorded = this.registry.IsSanctuaryMilestoneCompleted(SanctuaryQuestProgression.FirstBreedingStarted);

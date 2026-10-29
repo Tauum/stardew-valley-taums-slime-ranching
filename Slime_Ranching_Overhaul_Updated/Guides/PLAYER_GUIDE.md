@@ -10,7 +10,7 @@ The basic Daycare uses `FarmHouse`; its first building upgrade changes to `FarmH
 
 On a copied save, bring an ordinary Wallpaper item and Flooring item into the Slime Daycare. Select each item and use it on an unobstructed valid wall or floor tile. The Daycare saves its patterns independently from the farmhouse. Leave and re-enter the Daycare to confirm the patterns remain; then check the farmhouse to confirm its decoration did not change. The full room-upgrade and reload sequence is in `Planning/FEATURE_TESTING_WALKTHROUGH.md`.
 
-This guide covers the current early prototype. The Slime Breeder can reserve two Ranch Slimes, run a two-day cycle, and produce an externally registered egg. A genome-specific egg can hatch in the Slime Incubator; managed slime behavior beyond breeding and basic animal behavior is still under development.
+This guide covers the current early prototype. The Slime Breeder can reserve two Ranch Slimes and produce a fixed-genome egg; the 2.0 basic-tier cycle takes 18 days. The first building upgrade will reduce new cycles to 14 days when that progression is implemented. Active cycles keep their saved ready day if timing rules change in a later version. A genome-specific egg can hatch in the Slime Incubator; managed slime behavior beyond breeding and basic animal behavior is still under development.
 
 ## Before you start
 
@@ -131,7 +131,7 @@ Select the book and press the action button to open it. It is a custom item refe
 ## Features still under development
 
 - **Hatching:** Common and genome-specific Ranch Slime Eggs hatch in the custom incubator; vanilla eggs are unaffected.
-- **Breeding:** The breeder, parent selection, two-day cycle, and fixed-genome egg output work. Offspring inherit color/species only; the egg icon uses the same rendered color variant as the slime, and ability identifiers follow its species. Other offspring traits start at Normal size, Common rarity, non-shiny, no mutation, and a newly assigned favorite food. Parent links and generation remain as lineage metadata.
+- **Breeding:** The breeder, parent selection, 18-day basic-tier cycle, and fixed-genome egg output work. Offspring inherit color/species only; the egg icon uses the same rendered color variant as the slime, and ability identifiers follow its species. Other offspring traits start at Normal size, Common rarity, non-shiny, no mutation, and a newly assigned favorite food. Parent links and generation remain as lineage metadata.
 - **Egg details:** Hover over a genome-specific Ranch Slime Egg to view its stored species, color, size, rarity, mutation, generation, parent IDs, and favorite food.
 - **Genetics and slime identity:** The registry model can hold genome data. Ranch Slime genomes are keyed to native FarmAnimal IDs; this still needs save/reload verification. Existing GreenSlime monsters are only captured in the first-seen snapshot; they aren't changed or adopted.
 - **Food likes:** Favorite food is stored, assigned independently for each offspring, shown in the breeder, and used by the Compost Trough's provisional extra growth bonus.
@@ -153,7 +153,7 @@ To set a managed Ranch Slime's visual size for testing, use `slime_ranching_set_
 
 ### Breeder selection preview
 
-The breeder lists Daycare Ranch Slimes and previews selected parents in a chamber panel. Select two rows and click **Start 2-day Cycle**; the breeder reserves them automatically and starts the timer. The pair, start/ready days, and resulting genome are stored in the mod's external registry and survive reopening or reloading. Reserved slimes stop roaming where they are in the Daycare; the chamber remains a menu preview. Click **Cancel Cycle** to stop the timer and immediately release both parents. When egg formation finishes, the parents return to roaming in the Daycare and rest for one in-game day. The egg stays in the breeder until you click **Collect Egg**; it is never moved to a nearby chest automatically. Hover over the collected egg to inspect its stored genome. Use the custom Slime Incubator to hatch a managed egg.
+The breeder lists Daycare Ranch Slimes and previews selected parents in a chamber panel. Select two rows and click **Start Breeding**; the breeder reserves them automatically and starts the 18-day basic-tier timer. The pair, start/ready days, and resulting genome are stored in the active save data and survive reopening or reloading. Reserved slimes stop roaming where they are in the Daycare; the chamber remains a menu preview. Click **Cancel Cycle** to stop the timer and immediately release both parents. When egg formation finishes, the parents return to roaming in the Daycare and rest for one in-game day. The egg stays in the breeder until you click **Collect Egg**; it is never moved to a nearby chest automatically. Hover over the collected egg to inspect its stored genome. Use the custom Slime Incubator to hatch a managed egg.
 
 ## Data and save behavior
 
