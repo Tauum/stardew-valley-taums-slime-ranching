@@ -383,13 +383,14 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
         bool unlocked = lab is { IsUnlocked: true };
         int total = RareLabRules.GetChancePoints(lab);
         IncubationRecord? incubation = this.registry.GetIncubation(this.machineKey);
+        string chanceLabel = incubation is { RareOutcomeResolved: false } ? "CURRENT EGG CHANCE" : "NEXT CHANCE";
         string outcomeText = incubation is not { RareOutcomeResolved: true }
             ? "RARE LAB"
             : incubation.RareOffspringProduced
                 ? $"RESULT FIXED · {incubation.HatchGenome?.PrimarySpecies ?? "RARE"}"
                 : "RESULT FIXED · REGULAR";
         b.DrawString(Game1.tinyFont,
-            unlocked ? $"{outcomeText} · NEXT CHANCE {total}%" : "RARE LAB LOCKED · TOTAL 0%",
+            unlocked ? $"{outcomeText} · {chanceLabel} {total}%" : "RARE LAB LOCKED · TOTAL 0%",
             new Vector2(bounds.X + 12, bounds.Y + 4), new Color(213, 227, 255));
 
         Rectangle bar = new(bounds.X + 12, bounds.Y + 19, bounds.Width - 24, 12);
