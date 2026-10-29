@@ -18,7 +18,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
     {
         "Red Slime", "Yellow Slime", "Blue Slime", "Green Slime", "Orange Slime", "Purple Slime", "Pink Slime"
     };
-    private static readonly string[] WikiCategories = { "BASE", "HYBRID", "RARE", "RULES" };
+    private static readonly string[] WikiCategories = { "BASE", "HYBRID", "RARE", "RULES", "LIFE" };
     private static readonly IReadOnlyDictionary<string, string> AbilityDirections = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["Fighter"] = "May occasionally increase the chance of double monster drops.",
@@ -92,11 +92,13 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         };
         this.registryRows = new Rectangle(this.xPositionOnScreen + 48, this.yPositionOnScreen + 198, 382, 360);
         this.registryDetails = new Rectangle(this.xPositionOnScreen + 466, this.yPositionOnScreen + 146, 582, 432);
-        this.wikiCategoryButtons = Enumerable.Range(0, WikiCategories.Length)
-            .Select(index => new Rectangle(this.xPositionOnScreen + 48 + index * 97,
-                this.yPositionOnScreen + 166, 92, 42))
-            .ToArray();
         this.wikiRows = new Rectangle(this.xPositionOnScreen + 48, this.yPositionOnScreen + 220, 382, 330);
+        const int wikiCategoryGap = 6;
+        int wikiCategoryWidth = (this.wikiRows.Width - (WikiCategories.Length - 1) * wikiCategoryGap) / WikiCategories.Length;
+        this.wikiCategoryButtons = Enumerable.Range(0, WikiCategories.Length)
+            .Select(index => new Rectangle(this.wikiRows.X + index * (wikiCategoryWidth + wikiCategoryGap),
+                this.yPositionOnScreen + 166, wikiCategoryWidth, 42))
+            .ToArray();
         this.wikiDetails = this.registryDetails;
     }
 
@@ -644,6 +646,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         {
             "RARE" => "Current base-color ability: none; rare companion direction is planned.",
             "RULES" => "Approved Ranch Slime breeding reference.",
+            "LIFE" => "Ranch Slime life cycle reference.",
             _ => $"Current genome ability label: {abilityList}"
         };
         var details = new List<(string Text, Color Color)>
@@ -658,7 +661,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
                 : $"{ability}: details are still being written.";
             details.Add((description, new Color(217, 231, 253)));
         }
-        bool showAbilityDisclaimer = entry.Category != "RULES";
+        bool showAbilityDisclaimer = entry.Category is "BASE" or "HYBRID" or "RARE";
         int reservedFooterHeight = showAbilityDisclaimer ? 158 : 90;
         Rectangle detailBody = new(detailPanel.X + 20, detailPanel.Y + 58, detailPanel.Width - 40,
             detailPanel.Height - reservedFooterHeight);
@@ -722,6 +725,10 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             "Rare slimes cannot breed. A Chromatic Crystal can focus an offspring on one of the seven pure base identities, but cannot force a hybrid or rare result. Crystals are currently a tester input; normal acquisition and cost are not set.", Array.Empty<string>()));
         entries.Add(new WikiEntry("RULES", "Fixed egg outcomes",
             "The Breeder saves the offspring's non-rarity genome when its cycle completes. The Incubator's Rare Lab resolves rarity once at incubation completion and saves the result before hatching; reloading cannot reroll it. If the Daycare is full, a ready hatch waits safely for room.", Array.Empty<string>()));
+        entries.Add(new WikiEntry("LIFE", "Incubation and hatching",
+            "Each Ranch Slime Egg has a unique identity and does not stack with other eggs. Incubation takes seven days. An unlocked Rare Lab fixes its result when incubation completes; if the Daycare is full, the ready hatch waits with that same result.", Array.Empty<string>()));
+        entries.Add(new WikiEntry("LIFE", "Growing up",
+            "A Ranch Slime reaches maturity seven in-game days after hatching. This growth period is separate from the Incubator's seven-day timer, and visual size is a separate trait from age.", Array.Empty<string>()));
         return entries;
     }
 

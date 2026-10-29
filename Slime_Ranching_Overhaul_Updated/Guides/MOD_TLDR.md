@@ -6,7 +6,7 @@ This is a compact tour of the 2.0 mod: what each facility and furniture piece is
 
 The mod adds a separate Slime Daycare to a Stardew farm. The player raises domesticated Ranch Slimes, chooses when to breed them, incubates their individually identified eggs, researches rare offspring, and decorates a shared living space with enrichment furniture. Daycare upgrades add residents, rooms, and facilities. A read-only Registry, progression view, and Slime Wiki preview exist; the permanent Management Desk fixture and furniture editor are planned.
 
-The current desk preview supports row paging and independent resident/Wiki detail scrolling with the mouse or controller when text exceeds its panel. Its Slime Wiki also explains the approved base/hybrid breeding outcomes, rare-slime and Crystal limits, and fixed egg result rules; the permanent fixture and Furniture Edit Mode remain pending.
+The current desk preview supports row paging and independent resident/Wiki detail scrolling with the mouse or controller when text exceeds its panel. Its Slime Wiki explains the approved base/hybrid breeding outcomes, rare-slime and Crystal limits, fixed egg results, and the separate seven-day incubation and maturation stages; the permanent fixture and Furniture Edit Mode remain pending.
 
 The intended loop is:
 
