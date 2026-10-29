@@ -33,8 +33,8 @@ Reply with any collision, sizing, or warp issues and a screenshot if the room di
 
 1. Make a fresh copy of a 2.0 save with schema 12 or 13. Keep the original and the main farm untouched.
 2. Run **3 Build, Deploy, Run**, then load that copied save.
-3. In the SMAPI console, run `slime_ranching_quest_status`. Confirm it reports schema **14** as the target schema and lists the Sanctuary milestones. On a new save, `lewis_concern` should report `prerequisites met` (available but incomplete); the remaining milestones should report `waiting`.
-4. Save, return to title, reload the same copied save, and run `slime_ranching_quest_status` again. Confirm schema 14 is retained and the milestone list is unchanged.
+3. In the SMAPI console, run `slime_ranching_quest_status`. Confirm it reports schema **18** as the target schema and lists the Sanctuary milestones. On a new save, `lewis_concern` should report `prerequisites met` (available but incomplete); the remaining milestones should report `waiting`.
+4. Save, return to title, reload the same copied save, and run `slime_ranching_quest_status` again. Confirm schema 18 is retained and the milestone list is unchanged.
 
 ### Maru repair handoff check — can be tested before the opening scenes are complete
 
@@ -88,7 +88,22 @@ Reply with any collision, sizing, or warp issues and a screenshot if the room di
 7. On a copied save with a free inventory slot, start another incubation and reopen that machine before hatch. Select **Cancel** and then **Keep incubating**; confirm the same egg and progress remain. Select **Cancel** again and confirm **Destroy egg**; verify the job disappears and exactly one Fried Egg appears in inventory.
 8. Before canceling, keep a copy of that same unique egg item in a chest. After confirming cancellation, try to incubate the copied item; confirm the incubator rejects it. Also attempt cancellation with a full inventory and verify the job remains intact and the game explains that space is needed for the Fried Egg.
 9. After confirming cancellation, sleep to save and reload. Verify the job stays canceled, the Fried Egg remains, and the copied egg ID remains unusable. On a separate copy, cancel and return to title without saving; reload and confirm the pending transaction restores the original incubation and does not award an unsaved Fried Egg.
-10. Load a schema-14 copy with an active incubation, allow migration to schema 16, save/reload, and verify its ready day is unchanged. Confirm a saved cancellation stays finalized after reload.
+10. Load a schema-14 copy with an active incubation, allow migration to schema 18, save/reload, and verify its ready day is unchanged. Confirm a saved cancellation stays finalized after reload.
+
+## 2.0 bulk-test check — Feature 11: Mutagenic Pool rules and safe contributions
+
+**Status:** Fixed two-day attempts, contribution and pity rules, cancellation, approved mutation IDs, and save-receipt recovery are implemented. Rendered effects for the approved mutations and all in-game checks remain pending.
+
+1. On a disposable single-player save with a completed Daycare, complete Maru's Pool repair using the Feature 7 check. If the Pool facility is not present in the current build, run `slime_ranching_give_mutagenic_pool <exact save folder name>` and place it inside the Daycare. Spawn a mature Ranch Slime with `slime_ranching_spawn_ranch_slime <exact save folder name> 7`; note its ID.
+2. Run `slime_ranching_inspect <animal ID>` and record its Pool pity and contribution. Open the repaired Pool and select that slime. Confirm starting needs no Slime fuel, the attempt takes two days, and the initial chance is 10%.
+3. During the active attempt, carry at least 10 vanilla Slime (`(O)766`) and choose **Add 10 Slime**. Confirm exactly 10 are consumed, the attempt chance increases to 11%, and the bar adds one contribution segment. Close/reopen the Pool and confirm it still targets the same slime and shows the saved attempt chance. Run `slime_ranching_inspect <animal ID>` to verify saved contribution.
+4. Test interrupted-save recovery on a separate copied save: start an attempt, contribute 10 Slime, then return to title without saving. Reload and confirm the 10 Slime is back, the contribution and chance are restored, and the attempt remains at its original state. Repeat on another copy, contribute, sleep to save, reload, and confirm the 10 Slime remains spent and the extra percentage point persists.
+5. Start another attempt and contribute Slime, then select **Cancel** before its ready day. Confirm the slime is released, no result or roll notice occurs, pity and contribution are unchanged, and the Pool can start another attempt. Save/reload and confirm the cancellation persists.
+6. To verify the 100% guarantee from a fresh 10% attempt with no pity or contribution, add 90 contributions (900 vanilla Slime total) while it is active. Confirm the meter reaches 100%, the action reports maximum chance, and the item count decreases by 10 per contribution. Sleep two nights and confirm the attempt succeeds with exactly one of Starry, Spotted, Glowing, Crystalline, Mossy, Bubbly, Mushroom, Blooming, Firefly, Crowned, Cowboy, or Smelly. `slime_ranching_inspect <animal ID>` should show the saved mutation; no rendered trait effect is expected in this milestone.
+7. For failure carryover, use a separate unmutated slime and repeat attempts until one fails. Confirm the slime remains alive and unmutated, its pity increases by exactly 1 percentage point, and its next attempt uses the higher chance. If stored contribution is above 2%, confirm failure reduces it by 1 point; at 2% or lower, confirm it carries forward unchanged. After a later success, confirm contribution clears while pity remains. Use `slime_ranching_inspect <animal ID>` after each result.
+8. On one copy, run `slime_ranching_set_mutation <exact save folder name> <animal ID> Starry`; confirm the test command accepts an approved outcome and inspection shows it. Repeat with `none` on another unreserved slime. Confirm legacy `Shadow Clone` records remain readable but cannot be selected for a new Pool attempt.
+9. Load a schema-17 copy with existing slimes and, if available, an active Pool attempt. Run `slime_ranching_inspect`; confirm migration reaches schema 18, preserves existing pity, contribution, and ready day, and does not invent pending contribution transactions. Save/reload and confirm the migrated state is unchanged.
+10. On two different slimes, compare pity and contribution before and after attempts. Confirm their values never cross between slimes or into Rare Lab state. Keep Feature 11 acceptance pending until two-day completion, success/failure, cancellation, 100% guarantee, contribution receipt recovery, migration, and menu behavior pass in-game.
 
 ## How to use this walkthrough
 

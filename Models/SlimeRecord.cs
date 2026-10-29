@@ -16,6 +16,8 @@ public sealed class SlimeRecord
     public int BreedingCooldownUntilDay { get; set; }
     /// <summary>Failed Mutagenic Pool rolls, used by its per-slime pity chance.</summary>
     public int MutagenicPoolFailures { get; set; }
+    /// <summary>Player-contributed Mutagenic Pool chance, in percentage points.</summary>
+    public double MutagenicPoolContribution { get; set; }
     /// <summary>Last day this juvenile received a Compost Trough feeding; stored externally to limit feeding to once per day.</summary>
     public int LastCompostFeedDay { get; set; } = -1;
     /// <summary>Day and daily count for autonomous enrichment furniture use.</summary>

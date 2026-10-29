@@ -7,7 +7,7 @@ using taums_slime_ranching.Services;
 
 namespace taums_slime_ranching.UI;
 
-/// <summary>Assign one mature Ranch Slime to a one-day safe-failure mutation attempt.</summary>
+/// <summary>Assign one mature Ranch Slime to a two-day safe-failure mutation attempt.</summary>
 internal sealed class MutagenicPoolMenu : IClickableMenu
 {
     private const int SlimeItemId = 766;
@@ -15,8 +15,10 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
     private readonly SlimeRegistry registry;
     private readonly string machineKey;
     private readonly MutagenicPoolRules rules;
+    private readonly Func<string, bool> contributeSlime;
     private readonly List<FarmAnimal> candidates;
     private readonly Rectangle actionButton;
+    private readonly Rectangle cancelButton;
     private readonly Rectangle mutationsButton;
     private readonly Rectangle selectedSlimePanel;
     private readonly Rectangle previousSlimeButton;
@@ -26,12 +28,14 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
     private string? statusMessage;
     private bool showMutations;
 
-    public MutagenicPoolMenu(SlimeRegistry registry, string machineKey, MutagenicPoolRules rules)
+    public MutagenicPoolMenu(SlimeRegistry registry, string machineKey, MutagenicPoolRules rules,
+        Func<string, bool> contributeSlime)
         : base(Game1.uiViewport.Width / 2 - 500, Game1.uiViewport.Height / 2 - 310, 1000, 620)
     {
         this.registry = registry;
         this.machineKey = machineKey;
         this.rules = rules;
+        this.contributeSlime = contributeSlime;
         StardewValley.Buildings.Building? daycare = Game1.getFarm().buildings.FirstOrDefault(building =>
             BuildingContent.IsSlimeDaycare(building.buildingType.Value) && building.GetIndoors() is StardewValley.AnimalHouse);
         StardewValley.AnimalHouse? interior = daycare?.GetIndoors() as StardewValley.AnimalHouse;
@@ -43,6 +47,7 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
         this.previousSlimeButton = new Rectangle(this.xPositionOnScreen + 28, this.yPositionOnScreen + 176, 38, 52);
         this.nextSlimeButton = new Rectangle(this.xPositionOnScreen + 326, this.yPositionOnScreen + 176, 38, 52);
         this.actionButton = new Rectangle(this.xPositionOnScreen + 70, this.yPositionOnScreen + 550, 245, 52);
+        this.cancelButton = new Rectangle(this.xPositionOnScreen + 292, this.yPositionOnScreen + 476, 72, 30);
         this.mutationsButton = new Rectangle(this.xPositionOnScreen + 438, this.yPositionOnScreen + 550, 350, 52);
         this.closeButton = new Rectangle(this.xPositionOnScreen + this.width - 52, this.yPositionOnScreen + 16, 36, 34);
     }
@@ -68,6 +73,13 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
             Game1.playSound("smallSelect");
             return;
         }
+        if (this.cancelButton.Contains(x, y) && this.registry.GetMutagenicAttempt(this.machineKey) is not null)
+        {
+            if (this.registry.CancelMutagenicAttempt(this.machineKey))
+                this.statusMessage = "Attempt cancelled. The slime and all chance percentages were preserved.";
+            Game1.playSound("bigDeSelect");
+            return;
+        }
         if (this.previousSlimeButton.Contains(x, y))
         {
             this.SelectAdjacentSlime(-1);
@@ -80,7 +92,10 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
         }
         if (this.actionButton.Contains(x, y))
         {
-            this.StartAttempt();
+            if (this.registry.GetMutagenicAttempt(this.machineKey) is null)
+                this.StartAttempt();
+            else
+                this.ContributeToAttempt();
             Game1.playSound("smallSelect");
             return;
         }
@@ -126,16 +141,18 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
         b.DrawString(Game1.tinyFont, selected is null ? "Use the arrows to choose a resident" : "‹ / › to change selected slime",
             new Vector2(left + 32, top + 258), Color.White);
 
-        b.DrawString(Game1.smallFont, "2. Add Slime (Fuel)", new Vector2(left + 24, top + 302), Color.White);
+        b.DrawString(Game1.smallFont, "2. Add Slime", new Vector2(left + 24, top + 302), Color.White);
         DrawInset(b, new Rectangle(left + 22, top + 330, 316, 60), new Color(224, 196, 147));
         DrawSlimeIcon(b, new Rectangle(left + 32, top + 336, 48, 48));
-        b.DrawString(Game1.smallFont, $"{CountSlimeItems()} / {this.rules.SlimeCost}", new Vector2(left + 92, top + 340), Color.White);
-        b.DrawString(Game1.tinyFont, "vanilla Slime in inventory", new Vector2(left + 92, top + 366), Color.White);
+        b.DrawString(Game1.smallFont, $"{CountSlimeItems()} vanilla Slime", new Vector2(left + 92, top + 340), Color.White);
+        b.DrawString(Game1.tinyFont, "10 Slime adds +1% during an attempt", new Vector2(left + 92, top + 366), Color.White);
 
         b.DrawString(Game1.smallFont, "3. Mutation Attempt", new Vector2(left + 24, top + 402), Color.White);
+        if (active is not null)
+            DrawButton(b, this.cancelButton, "CANCEL", new Color(159, 74, 69));
         if (active is null)
         {
-            b.DrawString(Game1.tinyFont, $"Cycle: {this.rules.DurationDays} in-game day(s) · placeholder",
+            b.DrawString(Game1.tinyFont, $"Cycle: {MutagenicPoolRules.DurationDays} in-game days",
                 new Vector2(left + 24, top + 418), Color.White);
             DrawBar(b, new Rectangle(left + 24, top + 442, 306, 20), 0f);
         }
@@ -146,15 +163,22 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
             b.DrawString(Game1.tinyFont, $"Attempt in progress · ready day {active.ReadyOnDay}", new Vector2(left + 24, top + 418), Color.White);
             DrawBar(b, new Rectangle(left + 24, top + 442, 306, 20), progress);
         }
-        DrawButton(b, this.actionButton, active is null ? "START" : "PROCESSING", active is null ? new Color(40, 119, 207) : new Color(68, 76, 119));
+        string actionLabel = active is null ? "START · 2 DAYS"
+            : this.GetCurrentChance(selected, active) >= MutagenicPoolRules.MaximumChance ? "MAXIMUM CHANCE"
+            : CountSlimeItems() >= MutagenicPoolRules.SlimePerContributionPoint ? "ADD 10 SLIME"
+            : "NEED 10 SLIME";
+        DrawButton(b, this.actionButton, actionLabel,
+            active is null ? new Color(40, 119, 207)
+            : actionLabel == "ADD 10 SLIME" ? new Color(94, 120, 192) : new Color(68, 76, 119));
 
         int center = this.xPositionOnScreen + 394;
         DrawInset(b, new Rectangle(center, top, 390, 462), new Color(238, 224, 190));
         DrawInset(b, new Rectangle(center + 8, top + 8, 374, 46), new Color(154, 93, 51));
         b.DrawString(Game1.smallFont, "Possible Mutation Examples", new Vector2(center + 82, top + 21), Color.White);
-        string[] mutationNames = { "Spotted", "Striped", "Starry", "Speckled", "Glowing", "Crystalline", "Mossy", "Metallic" };
-        Color[] mutationColors = { new(224, 126, 162), new(90, 169, 221), new(148, 116, 214), new(232, 174, 75),
-            new(148, 199, 92), new(119, 211, 227), new(92, 142, 66), new(153, 160, 168) };
+        string[] mutationNames = MutagenicPoolRules.MutationTraits.ToArray();
+        Color[] mutationColors = { new(148, 116, 214), new(224, 126, 162), new(148, 199, 92), new(119, 211, 227),
+            new(92, 142, 66), new(90, 169, 221), new(168, 105, 74), new(236, 137, 168),
+            new(242, 218, 108), new(233, 196, 83), new(153, 129, 91), new(141, 192, 109) };
         for (int i = 0; i < mutationNames.Length; i++)
         {
             int column = i % 4;
@@ -164,8 +188,7 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
             DrawSlimePortrait(b, new Rectangle(tile.X + 12, tile.Y + 4, 54, 58), mutationColors[i]);
             b.DrawString(Game1.tinyFont, mutationNames[i], new Vector2(tile.X + 5, tile.Y + 65), Color.White);
         }
-        b.DrawString(Game1.tinyFont, "Design examples shown above.", new Vector2(center + 18, top + 300), Color.White);
-        b.DrawString(Game1.tinyFont, "Only Shadow Clone is implemented.", new Vector2(center + 18, top + 320), Color.White);
+        b.DrawString(Game1.tinyFont, "Approved cosmetic mutation outcomes.", new Vector2(center + 18, top + 404), Color.White);
         DrawButton(b, this.mutationsButton, "POSSIBLE MUTATIONS", new Color(31, 94, 178));
 
         int right = this.xPositionOnScreen + 804;
@@ -174,18 +197,21 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
         b.DrawString(Game1.smallFont, "PITY SYSTEM", new Vector2(right + 34, top + 20), Color.White);
         b.DrawString(Game1.tinyFont, "Each slime has", new Vector2(right + 14, top + 72), Color.White);
         b.DrawString(Game1.tinyFont, "its own counter.", new Vector2(right + 14, top + 92), Color.White);
-        double chance = active?.ChanceAtStart ?? (selected is null
-            ? this.rules.GetChance(0)
-            : this.rules.GetChance(this.registry.GetMutagenicPoolFailures(selected.myID.Value)));
-        b.DrawString(Game1.smallFont, $"Chance {chance:P0}", new Vector2(right + 14, top + 132), Color.White);
-        DrawBar(b, new Rectangle(right + 14, top + 162, 148, 22), (float)chance);
         int failures = selected is null ? 0 : this.registry.GetMutagenicPoolFailures(selected.myID.Value);
-        b.DrawString(Game1.tinyFont, $"Previous misses: {failures}", new Vector2(right + 14, top + 198), Color.White);
-        b.DrawString(Game1.tinyFont, "Misses raise its", new Vector2(right + 14, top + 238), Color.White);
-        b.DrawString(Game1.tinyFont, "chance. Failure", new Vector2(right + 14, top + 258), Color.White);
-        b.DrawString(Game1.tinyFont, "never harms it.", new Vector2(right + 14, top + 278), Color.White);
-        b.DrawString(Game1.tinyFont, "Success gives", new Vector2(right + 14, top + 316), Color.White);
-        b.DrawString(Game1.tinyFont, "Shadow Clone.", new Vector2(right + 14, top + 336), Color.White);
+        double contribution = selected is null ? 0 : this.registry.GetMutagenicPoolContribution(selected.myID.Value);
+        double pityChance = this.rules.GetPityChance(failures);
+        double contributionChance = this.rules.GetContributionChance(failures, contribution);
+        double chance = active?.ChanceAtStart ?? this.rules.GetChance(failures, contribution);
+        b.DrawString(Game1.smallFont, $"Chance {chance:P0}", new Vector2(right + 14, top + 132), Color.White);
+        DrawChanceBar(b, new Rectangle(right + 14, top + 162, 148, 22), MutagenicPoolRules.BaseChance, pityChance, contributionChance);
+        b.DrawString(Game1.tinyFont, $"Base {MutagenicPoolRules.BaseChance:P0}", new Vector2(right + 14, top + 196), new Color(112, 218, 255));
+        b.DrawString(Game1.tinyFont, $"Pity +{pityChance:P0}", new Vector2(right + 14, top + 216), new Color(255, 201, 112));
+        b.DrawString(Game1.tinyFont, $"You +{contributionChance:P0}", new Vector2(right + 14, top + 236), new Color(201, 153, 255));
+        b.DrawString(Game1.tinyFont, $"Previous misses: {failures}", new Vector2(right + 14, top + 270), Color.White);
+        b.DrawString(Game1.tinyFont, "Failure never harms", new Vector2(right + 14, top + 302), Color.White);
+        b.DrawString(Game1.tinyFont, "the slime. Reaching", new Vector2(right + 14, top + 322), Color.White);
+        b.DrawString(Game1.tinyFont, "100% guarantees a", new Vector2(right + 14, top + 342), Color.White);
+        b.DrawString(Game1.tinyFont, "cosmetic mutation.", new Vector2(right + 14, top + 362), Color.White);
         if (active is not null)
             b.DrawString(Game1.tinyFont, $"Locked at {active.ChanceAtStart:P0} for this attempt.", new Vector2(right + 14, top + 360), Color.White);
 
@@ -207,13 +233,12 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
         int y = this.yPositionOnScreen + (this.height - height) / 2;
         DrawMachineFrame(b, new Rectangle(x, y, width, height));
         b.DrawString(Game1.dialogueFont, "POSSIBLE MUTATIONS", new Vector2(x + 28, y + 22), Color.White);
-        b.DrawString(Game1.smallFont, "CURRENTLY IMPLEMENTED", new Vector2(x + 32, y + 86), new Color(92, 220, 255));
-        b.DrawString(Game1.dialogueFont, "Shadow Clone", new Vector2(x + 32, y + 122), new Color(201, 133, 235));
-        b.DrawString(Game1.smallFont, "Adds a mutation trait and visual shadow companion.", new Vector2(x + 32, y + 166), Color.White);
-        b.DrawString(Game1.smallFont, "Failure returns the slime unchanged; its next-attempt chance rises.",
-            new Vector2(x + 32, y + 208), Color.White);
-        b.DrawString(Game1.tinyFont, "Spotted, Striped, Starry, Speckled, Glowing, Crystalline, Mossy, and Metallic are design examples only; not implemented yet.",
-            new Vector2(x + 32, y + 260), Color.White);
+        b.DrawString(Game1.smallFont, "APPROVED COSMETIC OUTCOMES", new Vector2(x + 32, y + 86), new Color(92, 220, 255));
+        b.DrawString(Game1.smallFont, "One trait per slime; visual effects are being built.", new Vector2(x + 32, y + 122), Color.White);
+        b.DrawString(Game1.tinyFont, "Starry, Spotted, Glowing, Crystalline, Mossy, Bubbly", new Vector2(x + 32, y + 174), Color.White);
+        b.DrawString(Game1.tinyFont, "Mushroom, Blooming, Firefly, Crowned, Cowboy, Smelly", new Vector2(x + 32, y + 196), Color.White);
+        b.DrawString(Game1.smallFont, "Failure is safe; pity rises by 1%.", new Vector2(x + 32, y + 248), Color.White);
+        b.DrawString(Game1.smallFont, "Player contribution carries forward, with a 1% reduction only above 2%.", new Vector2(x + 32, y + 278), Color.White);
         b.DrawString(Game1.tinyFont, "Click anywhere to close", new Vector2(x + width - 174, y + height - 24), Color.White);
     }
 
@@ -298,6 +323,27 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
             batch.Draw(Game1.staminaRect, new Rectangle(bounds.X + 2, bounds.Y + 2, width, bounds.Height - 4), new Color(35, 198, 242));
     }
 
+    private static void DrawChanceBar(SpriteBatch batch, Rectangle bounds, double baseChance, double pityChance, double contributionChance)
+    {
+        batch.Draw(Game1.staminaRect, bounds, new Color(17, 26, 57));
+        int totalWidth = bounds.Width - 4;
+        int baseWidth = (int)Math.Round(totalWidth * Math.Clamp(baseChance, 0, 1));
+        int pityWidth = Math.Clamp((int)Math.Round(totalWidth * Math.Clamp(pityChance, 0, 1)), 0, totalWidth - baseWidth);
+        int contributionWidth = Math.Clamp((int)Math.Round(totalWidth * Math.Clamp(contributionChance, 0, 1)),
+            0, totalWidth - baseWidth - pityWidth);
+        int x = bounds.X + 2;
+        int y = bounds.Y + 2;
+        int height = bounds.Height - 4;
+        if (baseWidth > 0)
+            batch.Draw(Game1.staminaRect, new Rectangle(x, y, baseWidth, height), new Color(84, 194, 239));
+        x += baseWidth;
+        if (pityWidth > 0)
+            batch.Draw(Game1.staminaRect, new Rectangle(x, y, pityWidth, height), new Color(247, 179, 91));
+        x += pityWidth;
+        if (contributionWidth > 0)
+            batch.Draw(Game1.staminaRect, new Rectangle(x, y, contributionWidth, height), new Color(186, 131, 238));
+    }
+
     private void StartAttempt()
     {
         if (this.registry.GetMutagenicAttempt(this.machineKey) is not null)
@@ -310,55 +356,53 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
             this.statusMessage = "Select an eligible mature Ranch Slime first.";
             return;
         }
-        if (CountSlimeItems() < this.rules.SlimeCost)
-        {
-            this.statusMessage = $"Bring {this.rules.SlimeCost} vanilla Slime to the Daycare.";
-            return;
-        }
-
-        List<(int Slot, Item Item, int OldStack)> removed = ConsumeSlimeItems(this.rules.SlimeCost);
         FarmAnimal? animal = this.candidates.FirstOrDefault(candidate => candidate.myID.Value == slimeId);
         int age = animal is null ? 0 : this.registry.GetMaturityAgeDays(slimeId, animal.age.Value);
         if (!this.registry.StartMutagenicAttempt(this.machineKey, slimeId, Game1.Date.TotalDays, age, Game1.random.NextDouble(), this.rules))
         {
-            RestoreItems(removed);
             this.statusMessage = "The selected slime is no longer eligible.";
             return;
         }
 
-        this.statusMessage = "The pool is processing. Save by sleeping; failure is safe and improves this slime's odds next time.";
+        this.statusMessage = "The two-day attempt started at the displayed chance. Add Slime during processing to raise it.";
     }
+
+    private void ContributeToAttempt()
+    {
+        MutagenicAttemptRecord? active = this.registry.GetMutagenicAttempt(this.machineKey);
+        if (active is null || !this.candidates.Any(animal => animal.myID.Value == active.SlimeId))
+        {
+            this.statusMessage = "The slime assigned to this Pool is no longer available here.";
+            return;
+        }
+        if (active.ChanceAtStart >= MutagenicPoolRules.MaximumChance)
+        {
+            this.statusMessage = "This attempt is already guaranteed at 100%.";
+            return;
+        }
+        if (CountSlimeItems() < MutagenicPoolRules.SlimePerContributionPoint)
+        {
+            this.statusMessage = "Bring 10 vanilla Slime to add 1 percentage point during an attempt.";
+            return;
+        }
+
+        if (!this.contributeSlime(this.machineKey))
+        {
+            this.statusMessage = "The contribution could not be saved; your Slime and prior chance were restored.";
+            return;
+        }
+
+        double chance = this.registry.GetMutagenicAttempt(this.machineKey)?.ChanceAtStart ?? active.ChanceAtStart;
+        this.statusMessage = $"Added 10 Slime. This attempt is now at {chance:P0}.";
+    }
+
+    private double GetCurrentChance(FarmAnimal? selected, MutagenicAttemptRecord? active) => active?.ChanceAtStart
+        ?? (selected is null ? this.rules.GetChance(0)
+            : this.rules.GetChance(this.registry.GetMutagenicPoolFailures(selected.myID.Value),
+                this.registry.GetMutagenicPoolContribution(selected.myID.Value)));
 
     private static int CountSlimeItems() => Game1.player.Items
         .Where(item => item is not null && item.QualifiedItemId == "(O)" + SlimeItemId)
         .Sum(item => item!.Stack);
 
-    private static List<(int Slot, Item Item, int OldStack)> ConsumeSlimeItems(int amount)
-    {
-        var removed = new List<(int Slot, Item Item, int OldStack)>();
-        for (int i = 0; i < Game1.player.Items.Count && amount > 0; i++)
-        {
-            Item? item = Game1.player.Items[i];
-            if (item is null || item.QualifiedItemId != "(O)" + SlimeItemId)
-                continue;
-
-            int oldStack = item.Stack;
-            int consumed = Math.Min(amount, oldStack);
-            removed.Add((i, item, oldStack));
-            item.Stack -= consumed;
-            amount -= consumed;
-            if (item.Stack <= 0)
-                Game1.player.Items[i] = null;
-        }
-        return removed;
-    }
-
-    private static void RestoreItems(IEnumerable<(int Slot, Item Item, int OldStack)> removed)
-    {
-        foreach ((int slot, Item item, int oldStack) in removed)
-        {
-            item.Stack = oldStack;
-            Game1.player.Items[slot] = item;
-        }
-    }
 }

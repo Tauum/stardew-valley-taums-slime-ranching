@@ -15,6 +15,7 @@ namespace taums_slime_ranching;
 public sealed class ModEntry : Mod
 {
     private const string IncubationCancellationReceiptPrefix = "Taum.SlimeRanching/IncubationCancellation/";
+    private const string MutagenicContributionReceiptPrefix = "Taum.SlimeRanching/MutagenicContribution/";
 
     private SlimeRegistry? registry;
     private ModStateStore? stateStore;
@@ -23,6 +24,7 @@ public sealed class ModEntry : Mod
     private readonly EnrichmentInteractionService trampolineInteractions = new();
     private readonly ShadowCloneVisualService shadowCloneVisuals = new();
     private readonly List<(long SlimeId, bool Success, double Chance)> pendingMutagenicNotifications = new();
+    private readonly HashSet<string> mutagenicContributionReceiptsToClear = new(StringComparer.Ordinal);
 
     public override void Entry(IModHelper helper)
     {
@@ -56,7 +58,7 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("slime_ranching_set_size", "Set a managed Ranch Slime's test genome size. Usage: slime_ranching_set_size <exact save folder name> <animal ID> <Small|Normal|Large|Giant>.", this.OnSetSlimeSizeCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_color", "Set a managed Ranch Slime's test base color. Usage: slime_ranching_set_color <exact save folder name> <animal ID> <Red|Orange|Yellow|Green|Blue|Purple|Pink>.", this.OnSetSlimeColorCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_shiny", "Set a managed Ranch Slime's test shiny flag. Usage: slime_ranching_set_shiny <exact save folder name> <animal ID> <true|false>.", this.OnSetSlimeShinyCommand);
-        helper.ConsoleCommands.Add("slime_ranching_set_mutation", "Set a managed Ranch Slime's test mutation. Usage: slime_ranching_set_mutation <exact save folder name> <animal ID> <ShadowClone|none>.", this.OnSetSlimeMutationCommand);
+        helper.ConsoleCommands.Add("slime_ranching_set_mutation", "Set a managed Ranch Slime's test mutation. Usage: slime_ranching_set_mutation <exact save folder name> <animal ID> <Starry|Spotted|Glowing|Crystalline|Mossy|Bubbly|Mushroom|Blooming|Firefly|Crowned|Cowboy|Smelly|none>.", this.OnSetSlimeMutationCommand);
         helper.ConsoleCommands.Add("slime_ranching_bind_companion", "Bind one mature Daycare Ranch Slime as the external companion test. Usage: slime_ranching_bind_companion <exact save folder name> <animal ID>.", this.OnBindCompanionCommand);
         helper.ConsoleCommands.Add("slime_ranching_dismiss_companion", "Dismiss the currently bound Ranch Slime companion. Usage: slime_ranching_dismiss_companion <exact save folder name>.", this.OnDismissCompanionCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_guidebook", "Give the Slime Ranching Field Guide. Usage: slime_ranching_give_guidebook <exact save folder name>.", this.OnGiveGuidebookCommand);
@@ -99,6 +101,7 @@ public sealed class ModEntry : Mod
             this.stateReady = true;
             bool repairTransactionRecovered = this.ReconcileMaruRepairDelivery();
             bool incubationCancellationRecovered = this.ReconcileIncubationCancellations();
+            bool mutagenicContributionRecovered = this.ReconcileMutagenicContributionTransactions();
             bool constructionProgressChanged = this.TryRecordCompletedDaycareConstruction();
             bool repairQuestProgressChanged = this.TryStartMaruRepairQuest();
             this.LogRegistryReconciliation(detachedAnimals, cancelledCycles);
@@ -106,12 +109,16 @@ public sealed class ModEntry : Mod
                 this.Monitor.Log("Imported the previous mod-folder slime registry into this save. The original legacy file was left untouched.", LogLevel.Info);
             if (this.stateStore.MigratedSaveData)
                 this.Monitor.Log("Migrated the saved Ranch Slime data to the current schema.", LogLevel.Info);
-            if (needsPersistenceMigration || registeredRanchSlimes > 0 || recoveredHatches > 0 || detachedAnimals > 0 || cancelledCycles > 0 || maturityChanged || repairTransactionRecovered || incubationCancellationRecovered || constructionProgressChanged || repairQuestProgressChanged)
+            if (needsPersistenceMigration || registeredRanchSlimes > 0 || recoveredHatches > 0 || detachedAnimals > 0 || cancelledCycles > 0 || maturityChanged || repairTransactionRecovered || incubationCancellationRecovered || mutagenicContributionRecovered || constructionProgressChanged || repairQuestProgressChanged)
             {
                 if (!this.SaveExternalStateNow())
                     this.Monitor.Log("Imported or reconciled Ranch Slime state remains in memory but could not yet be written to the current save.", LogLevel.Error);
-                else if (maturityChanged)
-                    this.InvalidateEggObjectData();
+                else
+                {
+                    if (maturityChanged)
+                        this.InvalidateEggObjectData();
+                    this.ClearFinalizedMutagenicContributionReceipts();
+                }
             }
         }
         catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException or System.Text.Json.JsonException or NotSupportedException)
@@ -169,46 +176,17 @@ public sealed class ModEntry : Mod
             () => "Whole in-game days per batch (1–28).", 1f, 28f, 1f,
             value => $"{MathF.Round(value):0} day(s)");
         api.AddSectionTitle(this.ModManifest, () => "Mutagenic Pool");
-        api.AddParagraph(this.ModManifest, () => "Balance values are provisional. Changes apply when you save these settings; active attempts keep their stored chance and ready day.");
+        api.AddParagraph(this.ModManifest, () => "The repaired Pool uses fixed 2-day attempts, a 10% base chance, and saved per-slime pity and Slime contributions. Add 10 Slime during an attempt for +1 percentage point; canceling preserves the current chance.");
         api.AddBoolOption(this.ModManifest,
             () => this.config.ShowShadowCloneVisualEchoes,
             value => this.config.ShowShadowCloneVisualEchoes = value,
-            () => "Show Shadow Clone echoes",
-            () => "Show the temporary visual duplicate around Shadow Clone slimes in the Daycare.");
+            () => "Show legacy Shadow Clone echoes",
+            () => "Compatibility display for Shadow Clone traits saved by older versions; new Pool outcomes use the approved mutation list.");
         api.AddNumberOption(this.ModManifest,
             () => this.config.MutagenicPoolShopPrice,
             value => this.config.MutagenicPoolShopPrice = value,
             () => "Shop price",
             () => "Gold price at Marnie's shop.", 0, 999_999, 100);
-        api.AddNumberOption(this.ModManifest,
-            () => this.config.MutagenicPoolSlimeCost,
-            value => this.config.MutagenicPoolSlimeCost = value,
-            () => "Slime cost",
-            () => "Vanilla Slime consumed per attempt.", 1, 999_999, 25);
-        api.AddNumberOption(this.ModManifest,
-            () => (float)this.config.MutagenicPoolDurationDays,
-            value => this.config.MutagenicPoolDurationDays = (int)MathF.Round(value),
-            () => "Processing days",
-            () => "Whole in-game days per attempt (1–28).", 1f, 28f, 1f,
-            value => $"{MathF.Round(value):0} day(s)");
-        api.AddNumberOption(this.ModManifest,
-            () => (float)this.config.MutagenicPoolBaseChance,
-            value => this.config.MutagenicPoolBaseChance = value,
-            () => "Base chance",
-            () => "Chance before this slime has any failed attempts.", 0f, 1f, 0.01f,
-            value => $"{value:P0}");
-        api.AddNumberOption(this.ModManifest,
-            () => (float)this.config.MutagenicPoolChancePerFailure,
-            value => this.config.MutagenicPoolChancePerFailure = value,
-            () => "Pity increase",
-            () => "Chance added after each failed attempt for that slime.", 0f, 1f, 0.01f,
-            value => $"+{value:P0}");
-        api.AddNumberOption(this.ModManifest,
-            () => (float)this.config.MutagenicPoolMaximumChance,
-            value => this.config.MutagenicPoolMaximumChance = value,
-            () => "Chance cap",
-            () => "Maximum chance after repeated failures.", 0f, 1f, 0.01f,
-            value => $"{value:P0}");
     }
 
     private void AddShopPriceOption(IGenericModConfigMenuApi api, string name, string tooltip, Func<int> getValue, Action<int> setValue) =>
@@ -256,6 +234,7 @@ public sealed class ModEntry : Mod
             return;
 
         bool repairTransactionRecovered = this.ReconcileMaruRepairDelivery();
+        bool mutagenicContributionRecovered = this.ReconcileMutagenicContributionTransactions();
         bool constructionProgressChanged = this.TryRecordCompletedDaycareConstruction();
         bool repairQuestProgressChanged = this.TryStartMaruRepairQuest();
         bool maturityChanged = this.registry!.SynchronizeMaturity(GetFarmAnimals(), Game1.Date.TotalDays);
@@ -286,8 +265,20 @@ public sealed class ModEntry : Mod
 
         if (readyToNotify.Count == 0 && refineryReady.Count == 0 && this.pendingMutagenicNotifications.Count == 0)
         {
-            if ((maturityChanged || repairTransactionRecovered || constructionProgressChanged || repairQuestProgressChanged) && !this.SaveExternalStateNow())
-                this.Monitor.Log("Could not save Ranch Slime or Sanctuary quest progress; it will retry at the next save.", LogLevel.Error);
+            bool needsSave = maturityChanged || repairTransactionRecovered || mutagenicContributionRecovered
+                || constructionProgressChanged || repairQuestProgressChanged;
+            if (needsSave)
+            {
+                if (!this.SaveExternalStateNow())
+                    this.Monitor.Log("Could not save Ranch Slime or Sanctuary quest progress; it will retry at the next save.", LogLevel.Error);
+                else
+                {
+                    if (maturityChanged)
+                        this.InvalidateEggObjectData();
+                    if (mutagenicContributionRecovered)
+                        this.ClearFinalizedMutagenicContributionReceipts();
+                }
+            }
             else if (maturityChanged)
                 this.InvalidateEggObjectData();
             return;
@@ -304,6 +295,8 @@ public sealed class ModEntry : Mod
         }
         if (maturityChanged)
             this.InvalidateEggObjectData();
+        if (mutagenicContributionRecovered)
+            this.ClearFinalizedMutagenicContributionReceipts();
 
         foreach (var ready in readyToNotify)
         {
@@ -484,6 +477,97 @@ public sealed class ModEntry : Mod
         }
 
         return changed;
+    }
+
+    private bool ReconcileMutagenicContributionTransactions()
+    {
+        if (this.registry is null)
+            return false;
+
+        bool changed = false;
+        foreach (MutagenicContributionRecord pending in this.registry.PendingMutagenicContributions
+                     .OrderByDescending(transaction => transaction.Sequence).ToArray())
+        {
+            string receiptKey = MutagenicContributionReceiptPrefix + pending.Id;
+            if (Game1.player.modData.ContainsKey(receiptKey))
+            {
+                changed |= this.registry.FinalizeMutagenicContribution(pending.Id);
+                this.mutagenicContributionReceiptsToClear.Add(receiptKey);
+            }
+            else
+                changed |= this.registry.RollbackMutagenicContribution(pending.Id);
+        }
+
+        foreach (string receiptKey in Game1.player.modData.Keys
+                     .Where(key => key.StartsWith(MutagenicContributionReceiptPrefix, StringComparison.Ordinal))
+                     .ToArray())
+        {
+            this.mutagenicContributionReceiptsToClear.Add(receiptKey);
+            changed = true;
+        }
+
+        return changed;
+    }
+
+    private void ClearFinalizedMutagenicContributionReceipts()
+    {
+        foreach (string receiptKey in this.mutagenicContributionReceiptsToClear)
+            Game1.player.modData.Remove(receiptKey);
+        this.mutagenicContributionReceiptsToClear.Clear();
+    }
+
+    private bool ContributeMutagenicPoolSlime(string machineKey)
+    {
+        if (!this.stateReady || !Context.IsMainPlayer || Context.IsMultiplayer || this.registry is null
+            || CountVanillaSlimeItems() < MutagenicPoolRules.SlimePerContributionPoint)
+            return false;
+
+        string? transactionId = this.registry.BeginMutagenicContribution(machineKey, MutagenicPoolRules.Instance);
+        if (transactionId is null)
+            return false;
+        if (!this.SaveExternalStateNow())
+        {
+            this.registry.FinalizeMutagenicContribution(transactionId);
+            return false;
+        }
+
+        (Item? Item, int Stack)[] inventorySnapshot = Game1.player.Items
+            .Select(item => (Item: (Item?)item, Stack: item?.Stack ?? 0))
+            .ToArray();
+        ConsumeVanillaSlimeItems(MutagenicPoolRules.SlimePerContributionPoint);
+        bool applied = this.registry.ApplyMutagenicContribution(transactionId, MutagenicPoolRules.Instance);
+        string receiptKey = MutagenicContributionReceiptPrefix + transactionId;
+        if (applied)
+            Game1.player.modData[receiptKey] = "1";
+        if (applied && this.SaveExternalStateNow())
+            return true;
+
+        this.registry.RollbackMutagenicContribution(transactionId);
+        Game1.player.modData.Remove(receiptKey);
+        RestoreInventorySnapshot(inventorySnapshot);
+        if (!this.SaveExternalStateNow())
+            this.Monitor.Log("Could not persist the rollback after a Mutagenic Pool contribution save failure; the prior chance and inventory were restored in memory and will be reconciled on reload.", LogLevel.Error);
+        return false;
+    }
+
+    private static int CountVanillaSlimeItems() => Game1.player.Items
+        .Where(item => item is not null && item.QualifiedItemId == "(O)766")
+        .Sum(item => item!.Stack);
+
+    private static void ConsumeVanillaSlimeItems(int amount)
+    {
+        for (int index = 0; index < Game1.player.Items.Count && amount > 0; index++)
+        {
+            Item? item = Game1.player.Items[index];
+            if (item is null || item.QualifiedItemId != "(O)766")
+                continue;
+
+            int consumed = Math.Min(amount, item.Stack);
+            item.Stack -= consumed;
+            amount -= consumed;
+            if (item.Stack <= 0)
+                Game1.player.Items[index] = null;
+        }
     }
 
     private bool TryHandleMaruRepairInteraction(SButton button, Vector2 clickedTile)
@@ -1205,7 +1289,8 @@ public sealed class ModEntry : Mod
             }
 
             string machineKey = $"{Game1.currentLocation.NameOrUniqueName}:{(int)pool.TileLocation.X},{(int)pool.TileLocation.Y}";
-            Game1.activeClickableMenu = new MutagenicPoolMenu(this.registry!, machineKey, MutagenicPoolRules.FromConfig(this.config));
+            Game1.activeClickableMenu = new MutagenicPoolMenu(this.registry!, machineKey, MutagenicPoolRules.Instance,
+                this.ContributeMutagenicPoolSlime);
             return;
         }
 
@@ -1297,7 +1382,7 @@ public sealed class ModEntry : Mod
         string? saveName = Constants.SaveFolderName;
         if (args.Length < 1 || args[0] != saveName)
         {
-            this.Monitor.Log($"Usage: slime_ranching_give_test_eggs {saveName} [species=Name] [secondary=Name|none] [color=#RRGGBB] [size=Small|Normal|Large|Giant] [rarity=Tier] [shiny=true|false] [food=(O)itemId] [generation=number] [mutation=ShadowClone|none].", LogLevel.Warn);
+            this.Monitor.Log($"Usage: slime_ranching_give_test_eggs {saveName} [species=Name] [secondary=Name|none] [color=#RRGGBB] [size=Small|Normal|Large|Giant] [rarity=Tier] [shiny=true|false] [food=(O)itemId] [generation=number] [mutation=Starry|Spotted|Glowing|Crystalline|Mossy|Bubbly|Mushroom|Blooming|Firefly|Crowned|Cowboy|Smelly|none].", LogLevel.Warn);
             return;
         }
 
@@ -1345,9 +1430,7 @@ public sealed class ModEntry : Mod
             string? chosenFood = metadata.GetValueOrDefault("food");
             int? chosenGeneration = metadata.TryGetValue("generation", out string? generationText) ? int.Parse(generationText) : null;
             string? chosenMutation = metadata.TryGetValue("mutation", out string? mutationText)
-                && !mutationText.Equals("none", StringComparison.OrdinalIgnoreCase)
-                    ? "Shadow Clone"
-                    : null;
+                && !mutationText.Equals("none", StringComparison.OrdinalIgnoreCase) ? mutationText : null;
             eggs = new[]
             {
                 this.CreateTestEgg(mintId, species, secondarySpecies, chosenColor ?? "#65DDBB", chosenSize, chosenRarity, chosenShiny, chosenFood, chosenGeneration, chosenMutation),
@@ -1421,7 +1504,9 @@ public sealed class ModEntry : Mod
             IsShiny = Game1.random.NextDouble() < 0.1,
             LikedFoodItemId = FoodLikeCatalog.GetRandomItemId(),
             Generation = Game1.random.Next(0, 7),
-            MutationTrait = Game1.random.NextDouble() < 0.1 ? "Shadow Clone" : null
+            MutationTrait = Game1.random.NextDouble() < 0.1
+                ? MutagenicPoolRules.MutationTraits[Game1.random.Next(MutagenicPoolRules.MutationTraits.Count)]
+                : null
         });
     }
 
@@ -1500,12 +1585,16 @@ public sealed class ModEntry : Mod
             return false;
         }
         if (metadata.TryGetValue("mutation", out string? mutation)
-            && !mutation.Equals("none", StringComparison.OrdinalIgnoreCase)
-            && !mutation.Equals("ShadowClone", StringComparison.OrdinalIgnoreCase)
-            && !mutation.Equals("Shadow Clone", StringComparison.OrdinalIgnoreCase))
+            && !mutation.Equals("none", StringComparison.OrdinalIgnoreCase))
         {
-            error = "mutation must be ShadowClone or none";
-            return false;
+            string? approvedMutation = MutagenicPoolRules.MutationTraits
+                .FirstOrDefault(trait => trait.Equals(mutation, StringComparison.OrdinalIgnoreCase));
+            if (approvedMutation is null)
+            {
+                error = "mutation must be one of the 12 approved mutation names or none";
+                return false;
+            }
+            metadata["mutation"] = approvedMutation;
         }
 
         if (metadata.TryGetValue("size", out string? canonicalSize))
@@ -1678,7 +1767,9 @@ public sealed class ModEntry : Mod
             IsShiny = Game1.random.NextDouble() < 0.1,
             LikedFoodItemId = Services.FoodLikeCatalog.GetRandomItemId(),
             Generation = Game1.random.Next(0, 7),
-            MutationTrait = Game1.random.NextDouble() < 0.1 ? "Shadow Clone" : null
+            MutationTrait = Game1.random.NextDouble() < 0.1
+                ? MutagenicPoolRules.MutationTraits[Game1.random.Next(MutagenicPoolRules.MutationTraits.Count)]
+                : null
         };
     }
 
@@ -1800,15 +1891,20 @@ public sealed class ModEntry : Mod
         }
 
         string? saveName = Constants.SaveFolderName;
+        string? chosenMutation = args.Length == 3 && args[2].Equals("none", StringComparison.OrdinalIgnoreCase)
+            ? null
+            : args.Length == 3
+                ? MutagenicPoolRules.MutationTraits.FirstOrDefault(trait => trait.Equals(args[2], StringComparison.OrdinalIgnoreCase))
+                : null;
         if (args.Length != 3 || args[0] != saveName || !long.TryParse(args[1], out long animalId)
-            || (args[2] != "ShadowClone" && args[2] != "none"))
+            || (chosenMutation is null && !args[2].Equals("none", StringComparison.OrdinalIgnoreCase)))
         {
-            this.Monitor.Log($"Usage: slime_ranching_set_mutation {saveName} <animal ID> <ShadowClone|none>", LogLevel.Warn);
+            this.Monitor.Log($"Usage: slime_ranching_set_mutation {saveName} <animal ID> <Starry|Spotted|Glowing|Crystalline|Mossy|Bubbly|Mushroom|Blooming|Firefly|Crowned|Cowboy|Smelly|none>", LogLevel.Warn);
             return;
         }
 
         string? oldTrait = this.registry!.GetMutationTrait(animalId);
-        if (!this.registry.SetMutationTrait(animalId, args[2] == "none" ? null : "Shadow Clone"))
+        if (!this.registry.SetMutationTrait(animalId, chosenMutation))
         {
             this.Monitor.Log("That ID is not an unreserved managed Ranch Slime, or the requested test mutation is invalid.", LogLevel.Warn);
             return;
@@ -2332,7 +2428,7 @@ public sealed class ModEntry : Mod
             string likedFood = FoodLikeCatalog.GetDisplayName(genome.LikedFoodItemId);
             int age = record.AgeClockInitialized ? record.AgeDays : GetFarmAnimals().FirstOrDefault(animal => animal.myID.Value == animalId)?.age.Value ?? 0;
             this.Monitor.Log($"Ranch Slime {animalId}: genome {genome.Id:N}, {species}, color {genome.VisualColor}, size {genome.Size}, shiny {genome.IsShiny}, rarity {genome.RarityTier}, mutation {mutation}.", LogLevel.Info);
-            this.Monitor.Log($"Generation {genome.Generation}; abilities [{string.Join(", ", genome.AbilityIds)}]; likes {likedFood}; age {age}/{FarmAnimalContent.RanchSlimeDaysToMature} days; pity {loadedRegistry.GetMutagenicPoolFailures(animalId)}; companion {record.IsCompanion}; reserved {loadedRegistry.IsReserved(animalId)}.", LogLevel.Info);
+            this.Monitor.Log($"Generation {genome.Generation}; abilities [{string.Join(", ", genome.AbilityIds)}]; likes {likedFood}; age {age}/{FarmAnimalContent.RanchSlimeDaysToMature} days; Pool pity {loadedRegistry.GetMutagenicPoolFailures(animalId)}, contribution {loadedRegistry.GetMutagenicPoolContribution(animalId):P0}; companion {record.IsCompanion}; reserved {loadedRegistry.IsReserved(animalId)}.", LogLevel.Info);
             return;
         }
 

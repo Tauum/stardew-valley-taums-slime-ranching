@@ -17,12 +17,14 @@ internal sealed class SlimeRegistry
     private readonly Dictionary<string, SlimeEggRecord> eggs = new(StringComparer.Ordinal);
     private readonly Dictionary<string, IncubationRecord> incubations = new(StringComparer.Ordinal);
     private readonly Dictionary<string, MutagenicAttemptRecord> mutagenicAttempts = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, MutagenicContributionRecord> pendingMutagenicContributions = new(StringComparer.Ordinal);
     private readonly Dictionary<string, RefineryJobRecord> refineryJobs = new(StringComparer.Ordinal);
     private readonly HashSet<string> hatchedEggIds = new(StringComparer.Ordinal);
     private readonly HashSet<string> destroyedEggIds = new(StringComparer.Ordinal);
     private readonly Dictionary<string, IncubationRecord> pendingIncubationCancellations = new(StringComparer.Ordinal);
     private long? activeCompanionFarmAnimalId;
     private SanctuaryQuestRecord sanctuaryQuest = new();
+    private long nextMutagenicContributionSequence = 1;
 
     public SlimeRegistry(IMonitor monitor) => this.monitor = monitor;
 
@@ -32,6 +34,7 @@ internal sealed class SlimeRegistry
     public IReadOnlyCollection<IncubationRecord> PendingIncubationCancellations => this.pendingIncubationCancellations.Values;
     public IReadOnlyCollection<BreedingPairRecord> BreedingPairs => this.breedingPairs.Values;
     public IReadOnlyCollection<MutagenicAttemptRecord> MutagenicAttempts => this.mutagenicAttempts.Values;
+    public IReadOnlyCollection<MutagenicContributionRecord> PendingMutagenicContributions => this.pendingMutagenicContributions.Values;
     public IReadOnlyCollection<RefineryJobRecord> RefineryJobs => this.refineryJobs.Values;
 
     public IReadOnlyCollection<long> RanchSlimeFarmAnimalIds => this.farmAnimalRecords.Keys;
@@ -470,13 +473,19 @@ internal sealed class SlimeRegistry
     public int GetMutagenicPoolFailures(long slimeId) =>
         this.farmAnimalRecords.TryGetValue(slimeId, out SlimeRecord? record) ? Math.Clamp(record.MutagenicPoolFailures, 0, 9_999) : 0;
 
+    public double GetMutagenicPoolContribution(long slimeId) =>
+        this.farmAnimalRecords.TryGetValue(slimeId, out SlimeRecord? record)
+            ? (double.IsFinite(record.MutagenicPoolContribution) ? Math.Clamp(record.MutagenicPoolContribution, 0, 1) : 0)
+            : 0;
+
     public string? GetMutationTrait(long slimeId) =>
         this.farmAnimalRecords.TryGetValue(slimeId, out SlimeRecord? record) ? record.Genome.MutationTrait : null;
 
     public bool SetMutationTrait(long slimeId, string? mutationTrait)
     {
         if (!this.farmAnimalRecords.TryGetValue(slimeId, out SlimeRecord? record)
-            || (mutationTrait is not null && mutationTrait != "Shadow Clone")
+            || (mutationTrait is not null && !MutagenicPoolRules.IsApprovedMutation(mutationTrait)
+                && mutationTrait != "Shadow Clone")
             || this.IsReserved(slimeId))
             return false;
 
@@ -493,18 +502,80 @@ internal sealed class SlimeRegistry
             || this.IsReserved(slimeId, machineKey))
             return false;
 
-        double chance = rules.GetChance(record.MutagenicPoolFailures);
+        double chance = rules.GetChance(record.MutagenicPoolFailures, record.MutagenicPoolContribution);
         this.mutagenicAttempts[machineKey] = new MutagenicAttemptRecord
         {
             MachineKey = machineKey,
             SlimeId = slimeId,
             StartedOnDay = currentDay,
-            ReadyOnDay = currentDay + rules.DurationDays,
+            ReadyOnDay = currentDay + MutagenicPoolRules.DurationDays,
             ChanceAtStart = chance,
             Roll = Math.Clamp(roll, 0, 0.999999999)
         };
         return true;
     }
+
+    public string? BeginMutagenicContribution(string machineKey, MutagenicPoolRules rules)
+    {
+        if (string.IsNullOrWhiteSpace(machineKey)
+            || !this.mutagenicAttempts.TryGetValue(machineKey, out MutagenicAttemptRecord? attempt)
+            || !this.farmAnimalRecords.TryGetValue(attempt.SlimeId, out SlimeRecord? record)
+            || !string.IsNullOrWhiteSpace(record.Genome.MutationTrait)
+            || rules.GetChance(record.MutagenicPoolFailures, record.MutagenicPoolContribution) >= MutagenicPoolRules.MaximumChance)
+            return null;
+
+        string transactionId = Guid.NewGuid().ToString("N");
+
+        this.pendingMutagenicContributions[transactionId] = new MutagenicContributionRecord
+        {
+            Id = transactionId,
+            MachineKey = machineKey,
+            SlimeId = attempt.SlimeId,
+            Sequence = this.nextMutagenicContributionSequence,
+            PreviousContribution = Math.Clamp(record.MutagenicPoolContribution, 0, 1)
+        };
+        if (this.nextMutagenicContributionSequence < long.MaxValue)
+            this.nextMutagenicContributionSequence++;
+        return transactionId;
+    }
+
+    public bool ApplyMutagenicContribution(string transactionId, MutagenicPoolRules rules)
+    {
+        if (!this.pendingMutagenicContributions.TryGetValue(transactionId, out MutagenicContributionRecord? transaction)
+            || !this.mutagenicAttempts.TryGetValue(transaction.MachineKey, out MutagenicAttemptRecord? attempt)
+            || attempt.SlimeId != transaction.SlimeId
+            || !this.farmAnimalRecords.TryGetValue(transaction.SlimeId, out SlimeRecord? record))
+            return false;
+
+        if (transaction.ContributionApplied)
+            return false;
+
+        record.MutagenicPoolContribution = Math.Min(1,
+            record.MutagenicPoolContribution + MutagenicPoolRules.ContributionPoint);
+        attempt.ChanceAtStart = rules.GetChance(record.MutagenicPoolFailures, record.MutagenicPoolContribution);
+        transaction.ContributionApplied = true;
+        return true;
+    }
+
+    public bool RollbackMutagenicContribution(string transactionId)
+    {
+        if (!this.pendingMutagenicContributions.Remove(transactionId, out MutagenicContributionRecord? transaction))
+            return false;
+
+        if (this.farmAnimalRecords.TryGetValue(transaction.SlimeId, out SlimeRecord? record))
+            record.MutagenicPoolContribution = transaction.PreviousContribution;
+        if (this.mutagenicAttempts.TryGetValue(transaction.MachineKey, out MutagenicAttemptRecord? attempt)
+            && attempt.SlimeId == transaction.SlimeId
+            && this.farmAnimalRecords.TryGetValue(transaction.SlimeId, out SlimeRecord? current))
+            attempt.ChanceAtStart = MutagenicPoolRules.Instance.GetChance(current.MutagenicPoolFailures, current.MutagenicPoolContribution);
+        return true;
+    }
+
+    public bool FinalizeMutagenicContribution(string transactionId) =>
+        this.pendingMutagenicContributions.Remove(transactionId);
+
+    public bool CancelMutagenicAttempt(string machineKey) =>
+        !string.IsNullOrWhiteSpace(machineKey) && this.mutagenicAttempts.Remove(machineKey);
 
     public List<(long SlimeId, bool Success, double Chance)> ResolveReadyMutagenicAttempts(int currentDay)
     {
@@ -521,11 +592,17 @@ internal sealed class SlimeRegistry
             bool success = attempt.Roll < attempt.ChanceAtStart;
             if (success)
             {
-                slime.Genome.MutationTrait = "Shadow Clone";
-                slime.MutagenicPoolFailures = 0;
+                double withinSuccessRange = Math.Clamp(attempt.Roll / Math.Max(attempt.ChanceAtStart, double.Epsilon), 0, 0.999999999);
+                int mutationIndex = Math.Clamp((int)(withinSuccessRange * MutagenicPoolRules.MutationTraits.Count), 0, MutagenicPoolRules.MutationTraits.Count - 1);
+                slime.Genome.MutationTrait = MutagenicPoolRules.MutationTraits[mutationIndex];
+                slime.MutagenicPoolContribution = 0;
             }
             else
+            {
                 slime.MutagenicPoolFailures = Math.Min(9_999, Math.Clamp(slime.MutagenicPoolFailures, 0, 9_999) + 1);
+                if (slime.MutagenicPoolContribution > 0.02)
+                    slime.MutagenicPoolContribution = Math.Max(0, slime.MutagenicPoolContribution - MutagenicPoolRules.ContributionPoint);
+            }
             results.Add((attempt.SlimeId, success, attempt.ChanceAtStart));
             this.mutagenicAttempts.Remove(attempt.MachineKey);
         }
@@ -802,6 +879,7 @@ internal sealed class SlimeRegistry
         target.AgeClockInitialized = source.AgeClockInitialized;
         target.BreedingCooldownUntilDay = source.BreedingCooldownUntilDay;
         target.MutagenicPoolFailures = source.MutagenicPoolFailures;
+        target.MutagenicPoolContribution = source.MutagenicPoolContribution;
         target.LastCompostFeedDay = source.LastCompostFeedDay;
         target.EnrichmentActivityDay = source.EnrichmentActivityDay;
         target.EnrichmentActivitiesToday = source.EnrichmentActivitiesToday;
@@ -862,6 +940,8 @@ internal sealed class SlimeRegistry
         this.eggs.Clear();
         this.incubations.Clear();
         this.mutagenicAttempts.Clear();
+        this.pendingMutagenicContributions.Clear();
+        this.nextMutagenicContributionSequence = 1;
         this.refineryJobs.Clear();
         this.hatchedEggIds.Clear();
         this.destroyedEggIds.Clear();
@@ -908,6 +988,22 @@ internal sealed class SlimeRegistry
 
             if (!alreadyLikedFood)
                 assignedFoodLikes++;
+        }
+
+        foreach (MutagenicContributionRecord transaction in data?.PendingMutagenicContributions ?? Enumerable.Empty<MutagenicContributionRecord>())
+        {
+            if (transaction is null || !Guid.TryParseExact(transaction.Id, "N", out _)
+                || string.IsNullOrWhiteSpace(transaction.MachineKey)
+                || transaction.Sequence < 0
+                || !double.IsFinite(transaction.PreviousContribution) || transaction.PreviousContribution is < 0 or > 1
+                || !this.farmAnimalRecords.ContainsKey(transaction.SlimeId))
+            {
+                this.monitor.Log("Skipped a malformed Mutagenic Pool contribution transaction.", LogLevel.Warn);
+                continue;
+            }
+            this.pendingMutagenicContributions.TryAdd(transaction.Id, transaction);
+            if (transaction.Sequence >= this.nextMutagenicContributionSequence && transaction.Sequence < long.MaxValue)
+                this.nextMutagenicContributionSequence = transaction.Sequence + 1;
         }
 
         foreach (BreedingPairRecord pair in data?.BreedingPairs ?? Enumerable.Empty<BreedingPairRecord>())
@@ -1035,6 +1131,7 @@ internal sealed class SlimeRegistry
         BreedingPairs = this.breedingPairs.Values.OrderBy(pair => pair.MachineKey, StringComparer.Ordinal).ToList(),
         Incubations = this.incubations.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList(),
         MutagenicAttempts = this.mutagenicAttempts.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList(),
+        PendingMutagenicContributions = this.pendingMutagenicContributions.Values.OrderBy(record => record.Sequence).ToList(),
         RefineryJobs = this.refineryJobs.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList(),
         SanctuaryQuest = SanctuaryQuestProgression.Normalize(this.sanctuaryQuest),
         ActiveCompanionFarmAnimalId = this.activeCompanionFarmAnimalId,
@@ -1078,6 +1175,10 @@ internal sealed class SlimeRegistry
 
         if (!FoodLikeCatalog.IsEligible(record.Genome.LikedFoodItemId))
             record.Genome.LikedFoodItemId = FoodLikeCatalog.ForSlime(id);
+        record.MutagenicPoolFailures = Math.Clamp(record.MutagenicPoolFailures, 0, 9_999);
+        record.MutagenicPoolContribution = double.IsFinite(record.MutagenicPoolContribution)
+            ? Math.Clamp(record.MutagenicPoolContribution, 0, 1)
+            : 0;
         SlimeAbilityCatalog.Refresh(record.Genome);
 
         return true;

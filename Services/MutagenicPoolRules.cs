@@ -1,42 +1,42 @@
 namespace taums_slime_ranching.Services;
 
-/// <summary>Validated, per-session tuning values for the Mutagenic Pool.</summary>
+/// <summary>Approved fixed chance, timing, contribution, and cosmetic mutation rules.</summary>
 internal sealed class MutagenicPoolRules
 {
-    private MutagenicPoolRules(int slimeCost, double baseChance, double pityIncrease, double maximumChance, int durationDays)
-    {
-        this.SlimeCost = slimeCost;
-        this.BaseChance = baseChance;
-        this.PityIncrease = pityIncrease;
-        this.MaximumChance = maximumChance;
-        this.DurationDays = durationDays;
-    }
+    public const int DurationDays = 2;
+    public const int SlimePerContributionPoint = 10;
+    public const double BaseChance = 0.10;
+    public const double PityPerFailure = 0.01;
+    public const double MaximumChance = 1.0;
+    public const double ContributionPoint = 0.01;
 
-    public int SlimeCost { get; }
-    public double BaseChance { get; }
-    public double PityIncrease { get; }
-    public double MaximumChance { get; }
-    public int DurationDays { get; }
-
-    public static MutagenicPoolRules FromConfig(ModConfig config)
+    public static readonly IReadOnlyList<string> MutationTraits = new[]
     {
-        double baseChance = Math.Clamp(config.MutagenicPoolBaseChance, 0, 1);
-        return new MutagenicPoolRules(
-            Math.Clamp(config.MutagenicPoolSlimeCost, 1, 999_999),
-            baseChance,
-            Math.Clamp(config.MutagenicPoolChancePerFailure, 0, 1),
-            Math.Clamp(config.MutagenicPoolMaximumChance, baseChance, 1),
-            Math.Clamp(config.MutagenicPoolDurationDays, 1, 28));
-    }
+        "Starry", "Spotted", "Glowing", "Crystalline", "Mossy", "Bubbly",
+        "Mushroom", "Blooming", "Firefly", "Crowned", "Cowboy", "Smelly"
+    };
+
+    public static MutagenicPoolRules Instance { get; } = new();
+
+    private MutagenicPoolRules() { }
+
+    public double GetPityChance(int previousFailures) =>
+        Math.Min(MaximumChance - BaseChance,
+            PityPerFailure * Math.Clamp(previousFailures, 0, 9_999));
+
+    public double GetContributionChance(int previousFailures, double contribution) =>
+        Math.Clamp(double.IsFinite(contribution) ? contribution : 0, 0,
+            Math.Max(0, MaximumChance - BaseChance - this.GetPityChance(previousFailures)));
+
+    public double GetChance(int previousFailures, double contribution = 0) =>
+        Math.Min(MaximumChance, BaseChance + this.GetPityChance(previousFailures)
+            + this.GetContributionChance(previousFailures, contribution));
+
+    public static bool IsApprovedMutation(string? trait) =>
+        !string.IsNullOrWhiteSpace(trait) && MutationTraits.Contains(trait, StringComparer.Ordinal);
 
     public static void NormalizeConfig(ModConfig config)
     {
-        MutagenicPoolRules rules = FromConfig(config);
-        config.MutagenicPoolSlimeCost = rules.SlimeCost;
-        config.MutagenicPoolBaseChance = rules.BaseChance;
-        config.MutagenicPoolChancePerFailure = rules.PityIncrease;
-        config.MutagenicPoolMaximumChance = rules.MaximumChance;
-        config.MutagenicPoolDurationDays = rules.DurationDays;
         config.GelRefineryShopPrice = Math.Clamp(config.GelRefineryShopPrice, 0, 999_999);
         config.GelRefinerySlimeFuelCost = Math.Clamp(config.GelRefinerySlimeFuelCost, 1, 999_999);
         config.GelRefineryDurationDays = Math.Clamp(config.GelRefineryDurationDays, 1, 28);
@@ -57,7 +57,4 @@ internal sealed class MutagenicPoolRules
         config.SlimeBedShopPrice = Math.Clamp(config.SlimeBedShopPrice, 0, 999_999);
         config.MutagenicPoolShopPrice = Math.Clamp(config.MutagenicPoolShopPrice, 0, 999_999);
     }
-
-    public double GetChance(int previousFailures) =>
-        Math.Min(this.MaximumChance, this.BaseChance + this.PityIncrease * Math.Clamp(previousFailures, 0, 9_999));
 }

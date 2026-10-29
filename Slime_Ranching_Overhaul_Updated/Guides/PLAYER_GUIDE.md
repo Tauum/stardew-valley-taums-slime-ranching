@@ -4,7 +4,7 @@
 
 The basic Daycare uses `FarmHouse`; its first building upgrade changes to `FarmHouse1` and unlocks a separate Daycare Renovate choice at Robin. The second and third upgrades use `FarmHouse2`, and the third adds the Daycare's cellar. The Daycare remains an animal house for Ranch Slimes. Room renovation choices are saved to the Daycare; crib removal is not offered. Wallpaper and flooring remain Daycare-specific. This feature needs in-game testing; use the copied test save and follow `Planning/FEATURE_TESTING_WALKTHROUGH.md`.
 
-> **2.0 redesign in progress:** the current 1.x build still uses the storage and prototype behavior described below. The `feature/2.0-save-data` branch is not deployed yet. Its intended storage is per-save SMAPI data for facility jobs, Ranch Slime entity metadata for slime identity/genomes, and item metadata for each egg. The old install-folder registry is retained read-only during migration. Test this branch only on a copied save; this guide will be revised after migration is verified.
+> **2.0 redesign in progress:** the 2.0 feature branch is in active development, and feature checks are being collected for a later bulk test pass. The current architecture stores facility jobs in per-save SMAPI data, Ranch Slime identity and genome fields in entity `modData`, and unique egg records in item metadata. Legacy external registry data is imported once. The player guide covers the fixed Mutagenic Pool rules now; other prototype sections remain provisional. Test only on copied saves and report in-game results together.
 
 ## Daycare wallpaper and flooring
 
@@ -20,7 +20,7 @@ This guide covers the current early prototype. The Slime Breeder can reserve two
 - Marnie also sells a Slime Playground. Two nearby Ranch Slimes can hop together on it; the interaction is decorative and currently grants no friendship or happiness bonus.
 - Marnie also sells a Slime Slide. Nearby Ranch Slimes can do a small hop and horizontal glide down it; the effect is decorative.
 - Marnie also sells a Slime Bed. Nearby Ranch Slimes can settle briefly into a resting pose; it has no gameplay effect yet.
-- Marnie sells a Mutagenic Pool. It assigns one mature Ranch Slime for a nonlethal mutation attempt; defaults are 500 vanilla Slime, one day, 5% base chance, +2 percentage points per failure, and 30% cap. Use the GMCM settings page or `config.json` to tune it. Success adds the Shadow Clone trait; a temporary visual echo appears in the Daycare, but its planned abilities are not implemented. GMCM can disable the echo without removing the mutation.
+- After Maru repairs it, the Mutagenic Pool runs a two-day, nonlethal attempt on one mature Ranch Slime. Each attempt starts at 10%. During an active attempt, add 10 vanilla Slime for +1 percentage point; the segmented meter shows base chance, pity, and your contribution, up to a guaranteed 100%. Each slime keeps its own pity and contribution. Failure adds 1 percentage point of pity; contribution drops by 1 point only when it is above 2%. Success keeps pity and clears contribution. Canceling releases the slime without a roll and preserves all chance percentages. Approved outcomes are Starry, Spotted, Glowing, Crystalline, Mossy, Bubbly, Mushroom, Blooming, Firefly, Crowned, Cowboy, and Smelly. Their rendered effects are still being developed; old Shadow Clone traits remain supported as legacy data.
 - Marnie sells a Gel Refinery. Its first provisional recipe uses 1 Broken Glasses and 10 vanilla Slime to make 1 Refined Quartz over one in-game day. Fuel, time, and price can be tuned in GMCM or `config.json`; use `slime_ranching_give_gel_refinery <save name>` for testing. See the recipe section below and verify on a copied save.
 - Marnie sells a Compost Trough. It can feed juvenile Ranch Slimes eligible monster drops, fishing trash, or algae once per day. A favorite item advances growth more; the growth values are configurable and provisional. Use `slime_ranching_give_compost_trough <save name>` to test it.
 - Marnie also sells a Slime Tunnel. Nearby idle Ranch Slimes can do a short decorative crawl-through; use `slime_ranching_give_tunnel <save name>` to test it. This animation does not change stats or save state.
@@ -60,15 +60,15 @@ To generate one egg with randomized genome traits, add `random`:
 slime_ranching_give_test_eggs <save folder name> random
 ```
 
-The randomized egg rolls a base color/species, optional secondary species, size, rarity, shiny state, eligible favorite food, generation, and Shadow Clone mutation. Its parent links remain empty because this is a test genome, not offspring from a real pair. The default and `key=value` forms still give two eggs.
+The randomized egg rolls a base color/species, optional secondary species, size, rarity, shiny state, eligible favorite food, generation, and (at 10%) one of the approved cosmetic mutations. Its parent links remain empty because this is a test genome, not offspring from a real pair. The default and `key=value` forms still give two eggs.
 
 For controlled testing, pass one or more `key=value` options instead. Any omitted option keeps the command's default; explicit values apply to both eggs, while their genome IDs remain distinct:
 
 ```text
-slime_ranching_give_test_eggs <save folder name> species=Mint_Slime secondary=none color=#65DDBB size=Giant rarity=Rare shiny=true food=(O)168 generation=4 mutation=ShadowClone
+slime_ranching_give_test_eggs <save folder name> species=Mint_Slime secondary=none color=#65DDBB size=Giant rarity=Rare shiny=true food=(O)168 generation=4 mutation=Starry
 ```
 
-Available keys: `species`, `secondary` (`none` clears it), `color` (`#RRGGBB`), `size` (`Small`, `Normal`, `Large`, or `Giant`), `rarity` (text tier), `shiny` (`true`/`false`), `food` (eligible item ID), `generation` (0â€“999), and `mutation` (`ShadowClone` or `none`). Eligible food IDs include `(O)684` Bug Meat, `(O)766` Slime, `(O)168` Trash, and `(O)170` Broken Glasses. The `random` mode can't be combined with `key=value` options.
+Available keys: `species`, `secondary` (`none` clears it), `color` (`#RRGGBB`), `size` (`Small`, `Normal`, `Large`, or `Giant`), `rarity` (text tier), `shiny` (`true`/`false`), `food` (eligible item ID), `generation` (0-999), and `mutation` (`Starry`, `Spotted`, `Glowing`, `Crystalline`, `Mossy`, `Bubbly`, `Mushroom`, `Blooming`, `Firefly`, `Crowned`, `Cowboy`, `Smelly`, or `none`). Eligible food IDs include `(O)684` Bug Meat, `(O)766` Slime, `(O)168` Trash, and `(O)170` Broken Glasses. The `random` mode can't be combined with `key=value` options.
 
 ## Hutch inspection
 
@@ -108,9 +108,9 @@ In normal play, after Daycare construction, talk to Robin about the broken Mutag
 
 ## Mutagenic Pool
 
-Buy the Pool from Marnie or request a test item with `slime_ranching_give_mutagenic_pool <exact save folder name>`. Place it inside the Slime Daycare, bring the configured amount of vanilla Slime in your inventory, and select one mature, unreserved Ranch Slime. Sleep to save the inventory cost and external attempt. The Pool records its chance and roll when started, so reloading doesn't reroll it. Failure never harms the slime; its next attempt gets the configured pity increase. Success sets the Shadow Clone trait and resets pity.
+After Maru repairs the Pool, use it inside the Slime Daycare and select one mature, unreserved Ranch Slime. Starting costs no Slime. The attempt takes two in-game days and begins at 10%; while it runs, each 10 vanilla Slime adds 1 percentage point and is consumed. The color-coded bar separates base chance, pity, and contribution. At 100%, the mutation is guaranteed. Each failed roll is safe and adds 1 percentage point of that slime's pity. On failure, contribution falls by 1 point only when above 2%; otherwise it carries forward unchanged. On success, pity stays and contribution resets to zero. Use **Cancel** during an attempt to release the slime without a roll; all chance percentages remain unchanged.
 
-The attempt, roll, mutation trait, and pity count are stored under `<installed mod folder>/data/saves/<save folder name>/`. Vanilla inventory changes use Stardew's normal save. Use a copied test save, and keep the mod installed while its custom Pool item remains in the save. The visual echo is decorative; it is not another animal and produces no items or offspring.
+Attempts, rolls, mutation traits, pity, and contributions are stored in the per-save mod data. Slime contributions use a save receipt so an interrupted save restores the resource and prior chance together. The approved traits are Starry, Spotted, Glowing, Crystalline, Mossy, Bubbly, Mushroom, Blooming, Firefly, Crowned, Cowboy, and Smelly; visible effects are not implemented yet. The old Shadow Clone echo is retained only for compatible saves. Use a copied test save, and keep the mod installed while its custom Pool item remains in the save.
 
 ## Gel Refinery
 
@@ -138,7 +138,7 @@ Select the book and press the action button to open it. It is a custom item refe
 - **Genetics and slime identity:** The registry model can hold genome data. Ranch Slime genomes are keyed to native FarmAnimal IDs; this still needs save/reload verification. Existing GreenSlime monsters are only captured in the first-seen snapshot; they aren't changed or adopted.
 - **Food likes:** Favorite food is stored, assigned independently for each offspring, shown in the breeder, and used by the Compost Trough's provisional extra growth bonus.
 - **Furniture:** Trampoline, cushion, playground, slide, and bed animations are active prototypes in the Daycare, with no happiness or breeding effects yet.
-- **Mutations:** The Mutagenic Pool can roll the Shadow Clone trait with per-slime pity. Its temporary Daycare echo is visual only; cloned abilities are not implemented.
+- **Mutations:** The Mutagenic Pool now rolls from the approved twelve-trait list with per-slime pity and contribution. Rendered mutation effects remain under development; old Shadow Clone records are compatibility data.
 - **Production and companions:** Slime-produced goods and custom companion AI are not active gameplay features yet.
 
 ## Ranch Slime animal prototype
@@ -149,7 +149,7 @@ The 1.x prototype defines a **Slime Daycare**, a separate animal-house building,
 slime_ranching_spawn_ranch_slime <exact save folder name> <age in days 0-7> [random]
 ```
 
-For a 2.0 test copy, use `slime_ranching_spawn_ranch_slime <save folder name> 7` to spawn a mature slime, or use `slime_ranching_spawn_ranch_slime <save folder name> 0` to spawn a newborn. Add the optional `random` tag (for example, `slime_ranching_spawn_ranch_slime <save folder name> 0 random`) to keep the chosen age while randomizing the genome traits: primary species/color, a 30% chance of a secondary species, size, rarity, a 10% shiny chance, favorite food, generation (0â€“6), and a 10% chance of the Shadow Clone mutation. Without the tag, the command uses the default green Ranch Slime genome: no secondary species, Normal size, Common rarity, not shiny, generation 0, and no mutation; the mod assigns its favorite food. Ages 1â€“6 create juveniles that need the remaining days to reach maturity. The command adds a Ranch Slime without converting or removing any vanilla slimes, and immediately saves its genome to the mod's active save data. The animal itself and standard properties like its name, home, age, and friendship are stored by Stardew when the game saves.
+For a 2.0 test copy, use `slime_ranching_spawn_ranch_slime <save folder name> 7` to spawn a mature slime, or use `slime_ranching_spawn_ranch_slime <save folder name> 0` to spawn a newborn. Add the optional `random` tag (for example, `slime_ranching_spawn_ranch_slime <save folder name> 0 random`) to keep the chosen age while randomizing the genome traits: primary species/color, a 30% chance of a secondary species, size, rarity, a 10% shiny chance, favorite food, generation (0â€“6), and a 10% chance of an approved mutation. Without the tag, the command uses the default green Ranch Slime genome: no secondary species, Normal size, Common rarity, not shiny, generation 0, and no mutation; the mod assigns its favorite food. Ages 1â€“6 create juveniles that need the remaining days to reach maturity. The command adds a Ranch Slime without converting or removing any vanilla slimes, and immediately saves its genome to the mod's active save data. The animal itself and standard properties like its name, home, age, and friendship are stored by Stardew when the game saves.
 
 To set a managed Ranch Slime's visual size for testing, use `slime_ranching_set_size <save folder name> <animal ID> <Small|Normal|Large|Giant>`. This does not affect offspring size; bred offspring currently start at Normal size.
 

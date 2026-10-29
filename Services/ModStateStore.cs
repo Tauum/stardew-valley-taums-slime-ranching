@@ -80,6 +80,24 @@ internal sealed class ModStateStore
             if (saveData.SchemaVersion == 15)
             {
                 saveData.PendingIncubationCancellations ??= new List<IncubationRecord>();
+                saveData.SchemaVersion = 16;
+                this.MigratedSaveData = true;
+            }
+            if (saveData.SchemaVersion == 16)
+            {
+                foreach (SlimeRecord? slime in saveData.Slimes)
+                {
+                    if (slime is not null)
+                        slime.MutagenicPoolContribution = double.IsFinite(slime.MutagenicPoolContribution)
+                            ? Math.Clamp(slime.MutagenicPoolContribution, 0, 1)
+                            : 0;
+                }
+                saveData.SchemaVersion = 17;
+                this.MigratedSaveData = true;
+            }
+            if (saveData.SchemaVersion == 17)
+            {
+                saveData.PendingMutagenicContributions ??= new List<MutagenicContributionRecord>();
                 saveData.SchemaVersion = SlimeSaveData.CurrentSchemaVersion;
                 this.MigratedSaveData = true;
             }
@@ -180,8 +198,27 @@ internal sealed class ModStateStore
 
         if (root is JsonObject schemaFifteen && schemaFifteen["SchemaVersion"]?.GetValue<int>() == 15)
         {
-            schemaFifteen["SchemaVersion"] = SlimeSaveData.CurrentSchemaVersion;
+            schemaFifteen["SchemaVersion"] = 16;
             schemaFifteen["PendingIncubationCancellations"] = new JsonArray();
+        }
+
+        if (root is JsonObject schemaSixteen && schemaSixteen["SchemaVersion"]?.GetValue<int>() == 16)
+        {
+            schemaSixteen["SchemaVersion"] = 17;
+            if (schemaSixteen["Slimes"] is JsonArray slimeRecords)
+            {
+                foreach (JsonNode? slimeNode in slimeRecords)
+                {
+                    if (slimeNode is JsonObject slime && !slime.ContainsKey("MutagenicPoolContribution"))
+                        slime["MutagenicPoolContribution"] = 0;
+                }
+            }
+        }
+
+        if (root is JsonObject schemaSeventeen && schemaSeventeen["SchemaVersion"]?.GetValue<int>() == 17)
+        {
+            schemaSeventeen["SchemaVersion"] = SlimeSaveData.CurrentSchemaVersion;
+            schemaSeventeen["PendingMutagenicContributions"] = new JsonArray();
         }
 
         if (root is JsonObject jsonData && jsonData["Slimes"] is JsonArray slimes)
