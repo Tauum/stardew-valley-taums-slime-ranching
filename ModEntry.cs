@@ -75,6 +75,7 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("slime_ranching_give_breeder", "Give one Slime Breeder for testing. Usage: slime_ranching_give_breeder <exact save folder name>.", this.OnGiveBreederCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_incubator", "Give one Slime Incubator for testing. Usage: slime_ranching_give_incubator <exact save folder name>.", this.OnGiveIncubatorCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_cryolab", "Give one tester Egg CryoLab chest. Usage: slime_ranching_give_cryolab <exact save folder name>.", this.OnGiveCryoLabCommand);
+        helper.ConsoleCommands.Add("slime_ranching_duplicate_cryolab_egg", "Deliberately duplicate a stored egg ID for CryoLab guard testing on a disposable save. Usage: slime_ranching_duplicate_cryolab_egg <exact save folder name>.", this.OnDuplicateCryoLabEggCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_mutagenic_pool", "Give one Mutagenic Pool for testing. Usage: slime_ranching_give_mutagenic_pool <exact save folder name>.", this.OnGiveMutagenicPoolCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_gel_refinery", "Give one Gel Refinery for testing. Usage: slime_ranching_give_gel_refinery <exact save folder name>.", this.OnGiveGelRefineryCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_tunnel", "Give one Slime Tunnel for testing. Usage: slime_ranching_give_tunnel <exact save folder name>.", this.OnGiveTunnelCommand);
@@ -1651,6 +1652,16 @@ public sealed class ModEntry : Mod
             return false;
 
         bool changed = false;
+        foreach (Chest chest in this.GetDaycareCryoLabChests())
+        {
+            changed |= this.RegisterEggCryoLabContents(chest);
+        }
+
+        return changed;
+    }
+
+    private IEnumerable<Chest> GetDaycareCryoLabChests()
+    {
         foreach (Building building in Game1.getFarm().buildings)
         {
             if (!BuildingContent.IsSlimeDaycare(building.buildingType.Value)
@@ -1658,10 +1669,8 @@ public sealed class ModEntry : Mod
                 continue;
 
             foreach (Chest chest in daycare.Objects.Values.OfType<Chest>().Where(EggCryoLabContent.IsEggCryoLab))
-                changed |= this.RegisterEggCryoLabContents(chest);
+                yield return chest;
         }
-
-        return changed;
     }
 
     private bool RegisterEggCryoLabContents(Chest chest)
@@ -1760,8 +1769,7 @@ public sealed class ModEntry : Mod
             || this.registry.BreedingPairs.Any(pair => pair.OutputEggItemId == candidateEggId)
             || who.Items.Any(existing => existing is not null
                 && SlimeEggContent.TryGetEggId(existing, out string existingId) && existingId == candidateEggId)
-            || Game1.currentLocation.Objects.Values.OfType<Chest>()
-                .Where(EggCryoLabContent.IsEggCryoLab)
+            || this.GetDaycareCryoLabChests()
                 .SelectMany(existingChest => existingChest.GetItemsForPlayer())
                 .Any(existing => existing is not null
                     && SlimeEggContent.TryGetEggId(existing, out string existingId) && existingId == candidateEggId))
@@ -2604,6 +2612,53 @@ public sealed class ModEntry : Mod
         }
 
         this.Monitor.Log("Added a tester Egg CryoLab chest. Place it in a tier-1-or-higher Slime Daycare; it stores eligible Ranch Slime Eggs without starting incubation.", LogLevel.Info);
+    }
+
+    private void OnDuplicateCryoLabEggCommand(string command, string[] args)
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady || this.registry is null)
+        {
+            this.Monitor.Log("Load a disposable single-player save before creating a duplicate Egg CryoLab test item.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 1 || args[0] != saveName)
+        {
+            this.Monitor.Log($"This command deliberately duplicates an egg identity. Use it only on a disposable copy: slime_ranching_duplicate_cryolab_egg {saveName}", LogLevel.Warn);
+            return;
+        }
+
+        if (Game1.currentLocation is not AnimalHouse daycare
+            || !BuildingContent.IsSlimeDaycare(daycare.ParentBuilding?.buildingType.Value)
+            || BuildingContent.GetUpgradeTier(daycare.ParentBuilding?.buildingType.Value) < 1)
+        {
+            this.Monitor.Log("Enter a tier-1-or-higher Slime Daycare containing a tester Egg CryoLab chest first.", LogLevel.Warn);
+            return;
+        }
+
+        Chest? cryoLab = daycare.Objects.Values.OfType<Chest>().FirstOrDefault(EggCryoLabContent.IsEggCryoLab);
+        Item? source = cryoLab?.GetItemsForPlayer()
+            .FirstOrDefault(item => item is not null
+                && SlimeEggContent.TryReadRecord(item, out _)
+                && SlimeEggContent.TryGetEggId(item, out string eggId)
+                && this.registry.CanIncubate(eggId)
+                && !Game1.player.Items.Any(existing => existing is not null
+                    && SlimeEggContent.TryGetEggId(existing, out string existingId) && existingId == eggId));
+        if (source is null || !SlimeEggContent.TryGetEggId(source, out string sourceEggId))
+        {
+            this.Monitor.Log("The current Daycare needs a stored, unused Ranch Slime Egg with no copy already in your inventory.", LogLevel.Warn);
+            return;
+        }
+
+        Item duplicate = source.getOne();
+        if (!Game1.player.couldInventoryAcceptThisItem(duplicate) || !Game1.player.addItemToInventoryBool(duplicate))
+        {
+            this.Monitor.Log("Make room in your inventory before creating the duplicate test egg.", LogLevel.Warn);
+            return;
+        }
+
+        this.Monitor.Log($"Created a deliberate copy of stored egg ID {sourceEggId}. Try storing it in another Daycare's CryoLab; discard the duplicate after the check. Do not save this fixture on a normal save.", LogLevel.Warn);
     }
 
     private void OnGiveMutagenicPoolCommand(string command, string[] args)

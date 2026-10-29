@@ -44,6 +44,8 @@ Rare Lab progression is saved separately for each incubator: 0% at the basic Day
 
 The Egg CryoLab storage rules can be tested on an upgraded Daycare with `slime_ranching_give_cryolab <exact save folder name>`. Place the tester chest inside the Daycare and use it to store unused Ranch Slime Eggs. It holds 36 slots, does not start incubation, and rejects vanilla eggs and other items. Take a stored egg back to inventory before inserting it into an incubator. Its permanent fixture placement remains pending Daycare map acceptance.
 
+For a duplicate-identity guard check, use `slime_ranching_duplicate_cryolab_egg <exact save folder name>` while inside a tier-1-or-higher Daycare that has an unused Ranch Slime Egg in a tester CryoLab. It deliberately copies that egg's unique metadata into your inventory so you can try storing the same ID in a second Daycare. Use this command only on a disposable save, discard the duplicate after the check, and don't save while the duplicate exists.
+
 For a guaranteed rare-outcome check on a copied single-player save, use `slime_ranching_set_rare_lab <exact save folder name> <incubator number> <pity 0-100> <contribution 0-100>`. Incubator numbers follow placed tile order from top-left to bottom-right; `slime_ranching_inspect` prints each number and tile. At tier 3, incubator 1 can be set to 100% with `slime_ranching_set_rare_lab <save folder name> 1 0 95`; this sets test values only and does not consume Slime. Inspect again to confirm the total before starting the egg.
 
 In 2.0, newly hatched Ranch Slimes mature after **7 in-game days**. The breeder marks growing slimes in its list and won't let them be selected. The testing spawn command lets you choose an age from 0 to 7 days.
