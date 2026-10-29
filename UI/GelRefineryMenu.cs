@@ -11,6 +11,7 @@ namespace taums_slime_ranching.UI;
 internal sealed class GelRefineryMenu : IClickableMenu
 {
     private const int SlimeItemId = 766;
+    private const int BrokenGlassesItemId = 170;
     private readonly SlimeRegistry registry;
     private readonly string machineKey;
     private readonly GelRefineryRules rules;
@@ -72,6 +73,13 @@ internal sealed class GelRefineryMenu : IClickableMenu
                 return;
             }
 
+            if (!this.HasBatchInputs())
+            {
+                this.statusMessage = $"Need 1 Broken Glasses and {this.rules.FuelCost} vanilla Slime to start.";
+                Game1.playSound("cancel");
+                return;
+            }
+
             bool started = this.startBatch();
             this.statusMessage = started
                 ? $"Batch started. Sleep for {this.rules.DurationDays} in-game day(s) to finish it."
@@ -114,6 +122,9 @@ internal sealed class GelRefineryMenu : IClickableMenu
         b.DrawString(Game1.smallFont, "Output", new Vector2(left + 410, top + 214), Color.White);
         DrawInset(b, new Rectangle(left + 24, top + 242, 205, 92), new Color(224, 196, 147));
         DrawObjectIcon(b, 170, new Rectangle(left + 38, top + 252, 64, 64));
+        int brokenGlassesCount = CountItem("(O)" + BrokenGlassesItemId);
+        b.DrawString(Game1.tinyFont, $"Owned: {brokenGlassesCount} / 1", new Vector2(left + 106, top + 292),
+            brokenGlassesCount > 0 ? new Color(160, 255, 180) : new Color(255, 168, 148));
         b.DrawString(Game1.smallFont, "Broken Glasses ×1", new Vector2(left + 106, top + 268), Color.White);
         b.DrawString(Game1.dialogueFont, "→", new Vector2(left + 250, top + 260), Color.White);
         DrawInset(b, new Rectangle(left + 316, top + 242, 230, 92), new Color(224, 196, 147));
@@ -124,11 +135,12 @@ internal sealed class GelRefineryMenu : IClickableMenu
         if (job is null)
         {
             bool unlocked = this.canStartBatch();
-            b.DrawString(Game1.tinyFont, $"Cycle: {this.rules.DurationDays} in-game day(s) (placeholder)",
+            bool hasInputs = this.HasBatchInputs();
+            b.DrawString(Game1.tinyFont, $"Prototype time: {this.rules.DurationDays} in-game day(s)",
                 new Vector2(left + 28, top + 342), Color.White);
             DrawProgressBar(b, new Rectangle(left + 260, top + 346, 270, 22), 0f, "Ready");
-            DrawButton(b, this.actionButton, unlocked ? "START BATCH" : "LOCKED",
-                unlocked ? new Color(55, 133, 217) : new Color(74, 80, 117));
+            DrawButton(b, this.actionButton, !unlocked ? "LOCKED" : hasInputs ? "START BATCH" : "NEED INPUTS",
+                !unlocked || !hasInputs ? new Color(74, 80, 117) : new Color(55, 133, 217));
             if (!unlocked)
                 b.DrawString(Game1.tinyFont, "Unlocks at the final Daycare tier.", new Vector2(left + 28, top + 372), Color.White);
         }
@@ -142,7 +154,7 @@ internal sealed class GelRefineryMenu : IClickableMenu
                 new Vector2(left + 28, top + 342), Color.White);
             DrawProgressBar(b, new Rectangle(left + 260, top + 346, 270, 22), progress,
                 ready ? "Complete" : $"{elapsed} / {duration} days");
-            b.DrawString(Game1.tinyFont, ready ? "Output reserved until collected." : $"{duration}-day placeholder cycle",
+            b.DrawString(Game1.tinyFont, ready ? "Output reserved until collected." : $"Configured processing time: {duration} day(s)",
                 new Vector2(left + 28, top + 370), Color.White);
             bool buttonEnabled = ready;
             DrawButton(b, this.actionButton, buttonEnabled ? "COLLECT OUTPUT" : "PROCESSING",
@@ -235,7 +247,7 @@ internal sealed class GelRefineryMenu : IClickableMenu
         b.DrawString(Game1.dialogueFont, "REFINERY INPUT / OUTPUT", new Vector2(x + 28, y + 22), Color.White);
         b.DrawString(Game1.smallFont, this.canStartBatch() ? "PROTOTYPE RECIPE ENABLED" : "RECIPE UNLOCKS AT FINAL TIER",
             new Vector2(x + 32, y + 78), new Color(92, 220, 255));
-        b.DrawString(Game1.smallFont, "1 Broken Glasses + vanilla Slime fuel  →  1 Refined Quartz",
+        b.DrawString(Game1.smallFont, $"1 Broken Glasses + {this.rules.FuelCost} Slime fuel  →  1 Refined Quartz",
             new Vector2(x + 32, y + 108), Color.White);
         b.DrawString(Game1.smallFont, "Design examples shown in the reference", new Vector2(x + 32, y + 158), Color.White);
         b.DrawString(Game1.smallFont, "Strawberry → Strawberry Jam", new Vector2(x + 46, y + 190), Color.White);
@@ -259,4 +271,7 @@ internal sealed class GelRefineryMenu : IClickableMenu
     private static int CountItem(string qualifiedItemId) => Game1.player.Items
         .Where(item => item is not null && item.QualifiedItemId == qualifiedItemId)
         .Sum(item => item!.Stack);
+
+    private bool HasBatchInputs() => CountItem("(O)" + BrokenGlassesItemId) >= 1
+        && CountItem("(O)" + SlimeItemId) >= this.rules.FuelCost;
 }

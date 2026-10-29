@@ -128,7 +128,7 @@ Attempts, rolls, mutation traits, pity, and contributions are stored in the per-
 
 ## Gel Refinery
 
-Place the refinery inside the Slime Daycare and reach the final building tier before starting a new batch. Then use it with 1 Broken Glasses (`(O)170`) and the configured amount of vanilla Slime (`(O)766`) in your inventory. The current recipe produces one Refined Quartz (`(O)338`) after the configured number of in-game days. The output stays reserved in the machine until you collect it; a full inventory does not consume or discard the batch. These recipe and economy values are early prototypes. Start and collection changes reconcile the saved machine job with the Stardew inventory across reloads.
+Place the refinery inside the Slime Daycare and reach the final building tier before starting a new batch. Then use it with 1 Broken Glasses (`(O)170`) and the configured amount of vanilla Slime (`(O)766`) in your inventory. The idle menu shows the Broken Glasses count, the exact Slime fuel requirement, and a **NEED INPUTS** state until both are available; clicking then explains what is missing without consuming anything. The current recipe produces one Refined Quartz (`(O)338`) after the configured number of in-game days. The output stays reserved in the machine until you collect it; a full inventory does not consume or discard the batch. These recipe and economy values are early prototypes. Start and collection changes reconcile the saved machine job with the Stardew inventory across reloads.
 
 ## Retired furniture prototypes
 
