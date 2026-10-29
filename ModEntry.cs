@@ -66,7 +66,7 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("slime_ranching_backup_external_data", "Back up the current save's external mod data. Usage: slime_ranching_backup_external_data <exact save folder name>.", this.OnBackupExternalDataCommand);
         helper.ConsoleCommands.Add("slime_ranching_spawn_ranch_slime", $"Spawn one Ranch Slime at a chosen age in the Slime Daycare, optionally with randomized genome traits. Usage: slime_ranching_spawn_ranch_slime <exact save folder name> <age days 0-{FarmAnimalContent.RanchSlimeDaysToMature}> [random].", this.OnSpawnRanchSlimeCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_size", "Set a managed Ranch Slime's test genome size. Usage: slime_ranching_set_size <exact save folder name> <animal ID> <Small|Normal|Large|Giant>.", this.OnSetSlimeSizeCommand);
-        helper.ConsoleCommands.Add("slime_ranching_set_rare_lab", "Set Rare Lab pity and contribution for deterministic hatch testing. Usage: slime_ranching_set_rare_lab <exact save folder name> <incubator number> <pity 0-100> <contribution 0-100>.", this.OnSetRareLabCommand);
+        helper.ConsoleCommands.Add("slime_ranching_set_rare_lab", "Set Rare Lab test chance from inside its Daycare when no egg or hatch is pending. Usage: slime_ranching_set_rare_lab <exact save folder name> <incubator number in current Daycare> <pity 0-100> <contribution 0-100>.", this.OnSetRareLabCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_pool_test_state", "Set a mature Ranch Slime's Mutagenic Pool misses and contribution for testing. Usage: slime_ranching_set_pool_test_state <exact save folder name> <animal ID> <failures 0-90> <contribution 0-90; total <= 90>.", this.OnSetMutagenicPoolTestStateCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_color", "Set a managed Ranch Slime's test base color. Usage: slime_ranching_set_color <exact save folder name> <animal ID> <Red|Orange|Yellow|Green|Blue|Purple|Pink>.", this.OnSetSlimeColorCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_shiny", "Set a managed Ranch Slime's test shiny flag. Usage: slime_ranching_set_shiny <exact save folder name> <animal ID> <true|false>.", this.OnSetSlimeShinyCommand);
@@ -2275,7 +2275,7 @@ public sealed class ModEntry : Mod
             || !int.TryParse(args[2], out int pityPoints)
             || !int.TryParse(args[3], out int contributionPoints))
         {
-            this.Monitor.Log($"Usage: slime_ranching_set_rare_lab {saveName} <incubator number> <pity 0-100> <contribution 0-100>", LogLevel.Warn);
+            this.Monitor.Log($"Usage: slime_ranching_set_rare_lab {saveName} <incubator number in current Daycare> <pity 0-100> <contribution 0-100>", LogLevel.Warn);
             return;
         }
 
@@ -2323,7 +2323,7 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        this.Monitor.Log($"Set Rare Lab {incubatorNumber} to base {lab.BaseChancePoints}%, pity {lab.PityPoints}%, contribution {lab.ContributionPoints}%, total {this.registry.GetRareLabChancePoints(machineKey)}%.", LogLevel.Info);
+        this.Monitor.Log($"Set Rare Lab {incubatorNumber} in the current Daycare to base {lab.BaseChancePoints}%, pity {lab.PityPoints}%, contribution {lab.ContributionPoints}%, total {this.registry.GetRareLabChancePoints(machineKey)}%.", LogLevel.Info);
     }
 
     private void OnSetMutagenicPoolTestStateCommand(string command, string[] args)
