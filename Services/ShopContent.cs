@@ -3,7 +3,7 @@ using StardewValley.GameData.Shops;
 
 namespace taums_slime_ranching.Services;
 
-/// <summary>Adds the mod's core ranching machines to Marnie's existing shop.</summary>
+/// <summary>Adds the current prototype furniture to Marnie's existing shop.</summary>
 internal static class ShopContent
 {
     private const string MarnieShopId = "AnimalShop";
@@ -20,13 +20,9 @@ internal static class ShopContent
                 return;
 
             shop.Items ??= new List<ShopItemData>();
-            AddIfMissing(shop, "Breeder", RanchingItemContent.BreederQualifiedId, config.BreederShopPrice);
-            AddIfMissing(shop, "Incubator", RanchingItemContent.IncubatorQualifiedId, config.IncubatorShopPrice);
             AddIfMissing(shop, "Trampoline", FurnitureContent.TrampolineQualifiedId, config.TrampolineShopPrice);
             AddIfMissing(shop, "SlimeCushion", FurnitureContent.SlimeCushionQualifiedId, config.SlimeCushionShopPrice);
             AddIfMissing(shop, "SlimeSlide", FurnitureContent.SlimeSlideQualifiedId, config.SlimeSlideShopPrice);
-            AddIfMissing(shop, "MutagenicPool", MutagenicPoolContent.QualifiedItemId, config.MutagenicPoolShopPrice);
-            AddIfMissing(shop, "GelRefinery", GelRefineryContent.QualifiedItemId, config.GelRefineryShopPrice);
             AddIfMissing(shop, "SlimeTunnel", FurnitureContent.SlimeTunnelQualifiedId, config.SlimeTunnelShopPrice);
             AddIfMissing(shop, "HeatedSlimeStone", FurnitureContent.HeatedSlimeStoneQualifiedId, config.HeatedSlimeStoneShopPrice);
             AddIfMissing(shop, "SlimePond", FurnitureContent.SlimePondQualifiedId, config.SlimePondShopPrice);

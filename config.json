@@ -1,13 +1,9 @@
 {
   "LogRegistrySummary": true,
-  "BreederShopPrice": 10000,
-  "IncubatorShopPrice": 5000,
   "TrampolineShopPrice": 2500,
   "SlimeCushionShopPrice": 1500,
   "SlimeSlideShopPrice": 3000,
-  "MutagenicPoolShopPrice": 15000,
   "ShowShadowCloneVisualEchoes": true,
-  "GelRefineryShopPrice": 12000,
   "GelRefinerySlimeFuelCost": 10,
   "GelRefineryDurationDays": 1,
   "SlimeTunnelShopPrice": 2500,

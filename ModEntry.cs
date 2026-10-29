@@ -138,14 +138,11 @@ public sealed class ModEntry : Mod
             return;
 
         api.Register(this.ModManifest, this.ResetConfig, this.SaveConfig);
-        api.AddSectionTitle(this.ModManifest, () => "Ranching equipment prices");
-        api.AddParagraph(this.ModManifest, () => "Changes refresh Marnie's shop after saving these settings.");
-        this.AddShopPriceOption(api, "Slime Breeder", "Price of the Slime Breeder.", () => this.config.BreederShopPrice, value => this.config.BreederShopPrice = value);
-        this.AddShopPriceOption(api, "Slime Incubator", "Price of the Slime Incubator.", () => this.config.IncubatorShopPrice, value => this.config.IncubatorShopPrice = value);
+        api.AddSectionTitle(this.ModManifest, () => "Prototype furniture prices");
+        api.AddParagraph(this.ModManifest, () => "Changes refresh Marnie's prototype furniture stock after saving these settings.");
         this.AddShopPriceOption(api, "Slime Trampoline", "Price of the trampoline enrichment furniture.", () => this.config.TrampolineShopPrice, value => this.config.TrampolineShopPrice = value);
         this.AddShopPriceOption(api, "Slime Cushion", "Price of the cushion enrichment furniture.", () => this.config.SlimeCushionShopPrice, value => this.config.SlimeCushionShopPrice = value);
         this.AddShopPriceOption(api, "Slime Slide", "Price of the slide enrichment furniture.", () => this.config.SlimeSlideShopPrice, value => this.config.SlimeSlideShopPrice = value);
-        this.AddShopPriceOption(api, "Gel Refinery", "Price of the Gel Refinery.", () => this.config.GelRefineryShopPrice, value => this.config.GelRefineryShopPrice = value);
         this.AddShopPriceOption(api, "Slime Tunnel", "Price of the decorative crawl-through tunnel.", () => this.config.SlimeTunnelShopPrice, value => this.config.SlimeTunnelShopPrice = value);
         this.AddShopPriceOption(api, "Heated Slime Stone", "Price of the warm resting stone.", () => this.config.HeatedSlimeStoneShopPrice, value => this.config.HeatedSlimeStoneShopPrice = value);
         this.AddShopPriceOption(api, "Slime Pond", "Price of the decorative slime pond.", () => this.config.SlimePondShopPrice, value => this.config.SlimePondShopPrice = value);
@@ -171,11 +168,6 @@ public sealed class ModEntry : Mod
             value => this.config.ShowShadowCloneVisualEchoes = value,
             () => "Show legacy Shadow Clone echoes",
             () => "Compatibility display for Shadow Clone traits saved by older versions; new Pool outcomes use the approved mutation list.");
-        api.AddNumberOption(this.ModManifest,
-            () => this.config.MutagenicPoolShopPrice,
-            value => this.config.MutagenicPoolShopPrice = value,
-            () => "Shop price",
-            () => "Gold price at Marnie's shop.", 0, 999_999, 100);
     }
 
     private void AddShopPriceOption(IGenericModConfigMenuApi api, string name, string tooltip, Func<int> getValue, Action<int> setValue) =>

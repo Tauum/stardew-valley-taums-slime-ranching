@@ -151,10 +151,10 @@ Reply with any collision, sizing, or warp issues and a screenshot if the room di
 
 ## 2.0 bulk-test check — Feature 13 partial: refinery save transactions
 
-**Status:** The provisional Broken Glasses + Slime → Refined Quartz batch now has receipt-backed start and collection transactions. The one-recipe design, configurable fuel/time, final-tier facility unlock, later conversions, and balance review remain pending.
+**Status:** The provisional Broken Glasses + Slime → Refined Quartz batch now has receipt-backed start and collection transactions. Marnie no longer sells movable Breeder, Incubator, Mutagenic Pool, or Gel Refinery prototypes; use their test-grant commands while permanent fixture integration is pending. The one-recipe design, configurable fuel/time, final-tier facility unlock, later conversions, and balance review remain pending.
 
 1. On a disposable copied save, give and place a Gel Refinery with `slime_ranching_give_gel_refinery <exact save folder name>`. Carry at least 1 Broken Glasses and the configured amount of vanilla Slime.
-2. Start a batch, then return to title without sleeping or saving. If the game asks whether to save, choose not to. Reload the same copy. Confirm the input items are still present and `slime_ranching_inspect` reports no batch for that machine.
+2. Open Marnie's shop and confirm it does not sell the Slime Breeder, Slime Incubator, Mutagenic Pool, or Gel Refinery. In GMCM, confirm all four facility shop-price options are absent while the Refinery prototype fuel/time options remain. Start a batch, then return to title without sleeping or saving. If the game asks whether to save, choose not to. Reload the same copy. Confirm the input items are still present and `slime_ranching_inspect` reports no batch for that machine.
 3. Start another batch and sleep to save. Reload and inspect. Confirm the Broken Glasses and fuel remain spent, the same batch is still present, and its ready day did not move.
 4. At the ready day, fill every inventory slot with unrelated items at maximum stack so Refined Quartz cannot be accepted. Try to collect; confirm the batch remains ready and no output is added. Make room and collect, then return to title without saving. If prompted, choose not to save. Reload and confirm the batch is still ready and the unsaved output is absent.
 5. Collect again, sleep to save, reload, and confirm exactly one Refined Quartz is present and the batch has been removed. Try to collect again and confirm no second output is produced.

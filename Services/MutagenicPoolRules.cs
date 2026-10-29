@@ -37,7 +37,6 @@ internal sealed class MutagenicPoolRules
 
     public static void NormalizeConfig(ModConfig config)
     {
-        config.GelRefineryShopPrice = Math.Clamp(config.GelRefineryShopPrice, 0, 999_999);
         config.GelRefinerySlimeFuelCost = Math.Clamp(config.GelRefinerySlimeFuelCost, 1, 999_999);
         config.GelRefineryDurationDays = Math.Clamp(config.GelRefineryDurationDays, 1, 28);
         config.SlimeTunnelShopPrice = Math.Clamp(config.SlimeTunnelShopPrice, 0, 999_999);
@@ -45,11 +44,8 @@ internal sealed class MutagenicPoolRules
         config.SlimePondShopPrice = Math.Clamp(config.SlimePondShopPrice, 0, 999_999);
         config.SlimeSwingShopPrice = Math.Clamp(config.SlimeSwingShopPrice, 0, 999_999);
         config.SlimeFairyLightsShopPrice = Math.Clamp(config.SlimeFairyLightsShopPrice, 0, 999_999);
-        config.BreederShopPrice = Math.Clamp(config.BreederShopPrice, 0, 999_999);
-        config.IncubatorShopPrice = Math.Clamp(config.IncubatorShopPrice, 0, 999_999);
         config.TrampolineShopPrice = Math.Clamp(config.TrampolineShopPrice, 0, 999_999);
         config.SlimeCushionShopPrice = Math.Clamp(config.SlimeCushionShopPrice, 0, 999_999);
         config.SlimeSlideShopPrice = Math.Clamp(config.SlimeSlideShopPrice, 0, 999_999);
-        config.MutagenicPoolShopPrice = Math.Clamp(config.MutagenicPoolShopPrice, 0, 999_999);
     }
 }
