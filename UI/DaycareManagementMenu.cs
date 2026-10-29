@@ -18,6 +18,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
     {
         "Red Slime", "Yellow Slime", "Blue Slime", "Green Slime", "Orange Slime", "Purple Slime", "Pink Slime"
     };
+    private static readonly string[] WikiCategories = { "BASE", "HYBRID", "RARE", "RULES" };
     private static readonly IReadOnlyDictionary<string, string> AbilityDirections = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["Fighter"] = "May occasionally increase the chance of double monster drops.",
@@ -91,12 +92,10 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         };
         this.registryRows = new Rectangle(this.xPositionOnScreen + 48, this.yPositionOnScreen + 198, 382, 360);
         this.registryDetails = new Rectangle(this.xPositionOnScreen + 466, this.yPositionOnScreen + 146, 582, 432);
-        this.wikiCategoryButtons = new[]
-        {
-            new Rectangle(this.xPositionOnScreen + 48, this.yPositionOnScreen + 166, 112, 42),
-            new Rectangle(this.xPositionOnScreen + 170, this.yPositionOnScreen + 166, 112, 42),
-            new Rectangle(this.xPositionOnScreen + 292, this.yPositionOnScreen + 166, 112, 42)
-        };
+        this.wikiCategoryButtons = Enumerable.Range(0, WikiCategories.Length)
+            .Select(index => new Rectangle(this.xPositionOnScreen + 48 + index * 97,
+                this.yPositionOnScreen + 166, 92, 42))
+            .ToArray();
         this.wikiRows = new Rectangle(this.xPositionOnScreen + 48, this.yPositionOnScreen + 220, 382, 330);
         this.wikiDetails = this.registryDetails;
     }
@@ -131,13 +130,12 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         if (this.activeSection != "SLIME WIKI")
             return;
 
-        string[] categories = { "BASE", "HYBRID", "RARE" };
         for (int index = 0; index < this.wikiCategoryButtons.Length; index++)
         {
             if (!this.wikiCategoryButtons[index].Contains(x, y))
                 continue;
 
-            this.activeWikiCategory = categories[index];
+            this.activeWikiCategory = WikiCategories[index];
             this.firstWikiEntry = 0;
             this.selectedWikiIndex = 0;
             this.wikiDetailScroll = 0;
@@ -292,9 +290,8 @@ internal sealed class DaycareManagementMenu : IClickableMenu
 
     private void ChangeWikiCategory(int delta)
     {
-        string[] categories = { "BASE", "HYBRID", "RARE" };
-        int current = Array.IndexOf(categories, this.activeWikiCategory);
-        this.activeWikiCategory = categories[(current + delta + categories.Length) % categories.Length];
+        int current = Array.IndexOf(WikiCategories, this.activeWikiCategory);
+        this.activeWikiCategory = WikiCategories[(current + delta + WikiCategories.Length) % WikiCategories.Length];
         this.firstWikiEntry = 0;
         this.selectedWikiIndex = 0;
         this.wikiDetailScroll = 0;
@@ -609,13 +606,12 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         Rectangle detailPanel = this.wikiDetails;
         DrawPanel(b, listPanel, new Color(35, 51, 92), new Color(90, 128, 190));
         DrawPanel(b, detailPanel, new Color(35, 51, 92), new Color(90, 128, 190));
-        string[] categories = { "BASE", "HYBRID", "RARE" };
         for (int index = 0; index < this.wikiCategoryButtons.Length; index++)
         {
-            bool selected = categories[index] == this.activeWikiCategory;
+            bool selected = WikiCategories[index] == this.activeWikiCategory;
             DrawPanel(b, this.wikiCategoryButtons[index], selected ? new Color(68, 112, 166) : new Color(42, 58, 102),
                 selected ? new Color(178, 224, 255) : new Color(90, 126, 182));
-            DrawCentered(b, categories[index], Game1.tinyFont, this.wikiCategoryButtons[index], Color.White);
+            DrawCentered(b, WikiCategories[index], Game1.tinyFont, this.wikiCategoryButtons[index], Color.White);
         }
 
         List<WikiEntry> entries = this.GetVisibleWikiEntries();
@@ -644,9 +640,12 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         WikiEntry entry = entries[this.selectedWikiIndex];
         b.DrawString(Game1.smallFont, entry.Name, new Vector2(detailPanel.X + 20, detailPanel.Y + 18), new Color(139, 226, 255));
         string abilityList = entry.Abilities.Count == 0 ? "No base ability" : string.Join(" + ", entry.Abilities);
-        string abilityLabel = entry.Category == "RARE"
-            ? "Current base-color ability: none; rare companion direction is planned."
-            : $"Current genome ability label: {abilityList}";
+        string abilityLabel = entry.Category switch
+        {
+            "RARE" => "Current base-color ability: none; rare companion direction is planned.",
+            "RULES" => "Approved Ranch Slime breeding reference.",
+            _ => $"Current genome ability label: {abilityList}"
+        };
         var details = new List<(string Text, Color Color)>
         {
             (abilityLabel, Color.White),
@@ -659,14 +658,20 @@ internal sealed class DaycareManagementMenu : IClickableMenu
                 : $"{ability}: details are still being written.";
             details.Add((description, new Color(217, 231, 253)));
         }
-        Rectangle detailBody = new(detailPanel.X + 20, detailPanel.Y + 58, detailPanel.Width - 40, detailPanel.Height - 158);
+        bool showAbilityDisclaimer = entry.Category != "RULES";
+        int reservedFooterHeight = showAbilityDisclaimer ? 158 : 90;
+        Rectangle detailBody = new(detailPanel.X + 20, detailPanel.Y + 58, detailPanel.Width - 40,
+            detailPanel.Height - reservedFooterHeight);
         this.wikiDetailScroll = DrawScrollableParagraphs(b, details, detailBody, Game1.tinyFont,
             18f, 8f, this.wikiDetailScroll, out this.wikiDetailMaxScroll);
         if (this.wikiDetailMaxScroll > 0)
             b.DrawString(Game1.tinyFont, "Mouse wheel: scroll entry", new Vector2(detailPanel.X + 20, detailPanel.Y + 40), new Color(178, 214, 249));
-        DrawWrappedText(b, "These are planned companion abilities. They do not currently activate during normal play; exact rates, cooldowns, and limits remain under review.",
-            new Vector2(detailPanel.X + 20, detailPanel.Bottom - 86), detailPanel.Width - 40,
-            Game1.tinyFont, new Color(198, 213, 241), 18f);
+        if (showAbilityDisclaimer)
+        {
+            DrawWrappedText(b, "These are planned companion abilities. They do not currently activate during normal play; exact rates, cooldowns, and limits remain under review.",
+                new Vector2(detailPanel.X + 20, detailPanel.Bottom - 86), detailPanel.Width - 40,
+                Game1.tinyFont, new Color(198, 213, 241), 18f);
+        }
     }
 
     private int CountPlaced(string qualifiedItemId) =>
@@ -709,6 +714,14 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         entries.Add(new WikiEntry("RARE", "Gold Slime", "Gold is an active core rare offspring type. Its planned companion direction is a strict, capped shop discount; the effect is not implemented.", Array.Empty<string>()));
         entries.Add(new WikiEntry("RARE", "Void Slime", "Void is an active core rare offspring type. Its planned companion direction stores an additional row of collected items if inventory is full; the effect is not implemented.", Array.Empty<string>()));
         entries.Add(new WikiEntry("RARE", "Prismatic Slime", "Prismatic is an active core rare offspring type. Its planned companion direction allows riding at any size and selecting its other base-role ability; the effect is not implemented.", Array.Empty<string>()));
+        entries.Add(new WikiEntry("RULES", "Base pairings",
+            "Two parents with the same base species produce that base species. Two different base species produce a two-ability hybrid containing both base abilities.", Array.Empty<string>()));
+        entries.Add(new WikiEntry("RULES", "Hybrid pairings",
+            "Two parents with the same exact hybrid type produce that hybrid again; abilities do not stack. A hybrid paired with a base is eligible and has equal 50% outcomes: the base parent's type or the same hybrid type. Two different hybrids choose uniformly among their four base-contributor slots. Repeated species keep their separate slots: Red/Blue × Red/Yellow gives Red 50%, Blue 25%, Yellow 25%.", Array.Empty<string>()));
+        entries.Add(new WikiEntry("RULES", "Rare slimes and crystals",
+            "Rare slimes cannot breed. A Chromatic Crystal can focus an offspring on one of the seven pure base identities, but cannot force a hybrid or rare result. Crystals are currently a tester input; normal acquisition and cost are not set.", Array.Empty<string>()));
+        entries.Add(new WikiEntry("RULES", "Fixed egg outcomes",
+            "The Breeder saves the offspring's non-rarity genome when its cycle completes. The Incubator's Rare Lab resolves rarity once at incubation completion and saves the result before hatching; reloading cannot reroll it. If the Daycare is full, a ready hatch waits safely for room.", Array.Empty<string>()));
         return entries;
     }
 
