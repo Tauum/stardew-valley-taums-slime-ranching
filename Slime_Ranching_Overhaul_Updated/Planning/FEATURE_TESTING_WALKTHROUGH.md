@@ -100,6 +100,13 @@ Reply with any collision, sizing, or warp issues and a screenshot if the room di
 4. Repeat the new-cycle preview at upgrade tiers 2 and 3; each should remain **14 Days**. On a separate copy, start an 18-day cycle before upgrading and, if its breeder record survives the building upgrade, confirm the saved ready day is unchanged afterward.
 5. Save/reload the tiered copies and confirm the active cycle's ready day remains unchanged. Keep Feature 8 acceptance pending until capacity, construction costs, furniture/facility progression, and all upgrade behavior pass their in-game checks.
 
+### Feature 8 capacity check
+
+1. On a disposable copy with the basic Daycare, use `slime_ranching_spawn_ranch_slime <exact save folder name> 7` until the Daycare has 10 Ranch Slimes. Run `slime_ranching_inspect` and confirm it reports 10 residents. Try the spawn command once more and confirm it reports that the Daycare is full and the count stays at 10.
+2. Complete the first building upgrade. Confirm the live Daycare limit increases to 20; spawn and inspect until there are 20 residents, then confirm a 21st test spawn is refused.
+3. Complete the second upgrade and confirm capacity remains 20. Complete the final upgrade and confirm capacity becomes 30; spawn to 30 and confirm a 31st spawn is refused.
+4. At each tier, start or retain an incubator job until it is ready while the Daycare is full. Confirm the egg waits without creating an extra animal, then free one space and confirm the next hatch attempt succeeds. Keep Feature 8 acceptance pending until the limits, hatch waits, upgrades, and reload checks all pass.
+
 ## 2.0 bulk-test check — Feature 9 partial: resident assignment status
 
 **Status:** Resident status and assignment eligibility now share one source of truth for breeding, Pool attempts, incubator hatch recovery, and companions. `slime_ranching_inspect` reports each Ranch Slime's assignment and native friendship, happiness, and fullness. Fixed water amenities and Feeding Trough behavior are not implemented yet; no juvenile-growth or feeding balance has been chosen.

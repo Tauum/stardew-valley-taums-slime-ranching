@@ -1028,7 +1028,7 @@ public sealed class ModEntry : Mod
                 }
             }
 
-            if (animalHouse.animalsThatLiveHere.Count >= animalHouse.animalLimit.Value)
+            if (animalHouse.isFull())
             {
                 this.Monitor.Log("A Ranch Slime Egg is ready, but the Slime Daycare is full; hatching will retry after space is available.", LogLevel.Trace);
                 continue;
@@ -1694,7 +1694,7 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        if (animalHouse.animalsThatLiveHere.Count >= animalHouse.animalLimit.Value)
+        if (animalHouse.isFull())
         {
             this.Monitor.Log("The Slime Daycare is full; make room before spawning a Ranch Slime.", LogLevel.Warn);
             return;
