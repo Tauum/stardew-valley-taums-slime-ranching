@@ -337,7 +337,9 @@ internal sealed class EnrichmentInteractionService
                 continue;
             }
 
-            int durationMinutes = Game1.random.Next(120, 181);
+            int durationMinutes = Game1.random.Next(
+                spotToUse.Definition.MinimumDurationMinutes,
+                spotToUse.Definition.MaximumDurationMinutes + 1);
             if (spotToUse.Definition.ActivityKind == EnrichmentActivityKind.LampGathering)
             {
                 Vector2 lampCenter = spotToUse.Tile * 64f + new Vector2(32f, 32f);

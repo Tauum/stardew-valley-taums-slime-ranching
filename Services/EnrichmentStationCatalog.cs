@@ -22,7 +22,9 @@ internal sealed record EnrichmentStationDefinition(
     float SwingDistancePixels = 0f,
     bool UsesGenomeSizeBounce = false,
     int? MaximumParticipants = 1,
-    IReadOnlyList<Point>? ApproachOffsets = null)
+    IReadOnlyList<Point>? ApproachOffsets = null,
+    int MinimumDurationMinutes = 120,
+    int MaximumDurationMinutes = 180)
 {
     public IReadOnlyList<Point> ApproachTileOffsets =>
         this.ApproachOffsets ?? EnrichmentStationCatalog.DefaultApproachTileOffsets;
