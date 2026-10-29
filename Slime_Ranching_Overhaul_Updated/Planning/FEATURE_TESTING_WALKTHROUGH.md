@@ -314,3 +314,10 @@ Readable parent names (including old registered slimes), corrected egg color tex
 - **Current stage:** 6 - Breeder genome details and Chromatic Crystals.
 - **Completed stages:** 1, 2, 3, 4, and 5 - Daycare baseline; breeder selection/cycles/placement; incubator workflow; juvenile growth and breeding eligibility; color/species inheritance and offspring defaults.
 - **Next stage:** 7 - Enrichment furniture and autonomous activity schedule, after you report Stage 6 results and say **continue**.
+
+## 2.0 bulk-test check — Field Guide life-cycle wording
+
+**Status:** The in-game Field Guide now distinguishes the Incubator's seven-day timer from the seven-day maturation period that starts after hatching. Its item and save behavior are unchanged; wording checks remain pending.
+
+1. On a disposable copied save, run `slime_ranching_give_guidebook <exact save folder name>`. Open the book and confirm it says incubation takes seven days, hatching uses the egg's stored genome once, and the new Ranch Slime takes seven more in-game days to mature after hatching.
+2. Confirm the wording presents the two seven-day periods in sequence and does not describe the juvenile's growth as overlapping incubation. Close the book and verify no inventory item, egg, incubation, or Ranch Slime state changed besides receiving the test copy of the guide.
