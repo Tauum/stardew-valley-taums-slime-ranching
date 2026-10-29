@@ -86,7 +86,7 @@ Enter the Slime Daycare or a vanilla Slime Hutch and run:
 slime_ranching_inspect
 ```
 
-In the Daycare, this reports Ranch Slime and genome counts, assignment-status totals, native resident capacity as `occupied/limit`, and each incubator's saved Rare Lab chance state. In the vanilla Slime Hutch, it reports the monster slime count and confirms those slimes remain unchanged.
+In the Daycare, this reports Ranch Slime and genome counts, assignment-status totals, native resident capacity as `occupied/limit`, each incubator's saved Rare Lab chance state, and every marked Egg CryoLab slot's egg ID, genome summary, registry match, incubation eligibility, and duplicate-ID status. In the vanilla Slime Hutch, it reports the monster slime count and confirms those slimes remain unchanged.
 
 Add an animal ID to inspect one managed Ranch Slime's genome, favorite food, maturity, mutation pity, assignment status, and native friendship/happiness/fullness values:
 

@@ -3117,6 +3117,29 @@ public sealed class ModEntry : Mod
             {
                 this.Monitor.Log($"Slime Incubators placed in this Daycare: {roomIncubatorMachineKeys.Length}.", LogLevel.Info);
                 this.Monitor.Log($"Egg CryoLab tester chests: {roomCryoLabs.Length}; stored Ranch Slime Eggs: {roomCryoLabs.Sum(chest => chest.GetItemsForPlayer().Count(item => item is not null))}/36 slots each.", LogLevel.Info);
+                var storedEggIds = new HashSet<string>(StringComparer.Ordinal);
+                for (int chestIndex = 0; chestIndex < roomCryoLabs.Length; chestIndex++)
+                {
+                    IList<Item> chestItems = roomCryoLabs[chestIndex].GetItemsForPlayer();
+                    for (int slot = 0; slot < chestItems.Count; slot++)
+                    {
+                        Item? item = chestItems[slot];
+                        if (item is null)
+                            continue;
+
+                        if (!SlimeEggContent.TryReadRecord(item, out SlimeEggRecord egg)
+                            || !SlimeEggContent.TryGetEggId(item, out string eggId))
+                        {
+                            this.Monitor.Log($"Egg CryoLab {chestIndex + 1}, slot {slot + 1}: invalid or non-Ranch item {item.QualifiedItemId}.", LogLevel.Info);
+                            continue;
+                        }
+
+                        bool duplicate = !storedEggIds.Add(eggId);
+                        bool recordMatches = loadedRegistry.TryGetEgg(eggId, out SlimeEggRecord registeredEgg)
+                            && registeredEgg.Genome.Id == egg.Genome.Id;
+                        this.Monitor.Log($"Egg CryoLab {chestIndex + 1}, slot {slot + 1}: egg ID {eggId}; {egg.Genome.PrimarySpecies}; size {egg.Genome.Size}; rarity {egg.Genome.RarityTier}; registry record {(recordMatches ? "matches" : "missing or mismatched")}; incubator eligible {loadedRegistry.CanIncubate(eggId)}; duplicate ID in this Daycare {duplicate}.", LogLevel.Info);
+                    }
+                }
                 this.Monitor.Log($"Rare Labs saved in this Daycare: {roomRareLabs.Length}.", LogLevel.Info);
                 var placedIncubatorKeys = new HashSet<string>(roomIncubatorMachineKeys, StringComparer.Ordinal);
                 for (int index = 0; index < roomIncubators.Length; index++)
