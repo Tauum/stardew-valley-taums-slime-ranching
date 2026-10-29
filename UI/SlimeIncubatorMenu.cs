@@ -124,8 +124,16 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
 
         if (active?.HatchAnimalId is null && active is not null && this.actionButton.Contains(x, y))
         {
-            this.requestIncubationCancellation();
-            Game1.playSound("smallSelect");
+            if (active.RareOutcomeResolved)
+            {
+                this.statusMessage = "This egg's outcome is fixed; make room in the Daycare for it to hatch.";
+                Game1.playSound("cancel");
+            }
+            else
+            {
+                this.requestIncubationCancellation();
+                Game1.playSound("smallSelect");
+            }
             return;
         }
 
@@ -186,7 +194,10 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
             float progress = (float)elapsed / duration;
             string eggName = "Ranch Slime Egg";
             if (this.registry.TryGetEgg(active.EggItemId, out SlimeEggRecord egg))
-                eggName = $"{egg.Genome.PrimarySpecies} Egg · {egg.Genome.RarityTier} · Gen {egg.Genome.Generation}";
+            {
+                SlimeGenome displayGenome = active.HatchGenome ?? egg.Genome;
+                eggName = $"{displayGenome.PrimarySpecies} Egg · {displayGenome.RarityTier} · Gen {displayGenome.Generation}";
+            }
 
             bool hatched = active.HatchAnimalId is not null;
             b.DrawString(Game1.smallFont, hatched ? "HATCHED!" : "HATCHING...", new Vector2(panel.X + 24, panel.Y + 22), new Color(130, 231, 255));
@@ -212,8 +223,10 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
                     this.CanContribute(active) ? new Color(39, 135, 105) : new Color(65, 73, 103),
                     this.CanContribute(active) ? new Color(118, 228, 183) : new Color(110, 122, 160));
                 DrawCentered(b, this.GetContributionButtonLabel(active), Game1.tinyFont, this.contributionButton, Color.White);
-                DrawPanel(b, this.actionButton, new Color(146, 63, 66), new Color(242, 142, 137));
-                DrawCentered(b, "CANCEL", Game1.smallFont, this.actionButton, Color.White);
+                DrawPanel(b, this.actionButton,
+                    active.RareOutcomeResolved ? new Color(65, 79, 105) : new Color(146, 63, 66),
+                    active.RareOutcomeResolved ? new Color(117, 131, 159) : new Color(242, 142, 137));
+                DrawCentered(b, active.RareOutcomeResolved ? "OUTCOME FIXED" : "CANCEL", Game1.tinyFont, this.actionButton, Color.White);
             }
         }
         else if (this.candidates.Count == 0)
@@ -263,7 +276,8 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
     private bool CanContribute(IncubationRecord active)
     {
         RareLabRecord? lab = this.registry.GetRareLab(this.machineKey);
-        return active.HatchAnimalId is null
+        return !active.RareOutcomeResolved
+            && active.HatchAnimalId is null
             && Game1.Date.TotalDays < active.ReadyOnDay
             && lab is { IsUnlocked: true }
             && this.registry.GetRareLabChancePoints(this.machineKey) < RareLabRules.MaximumChancePoints
@@ -273,6 +287,8 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
     private string GetContributionButtonLabel(IncubationRecord active)
     {
         RareLabRecord? lab = this.registry.GetRareLab(this.machineKey);
+        if (active.RareOutcomeResolved)
+            return "RARE OUTCOME FIXED";
         if (lab is not { IsUnlocked: true })
             return "RARE LAB LOCKED";
         if (Game1.Date.TotalDays >= active.ReadyOnDay)
@@ -290,8 +306,14 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
         DrawPanel(b, bounds, new Color(55, 72, 134), new Color(101, 138, 205));
         bool unlocked = lab is { IsUnlocked: true };
         int total = RareLabRules.GetChancePoints(lab);
+        IncubationRecord? incubation = this.registry.GetIncubation(this.machineKey);
+        string outcomeText = incubation is not { RareOutcomeResolved: true }
+            ? "RARE LAB"
+            : incubation.RareOffspringProduced
+                ? $"RESULT FIXED · {incubation.HatchGenome?.PrimarySpecies ?? "RARE"}"
+                : "RESULT FIXED · REGULAR";
         b.DrawString(Game1.tinyFont,
-            unlocked ? $"RARE LAB · METER ONLY · TOTAL {total}%" : "RARE LAB LOCKED · TOTAL 0%",
+            unlocked ? $"{outcomeText} · NEXT CHANCE {total}%" : "RARE LAB LOCKED · TOTAL 0%",
             new Vector2(bounds.X + 12, bounds.Y + 4), new Color(213, 227, 255));
 
         Rectangle bar = new(bounds.X + 12, bounds.Y + 19, bounds.Width - 24, 12);

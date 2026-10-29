@@ -61,6 +61,7 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("slime_ranching_backup_external_data", "Back up the current save's external mod data. Usage: slime_ranching_backup_external_data <exact save folder name>.", this.OnBackupExternalDataCommand);
         helper.ConsoleCommands.Add("slime_ranching_spawn_ranch_slime", $"Spawn one Ranch Slime at a chosen age in the Slime Daycare, optionally with randomized genome traits. Usage: slime_ranching_spawn_ranch_slime <exact save folder name> <age days 0-{FarmAnimalContent.RanchSlimeDaysToMature}> [random].", this.OnSpawnRanchSlimeCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_size", "Set a managed Ranch Slime's test genome size. Usage: slime_ranching_set_size <exact save folder name> <animal ID> <Small|Normal|Large|Giant>.", this.OnSetSlimeSizeCommand);
+        helper.ConsoleCommands.Add("slime_ranching_set_rare_lab", "Set Rare Lab pity and contribution for deterministic hatch testing. Usage: slime_ranching_set_rare_lab <exact save folder name> <incubator number> <pity 0-100> <contribution 0-100>.", this.OnSetRareLabCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_color", "Set a managed Ranch Slime's test base color. Usage: slime_ranching_set_color <exact save folder name> <animal ID> <Red|Orange|Yellow|Green|Blue|Purple|Pink>.", this.OnSetSlimeColorCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_shiny", "Set a managed Ranch Slime's test shiny flag. Usage: slime_ranching_set_shiny <exact save folder name> <animal ID> <true|false>.", this.OnSetSlimeShinyCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_mutation", "Set a managed Ranch Slime's test mutation. Usage: slime_ranching_set_mutation <exact save folder name> <animal ID> <Starry|Spotted|Glowing|Crystalline|Mossy|Bubbly|Mushroom|Blooming|Firefly|Crowned|Cowboy|Smelly|none>.", this.OnSetSlimeMutationCommand);
@@ -1219,6 +1220,37 @@ public sealed class ModEntry : Mod
                 }
             }
 
+            if (!incubation.RareOutcomeResolved)
+            {
+                RareLabRecord? lab = this.registry.GetRareLab(incubation.MachineKey);
+                int chancePoints = RareLabRules.GetChancePoints(lab);
+                bool rareOffspringProduced = lab is { IsUnlocked: true }
+                    && Game1.random.Next(RareLabRules.MaximumChancePoints) < chancePoints;
+                string? rareSpecies = rareOffspringProduced
+                    ? RareLabRules.RareOffspringSpecies[Game1.random.Next(RareLabRules.RareOffspringSpecies.Count)]
+                    : null;
+
+                if (!this.registry.ResolveIncubationOutcome(incubation.MachineKey, rareOffspringProduced, rareSpecies,
+                        out RareLabRecord? previousLab))
+                {
+                    this.Monitor.Log($"Could not resolve the Rare Lab outcome for incubator '{incubation.MachineKey}'. The egg will retry without changing its saved chance.", LogLevel.Error);
+                    continue;
+                }
+
+                if (!this.SaveExternalStateNow())
+                {
+                    this.registry.RollbackIncubationOutcome(incubation.MachineKey, previousLab);
+                    if (!this.SaveExternalStateNow())
+                        this.Monitor.Log($"Could not persist the rollback after a Rare Lab outcome save failure for incubator '{incubation.MachineKey}'. Its chance state was restored in memory; reconciliation will retry on reload.", LogLevel.Error);
+                    else
+                        this.Monitor.Log($"Could not persist the Rare Lab outcome for incubator '{incubation.MachineKey}'. Its chance state was restored and the roll will retry later.", LogLevel.Error);
+                    continue;
+                }
+
+                string result = rareOffspringProduced ? $"rare {rareSpecies}" : "regular offspring";
+                this.Monitor.Log($"Resolved incubator '{incubation.MachineKey}' at {chancePoints}% chance: {result}.", LogLevel.Info);
+            }
+
             if (animalHouse.isFull())
             {
                 this.Monitor.Log("A Ranch Slime Egg is ready, but the Slime Daycare is full; hatching will retry after space is available.", LogLevel.Trace);
@@ -1247,12 +1279,13 @@ public sealed class ModEntry : Mod
 
             var animal = new FarmAnimal(FarmAnimalContent.RanchSlimeTypeId, animalId, Game1.player.UniqueMultiplayerID)
             {
-                Name = egg.Genome.PrimarySpecies,
+                Name = (incubation.HatchGenome ?? egg.Genome).PrimarySpecies,
                 home = daycare,
                 homeInterior = animalHouse
             };
             animal.age.Value = 0;
-            FarmAnimalContent.ApplyAppearance(animal, egg.Genome.VisualColor, egg.Genome.Size, egg.Genome.IsShiny);
+            SlimeGenome hatchGenome = incubation.HatchGenome ?? egg.Genome;
+            FarmAnimalContent.ApplyAppearance(animal, hatchGenome.VisualColor, hatchGenome.Size, hatchGenome.IsShiny);
             animalHouse.adoptAnimal(animal);
             if (!this.registry.RegisterIncubationHatch(incubation, animal))
             {
@@ -1950,6 +1983,72 @@ public sealed class ModEntry : Mod
         };
     }
 
+    private void OnSetRareLabCommand(string command, string[] args)
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
+        {
+            this.Monitor.Log("Load a single-player save with available external slime state before changing Rare Lab test values.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 4 || args[0] != saveName
+            || !int.TryParse(args[1], out int incubatorNumber)
+            || !int.TryParse(args[2], out int pityPoints)
+            || !int.TryParse(args[3], out int contributionPoints))
+        {
+            this.Monitor.Log($"Usage: slime_ranching_set_rare_lab {saveName} <incubator number> <pity 0-100> <contribution 0-100>", LogLevel.Warn);
+            return;
+        }
+
+        StardewValley.Buildings.Building? building = Game1.getFarm().buildings.FirstOrDefault(candidate =>
+            BuildingContent.IsSlimeDaycare(candidate.buildingType.Value)
+            && candidate.GetIndoors() is StardewValley.AnimalHouse);
+        if (building?.GetIndoors() is not StardewValley.AnimalHouse daycare)
+        {
+            this.Monitor.Log("The loaded save has no available Slime Daycare interior.", LogLevel.Warn);
+            return;
+        }
+
+        string[] incubatorKeys = daycare.Objects.Pairs
+            .Where(pair => pair.Value.QualifiedItemId == RanchingItemContent.IncubatorQualifiedId)
+            .OrderBy(pair => pair.Key.Y)
+            .ThenBy(pair => pair.Key.X)
+            .Select(pair => $"{daycare.NameOrUniqueName}:{(int)pair.Key.X},{(int)pair.Key.Y}")
+            .ToArray();
+        if (incubatorNumber < 1 || incubatorNumber > incubatorKeys.Length)
+        {
+            this.Monitor.Log($"Choose a placed incubator number from 1 to {incubatorKeys.Length}; numbers follow tile order from top-left to bottom-right.", LogLevel.Warn);
+            return;
+        }
+
+        string machineKey = incubatorKeys[incubatorNumber - 1];
+        RareLabRecord? lab = this.registry!.GetRareLab(machineKey);
+        if (lab is not { IsUnlocked: true }
+            || this.registry.GetIncubation(machineKey) is { RareOutcomeResolved: true }
+            || pityPoints is < 0 or > RareLabRules.MaximumChancePoints
+            || contributionPoints is < 0 or > RareLabRules.MaximumChancePoints
+            || lab.BaseChancePoints + pityPoints + contributionPoints > RareLabRules.MaximumChancePoints)
+        {
+            this.Monitor.Log("The selected incubator must have an unlocked lab, no fixed outcome, and valid chance values whose total is at most 100%.", LogLevel.Warn);
+            return;
+        }
+
+        int previousPity = lab.PityPoints;
+        int previousContribution = lab.ContributionPoints;
+        lab.PityPoints = pityPoints;
+        lab.ContributionPoints = contributionPoints;
+        if (!this.SaveExternalStateNow())
+        {
+            lab.PityPoints = previousPity;
+            lab.ContributionPoints = previousContribution;
+            this.Monitor.Log("Could not save the test chance; the prior Rare Lab values were restored.", LogLevel.Error);
+            return;
+        }
+
+        this.Monitor.Log($"Set Rare Lab {incubatorNumber} to base {lab.BaseChancePoints}%, pity {lab.PityPoints}%, contribution {lab.ContributionPoints}%, total {this.registry.GetRareLabChancePoints(machineKey)}%.", LogLevel.Info);
+    }
+
     private void OnSetSlimeSizeCommand(string command, string[] args)
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
@@ -2623,12 +2722,16 @@ public sealed class ModEntry : Mod
             RareLabRecord[] roomRareLabs = isDaycare
                 ? loadedRegistry.RareLabs.Where(lab => lab.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal)).ToArray()
                 : Array.Empty<RareLabRecord>();
-            string[] roomIncubatorMachineKeys = isDaycare
+            KeyValuePair<Vector2, StardewValley.Object>[] roomIncubators = isDaycare
                 ? animalHouse.Objects.Pairs
                     .Where(pair => pair.Value.QualifiedItemId == RanchingItemContent.IncubatorQualifiedId)
-                    .Select(pair => $"{animalHouse.NameOrUniqueName}:{(int)pair.Key.X},{(int)pair.Key.Y}")
+                    .OrderBy(pair => pair.Key.Y)
+                    .ThenBy(pair => pair.Key.X)
                     .ToArray()
-                : Array.Empty<string>();
+                : Array.Empty<KeyValuePair<Vector2, StardewValley.Object>>();
+            string[] roomIncubatorMachineKeys = roomIncubators
+                .Select(pair => $"{animalHouse.NameOrUniqueName}:{(int)pair.Key.X},{(int)pair.Key.Y}")
+                .ToArray();
             int mutatedResidents = residents.Count(animal => loadedRegistry.GetMutationTrait(animal.myID.Value) is not null);
             string residentStatuses = string.Join(", ", Enum.GetValues<SlimeResidentStatus>()
                 .Select(status => (Label: SlimeRegistry.GetResidentStatusLabel(status), Count: residents.Count(animal => loadedRegistry.GetResidentStatus(animal.myID.Value) == status)))
@@ -2644,17 +2747,20 @@ public sealed class ModEntry : Mod
                 this.Monitor.Log($"Slime Incubators placed in this Daycare: {roomIncubatorMachineKeys.Length}.", LogLevel.Info);
                 this.Monitor.Log($"Rare Labs saved in this Daycare: {roomRareLabs.Length}.", LogLevel.Info);
                 var placedIncubatorKeys = new HashSet<string>(roomIncubatorMachineKeys, StringComparer.Ordinal);
-                foreach (string machineKey in roomIncubatorMachineKeys)
+                for (int index = 0; index < roomIncubators.Length; index++)
                 {
+                    KeyValuePair<Vector2, StardewValley.Object> incubator = roomIncubators[index];
+                    string machineKey = roomIncubatorMachineKeys[index];
+                    string location = $"Incubator {index + 1} at tile {(int)incubator.Key.X},{(int)incubator.Key.Y}";
                     RareLabRecord? lab = loadedRegistry.GetRareLab(machineKey);
                     if (lab is null)
                     {
-                        this.Monitor.Log($"Rare Lab [{machineKey}]: locked; no saved lab record; base 0%, pity 0%, contribution 0%, total 0%.", LogLevel.Info);
+                        this.Monitor.Log($"{location} Rare Lab [{machineKey}]: locked; no saved lab record; base 0%, pity 0%, contribution 0%, total 0%.", LogLevel.Info);
                         continue;
                     }
 
                     int totalChance = loadedRegistry.GetRareLabChancePoints(lab.MachineKey);
-                    this.Monitor.Log($"Rare Lab [{lab.MachineKey}]: {(lab.IsUnlocked ? "unlocked" : "locked")}; base {lab.BaseChancePoints}%, pity {lab.PityPoints}%, contribution {lab.ContributionPoints}%, total {totalChance}%.", LogLevel.Info);
+                    this.Monitor.Log($"{location} Rare Lab [{lab.MachineKey}]: {(lab.IsUnlocked ? "unlocked" : "locked")}; base {lab.BaseChancePoints}%, pity {lab.PityPoints}%, contribution {lab.ContributionPoints}%, total {totalChance}%.", LogLevel.Info);
                 }
 
                 foreach (RareLabRecord lab in roomRareLabs.Where(lab => !placedIncubatorKeys.Contains(lab.MachineKey)))
@@ -2675,7 +2781,14 @@ public sealed class ModEntry : Mod
             }
 
             foreach (IncubationRecord job in loadedRegistry.Incubations.Where(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal)))
-                this.Monitor.Log($"Incubator [{job.MachineKey}]: egg {job.EggItemId}; ready day {job.ReadyOnDay}; reserved hatch ID {job.HatchAnimalId?.ToString() ?? "none"}.", LogLevel.Info);
+            {
+                string outcome = !job.RareOutcomeResolved
+                    ? "outcome pending"
+                    : job.RareOffspringProduced
+                        ? $"fixed rare {job.HatchGenome?.PrimarySpecies ?? "unknown"}"
+                        : "fixed regular offspring";
+                this.Monitor.Log($"Incubator [{job.MachineKey}]: egg {job.EggItemId}; ready day {job.ReadyOnDay}; {outcome}; reserved hatch ID {job.HatchAnimalId?.ToString() ?? "none"}.", LogLevel.Info);
+            }
 
             foreach (MutagenicAttemptRecord job in loadedRegistry.MutagenicAttempts.Where(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal)))
                 this.Monitor.Log($"Mutagenic Pool [{job.MachineKey}]: slime {job.SlimeId}; chance {job.ChanceAtStart:P0}; ready day {job.ReadyOnDay}.", LogLevel.Info);

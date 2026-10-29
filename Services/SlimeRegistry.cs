@@ -319,6 +319,60 @@ internal sealed class SlimeRegistry
         return true;
     }
 
+    public bool ResolveIncubationOutcome(string machineKey, bool rareOffspringProduced, string? rareSpecies,
+        out RareLabRecord? previousLab)
+    {
+        previousLab = null;
+        if (!this.incubations.TryGetValue(machineKey, out IncubationRecord? incubation)
+            || incubation.RareOutcomeResolved
+            || !this.eggs.TryGetValue(incubation.EggItemId, out SlimeEggRecord? egg))
+            return false;
+
+        RareLabRecord? lab = this.GetRareLab(machineKey);
+        if (rareOffspringProduced
+            && (lab is not { IsUnlocked: true } || !RareLabRules.IsRareOffspringSpecies(rareSpecies)))
+            return false;
+
+        if (lab is { IsUnlocked: true })
+        {
+            previousLab = new RareLabRecord
+            {
+                MachineKey = lab.MachineKey,
+                IsUnlocked = lab.IsUnlocked,
+                BaseChancePoints = lab.BaseChancePoints,
+                PityPoints = lab.PityPoints,
+                ContributionPoints = lab.ContributionPoints
+            };
+            RareLabRules.ApplyOutcome(lab, rareOffspringProduced);
+        }
+
+        incubation.RareOutcomeResolved = true;
+        incubation.RareOffspringProduced = rareOffspringProduced;
+        incubation.HatchGenome = rareOffspringProduced
+            ? CreateRareOffspringGenome(incubation.EggGenome ?? egg.Genome, rareSpecies!)
+            : null;
+        return true;
+    }
+
+    public bool RollbackIncubationOutcome(string machineKey, RareLabRecord? previousLab)
+    {
+        if (!this.incubations.TryGetValue(machineKey, out IncubationRecord? incubation)
+            || !incubation.RareOutcomeResolved)
+            return false;
+
+        incubation.RareOutcomeResolved = false;
+        incubation.RareOffspringProduced = false;
+        incubation.HatchGenome = null;
+        if (previousLab is not null && this.rareLabs.TryGetValue(machineKey, out RareLabRecord? lab))
+        {
+            lab.IsUnlocked = previousLab.IsUnlocked;
+            lab.BaseChancePoints = previousLab.BaseChancePoints;
+            lab.PityPoints = previousLab.PityPoints;
+            lab.ContributionPoints = previousLab.ContributionPoints;
+        }
+        return true;
+    }
+
     public bool IsUnclaimedIncubationHatch(long farmAnimalId) =>
         this.incubations.Values.Any(incubation => incubation.HatchAnimalId == farmAnimalId);
 
@@ -663,7 +717,17 @@ internal sealed class SlimeRegistry
             || egg.HatchedAnimalId != animal.myID.Value)
             return false;
 
-        if (this.records.TryGetValue(egg.Genome.Id, out SlimeRecord? existing))
+        // Older builds could save a native hatch before storing a Rare Lab result.
+        // The existing animal is authoritative, so preserve it as a regular hatch without rolling retroactively.
+        if (!incubation.RareOutcomeResolved)
+        {
+            incubation.RareOutcomeResolved = true;
+            incubation.RareOffspringProduced = false;
+        }
+
+        SlimeGenome hatchGenome = incubation.HatchGenome ?? egg.Genome;
+
+        if (this.records.TryGetValue(hatchGenome.Id, out SlimeRecord? existing))
         {
             if (existing.FarmAnimalId != animal.myID.Value)
                 return false;
@@ -672,7 +736,7 @@ internal sealed class SlimeRegistry
         {
             var record = new SlimeRecord
             {
-                Genome = egg.Genome,
+                Genome = hatchGenome,
                 FarmAnimalId = animal.myID.Value,
                 FarmAnimalTypeId = animal.type.Value
             };
@@ -696,7 +760,7 @@ internal sealed class SlimeRegistry
     {
         cancelled = null!;
         if (!this.incubations.TryGetValue(machineKey, out IncubationRecord? record)
-            || record.HatchAnimalId is not null
+            || record.HatchAnimalId is not null || record.RareOutcomeResolved
             || this.hatchedEggIds.Contains(record.EggItemId)
             || this.destroyedEggIds.Contains(record.EggItemId))
             return false;
@@ -1349,11 +1413,24 @@ internal sealed class SlimeRegistry
                 || incubation.StartedOnDay < 0 || incubation.ReadyOnDay < incubation.StartedOnDay
                 || !this.eggs.TryGetValue(incubation.EggItemId, out SlimeEggRecord? egg)
                 || incubation.HatchAnimalId != egg.HatchedAnimalId
+                || (incubation.RareOffspringProduced
+                    && (!incubation.RareOutcomeResolved || incubation.HatchGenome is null
+                        || incubation.HatchGenome.Id == Guid.Empty
+                        || incubation.HatchGenome.Id == egg.Genome.Id
+                        || !RareLabRules.IsRareOffspringSpecies(incubation.HatchGenome.PrimarySpecies)
+                        || incubation.HatchGenome.SecondarySpecies is not null))
+                || (!incubation.RareOffspringProduced && incubation.HatchGenome is not null)
                 || this.incubations.ContainsKey(incubation.MachineKey)
                 || this.incubations.Values.Any(other => other.EggItemId == incubation.EggItemId))
             {
                 this.monitor.Log("Skipped a malformed or duplicate external Ranch Slime incubation record.", LogLevel.Warn);
                 continue;
+            }
+
+            if (incubation.HatchGenome is not null)
+            {
+                incubation.HatchGenome.Size = NormalizeSize(incubation.HatchGenome.Size);
+                SlimeAbilityCatalog.Refresh(incubation.HatchGenome);
             }
 
             this.incubations.Add(incubation.MachineKey, incubation);
@@ -1518,5 +1595,28 @@ internal sealed class SlimeRegistry
         SlimeAbilityCatalog.Refresh(record.Genome);
 
         return true;
+    }
+
+    private static SlimeGenome CreateRareOffspringGenome(SlimeGenome source, string rareSpecies)
+    {
+        var genome = new SlimeGenome
+        {
+            Id = Guid.NewGuid(),
+            ParentA = source.ParentA,
+            ParentB = source.ParentB,
+            ParentAName = source.ParentAName,
+            ParentBName = source.ParentBName,
+            Generation = source.Generation,
+            PrimarySpecies = rareSpecies,
+            SecondarySpecies = null,
+            VisualColor = source.VisualColor,
+            Size = source.Size,
+            IsShiny = source.IsShiny,
+            RarityTier = "Rare",
+            MutationTrait = source.MutationTrait,
+            LikedFoodItemId = source.LikedFoodItemId
+        };
+        SlimeAbilityCatalog.Refresh(genome);
+        return genome;
     }
 }

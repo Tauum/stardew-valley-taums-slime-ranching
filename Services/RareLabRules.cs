@@ -4,10 +4,19 @@ namespace taums_slime_ranching.Services;
 
 internal static class RareLabRules
 {
+    // Black and White remain deferred; the current active no-catalyst selection uses the approved core roster.
+    private static readonly string[] ActiveRareOffspringSpecies = { "Gold Slime", "Void Slime", "Prismatic Slime" };
+
     public const int FirstTierBaseChancePoints = 1;
     public const int FinalTierBaseChancePoints = 5;
     public const int SlimeUnitsPerContributionPoint = 10;
     public const int MaximumChancePoints = 100;
+
+    public static IReadOnlyList<string> RareOffspringSpecies => ActiveRareOffspringSpecies;
+
+    public static bool IsRareOffspringSpecies(string? species) =>
+        !string.IsNullOrWhiteSpace(species)
+        && ActiveRareOffspringSpecies.Contains(species, StringComparer.OrdinalIgnoreCase);
 
     public static int GetChancePoints(RareLabRecord? lab) => lab is { IsUnlocked: true }
         ? Math.Clamp(lab.BaseChancePoints + lab.PityPoints + lab.ContributionPoints, 0, MaximumChancePoints)

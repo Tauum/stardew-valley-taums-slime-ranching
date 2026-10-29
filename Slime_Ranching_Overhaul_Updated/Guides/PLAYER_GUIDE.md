@@ -36,11 +36,13 @@ The Slime Incubator accepts a genome-specific Ranch Slime Egg from the player's 
 
 1. Request a testing incubator with `slime_ranching_give_incubator <exact save folder name>`.
 2. Place it inside the Slime Daycare. Use it while holding a genome-specific egg in your inventory; select the egg in the menu.
-3. The egg is removed from inventory; the saved incubator job keeps its genome and hatches after **7 in-game days**. The duration is fixed for new jobs. Any incubation already in progress retains its saved ready day when updating the mod.
+3. The egg is removed from inventory; the saved incubator job keeps its genome and reaches its ready day after **7 in-game days**. The duration is fixed for new jobs. Any incubation already in progress retains its saved ready day when updating the mod.
 4. While an egg is incubating, choose **Cancel** to review a confirmation. Confirming destroys that unique egg and gives you one Fried Egg; make sure your inventory has room. A canceled egg copy cannot be incubated later.
-5. The new Ranch Slime appears in the Daycare with the egg's stored genome. If the Daycare is full, the ready hatch waits until space is available.
+5. At the ready day, an unlocked Rare Lab fixes a single rare-or-regular result and saves it before hatch creation. A full Daycare waits with that result fixed until space is available. A fixed result cannot be canceled or rerolled.
 
-Rare Lab progression is saved separately for each incubator: 0% at the basic Daycare, 1% after the first building upgrade, and 5% at the final tier. While an egg is incubating, contribute 10 vanilla Slime for +1 percentage point; the meter shows base chance, pity, and your contribution. The meter is informational in this build and does not yet affect hatching. Rare rolls, catalysts, and the Egg CryoLab are still in development.
+Rare Lab progression is saved separately for each incubator: 0% at the basic Daycare, 1% after the first building upgrade, and 5% at the final tier. While an egg is incubating, contribute 10 vanilla Slime for +1 percentage point; the meter shows base chance, pity, and your contribution. A failed roll adds 1 point of pity and reduces contribution by 1 point only when contribution is above 2%; a successful roll clears contribution and retains pity. Without a catalyst, rare results are selected evenly from Gold, Void, and Prismatic Slime, independent of the egg's species. The rare species replaces species identity and rarity while preserving the egg's other genome traits. Catalysts and the Egg CryoLab are still in development.
+
+For a guaranteed rare-outcome check on a copied single-player save, use `slime_ranching_set_rare_lab <exact save folder name> <incubator number> <pity 0-100> <contribution 0-100>`. Incubator numbers follow placed tile order from top-left to bottom-right; `slime_ranching_inspect` prints each number and tile. At tier 3, incubator 1 can be set to 100% with `slime_ranching_set_rare_lab <save folder name> 1 0 95`; this sets test values only and does not consume Slime. Inspect again to confirm the total before starting the egg.
 
 In 2.0, newly hatched Ranch Slimes mature after **7 in-game days**. The breeder marks growing slimes in its list and won't let them be selected. The testing spawn command lets you choose an age from 0 to 7 days.
 

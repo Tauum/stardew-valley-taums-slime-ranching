@@ -118,6 +118,11 @@ internal sealed class ModStateStore
                 saveData.RareLabs ??= new List<RareLabRecord>();
                 saveData.PendingRefineryTransactions ??= new List<RefineryTransactionRecord>();
                 saveData.PendingRareLabContributions ??= new List<RareLabContributionRecord>();
+                saveData.SchemaVersion = 21;
+                this.MigratedSaveData = true;
+            }
+            if (saveData.SchemaVersion == 21)
+            {
                 saveData.SchemaVersion = SlimeSaveData.CurrentSchemaVersion;
                 this.MigratedSaveData = true;
             }
@@ -255,8 +260,13 @@ internal sealed class ModStateStore
 
         if (root is JsonObject schemaTwenty && schemaTwenty["SchemaVersion"]?.GetValue<int>() == 20)
         {
-            schemaTwenty["SchemaVersion"] = SlimeSaveData.CurrentSchemaVersion;
+            schemaTwenty["SchemaVersion"] = 21;
             schemaTwenty["PendingRareLabContributions"] = new JsonArray();
+        }
+
+        if (root is JsonObject schemaTwentyOne && schemaTwentyOne["SchemaVersion"]?.GetValue<int>() == 21)
+        {
+            schemaTwentyOne["SchemaVersion"] = SlimeSaveData.CurrentSchemaVersion;
         }
 
         if (root is JsonObject jsonData && jsonData["Slimes"] is JsonArray slimes)
