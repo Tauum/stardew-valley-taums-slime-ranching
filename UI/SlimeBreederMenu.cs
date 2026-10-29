@@ -198,8 +198,14 @@ internal sealed class SlimeBreederMenu : IClickableMenu
             return;
 
         long id = this.candidates[index].myID.Value;
-        if (!this.registry.TryGetSlimeRecord(id, out SlimeRecord selectedRecord)
-            || !BreedingRules.IsBreedable(selectedRecord.Genome))
+        if (!this.registry.TryGetSlimeRecord(id, out SlimeRecord selectedRecord))
+        {
+            this.statusMessage = "This Ranch Slime has no saved genome and cannot breed.";
+            Game1.playSound("cancel");
+            return;
+        }
+
+        if (!BreedingRules.IsBreedable(selectedRecord.Genome))
         {
             this.statusMessage = "Rare and exceptional Ranch Slimes cannot breed.";
             Game1.playSound("cancel");
