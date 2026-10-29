@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using StardewValley;
 using StardewValley.Menus;
 using StardewValley.Objects;
@@ -146,6 +147,75 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         }
     }
 
+    public override void receiveKeyPress(Keys key)
+    {
+        base.receiveKeyPress(key);
+        if (Game1.activeClickableMenu != this)
+            return;
+
+        int sectionIndex = key switch
+        {
+            Keys.D1 or Keys.NumPad1 => 0,
+            Keys.D2 or Keys.NumPad2 => 1,
+            Keys.D3 or Keys.NumPad3 => 2,
+            _ => -1
+        };
+        if (sectionIndex >= 0)
+        {
+            this.activeSection = sectionIndex switch
+            {
+                0 => "REGISTRY",
+                1 => "PROGRESSION",
+                _ => "SLIME WIKI"
+            };
+            Game1.playSound("smallSelect");
+            return;
+        }
+
+        if (this.activeSection == "REGISTRY" && key is Keys.Up or Keys.Down)
+        {
+            if (this.residents.Count == 0)
+                return;
+
+            int delta = key == Keys.Up ? -1 : 1;
+            this.selectedResidentIndex = Math.Clamp(this.selectedResidentIndex + delta, 0, this.residents.Count - 1);
+            if (this.selectedResidentIndex < this.firstResident)
+                this.firstResident = this.selectedResidentIndex;
+            else if (this.selectedResidentIndex >= this.firstResident + VisibleRows)
+                this.firstResident = this.selectedResidentIndex - VisibleRows + 1;
+            Game1.playSound("smallSelect");
+            return;
+        }
+
+        if (this.activeSection != "SLIME WIKI")
+            return;
+
+        string[] categories = { "BASE", "HYBRID", "RARE" };
+        if (key is Keys.Left or Keys.Right)
+        {
+            int currentCategory = Array.IndexOf(categories, this.activeWikiCategory);
+            int delta = key == Keys.Left ? -1 : 1;
+            int nextCategory = (currentCategory + delta + categories.Length) % categories.Length;
+            this.activeWikiCategory = categories[nextCategory];
+            this.firstWikiEntry = 0;
+            this.selectedWikiIndex = 0;
+            Game1.playSound("smallSelect");
+            return;
+        }
+
+        if (key is Keys.Up or Keys.Down)
+        {
+            List<WikiEntry> entries = this.GetVisibleWikiEntries();
+            int delta = key == Keys.Up ? -1 : 1;
+            this.selectedWikiIndex = Math.Clamp(this.selectedWikiIndex + delta, 0, Math.Max(0, entries.Count - 1));
+            if (this.selectedWikiIndex < this.firstWikiEntry)
+                this.firstWikiEntry = this.selectedWikiIndex;
+            else if (this.selectedWikiIndex >= this.firstWikiEntry + VisibleRows)
+                this.firstWikiEntry = this.selectedWikiIndex - VisibleRows + 1;
+            Game1.playSound("smallSelect");
+        }
+    }
+
     public override void receiveScrollWheelAction(int direction)
     {
         base.receiveScrollWheelAction(direction);
@@ -182,6 +252,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         else
             this.DrawWikiSection(b);
 
+        b.DrawString(Game1.tinyFont, "1-3: sections | Up/Down: lists | Left/Right: Wiki tabs", new Vector2(panel.X + 30, panel.Bottom - 24), Color.White);
         b.DrawString(Game1.tinyFont, "Esc: close", new Vector2(panel.Right - 86, panel.Bottom - 24), Color.White);
         this.drawMouse(b);
     }
