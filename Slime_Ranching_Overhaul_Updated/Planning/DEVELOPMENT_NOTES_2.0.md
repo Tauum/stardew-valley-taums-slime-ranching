@@ -4,7 +4,7 @@
 
 **Purpose:** This is the single active development reference for product direction, gameplay rules, release scope, and technical boundaries. Read and update it when designing or implementing features. The archived v7 notes and older specs are source history; the decisions here reconcile them with the owner's later directions.
 
-**Current work branch:** `feature/2.0-activity-station-identity`, interrupting an activity if its station object is replaced by another copy with the same item ID at the same tile. Feature 14 remains in progress; fixed desk placement and Furniture Edit Mode depend on the still-pending fixed-slot/map implementation. Taum requested continued 2.0 development across features and a later bulk in-game test pass. Keep every in-game acceptance status pending until Taum reports the result. The separate 1.x test remains paused at Stage 6; see `FEATURE_TESTING_WALKTHROUGH.md` for current 2.0 steps and that checkpoint.
+**Current work branch:** `feature/2.0-activity-interaction-validation`, continuing Feature 15's activity lifecycle refinements. Feature 14 remains in progress; fixed desk placement and Furniture Edit Mode depend on the still-pending fixed-slot/map implementation. Taum requested continued 2.0 development across features and a later bulk in-game test pass. Keep every in-game acceptance status pending until Taum reports the result. The separate 1.x test remains paused at Stage 6; see `FEATURE_TESTING_WALKTHROUGH.md` for current 2.0 steps and that checkpoint. A concise player-facing overview is in `Guides/PLAYER_GUIDE.md`.
 
 ## Shared design principles
 
