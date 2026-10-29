@@ -1262,7 +1262,12 @@ public sealed class ModEntry : Mod
             string machineKey = $"{Game1.currentLocation.NameOrUniqueName}:{(int)breederAnchor.X},{(int)breederAnchor.Y}";
             if (this.DiscardBreederPairsForMissingMachines(Game1.currentLocation))
                 this.SaveExternalStateNow();
-            Game1.activeClickableMenu = new SlimeBreederMenu(this.registry!, machineKey, this.SaveExternalStateNow, this.CreateEggItem);
+            Building? daycare = Game1.getFarm().buildings.FirstOrDefault(building =>
+                BuildingContent.IsSlimeDaycare(building.buildingType.Value)
+                && building.GetIndoors() == Game1.currentLocation);
+            int cycleDurationDays = BreedingRules.GetCycleDurationDays(daycare?.buildingType.Value);
+            Game1.activeClickableMenu = new SlimeBreederMenu(this.registry!, machineKey, this.SaveExternalStateNow,
+                this.CreateEggItem, cycleDurationDays);
             return;
         }
 

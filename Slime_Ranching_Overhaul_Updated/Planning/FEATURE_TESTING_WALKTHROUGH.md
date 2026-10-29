@@ -33,7 +33,7 @@ Reply with any collision, sizing, or warp issues and a screenshot if the room di
 
 1. Make a fresh copy of a 2.0 save with schema 12 or 13. Keep the original and the main farm untouched.
 2. Run **3 Build, Deploy, Run**, then load that copied save.
-3. In the SMAPI console, run `slime_ranching_quest_status`. Confirm it reports schema **18** as the target schema and lists the Sanctuary milestones. On a new save, `lewis_concern` should report `prerequisites met` (available but incomplete); the remaining milestones should report `waiting`.
+3. In the SMAPI console, run `slime_ranching_quest_status`. Confirm it reports schema **19** as the target schema and lists the Sanctuary milestones. On a new save, `lewis_concern` should report `prerequisites met` (available but incomplete); the remaining milestones should report `waiting`.
 4. Save, return to title, reload the same copied save, and run `slime_ranching_quest_status` again. Confirm schema 19 is retained and the milestone list is unchanged.
 
 ### Maru repair handoff check — can be tested before the opening scenes are complete
@@ -89,6 +89,16 @@ Reply with any collision, sizing, or warp issues and a screenshot if the room di
 8. Before canceling, keep a copy of that same unique egg item in a chest. After confirming cancellation, try to incubate the copied item; confirm the incubator rejects it. Also attempt cancellation with a full inventory and verify the job remains intact and the game explains that space is needed for the Fried Egg.
 9. After confirming cancellation, sleep to save and reload. Verify the job stays canceled, the Fried Egg remains, and the copied egg ID remains unusable. On a separate copy, cancel and return to title without saving; reload and confirm the pending transaction restores the original incubation and does not award an unsaved Fried Egg.
 10. Load a schema-14 copy with an active incubation, allow migration to schema 19, save/reload, and verify its ready day is unchanged. Confirm a saved cancellation stays finalized after reload.
+
+## 2.0 bulk-test check — Feature 8 partial: upgrade-aware breeder timing
+
+**Status:** New cycles use 18 days at the basic Daycare and 14 days at upgrade tiers 1–3. Existing cycles retain their saved ready day. Other Feature 8 progression, upgrade costs, and room/facility assignments remain pending.
+
+1. On a disposable save with the basic Daycare, run `slime_ranching_give_breeder <exact save folder name>` and `slime_ranching_spawn_ranch_slime <exact save folder name> 7` twice. Place the Breeder inside the Daycare, select the two mature Ranch Slimes, and confirm the new-cycle preview says **18 Days**.
+2. Start the cycle and run `slime_ranching_inspect` while inside the Daycare. Confirm the breeder record's ready day is 18 days after its saved start day.
+3. On a separate copy with Daycare upgrade 1 complete, give and place a new Breeder, then select two mature Ranch Slimes. Confirm the new-cycle preview says **14 Days**, start it, and verify the ready day is 14 days after the start day.
+4. Repeat the new-cycle preview at upgrade tiers 2 and 3; each should remain **14 Days**. On a separate copy, start an 18-day cycle before upgrading and, if its breeder record survives the building upgrade, confirm the saved ready day is unchanged afterward.
+5. Save/reload the tiered copies and confirm the active cycle's ready day remains unchanged. Keep Feature 8 acceptance pending until capacity, construction costs, furniture/facility progression, and all upgrade behavior pass their in-game checks.
 
 ## 2.0 bulk-test check — Feature 11: Mutagenic Pool rules and safe contributions
 

@@ -8,6 +8,13 @@ internal static class BreedingRules
     public const int BasicCycleDurationDays = 18;
     public const int FirstUpgradeCycleDurationDays = 14;
 
+    public static int GetCycleDurationDays(string? daycareBuildingType) =>
+        daycareBuildingType is BuildingContent.SlimeDaycareUpgrade1Id
+            or BuildingContent.SlimeDaycareUpgrade2Id
+            or BuildingContent.SlimeDaycareUpgrade3Id
+                ? FirstUpgradeCycleDurationDays
+                : BasicCycleDurationDays;
+
     private static readonly string[] BaseSpecies = { "Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Pink" };
     private static readonly string[] ExceptionalSpecies = { "Gold", "Golden", "Void", "Prismatic", "Black", "White" };
 
