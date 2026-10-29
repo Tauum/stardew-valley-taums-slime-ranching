@@ -237,7 +237,7 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
         DrawMachineFrame(b, new Rectangle(x, y, width, height));
         b.DrawString(Game1.dialogueFont, "POSSIBLE MUTATIONS", new Vector2(x + 28, y + 22), Color.White);
         b.DrawString(Game1.smallFont, "APPROVED COSMETIC OUTCOMES", new Vector2(x + 32, y + 86), new Color(92, 220, 255));
-        b.DrawString(Game1.smallFont, "One trait per slime; visual effects are being built.", new Vector2(x + 32, y + 122), Color.White);
+        b.DrawString(Game1.smallFont, "One trait per slime; visual effects are cosmetic only.", new Vector2(x + 32, y + 122), Color.White);
         b.DrawString(Game1.tinyFont, "Starry, Spotted, Glowing, Crystalline, Mossy, Bubbly", new Vector2(x + 32, y + 174), Color.White);
         b.DrawString(Game1.tinyFont, "Mushroom, Blooming, Firefly, Crowned, Cowboy, Smelly", new Vector2(x + 32, y + 196), Color.White);
         b.DrawString(Game1.smallFont, "Failure is safe; pity rises by 1%.", new Vector2(x + 32, y + 248), Color.White);
