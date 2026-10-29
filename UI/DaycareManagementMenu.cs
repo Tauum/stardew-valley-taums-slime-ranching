@@ -34,10 +34,10 @@ internal sealed class DaycareManagementMenu : IClickableMenu
     private readonly int buildingTier;
     private readonly Func<long, string?> getActiveActivitySummary;
     private readonly List<FarmAnimal> residents;
-    private readonly Rectangle registryRows;
-    private readonly Rectangle wikiRows;
-    private readonly Rectangle[] sectionButtons;
-    private readonly Rectangle[] wikiCategoryButtons;
+    private Rectangle registryRows;
+    private Rectangle wikiRows;
+    private Rectangle[] sectionButtons = Array.Empty<Rectangle>();
+    private Rectangle[] wikiCategoryButtons = Array.Empty<Rectangle>();
     private string activeSection = "REGISTRY";
     private string activeWikiCategory = "BASE";
     private int firstResident;
@@ -61,6 +61,21 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         if (this.residents.Count > 0)
             this.selectedResidentIndex = 0;
 
+        this.LayoutControls();
+    }
+
+    public override void gameWindowSizeChanged(Rectangle oldBounds, Rectangle newBounds)
+    {
+        base.gameWindowSizeChanged(oldBounds, newBounds);
+        this.xPositionOnScreen = Math.Clamp(this.xPositionOnScreen, 0,
+            Math.Max(0, Game1.uiViewport.Width - this.width));
+        this.yPositionOnScreen = Math.Clamp(this.yPositionOnScreen, 0,
+            Math.Max(0, Game1.uiViewport.Height - this.height));
+        this.LayoutControls();
+    }
+
+    private void LayoutControls()
+    {
         this.sectionButtons = new[]
         {
             new Rectangle(this.xPositionOnScreen + 34, this.yPositionOnScreen + 82, 326, 48),
