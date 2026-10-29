@@ -54,6 +54,16 @@ internal static class BuildingContent
             daycare.Description = "A safe animal house for friendly Ranch Slimes.";
             daycare.BuildingType = "";
             daycare.BuildingToUpgrade = null;
+            // A save has one Daycare building which expands through this upgrade
+            // chain. Keep the construction option visible only while none of its
+            // four building IDs exist, including buildings still under construction.
+            daycare.BuildCondition = string.Join(",", new[]
+            {
+                SlimeDaycareBuildingId,
+                SlimeDaycareUpgrade1Id,
+                SlimeDaycareUpgrade2Id,
+                SlimeDaycareUpgrade3Id
+            }.Select(id => $"BUILDINGS_CONSTRUCTED All {id} 0 0 true"));
             daycare.IndoorMap = "FarmHouse";
             daycare.IndoorMapType = "StardewValley.AnimalHouse";
             daycare.BuildDays = 0;
@@ -73,6 +83,7 @@ internal static class BuildingContent
             buildings[SlimeDaycareBuildingId] = daycare;
 
             BuildingData upgrade1 = Clone(daycare, options);
+            upgrade1.BuildCondition = "";
             upgrade1.Name = "Slime Daycare - Upgrade 1";
             upgrade1.NameForGeneralType = "Slime Daycare";
             upgrade1.Description = "An expanded interior with room for more Ranch Slimes.";
@@ -85,6 +96,7 @@ internal static class BuildingContent
             buildings[SlimeDaycareUpgrade1Id] = upgrade1;
 
             BuildingData upgrade2 = Clone(daycare, options);
+            upgrade2.BuildCondition = "";
             upgrade2.Name = "Slime Daycare - Upgrade 2";
             upgrade2.NameForGeneralType = "Slime Daycare";
             upgrade2.Description = "The largest interior, with room for even more Ranch Slimes.";
@@ -97,6 +109,7 @@ internal static class BuildingContent
             buildings[SlimeDaycareUpgrade2Id] = upgrade2;
 
             BuildingData upgrade3 = Clone(daycare, options);
+            upgrade3.BuildCondition = "";
             upgrade3.Name = "Slime Daycare - Cellar";
             upgrade3.NameForGeneralType = "Slime Daycare";
             upgrade3.Description = "Adds the farmhouse cellar beneath the Daycare.";

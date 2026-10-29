@@ -4,7 +4,7 @@ This is a compact tour of the 2.0 mod: what each facility and furniture piece is
 
 ## In one minute
 
-The mod adds a separate Slime Daycare to a Stardew farm. The player raises domesticated Ranch Slimes, chooses when to breed them, incubates their individually identified eggs, researches rare offspring, and decorates a shared living space with enrichment furniture. Daycare upgrades add residents, rooms, and facilities. A read-only Registry, progression view, and Slime Wiki preview exist; the permanent Management Desk fixture and furniture editor are planned.
+The mod adds one constructible Slime Daycare per save to a Stardew farm. The player raises domesticated Ranch Slimes, chooses when to breed them, incubates their individually identified eggs, researches rare offspring, and decorates a shared living space with enrichment furniture. Robin's upgrades expand that same building with residents, rooms, and facilities. Older saves with multiple Daycares keep them. A read-only Registry, progression view, and Slime Wiki preview exist; the permanent Management Desk fixture and furniture editor are planned.
 
 The current desk preview supports row paging and independent resident/Wiki detail scrolling with the mouse or controller when text exceeds its panel. Its Slime Wiki explains the approved base/hybrid breeding outcomes, rare-slime and Crystal limits, fixed egg results, and the separate seven-day incubation and maturation stages. The in-game Field Guide states that maturation follows incubation; the permanent desk fixture and Furniture Edit Mode remain pending.
 
@@ -20,7 +20,7 @@ This is an in-progress 2.0 redesign. Several gameplay services and tester protot
 
 ## Daycare progression
 
-The Daycare remains an `AnimalHouse` but reuses Stardew's farmhouse maps and room art. Its four building states are:
+The Carpenter menu offers the basic Daycare only until one of its four building states exists on the save; afterward, Robin's upgrades expand the existing building. This uses Stardew's native building condition query. Existing saves with more than one Daycare retain all of them. The Daycare remains an `AnimalHouse` but reuses Stardew's farmhouse maps and room art. Its four building states are:
 
 | Daycare state | Native resident capacity | Robin's Carpenter price | Facility progression |
 | --- | ---: | --- | --- |

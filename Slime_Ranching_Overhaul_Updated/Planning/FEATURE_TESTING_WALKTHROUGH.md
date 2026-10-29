@@ -13,6 +13,12 @@ The separate 2.0 implementation sequence is tracked in `DEVELOPMENT_NOTES_2.0.md
 
 **Map references:** Compare with Stardew's FarmHouse, FarmHouse1, FarmHouse2, FarmHouse_Cellar, and HomeRenovations. The original room experiments remain in the gallery as historical references; they are not the current Daycare layout.
 
+### Single Daycare construction check
+
+1. On a copied save with no Slime Daycare, open Robin's Carpenter menu. Confirm the basic Slime Daycare appears and can be selected. Build it, then reopen the menu after construction completes.
+2. Confirm the basic construction option is no longer listed. Select the existing Daycare and confirm its next upgrade remains available; after each upgrade completes, verify the next upgrade is still offered and the basic construction option stays hidden.
+3. If a legacy test save already contains more than one Daycare, confirm every building and its residents remain present after loading. Do not demolish extras for this check; verify only that the menu offers no new basic Daycare construction.
+
 1. Run **3 Build, Deploy, Run** and load the current copied **TaumTest** save prepared for 2.0, not the main farm. The old save ID at the top belongs to the paused 1.x checkpoint.
 2. Enter the basic Slime Daycare. Confirm its interior is the same layout as the base farmhouse, with no kitchen machines, fireplace, Barn hay hopper, hay stacks, or vanilla egg incubator. Only Daycare-specific machines should appear. Check that Ranch Slimes are still residents of the Daycare and roam normally.
 3. Buy the first Daycare upgrade. Confirm the interior changes from **FarmHouse** to **FarmHouse1**, capacity becomes 20, and Daycare renovations unlock.

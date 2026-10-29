@@ -38,7 +38,7 @@ This guide covers the current early prototype. The Slime Breeder can reserve two
 
 ## Daycare construction and upgrades
 
-Robin's Carpenter menu offers the Slime Daycare for 10,000g, 350 Wood, 150 Stone, and 50 vanilla Slime. Its three farmhouse-matched upgrades cost 10,000g + 450 Wood, 65,000g + 100 Hardwood, and 100,000g with no materials. Capacities are 10 at basic tier, 20 at upgrades 1 and 2, and 30 at the final tier. The first upgrade also unlocks Daycare-specific room renovations, the Egg CryoLab, and Rare Labs; the final upgrade adds the cellar and unlocks the last-tier facilities. The full facility and furniture progression is still under development.
+Each save can have one Slime Daycare. Robin's Carpenter menu offers its construction for 10,000g, 350 Wood, 150 Stone, and 50 vanilla Slime; after construction starts, the basic option is hidden and Robin's upgrade path remains available for that building. Existing saves with multiple Daycares keep them; no buildings or residents are removed. The three farmhouse-matched upgrades cost 10,000g + 450 Wood, 65,000g + 100 Hardwood, and 100,000g with no materials. Capacities are 10 at basic tier, 20 at upgrades 1 and 2, and 30 at the final tier. The first upgrade also unlocks Daycare-specific room renovations, the Egg CryoLab, and Rare Labs; the final upgrade adds the cellar and unlocks the last-tier facilities. The full facility and furniture progression is still under development.
 
 ## Slime Incubator
 
