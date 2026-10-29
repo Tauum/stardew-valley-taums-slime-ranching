@@ -513,17 +513,20 @@ internal sealed class DaycareManagementMenu : IClickableMenu
 
         FarmAnimal selectedAnimal = this.residents[this.selectedResidentIndex];
         b.DrawString(Game1.smallFont, selectedAnimal.Name, new Vector2(detailPanel.X + 20, detailPanel.Y + 16), new Color(139, 226, 255));
-        DrawResidentNeedBar(b,
+        DrawResidentStatusBar(b,
             new Rectangle(detailPanel.X + 20, detailPanel.Y + 44, 260, 38),
             "HAPPINESS", selectedAnimal.happiness.Value, 255, new Color(111, 214, 157));
-        DrawResidentNeedBar(b,
+        DrawResidentStatusBar(b,
             new Rectangle(detailPanel.X + 298, detailPanel.Y + 44, detailPanel.Width - 318, 38),
             "FULLNESS", selectedAnimal.fullness.Value, 255, new Color(239, 184, 99));
+        DrawResidentStatusBar(b,
+            new Rectangle(detailPanel.X + 20, detailPanel.Y + 88, detailPanel.Width - 40, 38),
+            "FRIENDSHIP", selectedAnimal.friendshipTowardFarmer.Value, 1000, new Color(115, 184, 245));
         if (!this.registry.TryGetSlimeRecord(selectedAnimal.myID.Value, out SlimeRecord selectedRecord))
         {
             this.registryDetailScroll = 0;
             this.registryDetailMaxScroll = 0;
-            b.DrawString(Game1.smallFont, "Genome record unavailable.", new Vector2(detailPanel.X + 20, detailPanel.Y + 106), Color.White);
+            b.DrawString(Game1.smallFont, "Genome record unavailable.", new Vector2(detailPanel.X + 20, detailPanel.Y + 148), Color.White);
             return;
         }
 
@@ -545,16 +548,15 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             $"Mutation: {genome.MutationTrait ?? "none"}",
             $"Favorite food: {FoodLikeCatalog.GetDisplayName(genome.LikedFoodItemId)}",
             $"Age: {ageDays}/{FarmAnimalContent.RanchSlimeDaysToMature} days",
-            $"Friendship {selectedAnimal.friendshipTowardFarmer.Value}/1000",
             $"Assignment: {SlimeRegistry.GetResidentStatusLabel(this.registry.GetResidentStatus(selectedAnimal.myID.Value))}",
             $"Current activity: {this.getActiveActivitySummary(selectedAnimal.myID.Value) ?? "none"}"
         };
-        Rectangle detailBody = new(detailPanel.X + 20, detailPanel.Y + 104, detailPanel.Width - 40, detailPanel.Height - 116);
+        Rectangle detailBody = new(detailPanel.X + 20, detailPanel.Y + 146, detailPanel.Width - 40, detailPanel.Height - 158);
         this.registryDetailScroll = DrawScrollableParagraphs(b,
             details.Select(text => (Text: text, Color: Color.White)), detailBody, Game1.tinyFont,
             18f, 4f, this.registryDetailScroll, out this.registryDetailMaxScroll);
         if (this.registryDetailMaxScroll > 0)
-            b.DrawString(Game1.tinyFont, "Mouse wheel: scroll details", new Vector2(detailPanel.X + 20, detailPanel.Y + 86), new Color(178, 214, 249));
+            b.DrawString(Game1.tinyFont, "Mouse wheel: scroll details", new Vector2(detailPanel.X + 20, detailPanel.Y + 128), new Color(178, 214, 249));
     }
 
     private void DrawProgressionSection(SpriteBatch b)
@@ -745,7 +747,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             b.Draw(Game1.staminaRect, new Rectangle(rect.X + 2, rect.Y + 2, rect.Width - 4, rect.Height - 4), fill);
     }
 
-    private static void DrawResidentNeedBar(SpriteBatch b, Rectangle bounds, string label, int value, int maximum, Color fillColor)
+    private static void DrawResidentStatusBar(SpriteBatch b, Rectangle bounds, string label, int value, int maximum, Color fillColor)
     {
         b.DrawString(Game1.tinyFont, $"{label} {value}/{maximum}", new Vector2(bounds.X, bounds.Y), Color.White);
         Rectangle bar = new(bounds.X, bounds.Y + 18, bounds.Width, 15);
