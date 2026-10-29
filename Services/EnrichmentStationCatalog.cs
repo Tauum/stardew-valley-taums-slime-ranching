@@ -1,3 +1,5 @@
+using Microsoft.Xna.Framework;
+
 namespace taums_slime_ranching.Services;
 
 internal enum EnrichmentActivityKind
@@ -19,11 +21,24 @@ internal sealed record EnrichmentStationDefinition(
     bool IsResting = false,
     float SwingDistancePixels = 0f,
     bool UsesGenomeSizeBounce = false,
-    int? MaximumParticipants = 1);
+    int? MaximumParticipants = 1,
+    IReadOnlyList<Point>? ApproachOffsets = null)
+{
+    public IReadOnlyList<Point> ApproachTileOffsets =>
+        this.ApproachOffsets ?? EnrichmentStationCatalog.DefaultApproachTileOffsets;
+}
 
 /// <summary>Station behavior data kept separate from activity scheduling and animation cleanup.</summary>
 internal static class EnrichmentStationCatalog
 {
+    public static readonly IReadOnlyList<Point> DefaultApproachTileOffsets = Array.AsReadOnly(new[]
+    {
+        new Point(0, -1),
+        new Point(1, 0),
+        new Point(0, 1),
+        new Point(-1, 0)
+    });
+
     private static readonly IReadOnlyDictionary<string, EnrichmentStationDefinition> Stations = new EnrichmentStationDefinition[]
     {
         new(FurnitureContent.TrampolineQualifiedId, EnrichmentActivityKind.Bounce, UsesGenomeSizeBounce: true),

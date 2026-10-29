@@ -9,13 +9,6 @@ internal sealed class EnrichmentInteractionService
 {
     private const int AssignmentIntervalTicks = 30;
     private const float InteractionRadiusPixels = 128f;
-    private static readonly Point[] ApproachTileOffsets =
-    {
-        new(0, -1),
-        new(1, 0),
-        new(0, 1),
-        new(-1, 0)
-    };
     private readonly Dictionary<long, Interaction> active = new();
     private int assignmentTicks;
     private AnimalHouse? activeHouse;
@@ -458,7 +451,7 @@ internal sealed class EnrichmentInteractionService
 
         Point stationTile = new((int)station.Tile.X, (int)station.Tile.Y);
         int pathSearchLimit = house.map.Layers[0].LayerWidth * house.map.Layers[0].LayerHeight;
-        foreach (Point approachOffset in ApproachTileOffsets)
+        foreach (Point approachOffset in station.Definition.ApproachTileOffsets)
         {
             Point approachTile = stationTile + approachOffset;
             if (approachTile.X < 0 || approachTile.Y < 0
