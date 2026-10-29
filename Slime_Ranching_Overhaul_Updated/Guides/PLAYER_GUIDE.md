@@ -38,11 +38,12 @@ The Slime Incubator accepts a genome-specific Ranch Slime Egg from the player's 
 1. Request a testing incubator with `slime_ranching_give_incubator <exact save folder name>`.
 2. Place it inside the Slime Daycare. Use it while holding a genome-specific egg in your inventory; select the egg in the menu.
 3. The egg is removed from inventory; the saved incubator job keeps its genome and hatches after **7 in-game days**. The duration is fixed for new jobs. Any incubation already in progress retains its saved ready day when updating the mod.
-4. The new Ranch Slime appears in the Daycare with the egg's stored genome. If the Daycare is full, the ready hatch waits until space is available.
+4. While an egg is incubating, choose **Cancel** to review a confirmation. Confirming destroys that unique egg and gives you one Fried Egg; make sure your inventory has room. A canceled egg copy cannot be incubated later.
+5. The new Ranch Slime appears in the Daycare with the egg's stored genome. If the Daycare is full, the ready hatch waits until space is available.
 
 In 2.0, newly hatched Ranch Slimes mature after **7 in-game days**. The breeder marks growing slimes in its list and won't let them be selected. The testing spawn command lets you choose an age from 0 to 7 days.
 
-An egg's genome ID can hatch only once, so copied breeder egg items with that same ID become inactive after the first hatch. Vanilla eggs are unaffected. In 2.0, the seven-day duration is fixed; full-Daycare waiting still needs in-game confirmation.
+An egg's genome ID can hatch only once, so copied breeder egg items with that same ID become inactive after the first hatch; canceling an incubation also permanently retires that egg ID. Vanilla eggs are unaffected. In 2.0, the seven-day duration is fixed; full-Daycare waiting and cancellation still need in-game confirmation.
 
 ### Test egg command
 

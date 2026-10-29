@@ -14,6 +14,8 @@ namespace taums_slime_ranching;
 
 public sealed class ModEntry : Mod
 {
+    private const string IncubationCancellationReceiptPrefix = "Taum.SlimeRanching/IncubationCancellation/";
+
     private SlimeRegistry? registry;
     private ModStateStore? stateStore;
     private ModConfig config = new();
@@ -96,6 +98,7 @@ public sealed class ModEntry : Mod
             bool maturityChanged = this.registry.SynchronizeMaturity(GetFarmAnimals(), Game1.Date.TotalDays);
             this.stateReady = true;
             bool repairTransactionRecovered = this.ReconcileMaruRepairDelivery();
+            bool incubationCancellationRecovered = this.ReconcileIncubationCancellations();
             bool constructionProgressChanged = this.TryRecordCompletedDaycareConstruction();
             bool repairQuestProgressChanged = this.TryStartMaruRepairQuest();
             this.LogRegistryReconciliation(detachedAnimals, cancelledCycles);
@@ -103,7 +106,7 @@ public sealed class ModEntry : Mod
                 this.Monitor.Log("Imported the previous mod-folder slime registry into this save. The original legacy file was left untouched.", LogLevel.Info);
             if (this.stateStore.MigratedSaveData)
                 this.Monitor.Log("Migrated the saved Ranch Slime data to the current schema.", LogLevel.Info);
-            if (needsPersistenceMigration || registeredRanchSlimes > 0 || recoveredHatches > 0 || detachedAnimals > 0 || cancelledCycles > 0 || maturityChanged || repairTransactionRecovered || constructionProgressChanged || repairQuestProgressChanged)
+            if (needsPersistenceMigration || registeredRanchSlimes > 0 || recoveredHatches > 0 || detachedAnimals > 0 || cancelledCycles > 0 || maturityChanged || repairTransactionRecovered || incubationCancellationRecovered || constructionProgressChanged || repairQuestProgressChanged)
             {
                 if (!this.SaveExternalStateNow())
                     this.Monitor.Log("Imported or reconciled Ranch Slime state remains in memory but could not yet be written to the current save.", LogLevel.Error);
@@ -446,6 +449,41 @@ public sealed class ModEntry : Mod
         }
 
         return false;
+    }
+
+    private bool ReconcileIncubationCancellations()
+    {
+        if (this.registry is null)
+            return false;
+
+        bool changed = false;
+        foreach (IncubationRecord pending in this.registry.PendingIncubationCancellations.ToArray())
+        {
+            string receiptKey = IncubationCancellationReceiptPrefix + pending.EggItemId;
+            bool rewardWasSaved = Game1.player.modData.ContainsKey(receiptKey);
+            bool reconciled = rewardWasSaved
+                ? this.registry.CommitIncubationCancellation(pending.EggItemId)
+                : this.registry.RestoreCancelledIncubation(pending);
+            if (!reconciled)
+                continue;
+
+            Game1.player.modData.Remove(receiptKey);
+            changed = true;
+        }
+
+        foreach (string receiptKey in Game1.player.modData.Keys
+                     .Where(key => key.StartsWith(IncubationCancellationReceiptPrefix, StringComparison.Ordinal))
+                     .ToArray())
+        {
+            string eggId = receiptKey[IncubationCancellationReceiptPrefix.Length..];
+            if (this.registry.HasPendingIncubationCancellation(eggId))
+                continue;
+
+            Game1.player.modData.Remove(receiptKey);
+            changed = true;
+        }
+
+        return changed;
     }
 
     private bool TryHandleMaruRepairInteraction(SButton button, Vector2 clickedTile)
@@ -801,6 +839,88 @@ public sealed class ModEntry : Mod
         return true;
     }
 
+    private bool CanCancelIncubation(string machineKey)
+    {
+        if (!this.stateReady || !Context.IsMainPlayer || Context.IsMultiplayer
+            || this.registry?.GetIncubation(machineKey) is not { HatchAnimalId: null })
+            return false;
+
+        return Game1.player.couldInventoryAcceptThisItem(ItemRegistry.Create("(O)194"));
+    }
+
+    private void RequestIncubationCancellation(string machineKey)
+    {
+        if (!this.CanCancelIncubation(machineKey))
+        {
+            Game1.drawObjectDialogue("Make room in your inventory for the Fried Egg before cancelling this incubation.");
+            return;
+        }
+
+        Game1.activeClickableMenu = null;
+        Game1.currentLocation.createQuestionDialogue(
+            "Cancel incubation? The Ranch Slime Egg will be destroyed, and you will receive one Fried Egg.",
+            new[]
+            {
+                new StardewValley.Response("confirm", "Destroy egg"),
+                new StardewValley.Response("keep", "Keep incubating")
+            },
+            (farmer, answer) =>
+            {
+                if (answer == "confirm" && !this.CancelIncubation(machineKey))
+                    Game1.drawObjectDialogue("The incubation could not be cancelled. The egg and its saved progress were kept.");
+            });
+    }
+
+    private bool CancelIncubation(string machineKey)
+    {
+        if (!this.CanCancelIncubation(machineKey) || this.registry is null)
+            return false;
+
+        (Item? Item, int Stack)[] inventorySnapshot = Game1.player.Items
+            .Select(item => (Item: (Item?)item, Stack: item?.Stack ?? 0))
+            .ToArray();
+        Item friedEgg = ItemRegistry.Create("(O)194");
+        if (!Game1.player.addItemToInventoryBool(friedEgg))
+        {
+            RestoreInventorySnapshot(inventorySnapshot);
+            return false;
+        }
+
+        if (!this.registry.CancelIncubation(machineKey, out IncubationRecord cancelled))
+        {
+            RestoreInventorySnapshot(inventorySnapshot);
+            return false;
+        }
+
+        string receiptKey = IncubationCancellationReceiptPrefix + cancelled.EggItemId;
+        Game1.player.modData[receiptKey] = "1";
+        if (this.SaveExternalStateNow())
+        {
+            Game1.playSound("smallSelect");
+            return true;
+        }
+
+        bool restored = this.registry.RestoreCancelledIncubation(cancelled);
+        Game1.player.modData.Remove(receiptKey);
+        RestoreInventorySnapshot(inventorySnapshot);
+        if (!this.SaveExternalStateNow())
+            this.Monitor.Log("Could not persist the rollback after an incubator cancellation save failure; the incubation was restored in memory and will be retried on the next save.", LogLevel.Error);
+        if (!restored)
+            this.Monitor.Log($"Could not restore cancelled incubation '{machineKey}' after a save failure.", LogLevel.Error);
+        return false;
+    }
+
+    private static void RestoreInventorySnapshot((Item? Item, int Stack)[] snapshot)
+    {
+        for (int index = 0; index < snapshot.Length && index < Game1.player.Items.Count; index++)
+        {
+            (Item? item, int stack) = snapshot[index];
+            if (item is not null)
+                item.Stack = stack;
+            Game1.player.Items[index] = item;
+        }
+    }
+
     private void ProcessReadyIncubations()
     {
         if (this.registry is null || this.registry.Incubations.Count == 0)
@@ -989,6 +1109,7 @@ public sealed class ModEntry : Mod
                     animal.Name = previousName;
                     return false;
                 },
+                () => this.RequestIncubationCancellation(key),
                 IncubatorPlacementGeometry.Texture);
             return;
         }

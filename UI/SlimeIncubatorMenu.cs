@@ -18,6 +18,7 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
     private readonly string machineKey;
     private readonly Func<int, bool> startIncubation;
     private readonly Func<string, bool> takeHatchedSlime;
+    private readonly Action requestIncubationCancellation;
     private readonly Texture2D incubatorTexture;
     private readonly FarmAnimal? hatchedAnimal;
     private readonly List<(int InventoryIndex, string Name, int Stack)> candidates;
@@ -28,13 +29,14 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
     private int? selectedInventoryIndex;
     private string? statusMessage;
 
-    public SlimeIncubatorMenu(SlimeRegistry registry, string machineKey, Func<int, bool> startIncubation, Func<string, bool> takeHatchedSlime, Texture2D incubatorTexture)
+    public SlimeIncubatorMenu(SlimeRegistry registry, string machineKey, Func<int, bool> startIncubation, Func<string, bool> takeHatchedSlime, Action requestIncubationCancellation, Texture2D incubatorTexture)
         : base(Game1.uiViewport.Width / 2 - 450, Game1.uiViewport.Height / 2 - 280, 900, 560)
     {
         this.registry = registry;
         this.machineKey = machineKey;
         this.startIncubation = startIncubation;
         this.takeHatchedSlime = takeHatchedSlime;
+        this.requestIncubationCancellation = requestIncubationCancellation;
         this.incubatorTexture = incubatorTexture;
         if (registry.GetIncubation(machineKey)?.HatchAnimalId is long animalId
             && Game1.currentLocation is StardewValley.AnimalHouse animalHouse)
@@ -94,6 +96,13 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
                 else
                     Game1.playSound("smallSelect");
             }, "Name your new slime", suggestedName);
+            return;
+        }
+
+        if (active?.HatchAnimalId is null && active is not null && this.actionButton.Contains(x, y))
+        {
+            this.requestIncubationCancellation();
+            Game1.playSound("smallSelect");
             return;
         }
 
@@ -179,6 +188,8 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
                 DrawPanel(b, new Rectangle(panel.X + 18, panel.Y + 316, panel.Width - 36, 54), new Color(55, 72, 134), new Color(101, 138, 205));
                 b.DrawString(Game1.smallFont, "TEMPERATURE", new Vector2(panel.X + 30, panel.Y + 325), Color.White);
                 DrawProgress(b, new Rectangle(panel.X + 173, panel.Y + 335, panel.Width - 216, 16), progress);
+                DrawPanel(b, this.actionButton, new Color(146, 63, 66), new Color(242, 142, 137));
+                DrawCentered(b, "CANCEL", Game1.smallFont, this.actionButton, Color.White);
             }
         }
         else if (this.candidates.Count == 0)

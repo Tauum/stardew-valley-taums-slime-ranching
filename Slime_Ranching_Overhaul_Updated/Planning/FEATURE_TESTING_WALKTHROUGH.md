@@ -71,7 +71,7 @@ Reply with any collision, sizing, or warp issues and a screenshot if the room di
 
 ## 2.0 bulk-test check — Feature 6: fixed incubator timing and capacity
 
-**Status:** New incubation jobs take seven in-game days; saved active jobs retain their recorded ready day. Existing hatch naming and full-capacity blocking remain in place. In-game checks are pending; cancellation is not implemented yet.
+**Status:** New incubation jobs take seven in-game days; saved active jobs retain their recorded ready day. Active-job cancellation now requires confirmation, destroys the unique egg identity, and awards one vanilla Fried Egg. Existing hatch naming and full-capacity blocking remain in place. In-game checks are pending.
 
 1. On a disposable single-player save with a completed Daycare, run `slime_ranching_give_test_eggs <exact save folder name> random` and `slime_ranching_give_incubator <exact save folder name>`. Place the incubator inside the Daycare.
 2. Open the incubator with the test egg in inventory. Confirm the menu shows **7 Days**, select the egg, and start incubation. Confirm exactly one egg is removed.
@@ -79,6 +79,10 @@ Reply with any collision, sizing, or warp issues and a screenshot if the room di
 4. Sleep the seventh night. Confirm exactly one Ranch Slime hatches in the Daycare with the egg's stored genome. Reopen the incubator and use **Name & Take**; confirm the name prompt appears and the egg cannot hatch again from a copied item with the same genome ID.
 5. To verify capacity blocking, fill the Daycare to its 10-resident limit with mature Ranch Slimes, start one egg, and sleep seven nights. Confirm the incubator reports it is ready but waiting for space, and the Daycare never exceeds 10 residents. Sell one test Ranch Slime through its normal Animal Query menu (its configured sell price is 0g), sleep once, and confirm the waiting hatch then appears.
 6. On a separate copied save, start an incubation with the previous build's 15-day config, save, then update to this build. Confirm that job retains its original ready day while a new job takes seven days.
+7. On a copied save with a free inventory slot, start another incubation and reopen that machine before hatch. Select **Cancel** and then **Keep incubating**; confirm the same egg and progress remain. Select **Cancel** again and confirm **Destroy egg**; verify the job disappears and exactly one Fried Egg appears in inventory.
+8. Before canceling, keep a copy of that same unique egg item in a chest. After confirming cancellation, try to incubate the copied item; confirm the incubator rejects it. Also attempt cancellation with a full inventory and verify the job remains intact and the game explains that space is needed for the Fried Egg.
+9. After confirming cancellation, sleep to save and reload. Verify the job stays canceled, the Fried Egg remains, and the copied egg ID remains unusable. On a separate copy, cancel and return to title without saving; reload and confirm the pending transaction restores the original incubation and does not award an unsaved Fried Egg.
+10. Load a schema-14 copy with an active incubation, allow migration to schema 16, save/reload, and verify its ready day is unchanged. Confirm a saved cancellation stays finalized after reload.
 
 ## How to use this walkthrough
 

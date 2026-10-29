@@ -68,6 +68,18 @@ internal sealed class ModStateStore
             if (saveData.SchemaVersion == 13)
             {
                 saveData.SanctuaryQuest ??= new SanctuaryQuestRecord();
+                saveData.SchemaVersion = 14;
+                this.MigratedSaveData = true;
+            }
+            if (saveData.SchemaVersion == 14)
+            {
+                saveData.DestroyedEggIds ??= new List<string>();
+                saveData.SchemaVersion = 15;
+                this.MigratedSaveData = true;
+            }
+            if (saveData.SchemaVersion == 15)
+            {
+                saveData.PendingIncubationCancellations ??= new List<IncubationRecord>();
                 saveData.SchemaVersion = SlimeSaveData.CurrentSchemaVersion;
                 this.MigratedSaveData = true;
             }
@@ -157,7 +169,19 @@ internal sealed class ModStateStore
 
         if (root is JsonObject schemaThirteen && schemaThirteen["SchemaVersion"]?.GetValue<int>() == 13)
         {
-            schemaThirteen["SchemaVersion"] = SlimeSaveData.CurrentSchemaVersion;
+            schemaThirteen["SchemaVersion"] = 14;
+        }
+
+        if (root is JsonObject schemaFourteen && schemaFourteen["SchemaVersion"]?.GetValue<int>() == 14)
+        {
+            schemaFourteen["SchemaVersion"] = 15;
+            schemaFourteen["DestroyedEggIds"] = new JsonArray();
+        }
+
+        if (root is JsonObject schemaFifteen && schemaFifteen["SchemaVersion"]?.GetValue<int>() == 15)
+        {
+            schemaFifteen["SchemaVersion"] = SlimeSaveData.CurrentSchemaVersion;
+            schemaFifteen["PendingIncubationCancellations"] = new JsonArray();
         }
 
         if (root is JsonObject jsonData && jsonData["Slimes"] is JsonArray slimes)

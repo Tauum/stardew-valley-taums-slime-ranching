@@ -19,6 +19,8 @@ internal sealed class SlimeRegistry
     private readonly Dictionary<string, MutagenicAttemptRecord> mutagenicAttempts = new(StringComparer.Ordinal);
     private readonly Dictionary<string, RefineryJobRecord> refineryJobs = new(StringComparer.Ordinal);
     private readonly HashSet<string> hatchedEggIds = new(StringComparer.Ordinal);
+    private readonly HashSet<string> destroyedEggIds = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, IncubationRecord> pendingIncubationCancellations = new(StringComparer.Ordinal);
     private long? activeCompanionFarmAnimalId;
     private SanctuaryQuestRecord sanctuaryQuest = new();
 
@@ -27,6 +29,7 @@ internal sealed class SlimeRegistry
     public int Count => this.records.Count;
     public IReadOnlyCollection<SlimeEggRecord> Eggs => this.eggs.Values;
     public IReadOnlyCollection<IncubationRecord> Incubations => this.incubations.Values;
+    public IReadOnlyCollection<IncubationRecord> PendingIncubationCancellations => this.pendingIncubationCancellations.Values;
     public IReadOnlyCollection<BreedingPairRecord> BreedingPairs => this.breedingPairs.Values;
     public IReadOnlyCollection<MutagenicAttemptRecord> MutagenicAttempts => this.mutagenicAttempts.Values;
     public IReadOnlyCollection<RefineryJobRecord> RefineryJobs => this.refineryJobs.Values;
@@ -257,7 +260,7 @@ internal sealed class SlimeRegistry
     {
         if (egg.Genome.Id == Guid.Empty || egg.EggId != egg.Genome.Id.ToString("N"))
             return false;
-        if (this.hatchedEggIds.Contains(egg.EggId))
+        if (this.hatchedEggIds.Contains(egg.EggId) || this.destroyedEggIds.Contains(egg.EggId))
             return false;
 
         egg.ItemId = SlimeEggContent.GetItemId(egg.Genome);
@@ -271,7 +274,10 @@ internal sealed class SlimeRegistry
     public bool CanIncubate(string itemId) => this.eggs.TryGetValue(itemId, out SlimeEggRecord? egg)
         && egg.HatchedAnimalId is null
         && !this.hatchedEggIds.Contains(egg.EggId)
+        && !this.destroyedEggIds.Contains(egg.EggId)
         && !this.incubations.Values.Any(record => record.EggItemId == itemId);
+
+    public bool HasPendingIncubationCancellation(string eggId) => this.pendingIncubationCancellations.ContainsKey(NormalizeEggToken(eggId));
 
     public bool StartIncubation(string machineKey, string eggItemId, int currentDay)
     {
@@ -397,6 +403,47 @@ internal sealed class SlimeRegistry
         this.hatchedEggIds.Add(record.EggItemId);
         return true;
     }
+
+    public bool CancelIncubation(string machineKey, out IncubationRecord cancelled)
+    {
+        cancelled = null!;
+        if (!this.incubations.TryGetValue(machineKey, out IncubationRecord? record)
+            || record.HatchAnimalId is not null
+            || this.hatchedEggIds.Contains(record.EggItemId)
+            || this.destroyedEggIds.Contains(record.EggItemId))
+            return false;
+
+        this.incubations.Remove(machineKey);
+        if (!this.destroyedEggIds.Add(record.EggItemId))
+        {
+            this.incubations[machineKey] = record;
+            return false;
+        }
+
+        this.pendingIncubationCancellations.Add(record.EggItemId, record);
+        cancelled = record;
+        return true;
+    }
+
+    public bool RestoreCancelledIncubation(IncubationRecord record)
+    {
+        if (!this.pendingIncubationCancellations.TryGetValue(record.EggItemId, out IncubationRecord? pending)
+            || !ReferenceEquals(pending, record))
+            return false;
+
+        if (this.incubations.ContainsKey(record.MachineKey)
+            || !this.eggs.ContainsKey(record.EggItemId)
+            || this.incubations.Values.Any(incubation => incubation.EggItemId == record.EggItemId))
+            return false;
+
+        this.pendingIncubationCancellations.Remove(record.EggItemId);
+        this.destroyedEggIds.Remove(record.EggItemId);
+        this.incubations.Add(record.MachineKey, record);
+        return true;
+    }
+
+    public bool CommitIncubationCancellation(string eggId) =>
+        this.pendingIncubationCancellations.Remove(NormalizeEggToken(eggId));
 
     public bool RestoreIncubation(IncubationRecord record)
     {
@@ -886,6 +933,8 @@ internal sealed class SlimeRegistry
         this.mutagenicAttempts.Clear();
         this.refineryJobs.Clear();
         this.hatchedEggIds.Clear();
+        this.destroyedEggIds.Clear();
+        this.pendingIncubationCancellations.Clear();
         this.activeCompanionFarmAnimalId = data?.ActiveCompanionFarmAnimalId;
         this.sanctuaryQuest = SanctuaryQuestProgression.Normalize(data?.SanctuaryQuest);
         foreach (string eggId in data?.HatchedEggIds ?? Enumerable.Empty<string>())
@@ -893,6 +942,20 @@ internal sealed class SlimeRegistry
             string normalizedEggId = NormalizeEggToken(eggId);
             if (Guid.TryParseExact(normalizedEggId, "N", out _))
                 this.hatchedEggIds.Add(normalizedEggId);
+        }
+        foreach (string eggId in data?.DestroyedEggIds ?? Enumerable.Empty<string>())
+        {
+            string normalizedEggId = NormalizeEggToken(eggId);
+            if (Guid.TryParseExact(normalizedEggId, "N", out _))
+                this.destroyedEggIds.Add(normalizedEggId);
+        }
+        foreach (IncubationRecord record in data?.PendingIncubationCancellations ?? Enumerable.Empty<IncubationRecord>())
+        {
+            if (record is null || string.IsNullOrWhiteSpace(record.EggItemId) || string.IsNullOrWhiteSpace(record.MachineKey))
+                continue;
+            record.EggItemId = NormalizeEggToken(record.EggItemId);
+            if (record.HatchAnimalId is null && this.destroyedEggIds.Contains(record.EggItemId))
+                this.pendingIncubationCancellations.TryAdd(record.EggItemId, record);
         }
         if (data is not null && data.SchemaVersion != SlimeSaveData.CurrentSchemaVersion)
             throw new InvalidOperationException($"Unsupported slime data schema {data.SchemaVersion}; expected {SlimeSaveData.CurrentSchemaVersion}.");
@@ -1044,7 +1107,9 @@ internal sealed class SlimeRegistry
         RefineryJobs = this.refineryJobs.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList(),
         SanctuaryQuest = SanctuaryQuestProgression.Normalize(this.sanctuaryQuest),
         ActiveCompanionFarmAnimalId = this.activeCompanionFarmAnimalId,
-        HatchedEggIds = this.hatchedEggIds.OrderBy(id => id, StringComparer.Ordinal).ToList()
+        HatchedEggIds = this.hatchedEggIds.OrderBy(id => id, StringComparer.Ordinal).ToList(),
+        DestroyedEggIds = this.destroyedEggIds.OrderBy(id => id, StringComparer.Ordinal).ToList(),
+        PendingIncubationCancellations = this.pendingIncubationCancellations.Values.OrderBy(record => record.EggItemId, StringComparer.Ordinal).ToList()
     };
 
     public SlimeEggRecord CreateEgg(SlimeGenome genome)
