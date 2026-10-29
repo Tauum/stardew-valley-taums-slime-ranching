@@ -22,6 +22,7 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
     private readonly Func<string, bool> contributeSlime;
     private readonly Func<string, bool> addGoldCatalyst;
     private readonly Texture2D incubatorTexture;
+    private readonly AnimalHouse? daycare;
     private readonly FarmAnimal? hatchedAnimal;
     private readonly List<(int InventoryIndex, string Name, int Stack)> candidates;
     private readonly int listTop;
@@ -44,8 +45,9 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
         this.contributeSlime = contributeSlime;
         this.addGoldCatalyst = addGoldCatalyst;
         this.incubatorTexture = incubatorTexture;
+        this.daycare = Game1.currentLocation as AnimalHouse;
         if (registry.GetIncubation(machineKey)?.HatchAnimalId is long animalId
-            && Game1.currentLocation is StardewValley.AnimalHouse animalHouse)
+            && this.daycare is AnimalHouse animalHouse)
             this.hatchedAnimal = animalHouse.animals.Values.FirstOrDefault(animal => animal.myID.Value == animalId);
         this.listTop = this.yPositionOnScreen + 166;
         this.listBottom = this.listTop + 184;
@@ -241,7 +243,14 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
             {
                 DrawPanel(b, new Rectangle(panel.X + 18, panel.Y + 62, panel.Width - 36, 236), new Color(48, 65, 128), new Color(105, 140, 209));
                 DrawCentered(b, eggName, Game1.dialogueFont, new Rectangle(panel.X + 30, panel.Y + 82, panel.Width - 60, 54), Color.White);
-                DrawCentered(b, daysLeft > 0 ? $"{daysLeft} Day{(daysLeft == 1 ? "" : "s")} Left" : "Ready to hatch · waiting for Daycare space", Game1.smallFont, new Rectangle(panel.X + 30, panel.Y + 134, panel.Width - 60, 38), Color.White);
+                bool daycareIsFull = this.daycare?.isFull() ?? false;
+                string hatchStatus = daysLeft > 0
+                    ? $"{daysLeft} Day{(daysLeft == 1 ? "" : "s")} Left"
+                    : daycareIsFull ? "Waiting for Daycare space" : "Ready to hatch";
+                DrawCentered(b, hatchStatus, Game1.smallFont, new Rectangle(panel.X + 30, panel.Y + 134, panel.Width - 60, 30), Color.White);
+                if (this.daycare is not null)
+                    DrawCentered(b, $"Daycare residents: {this.daycare.animalsThatLiveHere.Count}/{this.daycare.animalLimit.Value}",
+                        Game1.tinyFont, new Rectangle(panel.X + 30, panel.Y + 164, panel.Width - 60, 24), new Color(198, 219, 255));
                 DrawProgress(b, new Rectangle(panel.X + 32, panel.Y + 194, panel.Width - 64, 28), progress);
                 DrawCentered(b, $"{elapsed} / {duration} days  ({(int)(progress * 100)}%)", Game1.smallFont, new Rectangle(panel.X + 25, panel.Y + 232, panel.Width - 50, 34), Color.White);
                 DrawPanel(b, this.contributionButton,
