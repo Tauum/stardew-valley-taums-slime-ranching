@@ -293,7 +293,10 @@ internal sealed class EnrichmentInteractionService
 
                 if (spot.Definition.ActivityKind == EnrichmentActivityKind.PairedSwing)
                 {
-                    if (spot.Definition.MaximumParticipants is int maximumParticipants && maximumParticipants < 2)
+                    int requiredParticipants = spot.Definition.MinimumParticipants;
+                    if (requiredParticipants != 2
+                        || spot.Definition.MaximumParticipants is int maximumParticipants
+                            && maximumParticipants < requiredParticipants)
                         continue;
 
                     foreach ((FarmAnimal candidate, Models.SlimeRecord candidateRecord) in idleSlimes)
@@ -357,6 +360,12 @@ internal sealed class EnrichmentInteractionService
                 var gatherers = additionalGatherers.Take(additionalParticipantLimit)
                     .Prepend((animal, record))
                     .ToArray();
+                if (gatherers.Length < spotToUse.Definition.MinimumParticipants)
+                {
+                    record.NextEnrichmentCheckMinute = currentMinute + Game1.random.Next(120, 241);
+                    continue;
+                }
+
                 furnitureSpots.Remove(spotToUse);
                 foreach ((FarmAnimal gatherer, Models.SlimeRecord gathererRecord) in gatherers)
                     this.RecordActivity(gathererRecord, currentMinute, durationMinutes);

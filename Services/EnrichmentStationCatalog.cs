@@ -23,6 +23,7 @@ internal sealed record EnrichmentStationDefinition(
     bool UsesGenomeSizeBounce = false,
     int? MaximumParticipants = 1,
     IReadOnlyList<Point>? ApproachOffsets = null,
+    int MinimumParticipants = 1,
     int MinimumDurationMinutes = 120,
     int MaximumDurationMinutes = 180)
 {
@@ -47,7 +48,7 @@ internal static class EnrichmentStationCatalog
         new(FurnitureContent.SlimeCushionQualifiedId, EnrichmentActivityKind.Bounce, BounceHeightPixels: 9f, CompressionHeightPixels: 10f),
         new(FurnitureContent.SlimeSlideQualifiedId, EnrichmentActivityKind.Bounce, BounceHeightPixels: 8f, CompressionHeightPixels: 3f, HorizontalTravelPixels: 30f),
         new(FurnitureContent.SlimeSeesawQualifiedId, EnrichmentActivityKind.PairedSwing,
-            SwingDistancePixels: 8f, MaximumParticipants: 2),
+            SwingDistancePixels: 8f, MaximumParticipants: 2, MinimumParticipants: 2),
         new(FurnitureContent.SlimeBallPitQualifiedId, EnrichmentActivityKind.BallPit),
         new(FurnitureContent.SlimeTunnelQualifiedId, EnrichmentActivityKind.Bounce, BounceHeightPixels: 5f, CompressionHeightPixels: 2f, HorizontalTravelPixels: 42f),
         new(FurnitureContent.HeatedSlimeStoneQualifiedId, EnrichmentActivityKind.Rest, CompressionHeightPixels: 6f, IsResting: true),
