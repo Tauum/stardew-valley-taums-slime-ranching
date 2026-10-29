@@ -34,6 +34,7 @@ public sealed class ModEntry : Mod
     private readonly HashSet<string> rareLabContributionReceiptsToClear = new(StringComparer.Ordinal);
     private readonly HashSet<string> rareLabCatalystReceiptsToClear = new(StringComparer.Ordinal);
     private readonly HashSet<string> refineryTransactionReceiptsToClear = new(StringComparer.Ordinal);
+    private HashSet<string>? marnieFurnitureRecipesKnownOnShopOpen;
 
     public override void Entry(IModHelper helper)
     {
@@ -57,6 +58,7 @@ public sealed class ModEntry : Mod
         helper.Events.World.ObjectListChanged += this.OnObjectListChanged;
         helper.Events.Display.RenderedWorld += this.OnRenderedWorld;
         helper.Events.GameLoop.ReturnedToTitle += this.OnReturnedToTitle;
+        helper.Events.Display.MenuChanged += this.OnMenuChanged;
         helper.Events.Content.AssetRequested += this.OnAssetRequested;
         helper.Events.Input.ButtonPressed += this.OnButtonPressed;
         helper.ConsoleCommands.Add("slime_ranching_inspect", "Inspect vanilla slime or Ranch Slime counts in the current Slime Hutch or Slime Daycare.", this.OnInspectCommand);
@@ -159,16 +161,19 @@ public sealed class ModEntry : Mod
             return;
 
         api.Register(this.ModManifest, this.ResetConfig, this.SaveConfig);
-        api.AddSectionTitle(this.ModManifest, () => "Prototype furniture prices");
-        api.AddParagraph(this.ModManifest, () => "Changes refresh Marnie's prototype furniture stock after saving these settings.");
-        this.AddShopPriceOption(api, "Slime Trampoline", "Price of the trampoline enrichment furniture.", () => this.config.TrampolineShopPrice, value => this.config.TrampolineShopPrice = value);
-        this.AddShopPriceOption(api, "Slime Cushion", "Price of the cushion enrichment furniture.", () => this.config.SlimeCushionShopPrice, value => this.config.SlimeCushionShopPrice = value);
-        this.AddShopPriceOption(api, "Slime Slide", "Price of the slide enrichment furniture.", () => this.config.SlimeSlideShopPrice, value => this.config.SlimeSlideShopPrice = value);
-        this.AddShopPriceOption(api, "Slime Tunnel", "Price of the decorative crawl-through tunnel.", () => this.config.SlimeTunnelShopPrice, value => this.config.SlimeTunnelShopPrice = value);
-        this.AddShopPriceOption(api, "Heated Slime Stone", "Price of the warm resting stone.", () => this.config.HeatedSlimeStoneShopPrice, value => this.config.HeatedSlimeStoneShopPrice = value);
-        this.AddShopPriceOption(api, "Slime Pond", "Price of the decorative slime pond.", () => this.config.SlimePondShopPrice, value => this.config.SlimePondShopPrice = value);
-        this.AddShopPriceOption(api, "Slime Swing", "Price of the decorative slime swing.", () => this.config.SlimeSwingShopPrice, value => this.config.SlimeSwingShopPrice = value);
-        this.AddShopPriceOption(api, "Slime Fairy Lights", "Price of the evening decorative lights.", () => this.config.SlimeFairyLightsShopPrice, value => this.config.SlimeFairyLightsShopPrice = value);
+        api.AddSectionTitle(this.ModManifest, () => "Furniture recipe prices");
+        api.AddParagraph(this.ModManifest, () => "Changes refresh Marnie's furniture recipe stock after saving these settings.");
+        this.AddShopPriceOption(api, "Slime Trampoline Recipe", "Price to learn the reusable Trampoline recipe.", () => this.config.TrampolineRecipePrice, value => this.config.TrampolineRecipePrice = value);
+        this.AddShopPriceOption(api, "Slime Cushion Recipe", "Price to learn the reusable Cushion recipe.", () => this.config.SlimeCushionRecipePrice, value => this.config.SlimeCushionRecipePrice = value);
+        this.AddShopPriceOption(api, "Slime Slide Recipe", "Price to learn the reusable Slide recipe.", () => this.config.SlimeSlideRecipePrice, value => this.config.SlimeSlideRecipePrice = value);
+        this.AddShopPriceOption(api, "Slime Seesaw Recipe", "Price to learn the reusable Seesaw recipe.", () => this.config.SlimeSeesawRecipePrice, value => this.config.SlimeSeesawRecipePrice = value);
+        this.AddShopPriceOption(api, "Heated Slime Stone Recipe", "Price to learn the reusable Heated Slime Stone recipe.", () => this.config.HeatedSlimeStoneRecipePrice, value => this.config.HeatedSlimeStoneRecipePrice = value);
+        this.AddShopPriceOption(api, "Slime Pond Recipe", "Price to learn the reusable Pond recipe.", () => this.config.SlimePondRecipePrice, value => this.config.SlimePondRecipePrice = value);
+        this.AddShopPriceOption(api, "Slime Tunnel Recipe", "Price to learn the reusable Tunnel recipe.", () => this.config.SlimeTunnelRecipePrice, value => this.config.SlimeTunnelRecipePrice = value);
+        this.AddShopPriceOption(api, "Slime Swing Recipe", "Price to learn the reusable Swing recipe.", () => this.config.SlimeSwingRecipePrice, value => this.config.SlimeSwingRecipePrice = value);
+        this.AddShopPriceOption(api, "Slime Lamp Recipe", "Price to learn the reusable Lamp recipe.", () => this.config.SlimeLampRecipePrice, value => this.config.SlimeLampRecipePrice = value);
+        this.AddShopPriceOption(api, "Slime Fairy Lights Recipe", "Price to learn the reusable Fairy Lights recipe.", () => this.config.SlimeFairyLightsRecipePrice, value => this.config.SlimeFairyLightsRecipePrice = value);
+        this.AddShopPriceOption(api, "Slime Ball Pit Recipe", "Price to learn the reusable Ball Pit recipe.", () => this.config.SlimeBallPitRecipePrice, value => this.config.SlimeBallPitRecipePrice = value);
         api.AddSectionTitle(this.ModManifest, () => "Gel Refinery");
         api.AddParagraph(this.ModManifest, () => "The first recipe is provisional: Broken Glasses and vanilla Slime fuel become Refined Quartz.");
         api.AddNumberOption(this.ModManifest,
@@ -852,6 +857,7 @@ public sealed class ModEntry : Mod
         this.refineryTransactionReceiptsToClear.Clear();
         this.rareLabContributionReceiptsToClear.Clear();
         this.rareLabCatalystReceiptsToClear.Clear();
+        this.marnieFurnitureRecipesKnownOnShopOpen = null;
         this.stateReady = false;
         this.registry = new SlimeRegistry(this.Monitor);
         this.stateStore = new ModStateStore(this.Helper.Data, this.Helper.DirectoryPath);
@@ -861,6 +867,8 @@ public sealed class ModEntry : Mod
     {
         if (Context.IsWorldReady && Context.IsMainPlayer)
             this.trampolineInteractions.Update(Game1.currentLocation, Game1.currentGameTime, this.registry);
+
+        this.UpdateMarnieFurnitureRecipeNotifications();
 
         if (!this.stateReady || !Context.IsMainPlayer)
             return;
@@ -880,6 +888,38 @@ public sealed class ModEntry : Mod
         {
             if (reserved.Contains(animal.myID.Value))
                 animal.StopAllActions();
+        }
+    }
+
+    private void OnMenuChanged(object? sender, MenuChangedEventArgs e)
+    {
+        this.marnieFurnitureRecipesKnownOnShopOpen = e.NewMenu is ShopMenu shop
+            && string.Equals(shop.ShopId, "AnimalShop", StringComparison.Ordinal)
+                ? Game1.player.craftingRecipes.Keys.ToHashSet(StringComparer.Ordinal)
+                : null;
+    }
+
+    private void UpdateMarnieFurnitureRecipeNotifications()
+    {
+        HashSet<string>? knownOnOpen = this.marnieFurnitureRecipesKnownOnShopOpen;
+        if (knownOnOpen is null)
+            return;
+
+        if (Game1.activeClickableMenu is not ShopMenu shop
+            || !string.Equals(shop.ShopId, "AnimalShop", StringComparison.Ordinal))
+        {
+            this.marnieFurnitureRecipesKnownOnShopOpen = null;
+            return;
+        }
+
+        foreach (string recipeName in Game1.player.craftingRecipes.Keys.ToArray())
+        {
+            if (!knownOnOpen.Add(recipeName) || !FurnitureRecipeContent.IsFurnitureRecipe(recipeName))
+                continue;
+
+            Game1.addHUDMessage(new HUDMessage(
+                "A new Slime Daycare furniture recipe has been learned.",
+                HUDMessage.newQuest_type));
         }
     }
 
@@ -1429,6 +1469,7 @@ public sealed class ModEntry : Mod
         RanchingItemContent.EditAsset(e);
         ChromaticCrystalContent.EditAsset(e);
         ShopContent.EditAsset(e, this.config);
+        FurnitureRecipeContent.EditAsset(e);
         SlimeEggContent.LoadAssets(e);
         SlimeEggContent.EditAsset(e, this.Helper.DirectoryPath);
         GuidebookContent.EditAsset(e);

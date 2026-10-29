@@ -55,7 +55,7 @@ Chromatic Crystals are breeder inputs rather than machines or furniture. Their a
 
 ## Furniture, amenities, and animations
 
-The intended reusable recipe catalog has three groups: Trampoline, Slide, Cushion, Seesaw, and Heated Slime Stone at Daycare unlock (2,000g each); Pond, Tunnel, Swing, and Lamp at the first building upgrade (5,000g each); Fairy Lights, Ball Pit, and Washing Machine at the final upgrade (10,000g each). Learning a recipe is meant to allow repeated placement. These prices and the **3 initial / 7 after the first upgrade / 15 after the final upgrade** fixed slots describe the approved design; the recipe and fixed-slot editor are not fully integrated. Currently sold Tunnel, Pond, and Swing movable prototypes unlock at the first upgrade, and Fairy Lights unlock at the final tier; these are item purchases at provisional config prices, not reusable recipes. Other activity items remain tester-only.
+Marnie now sells implemented furniture as recipe unlocks only; buying a recipe teaches it and gives no physical furniture item. The basic tier offers Trampoline, Slide, Cushion, Seesaw, and Heated Slime Stone at 2,000g each; the first upgrade adds Pond, Tunnel, Swing, and Lamp at 5,000g each; the final upgrade adds Fairy Lights and Ball Pit at 10,000g each. A learned recipe shows **A new Slime Daycare furniture recipe has been learned.** and can be used repeatedly from the Crafting menu. Ingredient costs are provisional and recipe prices can be adjusted in GMCM. The Washing Machine item is not implemented yet. The approved **3 initial / 7 after the first upgrade / 15 after the final upgrade** fixed slots and Management Desk editor remain under development.
 
 | Furniture | Intended use and current animation/behavior |
 | --- | --- |
@@ -63,8 +63,8 @@ The intended reusable recipe catalog has three groups: Trampoline, Slide, Cushio
 | **Cushion** | A gentle squash followed by a spring back. |
 | **Slide** | A small hop and horizontal glide down the slide. |
 | **Seesaw** | Paired activity. Two nearby slimes must independently pass their activity checks; they sway on opposite phases and share one activity lifetime. |
-| **Ball Pit** | One slime repeatedly dips below the rim and pops back up. Tester-only movable prototype. |
-| **Slime Lamp** | The placed object uses Stardew's native lamp lighting. Nearby slimes that independently select it can gather around its base together. Tester-only movable prototype. |
+| **Ball Pit** | One slime repeatedly dips below the rim and pops back up. Its final-tier recipe is sold by Marnie. |
+| **Slime Lamp** | The placed object uses Stardew's native lamp lighting. Nearby slimes that independently select it can gather around its base together. Its first-upgrade recipe is sold by Marnie. |
 | **Tunnel** | A visual crawl-through, represented by a low hop/glide across its opening. |
 | **Heated Slime Stone** | A low, resting pose beside the ember. A winter-comfort or friendship bonus is not active. |
 | **Pond** | A short bobbing/swimming-like visual. It does not currently create drops or friendship effects. |
@@ -86,7 +86,7 @@ The separate Playground, Slime Bed, and Compost Trough are removed from active 2
 - **Jobs:** Breeding, incubation, Rare Lab state, Pool attempts, refinery batches, building progression, and story milestones are save-backed. A machine's menu is the player interface; its job record remains in save data so closing a menu or reloading does not restart a timer.
 - **Identity:** Ranch Slime genome and lineage are stored with the animal in `modData`; each unique Ranch Slime Egg carries its genome and identity in item `modData`. Save-wide data refers to stable native IDs where needed. Legacy install-folder records are migration input only, protected by backup and retry-safe migration rules.
 - **World behavior:** Farmhouse maps and art provide the Daycare shell while the location remains an `AnimalHouse`. Machines and furniture are custom Stardew big craftables or native object/chest forms, with custom services managing game-specific jobs. The Registry, progression view, and Wiki are a read-only Management Desk preview; permanent desk access and furniture editing are pending.
-- **Player-facing progression:** Robin's building upgrades control capacity and machine unlocks; Marnie is intended to sell reusable furniture recipes and announce new recipe groups after upgrades. Maru repairs the Pool. The mandatory opening story that establishes the starter egg and two initial slimes is still incomplete, and some NPC trigger details remain undecided.
+- **Player-facing progression:** Robin's building upgrades control capacity and machine unlocks; Marnie's recipe-only shop unlocks furniture groups at those same tiers. Maru repairs the Pool. The mandatory opening story that establishes the starter egg and two initial slimes is still incomplete, and some NPC trigger details remain undecided.
 - **Companions:** A later release may add one active companion and abilities. Current ability labels and Wiki directions do not mean those effects are active in normal play.
 
 ## Designed inline as an extension of Stardew Valley

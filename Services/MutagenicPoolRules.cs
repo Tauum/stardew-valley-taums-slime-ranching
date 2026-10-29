@@ -39,13 +39,16 @@ internal sealed class MutagenicPoolRules
     {
         config.GelRefinerySlimeFuelCost = Math.Clamp(config.GelRefinerySlimeFuelCost, 1, 999_999);
         config.GelRefineryDurationDays = Math.Clamp(config.GelRefineryDurationDays, 1, 28);
-        config.SlimeTunnelShopPrice = Math.Clamp(config.SlimeTunnelShopPrice, 0, 999_999);
-        config.HeatedSlimeStoneShopPrice = Math.Clamp(config.HeatedSlimeStoneShopPrice, 0, 999_999);
-        config.SlimePondShopPrice = Math.Clamp(config.SlimePondShopPrice, 0, 999_999);
-        config.SlimeSwingShopPrice = Math.Clamp(config.SlimeSwingShopPrice, 0, 999_999);
-        config.SlimeFairyLightsShopPrice = Math.Clamp(config.SlimeFairyLightsShopPrice, 0, 999_999);
-        config.TrampolineShopPrice = Math.Clamp(config.TrampolineShopPrice, 0, 999_999);
-        config.SlimeCushionShopPrice = Math.Clamp(config.SlimeCushionShopPrice, 0, 999_999);
-        config.SlimeSlideShopPrice = Math.Clamp(config.SlimeSlideShopPrice, 0, 999_999);
+        config.TrampolineRecipePrice = Math.Clamp(config.TrampolineRecipePrice, 0, 999_999);
+        config.SlimeCushionRecipePrice = Math.Clamp(config.SlimeCushionRecipePrice, 0, 999_999);
+        config.SlimeSlideRecipePrice = Math.Clamp(config.SlimeSlideRecipePrice, 0, 999_999);
+        config.SlimeSeesawRecipePrice = Math.Clamp(config.SlimeSeesawRecipePrice, 0, 999_999);
+        config.HeatedSlimeStoneRecipePrice = Math.Clamp(config.HeatedSlimeStoneRecipePrice, 0, 999_999);
+        config.SlimeTunnelRecipePrice = Math.Clamp(config.SlimeTunnelRecipePrice, 0, 999_999);
+        config.SlimePondRecipePrice = Math.Clamp(config.SlimePondRecipePrice, 0, 999_999);
+        config.SlimeSwingRecipePrice = Math.Clamp(config.SlimeSwingRecipePrice, 0, 999_999);
+        config.SlimeLampRecipePrice = Math.Clamp(config.SlimeLampRecipePrice, 0, 999_999);
+        config.SlimeFairyLightsRecipePrice = Math.Clamp(config.SlimeFairyLightsRecipePrice, 0, 999_999);
+        config.SlimeBallPitRecipePrice = Math.Clamp(config.SlimeBallPitRecipePrice, 0, 999_999);
     }
 }

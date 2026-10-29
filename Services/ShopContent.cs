@@ -3,7 +3,7 @@ using StardewValley.GameData.Shops;
 
 namespace taums_slime_ranching.Services;
 
-/// <summary>Adds the current prototype furniture to Marnie's existing shop.</summary>
+/// <summary>Adds reusable Daycare furniture recipes to Marnie's existing shop.</summary>
 internal static class ShopContent
 {
     private const string MarnieShopId = "AnimalShop";
@@ -20,19 +20,27 @@ internal static class ShopContent
                 return;
 
             shop.Items ??= new List<ShopItemData>();
-            AddIfMissing(shop, "Trampoline", FurnitureContent.TrampolineQualifiedId, config.TrampolineShopPrice);
-            AddIfMissing(shop, "SlimeCushion", FurnitureContent.SlimeCushionQualifiedId, config.SlimeCushionShopPrice);
-            AddIfMissing(shop, "SlimeSlide", FurnitureContent.SlimeSlideQualifiedId, config.SlimeSlideShopPrice);
+            string anyDaycareCondition = GetDaycareTierCondition(
+                BuildingContent.SlimeDaycareBuildingId,
+                BuildingContent.SlimeDaycareUpgrade1Id,
+                BuildingContent.SlimeDaycareUpgrade2Id,
+                BuildingContent.SlimeDaycareUpgrade3Id);
+            AddIfMissing(shop, "Trampoline", FurnitureContent.TrampolineQualifiedId, config.TrampolineRecipePrice, anyDaycareCondition);
+            AddIfMissing(shop, "SlimeCushion", FurnitureContent.SlimeCushionQualifiedId, config.SlimeCushionRecipePrice, anyDaycareCondition);
+            AddIfMissing(shop, "SlimeSlide", FurnitureContent.SlimeSlideQualifiedId, config.SlimeSlideRecipePrice, anyDaycareCondition);
+            AddIfMissing(shop, "SlimeSeesaw", FurnitureContent.SlimeSeesawQualifiedId, config.SlimeSeesawRecipePrice, anyDaycareCondition);
             string firstUpgradeCondition = GetDaycareTierCondition(
                 BuildingContent.SlimeDaycareUpgrade1Id,
                 BuildingContent.SlimeDaycareUpgrade2Id,
                 BuildingContent.SlimeDaycareUpgrade3Id);
             string finalUpgradeCondition = GetDaycareTierCondition(BuildingContent.SlimeDaycareUpgrade3Id);
-            AddIfMissing(shop, "SlimeTunnel", FurnitureContent.SlimeTunnelQualifiedId, config.SlimeTunnelShopPrice, firstUpgradeCondition);
-            AddIfMissing(shop, "HeatedSlimeStone", FurnitureContent.HeatedSlimeStoneQualifiedId, config.HeatedSlimeStoneShopPrice);
-            AddIfMissing(shop, "SlimePond", FurnitureContent.SlimePondQualifiedId, config.SlimePondShopPrice, firstUpgradeCondition);
-            AddIfMissing(shop, "SlimeSwing", FurnitureContent.SlimeSwingQualifiedId, config.SlimeSwingShopPrice, firstUpgradeCondition);
-            AddIfMissing(shop, "SlimeFairyLights", FurnitureContent.SlimeFairyLightsQualifiedId, config.SlimeFairyLightsShopPrice, finalUpgradeCondition);
+            AddIfMissing(shop, "SlimeTunnel", FurnitureContent.SlimeTunnelQualifiedId, config.SlimeTunnelRecipePrice, firstUpgradeCondition);
+            AddIfMissing(shop, "HeatedSlimeStone", FurnitureContent.HeatedSlimeStoneQualifiedId, config.HeatedSlimeStoneRecipePrice, anyDaycareCondition);
+            AddIfMissing(shop, "SlimePond", FurnitureContent.SlimePondQualifiedId, config.SlimePondRecipePrice, firstUpgradeCondition);
+            AddIfMissing(shop, "SlimeSwing", FurnitureContent.SlimeSwingQualifiedId, config.SlimeSwingRecipePrice, firstUpgradeCondition);
+            AddIfMissing(shop, "SlimeLamp", FurnitureContent.SlimeLampQualifiedId, config.SlimeLampRecipePrice, firstUpgradeCondition);
+            AddIfMissing(shop, "SlimeFairyLights", FurnitureContent.SlimeFairyLightsQualifiedId, config.SlimeFairyLightsRecipePrice, finalUpgradeCondition);
+            AddIfMissing(shop, "SlimeBallPit", FurnitureContent.SlimeBallPitQualifiedId, config.SlimeBallPitRecipePrice, finalUpgradeCondition);
         });
     }
 
@@ -46,6 +54,7 @@ internal static class ShopContent
         if (existing is not null)
         {
             existing.Price = Math.Max(0, price);
+            existing.IsRecipe = true;
             existing.AvailableStock = int.MaxValue;
             existing.AvailableStockLimit = LimitedStockMode.None;
             if (requiredCondition is not null)
@@ -58,6 +67,7 @@ internal static class ShopContent
             Id = id,
             ItemId = qualifiedItemId,
             Price = Math.Max(0, price),
+            IsRecipe = true,
             AvailableStock = int.MaxValue,
             AvailableStockLimit = LimitedStockMode.None,
             Condition = requiredCondition
