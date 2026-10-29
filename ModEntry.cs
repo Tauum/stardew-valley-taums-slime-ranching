@@ -211,6 +211,8 @@ public sealed class ModEntry : Mod
         if (!this.stateReady || !Context.IsMainPlayer)
             return;
 
+        this.trampolineInteractions.Clear();
+
         try
         {
             int registeredRanchSlimes = this.registry!.RegisterRanchSlimes(GetFarmAnimals());
