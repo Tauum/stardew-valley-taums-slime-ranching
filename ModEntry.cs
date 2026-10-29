@@ -78,6 +78,7 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("slime_ranching_give_incubator", "Give one Slime Incubator for testing. Usage: slime_ranching_give_incubator <exact save folder name>.", this.OnGiveIncubatorCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_cryolab", "Give one tester Egg CryoLab chest. Usage: slime_ranching_give_cryolab <exact save folder name>.", this.OnGiveCryoLabCommand);
         helper.ConsoleCommands.Add("slime_ranching_duplicate_cryolab_egg", "Deliberately duplicate a stored egg ID for CryoLab guard testing on a disposable save. Usage: slime_ranching_duplicate_cryolab_egg <exact save folder name>.", this.OnDuplicateCryoLabEggCommand);
+        helper.ConsoleCommands.Add("slime_ranching_duplicate_inventory_egg", "Deliberately duplicate one unused inventory egg ID for hatch-once testing on a disposable save. Usage: slime_ranching_duplicate_inventory_egg <exact save folder name>.", this.OnDuplicateInventoryEggCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_mutagenic_pool", "Give one Mutagenic Pool for testing. Usage: slime_ranching_give_mutagenic_pool <exact save folder name>.", this.OnGiveMutagenicPoolCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_gel_refinery", "Give one Gel Refinery for testing. Usage: slime_ranching_give_gel_refinery <exact save folder name>.", this.OnGiveGelRefineryCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_tunnel", "Give one Slime Tunnel for testing. Usage: slime_ranching_give_tunnel <exact save folder name>.", this.OnGiveTunnelCommand);
@@ -2806,6 +2807,57 @@ public sealed class ModEntry : Mod
         }
 
         this.Monitor.Log($"Created a deliberate copy of stored egg ID {sourceEggId}. Try storing it in another Daycare's CryoLab; discard the duplicate after the check. Do not save this fixture on a normal save.", LogLevel.Warn);
+    }
+
+    private void OnDuplicateInventoryEggCommand(string command, string[] args)
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady || this.registry is null)
+        {
+            this.Monitor.Log("Load a disposable single-player save before creating a duplicate inventory egg.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 1 || args[0] != saveName)
+        {
+            this.Monitor.Log($"This command deliberately duplicates an egg identity. Use it only on a disposable copy: slime_ranching_duplicate_inventory_egg {saveName}", LogLevel.Warn);
+            return;
+        }
+
+        if (Game1.currentLocation is not AnimalHouse daycare
+            || !BuildingContent.IsSlimeDaycare(daycare.ParentBuilding?.buildingType.Value))
+        {
+            this.Monitor.Log("Enter the Slime Daycare with one unused Ranch Slime Egg in inventory first.", LogLevel.Warn);
+            return;
+        }
+
+        Item? source = Game1.player.Items.FirstOrDefault(item => item is not null
+            && item.Stack == 1
+            && SlimeEggContent.TryReadRecord(item, out SlimeEggRecord egg)
+            && SlimeEggContent.TryGetEggId(item, out string eggId)
+            && egg.EggId == eggId
+            && this.registry.CanIncubate(eggId)
+            && !this.registry.BreedingPairs.Any(pair => pair.OutputEggItemId == eggId)
+            && Game1.player.Items.Count(existing => existing is not null
+                && SlimeEggContent.TryGetEggId(existing, out string existingId) && existingId == eggId) == 1
+            && !this.GetDaycareCryoLabChests()
+                .SelectMany(chest => chest.GetItemsForPlayer())
+                .Any(stored => stored is not null
+                    && SlimeEggContent.TryGetEggId(stored, out string storedEggId) && storedEggId == eggId));
+        if (source is null || !SlimeEggContent.TryGetEggId(source, out string sourceEggId))
+        {
+            this.Monitor.Log("The Daycare needs exactly one unused Ranch Slime Egg in inventory, with no copy in a Breeder or Egg CryoLab.", LogLevel.Warn);
+            return;
+        }
+
+        Item duplicate = source.getOne();
+        if (!Game1.player.couldInventoryAcceptThisItem(duplicate) || !Game1.player.addItemToInventoryBool(duplicate))
+        {
+            this.Monitor.Log("Make room in your inventory before creating the duplicate test egg.", LogLevel.Warn);
+            return;
+        }
+
+        this.Monitor.Log($"Created a deliberate second inventory copy of egg ID {sourceEggId}. Only one copy may hatch; use this duplicate on a disposable save and discard that save after the check.", LogLevel.Warn);
     }
 
     private void OnGiveMutagenicPoolCommand(string command, string[] args)
