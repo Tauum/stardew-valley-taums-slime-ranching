@@ -9,7 +9,7 @@ namespace taums_slime_ranching.Services;
 internal static class FarmAnimalContent
 {
     public const string RanchSlimeTypeId = "Taum.SlimeRanching_RanchSlime";
-    public const int RanchSlimeDaysToMature = 28;
+    public const int RanchSlimeDaysToMature = 7;
     private const string RanchSlimeTexturePrefix = "Mods/Taum.SlimeRanching/Animals/RanchSlime_";
     private const string RanchSlimeTexture = RanchSlimeTexturePrefix + "Green_Normal";
     private static Color[]? vanillaSlimePixels;

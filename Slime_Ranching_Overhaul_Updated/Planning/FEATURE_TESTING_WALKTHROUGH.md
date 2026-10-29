@@ -9,23 +9,58 @@ The separate 2.0 implementation sequence is tracked in `DEVELOPMENT_NOTES_2.0.md
 
 ## 2.0 active test focus — Feature 2: FarmHouse-layout Daycare, upgrades, and renovations
 
-**Status:** Implementation updated; in-game acceptance pending. The custom generated greybox has been superseded. The Daycare follows the FarmHouse progression (base plus three upgrades), keeps AnimalHouse behavior, adds a separate **Slime Daycare Renovations** choice to Robin's Renovate flow at tier 2, and adds a Daycare-specific cellar at tier 3. Renovation state is saved per Daycare; the crib-removal option is excluded.
+**Status:** Implementation updated; in-game acceptance pending. Taum requested on 2026-10-29 that 2.0 features continue before in-game checks, with these steps collected for a later bulk test pass. The custom generated greybox has been superseded. The Daycare follows the FarmHouse progression (base plus three upgrades), keeps AnimalHouse behavior, adds a separate **Slime Daycare Renovations** choice to Robin's Renovate flow at tier 2, and adds a Daycare-specific cellar at tier 3. Renovation state is saved per Daycare; the crib-removal option is excluded.
 
 **Map references:** Compare with Stardew's FarmHouse, FarmHouse1, FarmHouse2, FarmHouse_Cellar, and HomeRenovations. The original room experiments remain in the gallery as historical references; they are not the current Daycare layout.
 
 1. Run **3 Build, Deploy, Run** and load the current copied **TaumTest** save prepared for 2.0, not the main farm. The old save ID at the top belongs to the paused 1.x checkpoint.
 2. Enter the basic Slime Daycare. Confirm its interior is the same layout as the base farmhouse, with no kitchen machines, fireplace, Barn hay hopper, hay stacks, or vanilla egg incubator. Only Daycare-specific machines should appear. Check that Ranch Slimes are still residents of the Daycare and roam normally.
-3. Upgrade the Daycare once and confirm FarmHouse1; upgrade to tier 2 and confirm FarmHouse2. Check capacities, resident slimes, and wallpaper/flooring at each step.
-4. At tier 2, talk to Robin and open **Renovate**. Confirm the choice menu has separate **Farmhouse Renovations** and **Slime Daycare Renovations** options. The Daycare option should contain the room renovations without mixing in farmhouse options. Try **Open Bedroom**, **Add Southern Room**, and **Open Corner Room**. Confirm choices modify only the Daycare and persist after leaving/reloading. Confirm the renovation is blocked if a slime, object, or player occupies its work area, and that no crib-removal option appears.
-5. Upgrade to tier 3. Confirm the vanilla cellar stairs appear, entering leads to the Daycare's own cellar, and exiting returns to the Daycare. Confirm the cellar has no default casks and that the farmhouse cellar and its contents remain separate. Recheck wallpaper and flooring in expanded rooms.
-6. Save, return to title, and reload. Verify the Daycare tier, renovations, cellar contents, decorations, capacity, and slimes. Confirm the kitchen machines, fireplace, hay hopper, hay stacks, vanilla egg incubator, and default cellar casks remain absent from the Daycare, while the farmhouse and vanilla Barn/Slime Hutch remain unchanged.
-7. Record any AnimalHouse behavior that differs from farmhouse behavior (for example room transitions, furniture placement, or blocked animal paths). Do not mark Feature 2 accepted until all four tiers, renovations, cellar entry/exit, animal behavior, and decoration pass in-game.
+3. Buy the first Daycare upgrade. Confirm the interior changes from **FarmHouse** to **FarmHouse1**, capacity becomes 20, and Daycare renovations unlock.
+4. At this first upgrade, talk to Robin and open **Renovate**. Confirm separate **Farmhouse Renovations** and **Slime Daycare Renovations** options. The Daycare option should contain room renovations without mixing in farmhouse options. Try **Open Bedroom**, **Add Southern Room**, and **Open Corner Room**. Confirm choices modify only the Daycare and persist after leaving/reloading. Confirm renovation is blocked if a slime, object, or player occupies its work area, and no crib-removal option appears.
+5. With one ordinary Wallpaper item and one Flooring item in inventory, use each on an unobstructed valid Daycare wall or floor tile. Confirm each appears and one item is consumed. Check that the farmhouse decoration is unchanged. Leave and re-enter the Daycare and confirm both choices persist. Repeat after a room renovation.
+6. Buy the second Daycare upgrade. Confirm the interior changes to **FarmHouse2**, capacity remains 20, and Daycare renovations and decoration persist.
+7. Buy the final Daycare upgrade. Confirm it retains **FarmHouse2**, capacity becomes 30, and vanilla cellar stairs appear. Enter the Daycare's own cellar and exit back to the Daycare. Confirm the cellar has no default casks and the farmhouse cellar and its contents remain separate. Recheck wallpaper and flooring in expanded rooms.
+8. Save, return to title, and reload. Verify the Daycare tier, renovations, cellar contents, decorations, capacity, and slimes. Confirm the kitchen machines, fireplace, hay hopper, hay stacks, vanilla egg incubator, and default cellar casks remain absent from the Daycare, while the farmhouse and vanilla Barn/Slime Hutch remain unchanged.
+9. Record any AnimalHouse behavior that differs from farmhouse behavior (for example room transitions, furniture placement, or blocked animal paths). Do not mark Feature 2 accepted until all four maps, renovations, cellar entry/exit, animal behavior, and decoration pass in-game.
 
 Reply with any collision, sizing, or warp issues and a screenshot if the room differs from the texture preview. Do not mark Feature 2 complete until the in-game check passes.
 
+## 2.0 bulk-test check — Feature 3 ledger and Feature 7 Maru repair (partial implementation)
+
+**Status:** Schema migration, diagnostic, construction/breeding milestone hooks, Robin's prompt, and Maru's material-delivery handoff are implemented. The opening scenes, starter egg, and normal-play route to construction are not implemented. The Maru handoff can be tested with a guarded setup command on a disposable save with a completed Daycare. Keep both feature acceptances pending.
+
+### Save migration check
+
+1. Make a fresh copy of a 2.0 save with schema 12 or 13. Keep the original and the main farm untouched.
+2. Run **3 Build, Deploy, Run**, then load that copied save.
+3. In the SMAPI console, run `slime_ranching_quest_status`. Confirm it reports schema **14** as the target schema and lists the Sanctuary milestones. On a new save, `lewis_concern` should report `prerequisites met` (available but incomplete); the remaining milestones should report `waiting`.
+4. Save, return to title, reload the same copied save, and run `slime_ranching_quest_status` again. Confirm schema 14 is retained and the milestone list is unchanged.
+
+### Maru repair handoff check — can be tested before the opening scenes are complete
+
+1. Use a disposable single-player save with a fully constructed Slime Daycare. To test the handoff before the opening scenes exist, run `slime_ranching_test_maru_repair <exact save folder name>`. This deliberately marks the Lewis, Wizard, Marnie, and construction ledger milestones on that save; it does not play their scenes. Confirm the command logs that the test is primed, then run `slime_ranching_quest_status` and verify those four milestones are complete. When the opening story is implemented, repeat this check on a separate copy using normal play instead of the helper.
+2. Talk to Robin. Choose **Later** once and confirm `robin_pool_prompt` stays pending and Robin can offer the prompt again. Then choose **I'll talk to Maru**. Confirm `robin_pool_prompt=complete`, the mission is not added to the journal that day, and the status command reports an availability day one day after the current day. Reload on the same day and confirm both the date and prompt milestone persist.
+3. Sleep one night. Confirm the Maru repair mission appears in the journal and `maru_repair_requested=complete` appears in `slime_ranching_quest_status`.
+4. Interact with Maru while missing at least one repair material. Confirm she lists the missing amount and the inventory is unchanged.
+5. With all materials, interact with Maru and choose **Not yet**. Confirm no items are consumed and the quest remains active. Interact again and choose **Hand over materials**.
+6. Confirm exactly 1 Battery Pack, 5 Iron Bars, and 10 Refined Quartz are removed, the journal mission completes, and `maru_repair_completed=complete` appears in the status command.
+7. Use the Mutagenic Pool. If the fixed Daycare Pool is not present in this build, add one with `slime_ranching_give_mutagenic_pool <exact save folder name>` and place it inside the Daycare. Confirm it opens normally after repair. Save, return to title, and reload. Confirm the materials remain spent, the mission does not reappear, the repair milestone remains complete, and the Pool stays active.
+8. Keep Feature 3 and Feature 7 acceptance pending until the full Lewis-to-first-breeding flow, interrupted/skipped-scene recovery, Robin prompt, delivery cases, and Pool activation have been tested in-game.
+
+## 2.0 bulk-test check — Feature 4: Ranch Slime maturity
+
+**Status:** The save-backed age cap and native FarmAnimal maturity data use the approved seven-day duration. In-game age, eligibility, and reload checks are pending.
+
+1. On a disposable single-player save with a completed Daycare, run `slime_ranching_spawn_ranch_slime <exact save folder name> 0`. Note the animal ID printed in the SMAPI console.
+2. Run `slime_ranching_inspect <animal ID>`. Confirm the slime reports age `0/7` and cannot be selected as a breeder parent.
+3. Sleep six nights, inspecting after each wakeup. Confirm age advances by one per in-game day, reaches `6/7`, and the breeder still marks it as growing and blocks selection.
+4. Sleep one more night. Confirm the slime reports `7/7` and is selectable as a breeder parent.
+5. Save, return to title, and reload. Confirm age remains `7/7`, the slime stays mature, and vanilla farm animals retain their normal maturity behavior.
+6. On a separate disposable copy with an existing Ranch Slime older than seven days under the former 28-day prototype, confirm it remains mature after load and its age is normalized to `7/7`.
+
 ## How to use this walkthrough
 
-Test only the current stage. Reply with the results or issues. I will help resolve those first. When you say **continue**, I will present the next stage and update this file. Do not advance the stage until you say to continue.
+The 2.0 checks are being collected for one bulk test pass at Taum's request. Run the checks marked ready on disposable copied saves, then report results and issues together. Keep each feature's acceptance pending until its in-game checks pass. The separate 1.x sequence remains paused at Stage 6; resume it only if requested.
 
 ## Current stage: 6 - Breeder genome details and Chromatic Crystals
 

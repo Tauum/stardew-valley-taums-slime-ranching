@@ -20,6 +20,7 @@ internal sealed class SlimeRegistry
     private readonly Dictionary<string, RefineryJobRecord> refineryJobs = new(StringComparer.Ordinal);
     private readonly HashSet<string> hatchedEggIds = new(StringComparer.Ordinal);
     private long? activeCompanionFarmAnimalId;
+    private SanctuaryQuestRecord sanctuaryQuest = new();
 
     public SlimeRegistry(IMonitor monitor) => this.monitor = monitor;
 
@@ -44,6 +45,15 @@ internal sealed class SlimeRegistry
         .Distinct()
         .ToArray();
     public long? ActiveCompanionFarmAnimalId => this.activeCompanionFarmAnimalId;
+    public SanctuaryQuestRecord SanctuaryQuest => this.sanctuaryQuest;
+    public bool IsSanctuaryMilestoneCompleted(string milestone) =>
+        SanctuaryQuestProgression.IsCompleted(this.sanctuaryQuest, milestone);
+    public bool TryCompleteSanctuaryMilestone(string milestone) =>
+        SanctuaryQuestProgression.TryComplete(this.sanctuaryQuest, milestone);
+    public bool RecoverSanctuaryMilestoneFromDurableEvidence(string milestone) =>
+        SanctuaryQuestProgression.RecoverFromDurableEvidence(this.sanctuaryQuest, milestone);
+    public bool RemoveSanctuaryMilestone(string milestone) =>
+        this.sanctuaryQuest.CompletedMilestones.Remove(milestone);
 
     public BreedingPairRecord? GetBreedingPair(string machineKey) =>
         this.breedingPairs.TryGetValue(machineKey, out BreedingPairRecord? pair) ? pair : null;
@@ -876,6 +886,7 @@ internal sealed class SlimeRegistry
         this.refineryJobs.Clear();
         this.hatchedEggIds.Clear();
         this.activeCompanionFarmAnimalId = data?.ActiveCompanionFarmAnimalId;
+        this.sanctuaryQuest = SanctuaryQuestProgression.Normalize(data?.SanctuaryQuest);
         foreach (string eggId in data?.HatchedEggIds ?? Enumerable.Empty<string>())
         {
             string normalizedEggId = NormalizeEggToken(eggId);
@@ -1030,6 +1041,7 @@ internal sealed class SlimeRegistry
         Incubations = this.incubations.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList(),
         MutagenicAttempts = this.mutagenicAttempts.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList(),
         RefineryJobs = this.refineryJobs.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList(),
+        SanctuaryQuest = SanctuaryQuestProgression.Normalize(this.sanctuaryQuest),
         ActiveCompanionFarmAnimalId = this.activeCompanionFarmAnimalId,
         HatchedEggIds = this.hatchedEggIds.OrderBy(id => id, StringComparer.Ordinal).ToList()
     };

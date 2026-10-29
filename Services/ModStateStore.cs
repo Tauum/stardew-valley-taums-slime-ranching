@@ -56,6 +56,18 @@ internal sealed class ModStateStore
                     if (incubation.EggGenome is null)
                         incubation.EggGenome = saveData.Eggs.FirstOrDefault(egg => egg.EggId == incubation.EggItemId)?.Genome;
                 }
+                saveData.SchemaVersion = 12;
+                this.MigratedSaveData = true;
+            }
+            if (saveData.SchemaVersion == 12)
+            {
+                saveData.SanctuaryQuest ??= new SanctuaryQuestRecord();
+                saveData.SchemaVersion = 13;
+                this.MigratedSaveData = true;
+            }
+            if (saveData.SchemaVersion == 13)
+            {
+                saveData.SanctuaryQuest ??= new SanctuaryQuestRecord();
                 saveData.SchemaVersion = SlimeSaveData.CurrentSchemaVersion;
                 this.MigratedSaveData = true;
             }
@@ -130,12 +142,22 @@ internal sealed class ModStateStore
 
         if (root is JsonObject schemaTen && schemaTen["SchemaVersion"]?.GetValue<int>() == 10)
         {
-            schemaTen["SchemaVersion"] = SlimeSaveData.CurrentSchemaVersion;
+            schemaTen["SchemaVersion"] = 11;
         }
 
         if (root is JsonObject schemaEleven && schemaEleven["SchemaVersion"]?.GetValue<int>() == 11)
         {
-            schemaEleven["SchemaVersion"] = SlimeSaveData.CurrentSchemaVersion;
+            schemaEleven["SchemaVersion"] = 12;
+        }
+
+        if (root is JsonObject schemaTwelve && schemaTwelve["SchemaVersion"]?.GetValue<int>() == 12)
+        {
+            schemaTwelve["SchemaVersion"] = 13;
+        }
+
+        if (root is JsonObject schemaThirteen && schemaThirteen["SchemaVersion"]?.GetValue<int>() == 13)
+        {
+            schemaThirteen["SchemaVersion"] = SlimeSaveData.CurrentSchemaVersion;
         }
 
         if (root is JsonObject jsonData && jsonData["Slimes"] is JsonArray slimes)

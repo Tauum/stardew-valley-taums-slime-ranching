@@ -2,9 +2,13 @@
 
 ## 2.0 Daycare progression currently being implemented
 
-The Daycare interior follows farmhouse progression: the basic layout, then FarmHouse1, then FarmHouse2 after upgrade 2, and the FarmHouse2 cellar after upgrade 3. The Daycare remains an animal house for Ranch Slimes. After upgrade 2, Robin's Renovate menu includes separate Daycare room renovations alongside the regular farmhouse renovations. Those choices are saved to the Daycare; crib removal is not offered. Wallpaper and flooring remain Daycare-specific. This feature needs in-game testing; use the copied test save and follow `Planning/FEATURE_TESTING_WALKTHROUGH.md`.
+The basic Daycare uses `FarmHouse`; its first building upgrade changes to `FarmHouse1` and unlocks a separate Daycare Renovate choice at Robin. The second and third upgrades use `FarmHouse2`, and the third adds the Daycare's cellar. The Daycare remains an animal house for Ranch Slimes. Room renovation choices are saved to the Daycare; crib removal is not offered. Wallpaper and flooring remain Daycare-specific. This feature needs in-game testing; use the copied test save and follow `Planning/FEATURE_TESTING_WALKTHROUGH.md`.
 
 > **2.0 redesign in progress:** the current 1.x build still uses the storage and prototype behavior described below. The `feature/2.0-save-data` branch is not deployed yet. Its intended storage is per-save SMAPI data for facility jobs, Ranch Slime entity metadata for slime identity/genomes, and item metadata for each egg. The old install-folder registry is retained read-only during migration. Test this branch only on a copied save; this guide will be revised after migration is verified.
+
+## Daycare wallpaper and flooring
+
+On a copied save, bring an ordinary Wallpaper item and Flooring item into the Slime Daycare. Select each item and use it on an unobstructed valid wall or floor tile. The Daycare saves its patterns independently from the farmhouse. Leave and re-enter the Daycare to confirm the patterns remain; then check the farmhouse to confirm its decoration did not change. The full room-upgrade and reload sequence is in `Planning/FEATURE_TESTING_WALKTHROUGH.md`.
 
 This guide covers the current early prototype. The Slime Breeder can reserve two Ranch Slimes, run a two-day cycle, and produce an externally registered egg. A genome-specific egg can hatch in the Slime Incubator; managed slime behavior beyond breeding and basic animal behavior is still under development.
 
@@ -36,7 +40,7 @@ The Slime Incubator accepts a genome-specific Ranch Slime Egg from the player's 
 3. The egg is removed from inventory; sleep to save the incubator job in the mod-folder registry. Its stored genome is preserved and hatches automatically at the start of the day after 15 days by default. The incubation duration can be changed in the mod settings; active cycles keep the ready date they started with.
 4. The new Ranch Slime appears in the Daycare with the egg's stored genome. If the Daycare is full, the ready hatch waits until space is available.
 
-Ranch Slimes mature after **28 in-game days**. The breeder marks growing slimes in its list and won't let them be selected. The testing spawn command lets you choose an age from 0 to 28 days.
+In 2.0, newly hatched Ranch Slimes mature after **7 in-game days**. The breeder marks growing slimes in its list and won't let them be selected. The testing spawn command lets you choose an age from 0 to 7 days.
 
 An egg's genome ID can hatch only once, so copied breeder egg items with that same ID become inactive after the first hatch. Vanilla eggs are unaffected. The incubator's 15-day default duration and full-Daycare behavior are provisional for playtesting.
 
@@ -80,6 +84,26 @@ Add an animal ID to inspect one managed Ranch Slime's genome, favorite food, mat
 slime_ranching_inspect <Ranch Slime animal ID>
 ```
 
+### Sanctuary quest progress diagnostic
+
+On a copied development save, run:
+
+```text
+slime_ranching_quest_status
+```
+
+This read-only command reports the save-data schema and each saved Sanctuary introduction milestone. After Robin's Pool prompt is accepted, it also reports the in-game day when Maru's mission becomes available. Story scenes and the starter-egg sequence are still being implemented. Construction and first-breeding milestones only advance after their earlier story prerequisites have been recorded. Robin's Pool prompt and Maru's repair handoff wait for the construction milestone.
+
+To test the Robin-to-Maru handoff before the opening scenes are complete, use a disposable single-player save with a fully constructed Daycare and run:
+
+```text
+slime_ranching_test_maru_repair <exact save folder name>
+```
+
+This testing command marks the Lewis, Wizard, Marnie, and Daycare-construction ledger milestones so Robin's prompt can be tested. It skips those scenes and changes saved quest progress; do not use it on a main save. After priming, talk to Robin and follow the Maru repair steps below. When the opening story is implemented, test the normal story route separately without this helper.
+
+In normal play, after Daycare construction, talk to Robin about the broken Mutagenic Pool and choose to ask Maru. The repair mission appears in the journal the next morning. Speak to Maru with 1 Battery Pack, 5 Iron Bars, and 10 Refined Quartz to hand over the materials and activate the Pool. The normal route is not connected to the opening story yet; use the testing command above only on a disposable copy to reach this handoff meanwhile.
+
 ## Mutagenic Pool
 
 Buy the Pool from Marnie or request a test item with `slime_ranching_give_mutagenic_pool <exact save folder name>`. Place it inside the Slime Daycare, bring the configured amount of vanilla Slime in your inventory, and select one mature, unreserved Ranch Slime. Sleep to save the inventory cost and external attempt. The Pool records its chance and roll when started, so reloading doesn't reroll it. Failure never harms the slime; its next attempt gets the configured pity increase. Success sets the Shadow Clone trait and resets pity.
@@ -120,12 +144,12 @@ Select the book and press the action button to open it. It is a custom item refe
 The 1.x prototype defines a **Slime Daycare**, a separate animal-house building, and a **Ranch Slime** farm-animal type. For testing, the Daycare is free and completes instantly. The exterior uses prototype roof art; Ranch Slimes use the game's vanilla Green Slime body frames and face art recomposed as a FarmAnimal sprite sheet. The earlier 1.x build used the Barn map inside. The active 2.0 branch now uses a custom Daycare interior without changing vanilla barns or the Slime Hutch. Build the Daycare through Robin, then run this mod command in the SMAPI console:
 
 ```text
-slime_ranching_spawn_ranch_slime <exact save folder name> <age in days 0-28> [random]
+slime_ranching_spawn_ranch_slime <exact save folder name> <age in days 0-7> [random]
 ```
 
-For the current test copy, use `slime_ranching_spawn_ranch_slime TaumTest_322865388 28` to spawn a mature slime, or use `slime_ranching_spawn_ranch_slime TaumTest_322865388 0` to spawn a newborn. Add the optional `random` tag (for example, `slime_ranching_spawn_ranch_slime TaumTest_322865388 0 random`) to keep the chosen age while randomizing the genome traits: primary species/color, a 30% chance of a secondary species, size, rarity, a 10% shiny chance, favorite food, generation (0â€“6), and a 10% chance of the Shadow Clone mutation. Without the tag, the command uses the default green Ranch Slime genome: no secondary species, Normal size, Common rarity, not shiny, generation 0, and no mutation; the mod assigns its favorite food. Ages 1â€“27 create juveniles that need the remaining days to reach maturity. The command adds a Ranch Slime without converting or removing any vanilla slimes, and immediately saves its genome to the mod's external registry. The animal itself and standard properties like its name, home, age, and friendship are stored by Stardew when the game saves.
+For a 2.0 test copy, use `slime_ranching_spawn_ranch_slime <save folder name> 7` to spawn a mature slime, or use `slime_ranching_spawn_ranch_slime <save folder name> 0` to spawn a newborn. Add the optional `random` tag (for example, `slime_ranching_spawn_ranch_slime <save folder name> 0 random`) to keep the chosen age while randomizing the genome traits: primary species/color, a 30% chance of a secondary species, size, rarity, a 10% shiny chance, favorite food, generation (0â€“6), and a 10% chance of the Shadow Clone mutation. Without the tag, the command uses the default green Ranch Slime genome: no secondary species, Normal size, Common rarity, not shiny, generation 0, and no mutation; the mod assigns its favorite food. Ages 1â€“6 create juveniles that need the remaining days to reach maturity. The command adds a Ranch Slime without converting or removing any vanilla slimes, and immediately saves its genome to the mod's active save data. The animal itself and standard properties like its name, home, age, and friendship are stored by Stardew when the game saves.
 
-To set a managed Ranch Slime's visual size for testing, use `slime_ranching_set_size TaumTest_322865388 <animal ID> <Small|Normal|Large|Giant>`. This does not affect offspring size; bred offspring currently start at Normal size.
+To set a managed Ranch Slime's visual size for testing, use `slime_ranching_set_size <save folder name> <animal ID> <Small|Normal|Large|Giant>`. This does not affect offspring size; bred offspring currently start at Normal size.
 
 ### Breeder selection preview
 

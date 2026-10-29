@@ -46,7 +46,7 @@ internal static class BuildingContent
             daycare.Description = "A safe animal house for friendly Ranch Slimes.";
             daycare.BuildingType = "";
             daycare.BuildingToUpgrade = null;
-            daycare.IndoorMap = "FarmHouse1";
+            daycare.IndoorMap = "FarmHouse";
             daycare.IndoorMapType = "StardewValley.AnimalHouse";
             daycare.BuildDays = 0;
             daycare.BuildCost = 0;
@@ -64,7 +64,7 @@ internal static class BuildingContent
             upgrade1.NameForGeneralType = "Slime Daycare";
             upgrade1.Description = "An expanded interior with room for more Ranch Slimes.";
             upgrade1.BuildingToUpgrade = SlimeDaycareBuildingId;
-            upgrade1.IndoorMap = "FarmHouse2";
+            upgrade1.IndoorMap = "FarmHouse1";
             upgrade1.MaxOccupants = 20;
             upgrade1.BuildCost = 10_000;
             upgrade1.BuildMaterials = new List<BuildingMaterial> { new() { ItemId = "(O)388", Amount = 450 } };
