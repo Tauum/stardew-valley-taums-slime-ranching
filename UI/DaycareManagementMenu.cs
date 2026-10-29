@@ -36,7 +36,9 @@ internal sealed class DaycareManagementMenu : IClickableMenu
     private readonly Func<long, string?> getActiveActivitySummary;
     private readonly List<FarmAnimal> residents;
     private Rectangle registryRows;
+    private Rectangle registryDetails;
     private Rectangle wikiRows;
+    private Rectangle wikiDetails;
     private Rectangle[] sectionButtons = Array.Empty<Rectangle>();
     private Rectangle[] wikiCategoryButtons = Array.Empty<Rectangle>();
     private string activeSection = "REGISTRY";
@@ -45,6 +47,10 @@ internal sealed class DaycareManagementMenu : IClickableMenu
     private int selectedResidentIndex = -1;
     private int firstWikiEntry;
     private int selectedWikiIndex;
+    private float registryDetailScroll;
+    private float registryDetailMaxScroll;
+    private float wikiDetailScroll;
+    private float wikiDetailMaxScroll;
 
     public DaycareManagementMenu(AnimalHouse daycare, SlimeRegistry registry, int buildingTier,
         Func<long, string?> getActiveActivitySummary)
@@ -84,6 +90,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             new Rectangle(this.xPositionOnScreen + 720, this.yPositionOnScreen + 82, 326, 48)
         };
         this.registryRows = new Rectangle(this.xPositionOnScreen + 48, this.yPositionOnScreen + 198, 382, 360);
+        this.registryDetails = new Rectangle(this.xPositionOnScreen + 466, this.yPositionOnScreen + 146, 582, 432);
         this.wikiCategoryButtons = new[]
         {
             new Rectangle(this.xPositionOnScreen + 48, this.yPositionOnScreen + 166, 112, 42),
@@ -91,6 +98,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             new Rectangle(this.xPositionOnScreen + 292, this.yPositionOnScreen + 166, 112, 42)
         };
         this.wikiRows = new Rectangle(this.xPositionOnScreen + 48, this.yPositionOnScreen + 220, 382, 330);
+        this.wikiDetails = this.registryDetails;
     }
 
     public override void receiveLeftClick(int x, int y, bool playSound = true)
@@ -114,6 +122,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             if (row >= 0 && row < VisibleRows && selected < this.residents.Count)
             {
                 this.selectedResidentIndex = selected;
+                this.registryDetailScroll = 0;
                 Game1.playSound("smallSelect");
             }
             return;
@@ -131,6 +140,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             this.activeWikiCategory = categories[index];
             this.firstWikiEntry = 0;
             this.selectedWikiIndex = 0;
+            this.wikiDetailScroll = 0;
             Game1.playSound("smallSelect");
             return;
         }
@@ -142,6 +152,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             if (row >= 0 && row < VisibleRows && selected < this.GetVisibleWikiEntries().Count)
             {
                 this.selectedWikiIndex = selected;
+                this.wikiDetailScroll = 0;
                 Game1.playSound("smallSelect");
             }
         }
@@ -253,6 +264,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         this.activeWikiCategory = categories[(current + delta + categories.Length) % categories.Length];
         this.firstWikiEntry = 0;
         this.selectedWikiIndex = 0;
+        this.wikiDetailScroll = 0;
         Game1.playSound("smallSelect");
     }
 
@@ -264,6 +276,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
                 return;
 
             this.selectedResidentIndex = Math.Clamp(this.selectedResidentIndex + delta, 0, this.residents.Count - 1);
+            this.registryDetailScroll = 0;
             if (this.selectedResidentIndex < this.firstResident)
                 this.firstResident = this.selectedResidentIndex;
             else if (this.selectedResidentIndex >= this.firstResident + VisibleRows)
@@ -274,6 +287,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         {
             List<WikiEntry> entries = this.GetVisibleWikiEntries();
             this.selectedWikiIndex = Math.Clamp(this.selectedWikiIndex + delta, 0, Math.Max(0, entries.Count - 1));
+            this.wikiDetailScroll = 0;
             if (this.selectedWikiIndex < this.firstWikiEntry)
                 this.firstWikiEntry = this.selectedWikiIndex;
             else if (this.selectedWikiIndex >= this.firstWikiEntry + VisibleRows)
@@ -291,6 +305,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
 
             this.selectedResidentIndex = last ? this.residents.Count - 1 : 0;
             this.firstResident = last ? Math.Max(0, this.residents.Count - VisibleRows) : 0;
+            this.registryDetailScroll = 0;
             Game1.playSound("smallSelect");
         }
         else if (this.activeSection == "SLIME WIKI")
@@ -301,6 +316,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
 
             this.selectedWikiIndex = last ? entries.Count - 1 : 0;
             this.firstWikiEntry = last ? Math.Max(0, entries.Count - VisibleRows) : 0;
+            this.wikiDetailScroll = 0;
             Game1.playSound("smallSelect");
         }
     }
@@ -317,6 +333,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
 
             (this.firstResident, this.selectedResidentIndex) = GetPagedSelection(
                 this.firstResident, this.selectedResidentIndex, this.residents.Count, pageDelta);
+            this.registryDetailScroll = 0;
             Game1.playSound("smallSelect");
         }
         else if (this.activeSection == "SLIME WIKI")
@@ -327,6 +344,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
 
             (this.firstWikiEntry, this.selectedWikiIndex) = GetPagedSelection(
                 this.firstWikiEntry, this.selectedWikiIndex, count, pageDelta);
+            this.wikiDetailScroll = 0;
             Game1.playSound("smallSelect");
         }
     }
@@ -350,13 +368,26 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         base.receiveScrollWheelAction(direction);
         int mouseX = Game1.getMouseX();
         int mouseY = Game1.getMouseY();
-        if (this.activeSection == "REGISTRY" && this.registryRows.Contains(mouseX, mouseY))
+        if (this.activeSection == "REGISTRY" && this.registryDetails.Contains(mouseX, mouseY))
+        {
+            this.registryDetailScroll = Math.Clamp(this.registryDetailScroll + (direction < 0 ? 36f : -36f),
+                0, this.registryDetailMaxScroll);
+        }
+        else if (this.activeSection == "SLIME WIKI" && this.wikiDetails.Contains(mouseX, mouseY))
+        {
+            this.wikiDetailScroll = Math.Clamp(this.wikiDetailScroll + (direction < 0 ? 36f : -36f),
+                0, this.wikiDetailMaxScroll);
+        }
+        else if (this.activeSection == "REGISTRY" && this.registryRows.Contains(mouseX, mouseY))
         {
             this.firstResident = Math.Clamp(this.firstResident + (direction < 0 ? 1 : -1),
                 0, Math.Max(0, this.residents.Count - VisibleRows));
             if (this.selectedResidentIndex < this.firstResident
                 || this.selectedResidentIndex >= this.firstResident + VisibleRows)
+            {
                 this.selectedResidentIndex = this.firstResident;
+                this.registryDetailScroll = 0;
+            }
         }
         else if (this.activeSection == "SLIME WIKI" && this.wikiRows.Contains(mouseX, mouseY))
         {
@@ -365,7 +396,10 @@ internal sealed class DaycareManagementMenu : IClickableMenu
                 0, Math.Max(0, entries.Count - VisibleRows));
             if (this.selectedWikiIndex < this.firstWikiEntry
                 || this.selectedWikiIndex >= this.firstWikiEntry + VisibleRows)
+            {
                 this.selectedWikiIndex = this.firstWikiEntry;
+                this.wikiDetailScroll = 0;
+            }
         }
     }
 
@@ -384,7 +418,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         else
             this.DrawWikiSection(b);
 
-        b.DrawString(Game1.tinyFont, "1-3 sections | Up/Down rows | PgUp/PgDn or LB/RB pages | Home/End list | Left/Right Wiki", new Vector2(panel.X + 30, panel.Bottom - 24), Color.White);
+        b.DrawString(Game1.tinyFont, "Wheel: hovered list/details | Up/Down rows | PgUp/PgDn or LB/RB pages | Home/End list | Left/Right Wiki", new Vector2(panel.X + 30, panel.Bottom - 24), Color.White);
         b.DrawString(Game1.tinyFont, "Esc: close", new Vector2(panel.Right - 86, panel.Bottom - 24), Color.White);
         this.drawMouse(b);
     }
@@ -408,7 +442,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
     private void DrawRegistrySection(SpriteBatch b)
     {
         Rectangle listPanel = new(this.xPositionOnScreen + 32, this.yPositionOnScreen + 146, 416, 432);
-        Rectangle detailPanel = new(this.xPositionOnScreen + 466, this.yPositionOnScreen + 146, 582, 432);
+        Rectangle detailPanel = this.registryDetails;
         DrawPanel(b, listPanel, new Color(35, 51, 92), new Color(90, 128, 190));
         DrawPanel(b, detailPanel, new Color(35, 51, 92), new Color(90, 128, 190));
         b.DrawString(Game1.tinyFont, $"RANCH SLIMES: {this.residents.Count}",
@@ -438,6 +472,8 @@ internal sealed class DaycareManagementMenu : IClickableMenu
 
         if (this.selectedResidentIndex < 0 || this.selectedResidentIndex >= this.residents.Count)
         {
+            this.registryDetailScroll = 0;
+            this.registryDetailMaxScroll = 0;
             DrawCentered(b, "No Ranch Slime residents are registered in this Daycare.", Game1.smallFont,
                 new Rectangle(detailPanel.X + 24, detailPanel.Y + 48, detailPanel.Width - 48, 100), Color.White);
             return;
@@ -447,6 +483,8 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         b.DrawString(Game1.smallFont, selectedAnimal.Name, new Vector2(detailPanel.X + 20, detailPanel.Y + 16), new Color(139, 226, 255));
         if (!this.registry.TryGetSlimeRecord(selectedAnimal.myID.Value, out SlimeRecord selectedRecord))
         {
+            this.registryDetailScroll = 0;
+            this.registryDetailMaxScroll = 0;
             b.DrawString(Game1.smallFont, "Genome record unavailable.", new Vector2(detailPanel.X + 20, detailPanel.Y + 58), Color.White);
             return;
         }
@@ -473,13 +511,12 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             $"Assignment: {SlimeRegistry.GetResidentStatusLabel(this.registry.GetResidentStatus(selectedAnimal.myID.Value))}",
             $"Current activity: {this.getActiveActivitySummary(selectedAnimal.myID.Value) ?? "none"}"
         };
-        int y = detailPanel.Y + 56;
-        foreach (string line in details)
-        {
-            y = DrawWrappedText(b, line, new Vector2(detailPanel.X + 20, y), detailPanel.Width - 40,
-                Game1.tinyFont, Color.White, 18f);
-            y += 4;
-        }
+        Rectangle detailBody = new(detailPanel.X + 20, detailPanel.Y + 56, detailPanel.Width - 40, detailPanel.Height - 68);
+        this.registryDetailScroll = DrawScrollableParagraphs(b,
+            details.Select(text => (Text: text, Color: Color.White)), detailBody, Game1.tinyFont,
+            18f, 4f, this.registryDetailScroll, out this.registryDetailMaxScroll);
+        if (this.registryDetailMaxScroll > 0)
+            b.DrawString(Game1.tinyFont, "Mouse wheel: scroll details", new Vector2(detailPanel.X + 20, detailPanel.Y + 39), new Color(178, 214, 249));
     }
 
     private void DrawProgressionSection(SpriteBatch b)
@@ -536,7 +573,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
     private void DrawWikiSection(SpriteBatch b)
     {
         Rectangle listPanel = new(this.xPositionOnScreen + 32, this.yPositionOnScreen + 146, 416, 432);
-        Rectangle detailPanel = new(this.xPositionOnScreen + 466, this.yPositionOnScreen + 146, 582, 432);
+        Rectangle detailPanel = this.wikiDetails;
         DrawPanel(b, listPanel, new Color(35, 51, 92), new Color(90, 128, 190));
         DrawPanel(b, detailPanel, new Color(35, 51, 92), new Color(90, 128, 190));
         string[] categories = { "BASE", "HYBRID", "RARE" };
@@ -565,7 +602,11 @@ internal sealed class DaycareManagementMenu : IClickableMenu
                 new Vector2(listPanel.X + 16, listPanel.Bottom - 26), new Color(178, 214, 249));
 
         if (entries.Count == 0)
+        {
+            this.wikiDetailScroll = 0;
+            this.wikiDetailMaxScroll = 0;
             return;
+        }
         this.selectedWikiIndex = Math.Clamp(this.selectedWikiIndex, 0, entries.Count - 1);
         WikiEntry entry = entries[this.selectedWikiIndex];
         b.DrawString(Game1.smallFont, entry.Name, new Vector2(detailPanel.X + 20, detailPanel.Y + 18), new Color(139, 226, 255));
@@ -573,20 +614,23 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         string abilityLabel = entry.Category == "RARE"
             ? "Current base-color ability: none; rare companion direction is planned."
             : $"Current genome ability label: {abilityList}";
-        int y = DrawWrappedText(b, abilityLabel, new Vector2(detailPanel.X + 20, detailPanel.Y + 58),
-            detailPanel.Width - 40, Game1.tinyFont, Color.White, 18f);
-        y = DrawWrappedText(b, entry.Summary, new Vector2(detailPanel.X + 20, y + 8),
-            detailPanel.Width - 40, Game1.tinyFont, Color.White, 18f);
-        y += 10;
+        var details = new List<(string Text, Color Color)>
+        {
+            (abilityLabel, Color.White),
+            (entry.Summary, Color.White)
+        };
         foreach (string ability in entry.Abilities.Distinct(StringComparer.Ordinal))
         {
             string description = AbilityDirections.TryGetValue(ability, out string? direction)
                 ? $"{ability}: {direction}"
                 : $"{ability}: details are still being written.";
-            y = DrawWrappedText(b, description, new Vector2(detailPanel.X + 20, y),
-                detailPanel.Width - 40, Game1.tinyFont, new Color(217, 231, 253), 18f);
-            y += 6;
+            details.Add((description, new Color(217, 231, 253)));
         }
+        Rectangle detailBody = new(detailPanel.X + 20, detailPanel.Y + 58, detailPanel.Width - 40, detailPanel.Height - 158);
+        this.wikiDetailScroll = DrawScrollableParagraphs(b, details, detailBody, Game1.tinyFont,
+            18f, 8f, this.wikiDetailScroll, out this.wikiDetailMaxScroll);
+        if (this.wikiDetailMaxScroll > 0)
+            b.DrawString(Game1.tinyFont, "Mouse wheel: scroll entry", new Vector2(detailPanel.X + 20, detailPanel.Y + 40), new Color(178, 214, 249));
         DrawWrappedText(b, "These are planned companion abilities. They do not currently activate during normal play; exact rates, cooldowns, and limits remain under review.",
             new Vector2(detailPanel.X + 20, detailPanel.Bottom - 86), detailPanel.Width - 40,
             Game1.tinyFont, new Color(198, 213, 241), 18f);
@@ -681,6 +725,51 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             y += lineHeight;
         }
         return (int)y;
+    }
+
+    private static float DrawScrollableParagraphs(SpriteBatch b, IEnumerable<(string Text, Color Color)> paragraphs,
+        Rectangle bounds, SpriteFont font, float lineHeight, float paragraphSpacing, float scrollOffset, out float maxScroll)
+    {
+        var paragraphList = paragraphs.ToList();
+        var lines = new List<(string Text, float Y, Color Color)>();
+        float contentHeight = 0;
+        for (int paragraphIndex = 0; paragraphIndex < paragraphList.Count; paragraphIndex++)
+        {
+            (string paragraph, Color paragraphColor) = paragraphList[paragraphIndex];
+            string line = string.Empty;
+            foreach (string word in paragraph.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            {
+                string candidate = line.Length == 0 ? word : line + " " + word;
+                if (line.Length > 0 && font.MeasureString(candidate).X > bounds.Width)
+                {
+                    lines.Add((line, contentHeight, paragraphColor));
+                    contentHeight += lineHeight;
+                    line = word;
+                }
+                else
+                    line = candidate;
+            }
+
+            if (line.Length > 0)
+            {
+                lines.Add((line, contentHeight, paragraphColor));
+                contentHeight += lineHeight;
+            }
+            if (paragraphIndex < paragraphList.Count - 1)
+                contentHeight += paragraphSpacing;
+        }
+
+        maxScroll = Math.Max(0, contentHeight - bounds.Height);
+        scrollOffset = Math.Clamp(scrollOffset, 0, maxScroll);
+        foreach ((string text, float y, Color color) in lines)
+        {
+            float drawY = bounds.Y + y - scrollOffset;
+            if (drawY < bounds.Y || drawY + lineHeight > bounds.Bottom)
+                continue;
+
+            b.DrawString(font, text, new Vector2(bounds.X, drawY), color);
+        }
+        return scrollOffset;
     }
 
     private sealed record WikiEntry(string Category, string Name, string Summary, IReadOnlyList<string> Abilities);
