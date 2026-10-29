@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.Objects;
 using StardewValley.Tools;
+using Object = StardewValley.Object;
 
 namespace taums_slime_ranching.Services;
 
@@ -63,7 +64,7 @@ internal static class BreederPlacementBoundsPatch
 [HarmonyPatch(typeof(StardewValley.Object), nameof(StardewValley.Object.placementAction), new[] { typeof(GameLocation), typeof(int), typeof(int), typeof(Farmer) })]
 internal static class BreederPlacementActionPatch
 {
-    private static bool Prefix(StardewValley.Object __instance, GameLocation location, ref int x, ref int y, Farmer who, ref bool __result)
+    private static bool Prefix(Object __instance, GameLocation location, ref int x, ref int y, ref bool __result)
     {
         if (__instance.QualifiedItemId != RanchingItemContent.BreederQualifiedId)
             return true;

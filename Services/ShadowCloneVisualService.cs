@@ -1,7 +1,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
-using taums_slime_ranching.Models;
 
 namespace taums_slime_ranching.Services;
 

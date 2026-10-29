@@ -1,11 +1,27 @@
 # Today's Feature Testing Walkthrough
 
-Updated: 2026-10-27  
+Updated: 2026-10-29
 Paused test checkpoint: `feature/ranch-slime-size-scaled-shadows` at `3799f68` (`Scale Ranch Slime ground shadows by genome size`; now merged into `master`)
 Test save: `TaumTest_322865388` (use this copied save, not the main farm).
 Status: **Paused** at Stage 6 on 2026-10-28 during the 2.0 design pivot. Resume this stage only when requested.
 
-The separate 2.0 implementation sequence is tracked in `DEVELOPMENT_NOTES_2.0.md`. Feature 1, save-safe data foundation, is in progress on `feature/2.0-save-data`; it does not resume or replace this paused 1.x testing stage.
+The separate 2.0 implementation sequence is tracked in `DEVELOPMENT_NOTES_2.0.md`. Feature 1, the save-safe data foundation, passed copied-save acceptance. Feature 2 uses the vanilla FarmHouse maps; test each Daycare tier separately from the paused 1.x Stage 6 below.
+
+## 2.0 active test focus — Feature 2: FarmHouse-layout Daycare, upgrades, and renovations
+
+**Status:** Implementation updated; in-game acceptance pending. The custom generated greybox has been superseded. The Daycare follows the FarmHouse progression (base plus three upgrades), keeps AnimalHouse behavior, adds a separate **Slime Daycare Renovations** choice to Robin's Renovate flow at tier 2, and adds a Daycare-specific cellar at tier 3. Renovation state is saved per Daycare; the crib-removal option is excluded.
+
+**Map references:** Compare with Stardew's FarmHouse, FarmHouse1, FarmHouse2, FarmHouse_Cellar, and HomeRenovations. The original room experiments remain in the gallery as historical references; they are not the current Daycare layout.
+
+1. Run **3 Build, Deploy, Run** and load the current copied **TaumTest** save prepared for 2.0, not the main farm. The old save ID at the top belongs to the paused 1.x checkpoint.
+2. Enter the basic Slime Daycare. Confirm its interior is the same layout as the base farmhouse, with no kitchen machines, fireplace, Barn hay hopper, hay stacks, or vanilla egg incubator. Only Daycare-specific machines should appear. Check that Ranch Slimes are still residents of the Daycare and roam normally.
+3. Upgrade the Daycare once and confirm FarmHouse1; upgrade to tier 2 and confirm FarmHouse2. Check capacities, resident slimes, and wallpaper/flooring at each step.
+4. At tier 2, talk to Robin and open **Renovate**. Confirm the choice menu has separate **Farmhouse Renovations** and **Slime Daycare Renovations** options. The Daycare option should contain the room renovations without mixing in farmhouse options. Try **Open Bedroom**, **Add Southern Room**, and **Open Corner Room**. Confirm choices modify only the Daycare and persist after leaving/reloading. Confirm the renovation is blocked if a slime, object, or player occupies its work area, and that no crib-removal option appears.
+5. Upgrade to tier 3. Confirm the vanilla cellar stairs appear, entering leads to the Daycare's own cellar, and exiting returns to the Daycare. Confirm the cellar has no default casks and that the farmhouse cellar and its contents remain separate. Recheck wallpaper and flooring in expanded rooms.
+6. Save, return to title, and reload. Verify the Daycare tier, renovations, cellar contents, decorations, capacity, and slimes. Confirm the kitchen machines, fireplace, hay hopper, hay stacks, vanilla egg incubator, and default cellar casks remain absent from the Daycare, while the farmhouse and vanilla Barn/Slime Hutch remain unchanged.
+7. Record any AnimalHouse behavior that differs from farmhouse behavior (for example room transitions, furniture placement, or blocked animal paths). Do not mark Feature 2 accepted until all four tiers, renovations, cellar entry/exit, animal behavior, and decoration pass in-game.
+
+Reply with any collision, sizing, or warp issues and a screenshot if the room differs from the texture preview. Do not mark Feature 2 complete until the in-game check passes.
 
 ## How to use this walkthrough
 

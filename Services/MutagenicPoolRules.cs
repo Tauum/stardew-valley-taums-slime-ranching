@@ -31,7 +31,6 @@ internal sealed class MutagenicPoolRules
 
     public static void NormalizeConfig(ModConfig config)
     {
-        BuildingContent.NormalizeConfig(config);
         MutagenicPoolRules rules = FromConfig(config);
         config.MutagenicPoolSlimeCost = rules.SlimeCost;
         config.MutagenicPoolBaseChance = rules.BaseChance;

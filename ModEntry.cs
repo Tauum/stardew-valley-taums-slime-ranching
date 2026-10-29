@@ -2,7 +2,6 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Buildings;
-using StardewValley.Locations;
 using StardewValley.Monsters;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
@@ -26,8 +25,8 @@ public sealed class ModEntry : Mod
     public override void Entry(IModHelper helper)
     {
         new Harmony(this.ModManifest.UniqueID).PatchAll(typeof(ModEntry).Assembly);
+        DaycareDecorating.Initialize(helper, this.Monitor);
         this.config = helper.ReadConfig<ModConfig>();
-        BuildingContent.NormalizeConfig(this.config);
         this.config.IncubatorDurationDays = Math.Clamp(this.config.IncubatorDurationDays, 1, 28);
         this.registry = new SlimeRegistry(this.Monitor);
         RanchSlimeShadowScalePatch.SetSizeLookup(id => this.registry?.GetGenomeSize(id));
@@ -76,6 +75,8 @@ public sealed class ModEntry : Mod
         this.stateReady = false;
         if (!Context.IsMainPlayer)
             return;
+
+        BuildingContent.RefreshLoadedDaycareInteriors(this.Monitor);
 
         try
         {
@@ -415,12 +416,14 @@ public sealed class ModEntry : Mod
             {
                 BuildingContent.SlimeDaycareUpgrade1Id => 176,
                 BuildingContent.SlimeDaycareUpgrade2Id => 192,
+                BuildingContent.SlimeDaycareUpgrade3Id => 192,
                 _ => 160
             };
             int chimneyTop = building.buildingType.Value switch
             {
                 BuildingContent.SlimeDaycareUpgrade1Id => 23,
                 BuildingContent.SlimeDaycareUpgrade2Id => 30,
+                BuildingContent.SlimeDaycareUpgrade3Id => 30,
                 _ => 39
             };
             int textureOffsetX = building.buildingType.Value == BuildingContent.SlimeDaycareBuildingId ? -8 : 0;
@@ -729,7 +732,6 @@ public sealed class ModEntry : Mod
             e.LoadFromModFile<Texture2D>("assets/Machines/SlimeIncubator.png", AssetLoadPriority.Medium);
         else if (e.NameWithoutLocale.IsEquivalentTo("Mods/Taum.SlimeRanching/Machines/SlimeBreeder"))
             e.LoadFromModFile<Texture2D>("assets/Machines/SlimeBreeder.png", AssetLoadPriority.Medium);
-        BuildingContent.LoadAssets(e, this.Helper);
         RanchingItemContent.EditAsset(e);
         ChromaticCrystalContent.EditAsset(e);
         ShopContent.EditAsset(e, this.config);
@@ -744,13 +746,13 @@ public sealed class ModEntry : Mod
         GelRefineryContent.EditAsset(e);
         MutagenicPoolContent.LoadAssets(e);
         MutagenicPoolContent.EditAsset(e);
-        BuildingContent.EditAsset(e, this.Helper, this.config);
+        BuildingContent.EditAsset(e);
     }
 
     private void OnButtonPressed(object? sender, ButtonPressedEventArgs e)
     {
         if (Context.IsWorldReady && Game1.activeClickableMenu is null && e.Button.IsActionButton()
-            && this.TryGetIncubatorAt(e.Cursor.GrabTile, out Vector2 incubatorAnchor, out StardewValley.Object? incubator))
+            && this.TryGetIncubatorAt(e.Cursor.GrabTile, out Vector2 incubatorAnchor))
         {
             if (!this.stateReady)
             {
@@ -896,7 +898,7 @@ public sealed class ModEntry : Mod
         Game1.activeClickableMenu = new StardewValley.Menus.LetterViewerMenu(GuidebookContent.Text);
     }
 
-    private bool TryGetIncubatorAt(Vector2 clickedTile, out Vector2 anchor, out StardewValley.Object? incubator)
+    private bool TryGetIncubatorAt(Vector2 clickedTile, out Vector2 anchor)
     {
         foreach (KeyValuePair<Vector2, StardewValley.Object> pair in Game1.currentLocation.Objects.Pairs)
         {
@@ -909,12 +911,10 @@ public sealed class ModEntry : Mod
                 continue;
 
             anchor = pair.Key;
-            incubator = pair.Value;
             return true;
         }
 
         anchor = Vector2.Zero;
-        incubator = null;
         return false;
     }
 

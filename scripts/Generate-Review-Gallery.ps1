@@ -10,6 +10,7 @@ New-Item -ItemType Directory -Path $previewDirectory -Force | Out-Null
 $imageFiles = @(
     Get-ChildItem -LiteralPath (Join-Path $projectRoot 'assets') -Recurse -File -ErrorAction SilentlyContinue
     Get-ChildItem -LiteralPath (Join-Path $previewDirectory 'ui') -Recurse -File -ErrorAction SilentlyContinue
+    Get-ChildItem -LiteralPath (Join-Path $previewDirectory 'reviews') -File -Filter '*-comparison.png' -ErrorAction SilentlyContinue
     Get-ChildItem -LiteralPath $referenceRoot -Recurse -File -ErrorAction SilentlyContinue
 ) | Where-Object { $_.Extension -match '^\.(png|jpe?g|webp|gif|svg)$' }
 $skippedLongPaths = @($imageFiles | Where-Object { $_.FullName.Length -ge 250 })
@@ -26,6 +27,7 @@ $cards = foreach ($file in $imageFiles) {
     $categories = [Collections.Generic.List[string]]::new()
     $isActive = $relativePath.StartsWith('assets/', [StringComparison]::OrdinalIgnoreCase)
     $isCurrentUiPreview = $relativePath.StartsWith('preview/ui/', [StringComparison]::OrdinalIgnoreCase)
+    $isArtworkComparison = $relativePath.StartsWith('preview/reviews/', [StringComparison]::OrdinalIgnoreCase)
 
     if ($isCurrentUiPreview) { $categories.Add('UI') }
     if ($relativePath -match '(?i)^assets/Buildings/') { $categories.Add('Buildings') }
@@ -56,8 +58,10 @@ $cards = foreach ($file in $imageFiles) {
         $categories = @('Reference')
     }
 
-    $status = if ($isCurrentUiPreview) { 'Current UI preview' }
+    $status = if ($relativePath -match '(?i)superseded-custom-map') { 'Superseded map experiment' }
+        elseif ($isCurrentUiPreview) { 'Current UI preview' }
         elseif ($isActive) { 'Active asset' }
+        elseif ($isArtworkComparison) { 'Artwork comparison' }
         elseif ($relativePath -match '(?i)redesigns.*old') { 'Archived reference' }
         else { 'Concept / reference' }
 

@@ -1,87 +1,34 @@
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System.Text.Json;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
+using StardewValley.Buildings;
 using StardewValley.GameData.Buildings;
+using StardewValley.Objects;
 
 namespace taums_slime_ranching.Services;
 
 internal static class BuildingContent
 {
-    private const int PixelsPerTile = 16;
-    private const int DaycareTextureWidth = 128;
-    private const int DaycareTextureHeight = 80;
-    private const int DesignCellWidth = 384;
-    private const string ExteriorTextureAssetPrefix = "Mods/Taum.SlimeRanching/Buildings/SlimeDaycare/";
-    private static readonly int[] DesignRowBounds = { 0, 341, 683, 1024 };
-    private static readonly string[] ExteriorDesignIds =
-    {
-        "RedRanch", "Forest", "Harbor", "Harvest", "Moonlit", "Winter", "Coastal", "Stone",
-        "Carnival", "Woodland", "Bloom", "Desert"
-    };
-    private static readonly string[] ExteriorDesignNames =
-    {
-        "Red Ranch", "Forest", "Harbor", "Harvest", "Moonlit", "Winter", "Coastal", "Stone",
-        "Carnival", "Woodland", "Bloom", "Desert"
-    };
-    private static Color[]? designSheetPixels;
-    private static int designSheetWidth;
-    private static int designSheetHeight;
-
     public const string SlimeDaycareBuildingId = "Taum.SlimeRanching_SlimeDaycare";
     public const string SlimeDaycareUpgrade1Id = "Taum.SlimeRanching_SlimeDaycare_Upgrade1";
     public const string SlimeDaycareUpgrade2Id = "Taum.SlimeRanching_SlimeDaycare_Upgrade2";
+    public const string SlimeDaycareUpgrade3Id = "Taum.SlimeRanching_SlimeDaycare_Upgrade3";
 
     private const string VanillaDeluxeBarnBuildingId = "Deluxe Barn";
     private static readonly HashSet<string> SlimeDaycareIds = new(StringComparer.Ordinal)
     {
         SlimeDaycareBuildingId,
         SlimeDaycareUpgrade1Id,
-        SlimeDaycareUpgrade2Id
+        SlimeDaycareUpgrade2Id,
+        SlimeDaycareUpgrade3Id
     };
 
     public static bool IsSlimeDaycare(string? buildingId) =>
         buildingId is not null && SlimeDaycareIds.Contains(buildingId);
 
-    public static string[] GetExteriorDesignIds() => ExteriorDesignIds.ToArray();
-
-    public static string GetExteriorDesignName(string designId)
-    {
-        int index = Array.IndexOf(ExteriorDesignIds, designId);
-        return index >= 0 ? ExteriorDesignNames[index] : ExteriorDesignNames[0];
-    }
-
-    public static void NormalizeConfig(ModConfig config)
-    {
-        if (!ExteriorDesignIds.Contains(config.SlimeDaycareExteriorDesign, StringComparer.Ordinal))
-            config.SlimeDaycareExteriorDesign = ExteriorDesignIds[0];
-    }
-
-    public static string GetExteriorTextureName(string designId)
-    {
-        int index = Array.IndexOf(ExteriorDesignIds, designId);
-        if (index < 0)
-            index = 0;
-        return ExteriorTextureAssetPrefix + ExteriorDesignIds[index];
-    }
-
-    public static void LoadAssets(AssetRequestedEventArgs e, IModHelper helper)
-    {
-        for (int i = 0; i < ExteriorDesignIds.Length; i++)
-        {
-            string designId = ExteriorDesignIds[i];
-            if (e.NameWithoutLocale.IsEquivalentTo(GetExteriorTextureName(designId)))
-            {
-                int designIndex = i;
-                e.LoadFrom(() => CreateExteriorTexture(Game1.graphics.GraphicsDevice, helper, designIndex), AssetLoadPriority.Exclusive);
-                return;
-            }
-        }
-    }
-
-    public static void EditAsset(AssetRequestedEventArgs e, IModHelper helper, ModConfig config)
+    public static void EditAsset(AssetRequestedEventArgs e)
     {
         if (!e.NameWithoutLocale.IsEquivalentTo("Data/Buildings"))
             return;
@@ -99,12 +46,13 @@ internal static class BuildingContent
             daycare.Description = "A safe animal house for friendly Ranch Slimes.";
             daycare.BuildingType = "";
             daycare.BuildingToUpgrade = null;
-            daycare.IndoorMap = "Barn3";
+            daycare.IndoorMap = "FarmHouse1";
             daycare.IndoorMapType = "StardewValley.AnimalHouse";
             daycare.BuildDays = 0;
             daycare.BuildCost = 0;
             daycare.BuildMaterials = new();
-            daycare.MaxOccupants = 12;
+            daycare.MaxOccupants = 10;
+            daycare.HayCapacity = 0;
             // Explicitly allow this custom animal's House ID. Some animal
             // placement paths only consult ValidOccupantTypes for modded types.
             daycare.ValidOccupantTypes = new List<string> { SlimeDaycareBuildingId };
@@ -116,7 +64,10 @@ internal static class BuildingContent
             upgrade1.NameForGeneralType = "Slime Daycare";
             upgrade1.Description = "An expanded interior with room for more Ranch Slimes.";
             upgrade1.BuildingToUpgrade = SlimeDaycareBuildingId;
+            upgrade1.IndoorMap = "FarmHouse2";
             upgrade1.MaxOccupants = 20;
+            upgrade1.BuildCost = 10_000;
+            upgrade1.BuildMaterials = new List<BuildingMaterial> { new() { ItemId = "(O)388", Amount = 450 } };
             upgrade1.ValidOccupantTypes = new List<string> { SlimeDaycareBuildingId };
             buildings[SlimeDaycareUpgrade1Id] = upgrade1;
 
@@ -125,79 +76,164 @@ internal static class BuildingContent
             upgrade2.NameForGeneralType = "Slime Daycare";
             upgrade2.Description = "The largest interior, with room for even more Ranch Slimes.";
             upgrade2.BuildingToUpgrade = SlimeDaycareUpgrade1Id;
-            upgrade2.MaxOccupants = 30;
+            upgrade2.IndoorMap = "FarmHouse2";
+            upgrade2.MaxOccupants = 20;
+            upgrade2.BuildCost = 65_000;
+            upgrade2.BuildMaterials = new List<BuildingMaterial> { new() { ItemId = "(O)709", Amount = 100 } };
             upgrade2.ValidOccupantTypes = new List<string> { SlimeDaycareBuildingId, SlimeDaycareUpgrade1Id };
             buildings[SlimeDaycareUpgrade2Id] = upgrade2;
+
+            BuildingData upgrade3 = Clone(daycare, options);
+            upgrade3.Name = "Slime Daycare - Cellar";
+            upgrade3.NameForGeneralType = "Slime Daycare";
+            upgrade3.Description = "Adds the farmhouse cellar beneath the Daycare.";
+            upgrade3.BuildingToUpgrade = SlimeDaycareUpgrade2Id;
+            upgrade3.IndoorMap = "FarmHouse2";
+            upgrade3.MaxOccupants = 30;
+            upgrade3.BuildCost = 100_000;
+            upgrade3.BuildMaterials = new();
+            upgrade3.ValidOccupantTypes = new List<string>
+            {
+                SlimeDaycareBuildingId,
+                SlimeDaycareUpgrade1Id,
+                SlimeDaycareUpgrade2Id
+            };
+            buildings[SlimeDaycareUpgrade3Id] = upgrade3;
         });
     }
 
-    private static Texture2D CreateExteriorTexture(GraphicsDevice graphicsDevice, IModHelper helper, int designIndex)
+    public static void RefreshLoadedDaycareInteriors(IMonitor monitor)
     {
-        Texture2D sheet = helper.ModContent.Load<Texture2D>("assets/Buildings/SlimeDaycareDesigns.png");
-        Color[] source = GetTransparentDesignSheetPixels(sheet);
-        int column = designIndex % 4;
-        int row = designIndex / 4;
-        int sourceX = column * DesignCellWidth;
-        int sourceY = DesignRowBounds[row];
-        int sourceHeight = DesignRowBounds[row + 1] - sourceY;
-        Color[] output = new Color[DaycareTextureWidth * DaycareTextureHeight];
-
-        // Use nearest-neighbor scaling to fit the complete building source
-        // rectangle without texture pixels extending past its tile footprint.
-        for (int y = 0; y < DaycareTextureHeight; y++)
-        for (int x = 0; x < DaycareTextureWidth; x++)
+        foreach (Building building in Game1.getFarm().buildings)
         {
-            int sampleX = sourceX + x * DesignCellWidth / DaycareTextureWidth;
-            int sampleY = sourceY + y * sourceHeight / DaycareTextureHeight;
-            output[y * DaycareTextureWidth + x] = source[sampleY * designSheetWidth + sampleX];
-        }
+            if (!IsSlimeDaycare(building.buildingType.Value))
+                continue;
 
-        var texture = new Texture2D(graphicsDevice, DaycareTextureWidth, DaycareTextureHeight);
-        texture.SetData(output);
-        return texture;
+            BuildingData? data = building.GetData();
+            if (data is null || string.IsNullOrWhiteSpace(data.IndoorMap))
+                continue;
+
+            building.ReloadBuildingData();
+            if (building.GetIndoors() is not AnimalHouse house)
+                continue;
+
+            // Old saves can retain a Barn map and its baked-in hay hopper after
+            // the building data changes. Reload the configured map on save load.
+            house.mapPath.Value = "Maps\\" + data.IndoorMap;
+            house.reloadMap();
+            house.MakeMapModifications(force: true);
+            house.animalLimit.Value = data.MaxOccupants;
+            house.piecesOfHay.Value = 0;
+
+            int removed = RemoveFarmhouseOnlyFixtures(house);
+            if (removed > 0)
+                monitor.Log($"Removed farmhouse kitchen appliances, fireplace, hay, vanilla incubator, and cellar casks from the Slime Daycare ({removed} saved items or map tiles).", LogLevel.Info);
+        }
     }
 
-    private static Color[] GetTransparentDesignSheetPixels(Texture2D sheet)
+    internal static int RemoveFarmhouseOnlyFixtures(AnimalHouse house)
     {
-        if (designSheetPixels is not null && designSheetWidth == sheet.Width && designSheetHeight == sheet.Height)
-            return designSheetPixels;
+        int removed = 0;
+        foreach (var pair in house.objects.Pairs.ToArray())
+        {
+            StardewValley.Object obj = pair.Value;
+            bool isHay = obj.QualifiedItemId == "(O)178"
+                || obj.Name.Contains("Hay", StringComparison.OrdinalIgnoreCase)
+                || obj.Name.Contains("Hopper", StringComparison.OrdinalIgnoreCase);
+            bool isVanillaIncubator = obj.GetMachineData()?.IsIncubator == true;
+            bool isKitchenFixture = obj is Chest chest && chest.fridge.Value
+                || obj.Name.Contains("Stove", StringComparison.OrdinalIgnoreCase)
+                || obj.Name.Contains("Oven", StringComparison.OrdinalIgnoreCase)
+                || obj.Name.Contains("Refrigerator", StringComparison.OrdinalIgnoreCase);
+            if (!isHay && !isVanillaIncubator && !isKitchenFixture)
+                continue;
 
-        designSheetWidth = sheet.Width;
-        designSheetHeight = sheet.Height;
-        designSheetPixels = new Color[sheet.Width * sheet.Height];
-        sheet.GetData(designSheetPixels);
-        Color[] pixels = designSheetPixels;
-        var queue = new Queue<int>();
-        for (int x = 0; x < sheet.Width; x++)
-        {
-            EnqueueBackgroundPixel(x);
-            EnqueueBackgroundPixel((sheet.Height - 1) * sheet.Width + x);
-        }
-        for (int y = 1; y < sheet.Height - 1; y++)
-        {
-            EnqueueBackgroundPixel(y * sheet.Width);
-            EnqueueBackgroundPixel(y * sheet.Width + sheet.Width - 1);
-        }
-
-        while (queue.TryDequeue(out int index))
-        {
-            int x = index % sheet.Width;
-            int y = index / sheet.Width;
-            if (x > 0) EnqueueBackgroundPixel(index - 1);
-            if (x + 1 < sheet.Width) EnqueueBackgroundPixel(index + 1);
-            if (y > 0) EnqueueBackgroundPixel(index - sheet.Width);
-            if (y + 1 < sheet.Height) EnqueueBackgroundPixel(index + sheet.Width);
+            house.objects.Remove(pair.Key);
+            removed++;
         }
 
-        return designSheetPixels!;
+        removed += RemoveDaycareHomeFurniture(house);
+        removed += RemoveKitchenAndFridgeMapTiles(house);
+        removed += DaycareRenovations.RemoveCellarKegs(house);
+        return removed;
+    }
 
-        void EnqueueBackgroundPixel(int index)
+    internal static int RemoveDaycareHomeFurniture(AnimalHouse house)
+    {
+        int removed = 0;
+        foreach (Furniture furniture in house.furniture.ToArray())
         {
-            Color pixel = pixels[index];
-            if (pixel.A == 0 || pixel.R > 2 || pixel.G > 2 || pixel.B > 2)
+            string id = furniture.QualifiedItemId;
+            string name = furniture.Name;
+            bool isHayHopper = name.Contains("Hay", StringComparison.OrdinalIgnoreCase)
+                || name.Contains("Hopper", StringComparison.OrdinalIgnoreCase);
+            bool isFireplace = id is "(F)1792" or "(F)1794"
+                || name.Contains("Fireplace", StringComparison.OrdinalIgnoreCase);
+            bool isKitchenMachine = name.Contains("Stove", StringComparison.OrdinalIgnoreCase)
+                || name.Contains("Oven", StringComparison.OrdinalIgnoreCase)
+                || name.Contains("Refrigerator", StringComparison.OrdinalIgnoreCase)
+                || name.Contains("Kitchen", StringComparison.OrdinalIgnoreCase);
+            if (!isFireplace && !isKitchenMachine && !isHayHopper)
+                continue;
+
+            house.furniture.Remove(furniture);
+            removed++;
+        }
+        return removed;
+    }
+
+    private static int RemoveKitchenAndFridgeMapTiles(AnimalHouse house)
+    {
+        int removed = 0;
+        var buildings = house.Map.GetLayer("Buildings");
+        if (buildings is null)
+            return 0;
+
+        List<Point> fridgeTiles = new();
+        List<Point> kitchenActionTiles = new();
+        for (int y = 0; y < buildings.LayerHeight; y++)
+        for (int x = 0; x < buildings.LayerWidth; x++)
+        {
+            if (buildings.Tiles[x, y] is { TileIndex: 173 } fridgeTile
+                && string.Equals(fridgeTile.TileSheet.Id, "untitled tile sheet", StringComparison.OrdinalIgnoreCase))
+                fridgeTiles.Add(new Point(x, y));
+
+            foreach (string layerName in new[] { "Back", "Buildings", "Buildings2", "Front" })
+            {
+                var layer = house.Map.GetLayer(layerName);
+                var tile = layer?.Tiles[x, y];
+                if (tile is null || !tile.Properties.TryGetValue("Action", out var action))
+                    continue;
+                if (string.Equals(action, "Kitchen", StringComparison.OrdinalIgnoreCase))
+                    kitchenActionTiles.Add(new Point(x, y));
+            }
+        }
+
+        foreach (Point point in fridgeTiles)
+        {
+            RemoveTile(point.X, point.Y - 1, "Buildings");
+            RemoveTile(point.X, point.Y, "Buildings");
+        }
+
+        foreach (Point point in kitchenActionTiles.Distinct())
+        {
+            // The kitchen action is on the stove. Clear its 3x2 appliance art
+            // from foreground layers while preserving the floor and walls.
+            for (int x = point.X - 1; x <= point.X + 1; x++)
+            for (int y = point.Y - 1; y <= point.Y; y++)
+                foreach (string layerName in new[] { "Buildings", "Buildings2", "Front" })
+                    RemoveTile(x, y, layerName);
+        }
+
+        return removed;
+
+        void RemoveTile(int x, int y, string layerName)
+        {
+            var layer = house.Map.GetLayer(layerName);
+            if (layer is null || x < 0 || y < 0 || x >= layer.LayerWidth || y >= layer.LayerHeight || layer.Tiles[x, y] is null)
                 return;
-            pixels[index] = Color.Transparent;
-            queue.Enqueue(index);
+            house.removeTile(x, y, layerName);
+            removed++;
         }
     }
 

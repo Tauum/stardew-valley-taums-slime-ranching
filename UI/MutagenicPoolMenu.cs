@@ -137,14 +137,14 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
         {
             b.DrawString(Game1.tinyFont, $"Cycle: {this.rules.DurationDays} in-game day(s) · placeholder",
                 new Vector2(left + 24, top + 418), Color.White);
-            DrawBar(b, new Rectangle(left + 24, top + 442, 306, 20), 0f, new Color(184, 135, 204));
+            DrawBar(b, new Rectangle(left + 24, top + 442, 306, 20), 0f);
         }
         else
         {
             int duration = Math.Max(1, active.ReadyOnDay - active.StartedOnDay);
             float progress = Math.Clamp((Game1.Date.TotalDays - active.StartedOnDay) / (float)duration, 0f, 1f);
             b.DrawString(Game1.tinyFont, $"Attempt in progress · ready day {active.ReadyOnDay}", new Vector2(left + 24, top + 418), Color.White);
-            DrawBar(b, new Rectangle(left + 24, top + 442, 306, 20), progress, new Color(184, 135, 204));
+            DrawBar(b, new Rectangle(left + 24, top + 442, 306, 20), progress);
         }
         DrawButton(b, this.actionButton, active is null ? "START" : "PROCESSING", active is null ? new Color(40, 119, 207) : new Color(68, 76, 119));
 
@@ -178,7 +178,7 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
             ? this.rules.GetChance(0)
             : this.rules.GetChance(this.registry.GetMutagenicPoolFailures(selected.myID.Value)));
         b.DrawString(Game1.smallFont, $"Chance {chance:P0}", new Vector2(right + 14, top + 132), Color.White);
-        DrawBar(b, new Rectangle(right + 14, top + 162, 148, 22), (float)chance, new Color(184, 135, 204));
+        DrawBar(b, new Rectangle(right + 14, top + 162, 148, 22), (float)chance);
         int failures = selected is null ? 0 : this.registry.GetMutagenicPoolFailures(selected.myID.Value);
         b.DrawString(Game1.tinyFont, $"Previous misses: {failures}", new Vector2(right + 14, top + 198), Color.White);
         b.DrawString(Game1.tinyFont, "Misses raise its", new Vector2(right + 14, top + 238), Color.White);
@@ -290,7 +290,7 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
         b.Draw(slimePortraitTexture, bounds, new Rectangle(32, 120, 16, 24), tint);
     }
 
-    private static void DrawBar(SpriteBatch batch, Rectangle bounds, float value, Color fill)
+    private static void DrawBar(SpriteBatch batch, Rectangle bounds, float value)
     {
         batch.Draw(Game1.staminaRect, bounds, new Color(17, 26, 57));
         int width = (int)((bounds.Width - 4) * Math.Clamp(value, 0f, 1f));
