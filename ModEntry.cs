@@ -23,6 +23,7 @@ public sealed class ModEntry : Mod
     private bool stateReady;
     private readonly EnrichmentInteractionService trampolineInteractions = new();
     private readonly ShadowCloneVisualService shadowCloneVisuals = new();
+    private readonly SlimeMutationVisualService mutationVisuals = new();
     private readonly List<(long SlimeId, bool Success, double Chance)> pendingMutagenicNotifications = new();
     private readonly HashSet<string> mutagenicContributionReceiptsToClear = new(StringComparer.Ordinal);
 
@@ -635,6 +636,7 @@ public sealed class ModEntry : Mod
     {
         this.trampolineInteractions.Clear();
         this.shadowCloneVisuals.Clear();
+        this.mutationVisuals.Clear();
         this.pendingMutagenicNotifications.Clear();
         this.stateReady = false;
         this.registry = new SlimeRegistry(this.Monitor);
@@ -699,6 +701,7 @@ public sealed class ModEntry : Mod
 
         if (this.config.ShowShadowCloneVisualEchoes)
             this.shadowCloneVisuals.Draw(Game1.currentLocation, e.SpriteBatch, this.registry!);
+        this.mutationVisuals.Draw(Game1.currentLocation, e.SpriteBatch, this.registry!);
         this.DrawFairyLightGlow(e.SpriteBatch);
         if (Game1.currentLocation != Game1.getFarm())
             return;
