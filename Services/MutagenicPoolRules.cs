@@ -40,9 +40,6 @@ internal sealed class MutagenicPoolRules
         config.GelRefineryShopPrice = Math.Clamp(config.GelRefineryShopPrice, 0, 999_999);
         config.GelRefinerySlimeFuelCost = Math.Clamp(config.GelRefinerySlimeFuelCost, 1, 999_999);
         config.GelRefineryDurationDays = Math.Clamp(config.GelRefineryDurationDays, 1, 28);
-        config.CompostTroughShopPrice = Math.Clamp(config.CompostTroughShopPrice, 0, 999_999);
-        config.CompostTroughGrowthDays = Math.Clamp(config.CompostTroughGrowthDays, 1, 3);
-        config.CompostTroughLikedFoodBonusDays = Math.Clamp(config.CompostTroughLikedFoodBonusDays, 0, 2);
         config.SlimeTunnelShopPrice = Math.Clamp(config.SlimeTunnelShopPrice, 0, 999_999);
         config.HeatedSlimeStoneShopPrice = Math.Clamp(config.HeatedSlimeStoneShopPrice, 0, 999_999);
         config.SlimePondShopPrice = Math.Clamp(config.SlimePondShopPrice, 0, 999_999);
@@ -52,9 +49,7 @@ internal sealed class MutagenicPoolRules
         config.IncubatorShopPrice = Math.Clamp(config.IncubatorShopPrice, 0, 999_999);
         config.TrampolineShopPrice = Math.Clamp(config.TrampolineShopPrice, 0, 999_999);
         config.SlimeCushionShopPrice = Math.Clamp(config.SlimeCushionShopPrice, 0, 999_999);
-        config.SlimePlaygroundShopPrice = Math.Clamp(config.SlimePlaygroundShopPrice, 0, 999_999);
         config.SlimeSlideShopPrice = Math.Clamp(config.SlimeSlideShopPrice, 0, 999_999);
-        config.SlimeBedShopPrice = Math.Clamp(config.SlimeBedShopPrice, 0, 999_999);
         config.MutagenicPoolShopPrice = Math.Clamp(config.MutagenicPoolShopPrice, 0, 999_999);
     }
 }

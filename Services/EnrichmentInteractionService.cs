@@ -141,9 +141,7 @@ internal sealed class EnrichmentInteractionService
         var furnitureSpots = house.Objects.Values
             .Where(obj => obj.QualifiedItemId == FurnitureContent.TrampolineQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.SlimeCushionQualifiedId
-                || obj.QualifiedItemId == FurnitureContent.SlimePlaygroundQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.SlimeSlideQualifiedId
-            || obj.QualifiedItemId == FurnitureContent.SlimeBedQualifiedId
             || obj.QualifiedItemId == FurnitureContent.SlimeTunnelQualifiedId
             || obj.QualifiedItemId == FurnitureContent.HeatedSlimeStoneQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.SlimePondQualifiedId
@@ -215,7 +213,6 @@ internal sealed class EnrichmentInteractionService
             {
                 var id when id == FurnitureContent.SlimeCushionQualifiedId => (9f, 10f, 0f, false),
                 var id when id == FurnitureContent.SlimeSlideQualifiedId => (8f, 3f, 30f, false),
-                var id when id == FurnitureContent.SlimeBedQualifiedId => (0f, 7f, 0f, true),
                 var id when id == FurnitureContent.SlimeTunnelQualifiedId => (5f, 2f, 42f, false),
                 var id when id == FurnitureContent.HeatedSlimeStoneQualifiedId => (0f, 6f, 0f, true),
                 var id when id == FurnitureContent.SlimePondQualifiedId => (4f, 0f, 0f, false),
