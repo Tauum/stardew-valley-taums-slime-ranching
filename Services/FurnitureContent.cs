@@ -31,6 +31,8 @@ internal static class FurnitureContent
     public const string SlimeSwingQualifiedId = "(BC)" + SlimeSwingItemId;
     public const string SlimeSeesawItemId = "Taum.SlimeRanching_SlimeSeesaw";
     public const string SlimeSeesawQualifiedId = "(BC)" + SlimeSeesawItemId;
+    public const string SlimeBallPitItemId = "Taum.SlimeRanching_SlimeBallPit";
+    public const string SlimeBallPitQualifiedId = "(BC)" + SlimeBallPitItemId;
     public const string SlimeFairyLightsItemId = "Taum.SlimeRanching_SlimeFairyLights";
     public const string SlimeFairyLightsQualifiedId = "(BC)" + SlimeFairyLightsItemId;
     private const string TrampolineTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeTrampoline";
@@ -44,6 +46,7 @@ internal static class FurnitureContent
     private const string PondTexture = "Mods/Taum.SlimeRanching/Furniture/SlimePond";
     private const string SwingTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeSwing";
     private const string SeesawTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeSeesaw";
+    private const string BallPitTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeBallPit";
     private const string FairyLightsTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeFairyLights";
 
     public static void LoadAssets(AssetRequestedEventArgs e)
@@ -70,6 +73,8 @@ internal static class FurnitureContent
             e.LoadFrom(() => CreateSwingTexture(Game1.graphics.GraphicsDevice), AssetLoadPriority.Exclusive);
         else if (e.NameWithoutLocale.IsEquivalentTo(SeesawTexture))
             e.LoadFrom(() => CreateSeesawTexture(Game1.graphics.GraphicsDevice), AssetLoadPriority.Exclusive);
+        else if (e.NameWithoutLocale.IsEquivalentTo(BallPitTexture))
+            e.LoadFrom(() => CreateBallPitTexture(Game1.graphics.GraphicsDevice), AssetLoadPriority.Exclusive);
         else if (e.NameWithoutLocale.IsEquivalentTo(FairyLightsTexture))
             e.LoadFrom(() => CreateFairyLightsTexture(Game1.graphics.GraphicsDevice), AssetLoadPriority.Exclusive);
     }
@@ -201,6 +206,17 @@ internal static class FurnitureContent
                 CanBePlacedOutdoors = false,
                 Fragility = 0,
                 Texture = SeesawTexture,
+                SpriteIndex = 0
+            });
+            craftables.TryAdd(SlimeBallPitItemId, new BigCraftableData
+            {
+                Name = "Slime Ball Pit",
+                DisplayName = "Slime Ball Pit",
+                Description = "A colorful pit where Ranch Slimes can dip and pop back out.",
+                CanBePlacedIndoors = true,
+                CanBePlacedOutdoors = false,
+                Fragility = 0,
+                Texture = BallPitTexture,
                 SpriteIndex = 0
             });
             craftables.TryAdd(SlimeFairyLightsItemId, new BigCraftableData
@@ -590,6 +606,43 @@ internal static class FurnitureContent
         for (int x = 9; x <= 12; x++) SetPixel(pixels, width, x, 9, lightWood);
         SetPixel(pixels, width, 2, 7, outline);
         SetPixel(pixels, width, 13, 7, outline);
+        texture.SetData(pixels);
+        return texture;
+    }
+
+    private static Texture2D CreateBallPitTexture(GraphicsDevice graphicsDevice)
+    {
+        const int width = 16;
+        const int height = 32;
+        var texture = new Texture2D(graphicsDevice, width, height);
+        var pixels = new Color[width * height];
+        Color outline = new(59, 49, 74);
+        Color rim = new(204, 91, 161);
+        Color lightRim = new(242, 145, 192);
+        Color blue = new(75, 159, 214);
+        Color yellow = new(244, 202, 83);
+        Color green = new(111, 190, 103);
+        for (int x = 2; x <= 13; x++) SetPixel(pixels, width, x, 11, outline);
+        for (int y = 12; y <= 16; y++)
+        {
+            SetPixel(pixels, width, 1, y, outline);
+            SetPixel(pixels, width, 14, y, outline);
+            SetPixel(pixels, width, 2, y, rim);
+            SetPixel(pixels, width, 13, y, rim);
+            for (int x = 3; x <= 12; x++)
+                SetPixel(pixels, width, x, y, y == 12 ? new Color(121, 77, 158) : new Color(99, 66, 137));
+        }
+        for (int x = 2; x <= 13; x++)
+        {
+            SetPixel(pixels, width, x, 17, outline);
+            SetPixel(pixels, width, x, 18, rim);
+        }
+        for (int x = 3; x <= 12; x++) SetPixel(pixels, width, x, 10, lightRim);
+        SetPixel(pixels, width, 4, 13, blue);
+        SetPixel(pixels, width, 7, 14, yellow);
+        SetPixel(pixels, width, 10, 13, green);
+        SetPixel(pixels, width, 12, 15, new Color(240, 110, 85));
+        for (int x = 4; x <= 11; x++) SetPixel(pixels, width, x, 19, new Color(67, 43, 56));
         texture.SetData(pixels);
         return texture;
     }

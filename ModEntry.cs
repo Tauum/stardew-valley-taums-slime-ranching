@@ -83,6 +83,7 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("slime_ranching_give_pond", "Give one Slime Pond for testing. Usage: slime_ranching_give_pond <exact save folder name>.", this.OnGivePondCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_swing", "Give one Slime Swing for testing. Usage: slime_ranching_give_swing <exact save folder name>.", this.OnGiveSwingCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_seesaw", "Give one Slime Seesaw for paired activity testing. Usage: slime_ranching_give_seesaw <exact save folder name>.", this.OnGiveSeesawCommand);
+        helper.ConsoleCommands.Add("slime_ranching_give_ball_pit", "Give one Slime Ball Pit for activity testing. Usage: slime_ranching_give_ball_pit <exact save folder name>.", this.OnGiveBallPitCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_fairy_lights", "Give one set of Slime Fairy Lights for testing. Usage: slime_ranching_give_fairy_lights <exact save folder name>.", this.OnGiveFairyLightsCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_test_eggs", "Create test eggs, use 'random' for one randomized egg, or pass key=value metadata for two controlled eggs. Usage: slime_ranching_give_test_eggs <save name> [random|species=Name ...].", this.OnGiveTestEggsCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_color_eggs", "Create seven color test eggs. Usage: slime_ranching_give_color_eggs <exact save folder name>.", this.OnGiveColorEggsCommand);
@@ -2860,6 +2861,31 @@ public sealed class ModEntry : Mod
         }
 
         this.Monitor.Log("Added one Slime Seesaw. Place it in the Slime Daycare; two nearby idle Ranch Slimes can play together.", LogLevel.Info);
+    }
+
+    private void OnGiveBallPitCommand(string command, string[] args)
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
+        {
+            this.Monitor.Log("Load a single-player save with available external slime state before requesting a Slime Ball Pit.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 1 || args[0] != saveName)
+        {
+            this.Monitor.Log($"To give a Slime Ball Pit to the currently loaded save, use: slime_ranching_give_ball_pit {saveName}", LogLevel.Warn);
+            return;
+        }
+
+        Item ballPit = ItemRegistry.Create(FurnitureContent.SlimeBallPitQualifiedId);
+        if (!Game1.player.couldInventoryAcceptThisItem(ballPit) || !Game1.player.addItemToInventoryBool(ballPit))
+        {
+            this.Monitor.Log("Make room in your inventory for the Slime Ball Pit, then try again.", LogLevel.Warn);
+            return;
+        }
+
+        this.Monitor.Log("Added one Slime Ball Pit. Place it in the Daycare for nearby idle Ranch Slimes to dip into and pop back out.", LogLevel.Info);
     }
 
     private bool StartRefineryBatch(string machineKey, Building daycare)

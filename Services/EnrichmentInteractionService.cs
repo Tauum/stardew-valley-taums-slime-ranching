@@ -102,6 +102,25 @@ internal sealed class EnrichmentInteractionService
             for (int i = 0; i < interaction.Animals.Length; i++)
             {
                 FarmAnimal animal = interaction.Animals[i];
+                if (interaction.IsBallPit)
+                {
+                    float cycleMinute = interaction.ElapsedMinutes % 24f;
+                    float dipOffset = cycleMinute < 5f
+                        ? cycleMinute / 5f * 10f
+                        : cycleMinute < 8f
+                            ? 10f
+                            : cycleMinute < 10f
+                                ? 10f - (cycleMinute - 8f) / 2f * 22f
+                                : cycleMinute < 14f
+                                    ? -12f * (1f - (cycleMinute - 10f) / 4f)
+                                    : 0f;
+                    Vector2 pitCenter = interaction.FurnitureTile * 64f + new Vector2(32f, 32f);
+                    animal.drawOffset = interaction.OriginalDrawOffsets[i]
+                        + (pitCenter - animal.Position)
+                        + new Vector2(0f, dipOffset);
+                    continue;
+                }
+
                 if (interaction.SwingDistancePixels > 0)
                 {
                     float progress = interaction.ElapsedMinutes / interaction.DurationMinutes;
@@ -164,6 +183,7 @@ internal sealed class EnrichmentInteractionService
                 || obj.QualifiedItemId == FurnitureContent.SlimeCushionQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.SlimeSlideQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.SlimeSeesawQualifiedId
+                || obj.QualifiedItemId == FurnitureContent.SlimeBallPitQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.SlimeTunnelQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.HeatedSlimeStoneQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.SlimePondQualifiedId
@@ -281,6 +301,12 @@ internal sealed class EnrichmentInteractionService
                 continue;
             }
 
+            if (spotToUse.QualifiedItemId == FurnitureContent.SlimeBallPitQualifiedId)
+            {
+                this.StartInteraction(animal, spotToUse, durationMinutes, 0f, 0f, isBallPit: true);
+                continue;
+            }
+
             if (spotToUse.QualifiedItemId == FurnitureContent.SlimeSwingQualifiedId)
             {
                 this.StartInteraction(animal, spotToUse, durationMinutes, 2f, 2f, 0f, swingDistance: 8f);
@@ -315,10 +341,10 @@ internal sealed class EnrichmentInteractionService
 
     private void StartInteraction(FarmAnimal animal, FurnitureSpot furniture, int durationMinutes,
         float bounceHeight, float compressionHeight,
-        float slideDistance = 0f, bool isResting = false, float swingDistance = 0f)
+        float slideDistance = 0f, bool isResting = false, float swingDistance = 0f, bool isBallPit = false)
     {
         this.StartInteraction(new[] { animal }, new[] { 0f }, furniture, durationMinutes,
-            bounceHeight, compressionHeight, slideDistance, isResting, swingDistance);
+            bounceHeight, compressionHeight, slideDistance, isResting, swingDistance, isBallPit: isBallPit);
     }
 
     private void StartPairedInteraction(FarmAnimal first, FarmAnimal second, FurnitureSpot furniture, int durationMinutes)
@@ -329,10 +355,10 @@ internal sealed class EnrichmentInteractionService
 
     private void StartInteraction(FarmAnimal[] animals, float[] swayPhases, FurnitureSpot furniture, int durationMinutes,
         float bounceHeight, float compressionHeight,
-        float slideDistance = 0f, bool isResting = false, float swingDistance = 0f, bool isSeesaw = false)
+        float slideDistance = 0f, bool isResting = false, float swingDistance = 0f, bool isSeesaw = false, bool isBallPit = false)
     {
         var interaction = new Interaction(animals, swayPhases, furniture.Tile, furniture.QualifiedItemId,
-            durationMinutes, bounceHeight, compressionHeight, slideDistance, isResting, swingDistance, isSeesaw);
+            durationMinutes, bounceHeight, compressionHeight, slideDistance, isResting, swingDistance, isSeesaw, isBallPit);
         foreach (FarmAnimal animal in animals)
             this.active[animal.myID.Value] = interaction;
     }
@@ -345,7 +371,7 @@ internal sealed class EnrichmentInteractionService
     {
         public Interaction(FarmAnimal[] animals, float[] swayPhases, Vector2 furnitureTile, string furnitureQualifiedItemId,
             int durationMinutes, float bounceHeightPixels, float compressionHeightPixels, float horizontalTravelPixels,
-            bool isResting, float swingDistancePixels, bool isSeesaw)
+            bool isResting, float swingDistancePixels, bool isSeesaw, bool isBallPit)
         {
             this.Animals = animals;
             this.SwayPhases = swayPhases;
@@ -359,6 +385,7 @@ internal sealed class EnrichmentInteractionService
             this.IsResting = isResting;
             this.SwingDistancePixels = swingDistancePixels;
             this.IsSeesaw = isSeesaw;
+            this.IsBallPit = isBallPit;
             this.CompressionDurationMinutes = durationMinutes * 0.16f;
         }
 
@@ -374,6 +401,7 @@ internal sealed class EnrichmentInteractionService
         public bool IsResting { get; }
         public float SwingDistancePixels { get; }
         public bool IsSeesaw { get; }
+        public bool IsBallPit { get; }
         public float CompressionDurationMinutes { get; }
         public float ElapsedMinutes { get; set; }
 
