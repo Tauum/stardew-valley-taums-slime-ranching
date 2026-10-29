@@ -25,6 +25,7 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
     private readonly AnimalHouse? daycare;
     private readonly FarmAnimal? hatchedAnimal;
     private readonly List<(int InventoryIndex, string Name, int Stack)> candidates;
+    private readonly int ineligibleEggCount;
     private readonly int listTop;
     private readonly int listBottom;
     private readonly Rectangle actionButton;
@@ -54,6 +55,7 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
         this.actionButton = new Rectangle(this.xPositionOnScreen + 710, this.yPositionOnScreen + this.height - 88, 148, 58);
         this.contributionButton = new Rectangle(this.xPositionOnScreen + 400, this.yPositionOnScreen + this.height - 88, 142, 58);
         this.catalystButton = new Rectangle(this.xPositionOnScreen + 550, this.yPositionOnScreen + this.height - 88, 145, 58);
+        int ineligibleEggCount = 0;
         this.candidates = Game1.player.Items
             .Select((item, index) => (item, index))
             .Where(pair =>
@@ -61,18 +63,30 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
                 Item? item = pair.item;
                 if (item is null
                     || !(item.QualifiedItemId.StartsWith(EggItemPrefix, StringComparison.Ordinal)
-                        || item.modData.ContainsKey(SlimeEggContent.EggIdModDataKey))
-                    || !SlimeEggContent.TryGetEggId(item, out string eggId))
+                        || item.modData.ContainsKey(SlimeEggContent.EggIdModDataKey)))
                     return false;
+
+                if (!SlimeEggContent.TryGetEggId(item, out string eggId))
+                {
+                    ineligibleEggCount++;
+                    return false;
+                }
 
                 if (SlimeEggContent.TryReadRecord(item, out SlimeEggRecord egg)
                     && !registry.RegisterEggItem(egg))
+                {
+                    ineligibleEggCount++;
                     return false;
+                }
 
-                return registry.CanIncubate(eggId);
+                bool eligible = registry.CanIncubate(eggId);
+                if (!eligible)
+                    ineligibleEggCount++;
+                return eligible;
             })
             .Select(pair => (pair.index, pair.item!.DisplayName, pair.item.Stack))
             .ToList();
+        this.ineligibleEggCount = ineligibleEggCount;
     }
 
     public override void receiveScrollWheelAction(int direction)
@@ -273,7 +287,19 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
         else if (this.candidates.Count == 0)
         {
             b.DrawString(Game1.smallFont, "SELECT EGG", new Vector2(panel.X + 24, panel.Y + 22), new Color(130, 231, 255));
-            DrawCentered(b, "No eligible eggs in your inventory.", Game1.smallFont, new Rectangle(panel.X + 20, panel.Y + 100, panel.Width - 40, 100), Color.White);
+            Rectangle emptyState = new(panel.X + 20, panel.Y + 88, panel.Width - 40, 112);
+            if (this.ineligibleEggCount == 0)
+                DrawCentered(b, "No eligible eggs in your inventory.", Game1.smallFont, emptyState, Color.White);
+            else
+            {
+                DrawCentered(b, "No eligible eggs in your inventory.", Game1.smallFont,
+                    new Rectangle(emptyState.X, emptyState.Y, emptyState.Width, 48), Color.White);
+                string eggCount = this.ineligibleEggCount == 1
+                    ? "1 Ranch Slime Egg copy is used or unavailable."
+                    : $"{this.ineligibleEggCount} Ranch Slime Egg copies are used or unavailable.";
+                DrawCentered(b, eggCount, Game1.tinyFont,
+                    new Rectangle(emptyState.X, emptyState.Y + 48, emptyState.Width, 40), new Color(210, 220, 245));
+            }
             DrawIncubationControls(b, panel);
             this.DrawGoldCatalystButton(b);
         }
