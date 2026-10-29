@@ -300,6 +300,9 @@ internal sealed class EnrichmentInteractionService
 
                 if (spot.Definition.ActivityKind == EnrichmentActivityKind.PairedSwing)
                 {
+                    if (spot.Definition.MaximumParticipants is int maximumParticipants && maximumParticipants < 2)
+                        continue;
+
                     foreach ((FarmAnimal candidate, Models.SlimeRecord candidateRecord) in idleSlimes)
                     {
                         if (candidate.myID.Value == animal.myID.Value
@@ -345,13 +348,18 @@ internal sealed class EnrichmentInteractionService
             if (spotToUse.Definition.ActivityKind == EnrichmentActivityKind.LampGathering)
             {
                 Vector2 lampCenter = spotToUse.Tile * 64f + new Vector2(32f, 32f);
-                var gatherers = activityCandidates
+                int additionalParticipantLimit = spotToUse.Definition.MaximumParticipants is int maximumParticipants
+                    ? Math.Max(0, maximumParticipants - 1)
+                    : int.MaxValue;
+                var additionalGatherers = activityCandidates
                     .Where(candidate => candidate.Animal.myID.Value != animal.myID.Value
                         && !this.active.ContainsKey(candidate.Animal.myID.Value)
                         && candidate.Record.EnrichmentActivitiesToday < 4
                         && Vector2.DistanceSquared(candidate.Animal.Position, lampCenter) < InteractionRadiusPixels * InteractionRadiusPixels
                         && IsNearestAvailableSpot(house, candidate.Animal, spotToUse, furnitureSpots, reachabilityCache))
                     .Select(candidate => (candidate.Animal, candidate.Record))
+                    .ToArray();
+                var gatherers = additionalGatherers.Take(additionalParticipantLimit)
                     .Prepend((animal, record))
                     .ToArray();
                 furnitureSpots.Remove(spotToUse);
