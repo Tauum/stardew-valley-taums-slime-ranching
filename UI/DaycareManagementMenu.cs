@@ -290,11 +290,15 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             y += 30;
         }
 
-        Rectangle guidance = new(content.X + 20, content.Y + 320, content.Width - 40, 92);
+        Rectangle guidance = new(content.X + 20, content.Y + 300, content.Width - 40, 112);
         DrawPanel(b, guidance, new Color(47, 66, 111), new Color(95, 134, 194));
-        string guidanceText = "Robin handles building upgrades. The first upgrade unlocks the Egg CryoLab and Rare Labs; the final upgrade adds the Gel Refinery and raises the Rare Lab base chance to 5%.";
-        DrawWrappedText(b, guidanceText, new Vector2(guidance.X + 12, guidance.Y + 9), guidance.Width - 24,
-            Game1.tinyFont, new Color(230, 239, 255), 17f);
+        b.DrawString(Game1.tinyFont, "PROGRESSION GUIDE", new Vector2(guidance.X + 12, guidance.Y + 5), new Color(139, 226, 255));
+        int currentCycleDays = this.buildingTier == 0 ? 18 : 14;
+        string guidanceText = $"New breeder cycles: {currentCycleDays} days at this tier (14 days from the first upgrade onward). "
+            + "First upgrade unlocks the Egg CryoLab and Rare Labs at 1% base chance. Final upgrade adds a second breeder and incubator, "
+            + "raises Rare Lab base chance to 5%, and unlocks the Gel Refinery. Robin handles upgrades; Marnie sells furniture recipes.";
+        DrawWrappedText(b, guidanceText, new Vector2(guidance.X + 12, guidance.Y + 23), guidance.Width - 24,
+            Game1.tinyFont, new Color(230, 239, 255), 15f);
     }
 
     private void DrawWikiSection(SpriteBatch b)
