@@ -55,7 +55,7 @@ Chromatic Crystals are breeder inputs rather than machines or furniture. Their a
 
 ## Furniture, amenities, and animations
 
-The intended reusable recipe catalog has three groups: Trampoline, Slide, Cushion, Seesaw, and Heated Slime Stone at Daycare unlock (2,000g each); Pond, Tunnel, Swing, and Lamp at the first building upgrade (5,000g each); Fairy Lights, Ball Pit, and Washing Machine at the final upgrade (10,000g each). Learning a recipe is meant to allow repeated placement. These prices and the **3 initial / 7 after the first upgrade / 15 after the final upgrade** fixed slots describe the approved design; the recipe and fixed-slot editor are not fully integrated. Current activity items are movable prototypes, and some extra items are tester-only.
+The intended reusable recipe catalog has three groups: Trampoline, Slide, Cushion, Seesaw, and Heated Slime Stone at Daycare unlock (2,000g each); Pond, Tunnel, Swing, and Lamp at the first building upgrade (5,000g each); Fairy Lights, Ball Pit, and Washing Machine at the final upgrade (10,000g each). Learning a recipe is meant to allow repeated placement. These prices and the **3 initial / 7 after the first upgrade / 15 after the final upgrade** fixed slots describe the approved design; the recipe and fixed-slot editor are not fully integrated. Currently sold Tunnel, Pond, and Swing movable prototypes unlock at the first upgrade, and Fairy Lights unlock at the final tier; these are item purchases at provisional config prices, not reusable recipes. Other activity items remain tester-only.
 
 | Furniture | Intended use and current animation/behavior |
 | --- | --- |

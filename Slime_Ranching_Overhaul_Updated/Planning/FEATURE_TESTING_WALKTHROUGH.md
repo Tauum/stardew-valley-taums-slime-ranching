@@ -129,9 +129,16 @@ Reply with any collision, sizing, or warp issues and a screenshot if the room di
 3. On a separate copy with Maru's Pool repair complete, start a Mutagenic Pool attempt with a third slime. Confirm its status is **Mutagenic Pool** and another machine or companion selection cannot claim it. On another copy, run `slime_ranching_bind_companion <exact save folder name> <animal ID>` for the fourth slime and confirm its status is **Companion** and Pool/breeder assignment is blocked.
 4. In the Daycare, run `slime_ranching_inspect` with no ID and confirm the status totals match the four residents as their assignments change. Keep Feature 9 pending until the status checks and the later water/feeding/happiness checks pass in-game.
 
-## 2.0 bulk-test check — Feature 10 partial: retired prototype furniture cleanup
+## 2.0 bulk-test check — Feature 10 partial: prototype stock and retired furniture cleanup
 
-**Status:** The former Playground, Bed, and Compost Trough prototypes are no longer sold, configurable, or active. Their item definitions remain so existing save objects and inventory items can still load; old placed instances should be inert. Furniture recipes, fixed slots, tier unlocks, and Management Desk edit mode remain pending.
+**Status:** The currently sold Tunnel, Pond, and Swing prototypes are gated to the first Daycare upgrade, and Fairy Lights are gated to the final upgrade. The former Playground, Bed, and Compost Trough prototypes are no longer sold, configurable, or active. Their item definitions remain so existing save objects and inventory items can still load; old placed instances should be inert. Reusable recipes, the complete furniture catalog, fixed slots, and Management Desk edit mode remain pending.
+
+### Marnie prototype stock tier check
+
+1. On a copied save with a basic Daycare, open Marnie's shop. Confirm the currently sold basic prototypes remain available, while Tunnel, Pond, Swing, and Fairy Lights are hidden.
+2. Upgrade the Daycare to tier 1 and reopen Marnie's shop. Confirm Tunnel, Pond, and Swing are now available, while Fairy Lights remain hidden.
+3. Upgrade the Daycare to tier 3 and reopen the shop. Confirm Fairy Lights are available. Save/reload between checks if needed to confirm shop stock follows the current building tier.
+4. Confirm any copies of these furniture items already in inventory or placed in the Daycare still work at lower tiers; the new conditions should affect shop stock only. Prototype prices remain configurable and this does not verify reusable recipes or fixed furniture slots.
 
 1. On a disposable copied save from the prior prototype, keep any placed Slime Playground, Slime Bed, and Compost Trough in the Daycare and any matching items in inventory or chests. Load with this build and confirm the SMAPI log has no missing-item or content errors; the objects and items should remain present.
 2. Try the action button on each old placed object. Confirm no Compost Trough menu opens and the old Playground and Bed do not start resident animations.
