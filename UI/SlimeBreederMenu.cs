@@ -323,8 +323,25 @@ internal sealed class SlimeBreederMenu : IClickableMenu
         int count = Math.Min(4, this.selected.Count * 2);
         for (int i = 0; i < hearts.Length; i++)
             b.DrawString(Game1.dialogueFont, i < count ? "♥" : hearts[i], new Vector2(this.xPositionOnScreen + 656 + i * 36, this.yPositionOnScreen + 418), i < count ? new Color(255, 115, 173) : new Color(135, 158, 206));
-        string label = this.selected.Count == 2 || pair is not null ? "PAIR READY" : "CHOOSE TWO PARENTS";
-        b.DrawString(Game1.tinyFont, label, new Vector2(this.xPositionOnScreen + 802, this.yPositionOnScreen + 430), new Color(135, 255, 176));
+        string label = pair is not null
+            ? pair.OutputEggItemId is null ? "PARENTS RESERVED" : "EGG READY"
+            : this.selected.Count != 2 ? "CHOOSE TWO PARENTS"
+            : this.HasEligibleSelectedPair() ? "PAIR ELIGIBLE" : "PAIR INELIGIBLE";
+        Color labelColor = label == "PAIR INELIGIBLE" ? new Color(255, 160, 145) : new Color(135, 255, 176);
+        b.DrawString(Game1.tinyFont, label, new Vector2(this.xPositionOnScreen + 802, this.yPositionOnScreen + 430), labelColor);
+    }
+
+    private bool HasEligibleSelectedPair()
+    {
+        if (this.selected.Count != 2)
+            return false;
+
+        SlimeGenome[] parents = this.selected
+            .Select(id => this.registry.TryGetSlimeRecord(id, out SlimeRecord record) ? record.Genome : null)
+            .Where(genome => genome is not null)
+            .Cast<SlimeGenome>()
+            .ToArray();
+        return parents.Length == 2 && BreedingRules.GetPossibleOffspring(parents[0], parents[1]).Count > 0;
     }
 
     private void DrawPairingPreview(SpriteBatch b)

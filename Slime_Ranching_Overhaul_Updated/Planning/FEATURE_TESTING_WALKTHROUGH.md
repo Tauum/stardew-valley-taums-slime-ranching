@@ -60,14 +60,14 @@ Reply with any collision, sizing, or warp issues and a screenshot if the room di
 
 ## 2.0 bulk-test check — Feature 5: basic breeder timing
 
-**Status:** New basic-tier cycles use the approved 18-day duration. Pairing now follows the recorded base/hybrid rules, rare species are rejected, and the menu previews offspring probabilities and abilities. Existing cycle dates remain unchanged. In-game timing, pairing, cancellation, output, and reload checks are pending.
+**Status:** New basic-tier cycles use the approved 18-day duration. Pairing follows the recorded base/hybrid rules, rare species are rejected, and the menu previews offspring probabilities and abilities. A compatibility label identifies whether parents are needed, the selected pair is eligible, parents are reserved, or an egg is ready. Existing cycle dates remain unchanged. In-game timing, pairing, cancellation, output, and reload checks are pending.
 
 1. On a disposable single-player save with a completed Daycare, run `slime_ranching_spawn_ranch_slime <exact save folder name> 7` twice and note both animal IDs. Run `slime_ranching_give_breeder <exact save folder name>`, place the Breeder in the Daycare, and open it.
-2. Select the two mature Ranch Slimes. Confirm both appear as the selected parents and the basic cycle displays **18 Days**.
-3. Start breeding. Confirm the UI reports 18 days remaining and the parent reservations persist after closing and reopening the menu.
+2. Open the breeder before selecting a parent and confirm the compatibility label says **CHOOSE TWO PARENTS**. Select the two mature Ranch Slimes. Confirm both appear in the chamber, the label says **PAIR ELIGIBLE**, and the basic cycle displays **18 Days**. For an unbreedable rare slime, confirm its row says **Cannot breed** and selection is refused.
+3. Start breeding. Confirm the compatibility label changes to **PARENTS RESERVED**, the UI reports 18 days remaining, and the parent reservations persist after closing and reopening the menu.
 4. Sleep five nights. Confirm 13 days remain. Save, return to title, reload, and confirm the same ready date and remaining time are shown.
 5. Before the ready day, cancel the cycle. Confirm no egg is created, both parents are selectable again, and starting a new cycle sets a new 18-day ready date.
-6. Let the replacement cycle reach its ready day. Confirm the egg-ready notice appears, both parents are released into the Daycare, the egg remains collectible once, and the saved genome remains available after reload.
+6. Let the replacement cycle reach its ready day. Confirm the compatibility label says **EGG READY**, the egg-ready notice appears, both parents are released into the Daycare, the egg remains collectible once, and the saved genome remains available after reload.
 7. On a disposable copy, spawn two mature parents and set both to Red with `slime_ranching_set_color <exact save folder name> <animal ID> Red`. Select them and verify the preview shows 100% Red with Fighter. Start the cycle and verify the saved egg remains Red.
 8. Reset the parents to Red and Yellow. Verify the preview shows a Red/Yellow hybrid with Fighter and Revealer. Complete the cycle and confirm the egg stores both species and both abilities. Repeat with two different base colors that were absent from the old six-recipe table; they must also form a hybrid.
 9. Create matching hybrid test eggs with `slime_ranching_give_test_eggs <exact save folder name> species=Red secondary=Yellow`. Hatch two distinct eggs in turn, let both Ranch Slimes mature, and breed them. Verify the preview and offspring retain the same Red/Yellow hybrid without adding another ability.
