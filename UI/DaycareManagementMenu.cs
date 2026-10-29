@@ -218,6 +218,14 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             case Buttons.RightShoulder:
                 this.MoveCurrentSelectionByPage(1);
                 break;
+            case Buttons.LeftThumbstickUp:
+                if (!this.TryScrollCurrentDetails(-1))
+                    this.MoveCurrentSelection(-1);
+                break;
+            case Buttons.LeftThumbstickDown:
+                if (!this.TryScrollCurrentDetails(1))
+                    this.MoveCurrentSelection(1);
+                break;
             case Buttons.DPadUp:
                 this.MoveCurrentSelection(-1);
                 break;
@@ -237,6 +245,31 @@ internal sealed class DaycareManagementMenu : IClickableMenu
                     this.ChangeSection(1);
                 break;
         }
+    }
+
+    private bool TryScrollCurrentDetails(int direction)
+    {
+        if (this.activeSection == "REGISTRY" && this.registryDetailMaxScroll > 0)
+        {
+            float next = Math.Clamp(this.registryDetailScroll + direction * 36f, 0, this.registryDetailMaxScroll);
+            if (next == this.registryDetailScroll)
+                return false;
+
+            this.registryDetailScroll = next;
+            return true;
+        }
+
+        if (this.activeSection == "SLIME WIKI" && this.wikiDetailMaxScroll > 0)
+        {
+            float next = Math.Clamp(this.wikiDetailScroll + direction * 36f, 0, this.wikiDetailMaxScroll);
+            if (next == this.wikiDetailScroll)
+                return false;
+
+            this.wikiDetailScroll = next;
+            return true;
+        }
+
+        return false;
     }
 
     private void SetSection(int index)
@@ -418,7 +451,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         else
             this.DrawWikiSection(b);
 
-        b.DrawString(Game1.tinyFont, "Wheel: hovered list/details | Up/Down rows | PgUp/PgDn or LB/RB pages | Home/End list | Left/Right Wiki", new Vector2(panel.X + 30, panel.Bottom - 24), Color.White);
+        b.DrawString(Game1.tinyFont, "Wheel: hovered list/details | L-stick: details/rows | D-pad/Up/Down: rows | PgUp/PgDn or LB/RB: pages | Home/End: list ends | Left/Right: Wiki", new Vector2(panel.X + 30, panel.Bottom - 24), Color.White);
         b.DrawString(Game1.tinyFont, "Esc: close", new Vector2(panel.Right - 86, panel.Bottom - 24), Color.White);
         this.drawMouse(b);
     }
