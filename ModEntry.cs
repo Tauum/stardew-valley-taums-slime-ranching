@@ -2303,12 +2303,12 @@ public sealed class ModEntry : Mod
         string machineKey = incubatorKeys[incubatorNumber - 1];
         RareLabRecord? lab = this.registry!.GetRareLab(machineKey);
         if (lab is not { IsUnlocked: true }
-            || this.registry.GetIncubation(machineKey) is { RareOutcomeResolved: true }
+            || this.registry.GetIncubation(machineKey) is not null
             || pityPoints is < 0 or > RareLabRules.MaximumChancePoints
             || contributionPoints is < 0 or > RareLabRules.MaximumChancePoints
             || lab.BaseChancePoints + pityPoints + contributionPoints > RareLabRules.MaximumChancePoints)
         {
-            this.Monitor.Log("The selected incubator must have an unlocked lab, no fixed outcome, and valid chance values whose total is at most 100%.", LogLevel.Warn);
+            this.Monitor.Log("The selected incubator must have an unlocked lab with no egg or hatch pending, and valid chance values whose total is at most 100%.", LogLevel.Warn);
             return;
         }
 
