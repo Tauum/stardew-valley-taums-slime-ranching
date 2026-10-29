@@ -14,6 +14,7 @@ internal sealed class GelRefineryMenu : IClickableMenu
     private readonly SlimeRegistry registry;
     private readonly string machineKey;
     private readonly GelRefineryRules rules;
+    private readonly Func<bool> canStartBatch;
     private readonly Func<bool> startBatch;
     private readonly Func<bool> collectBatch;
     private readonly Rectangle actionButton;
@@ -23,12 +24,13 @@ internal sealed class GelRefineryMenu : IClickableMenu
     private string? statusMessage;
 
     public GelRefineryMenu(SlimeRegistry registry, string machineKey, GelRefineryRules rules,
-        Func<bool> startBatch, Func<bool> collectBatch)
+        Func<bool> canStartBatch, Func<bool> startBatch, Func<bool> collectBatch)
         : base(Game1.uiViewport.Width / 2 - 450, Game1.uiViewport.Height / 2 - 290, 900, 580)
     {
         this.registry = registry;
         this.machineKey = machineKey;
         this.rules = rules;
+        this.canStartBatch = canStartBatch;
         this.startBatch = startBatch;
         this.collectBatch = collectBatch;
         this.actionButton = new Rectangle(this.xPositionOnScreen + 220, this.yPositionOnScreen + 474, 230, 54);
@@ -63,6 +65,13 @@ internal sealed class GelRefineryMenu : IClickableMenu
         RefineryJobRecord? job = this.registry.GetRefineryJob(this.machineKey);
         if (job is null)
         {
+            if (!this.canStartBatch())
+            {
+                this.statusMessage = "The Gel Refinery unlocks at the final Daycare tier.";
+                Game1.playSound("cancel");
+                return;
+            }
+
             bool started = this.startBatch();
             this.statusMessage = started
                 ? $"Batch started. Sleep for {this.rules.DurationDays} in-game day(s) to finish it."
@@ -114,10 +123,14 @@ internal sealed class GelRefineryMenu : IClickableMenu
         RefineryJobRecord? job = this.registry.GetRefineryJob(this.machineKey);
         if (job is null)
         {
+            bool unlocked = this.canStartBatch();
             b.DrawString(Game1.tinyFont, $"Cycle: {this.rules.DurationDays} in-game day(s) (placeholder)",
                 new Vector2(left + 28, top + 342), Color.White);
             DrawProgressBar(b, new Rectangle(left + 260, top + 346, 270, 22), 0f, "Ready");
-            DrawButton(b, this.actionButton, "START BATCH", new Color(55, 133, 217));
+            DrawButton(b, this.actionButton, unlocked ? "START BATCH" : "LOCKED",
+                unlocked ? new Color(55, 133, 217) : new Color(74, 80, 117));
+            if (!unlocked)
+                b.DrawString(Game1.tinyFont, "Unlocks at the final Daycare tier.", new Vector2(left + 28, top + 372), Color.White);
         }
         else
         {
@@ -220,7 +233,8 @@ internal sealed class GelRefineryMenu : IClickableMenu
         int y = this.yPositionOnScreen + (this.height - height) / 2;
         DrawMachineFrame(b, new Rectangle(x, y, width, height));
         b.DrawString(Game1.dialogueFont, "REFINERY INPUT / OUTPUT", new Vector2(x + 28, y + 22), Color.White);
-        b.DrawString(Game1.smallFont, "PROTOTYPE RECIPE ENABLED", new Vector2(x + 32, y + 78), new Color(92, 220, 255));
+        b.DrawString(Game1.smallFont, this.canStartBatch() ? "PROTOTYPE RECIPE ENABLED" : "RECIPE UNLOCKS AT FINAL TIER",
+            new Vector2(x + 32, y + 78), new Color(92, 220, 255));
         b.DrawString(Game1.smallFont, "1 Broken Glasses + vanilla Slime fuel  →  1 Refined Quartz",
             new Vector2(x + 32, y + 108), Color.White);
         b.DrawString(Game1.smallFont, "Design examples shown in the reference", new Vector2(x + 32, y + 158), Color.White);

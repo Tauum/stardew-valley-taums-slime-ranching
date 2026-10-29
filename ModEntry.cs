@@ -1330,8 +1330,11 @@ public sealed class ModEntry : Mod
 
             this.Helper.Input.Suppress(e.Button);
             string machineKey = $"{Game1.currentLocation.NameOrUniqueName}:{(int)refinery.TileLocation.X},{(int)refinery.TileLocation.Y}";
+            Building activeDaycare = daycare;
             Game1.activeClickableMenu = new GelRefineryMenu(this.registry!, machineKey, GelRefineryRules.FromConfig(this.config),
-                () => this.StartRefineryBatch(machineKey), () => this.CollectRefineryBatch(machineKey));
+                () => BuildingContent.GetUpgradeTier(activeDaycare.buildingType.Value) >= 3,
+                () => this.StartRefineryBatch(machineKey, activeDaycare),
+                () => this.CollectRefineryBatch(machineKey));
             return;
         }
 
@@ -2338,10 +2341,11 @@ public sealed class ModEntry : Mod
         this.Monitor.Log("Added one set of Slime Fairy Lights. Place them in the Slime Daycare; their colored glow is on from 6:00 PM until 2:00 AM.", LogLevel.Info);
     }
 
-    private bool StartRefineryBatch(string machineKey)
+    private bool StartRefineryBatch(string machineKey, Building daycare)
     {
         GelRefineryRules rules = GelRefineryRules.FromConfig(this.config);
-        if (this.registry is null || this.registry.GetRefineryJob(machineKey) is not null
+        if (BuildingContent.GetUpgradeTier(daycare.buildingType.Value) < 3
+            || this.registry is null || this.registry.GetRefineryJob(machineKey) is not null
             || CountInventoryItem("(O)170") < 1 || CountInventoryItem("(O)766") < rules.FuelCost)
             return false;
 
