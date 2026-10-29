@@ -1725,10 +1725,10 @@ public sealed class ModEntry : Mod
 
     private void StoreEggInCryoLab(Chest chest, Item item, Farmer who)
     {
-        if (this.registry is null || !this.IsEligibleCryoLabEgg(chest, item, who, out _))
+        if (!this.IsEligibleCryoLabEgg(chest, item, who, out _, out string rejectionMessage))
         {
             Game1.playSound("cancel");
-            Game1.showRedMessage("The Egg CryoLab accepts unused Ranch Slime Eggs only.");
+            Game1.showRedMessage(rejectionMessage);
             return;
         }
 
@@ -1750,7 +1750,7 @@ public sealed class ModEntry : Mod
 
     private void TakeEggFromCryoLab(Chest chest, Item item, Farmer who)
     {
-        if (this.registry is not null && this.IsEligibleCryoLabEgg(chest, item, who, out _))
+        if (this.IsEligibleCryoLabEgg(chest, item, who, out _, out _))
             return;
 
         chest.addItem(item);
@@ -1761,25 +1761,52 @@ public sealed class ModEntry : Mod
         Game1.showRedMessage("That egg is invalid or already exists outside the Egg CryoLab.");
     }
 
-    private bool IsEligibleCryoLabEgg(Chest chest, Item item, Farmer who, out string eggId)
+    private bool IsEligibleCryoLabEgg(Chest chest, Item item, Farmer who, out string eggId, out string rejectionMessage)
     {
         eggId = string.Empty;
-        if (this.registry is null || !SlimeEggContent.TryReadRecord(item, out SlimeEggRecord egg)
+        rejectionMessage = "The Egg CryoLab accepts unused Ranch Slime Eggs only.";
+        if (this.registry is null)
+            return false;
+
+        if (!SlimeEggContent.TryReadRecord(item, out SlimeEggRecord egg)
             || !SlimeEggContent.TryGetEggId(item, out eggId)
             || egg.EggId != eggId)
             return false;
 
-        string candidateEggId = eggId;
-        if (!this.registry.RegisterEggItem(egg)
-            || !this.registry.CanIncubate(candidateEggId)
-            || this.registry.BreedingPairs.Any(pair => pair.OutputEggItemId == candidateEggId)
-            || who.Items.Any(existing => existing is not null
-                && SlimeEggContent.TryGetEggId(existing, out string existingId) && existingId == candidateEggId)
-            || this.GetDaycareCryoLabChests()
-                .SelectMany(existingChest => existingChest.GetItemsForPlayer())
-                .Any(existing => existing is not null
-                    && SlimeEggContent.TryGetEggId(existing, out string existingId) && existingId == candidateEggId))
+        if (!this.registry.RegisterEggItem(egg))
+        {
+            rejectionMessage = "This Ranch Slime Egg is invalid, already hatched, or retired.";
             return false;
+        }
+
+        string candidateEggId = eggId;
+        if (!this.registry.CanIncubate(candidateEggId))
+        {
+            rejectionMessage = "This Ranch Slime Egg has already been incubated or used.";
+            return false;
+        }
+
+        if (this.registry.BreedingPairs.Any(pair => pair.OutputEggItemId == candidateEggId))
+        {
+            rejectionMessage = "Collect this egg from its Breeder before storing it.";
+            return false;
+        }
+
+        if (who.Items.Any(existing => existing is not null
+            && SlimeEggContent.TryGetEggId(existing, out string existingId) && existingId == candidateEggId))
+        {
+            rejectionMessage = "An egg with this unique ID already exists in your inventory.";
+            return false;
+        }
+
+        if (this.GetDaycareCryoLabChests()
+            .SelectMany(existingChest => existingChest.GetItemsForPlayer())
+            .Any(existing => existing is not null
+                && SlimeEggContent.TryGetEggId(existing, out string existingId) && existingId == candidateEggId))
+        {
+            rejectionMessage = "An egg with this unique ID is already stored in an Egg CryoLab.";
+            return false;
+        }
 
         return true;
     }
