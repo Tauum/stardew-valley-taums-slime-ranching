@@ -223,7 +223,10 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
             if (this.registry.TryGetEgg(active.EggItemId, out SlimeEggRecord egg))
             {
                 SlimeGenome displayGenome = active.HatchGenome ?? egg.Genome;
-                eggName = $"{displayGenome.PrimarySpecies} Egg · {displayGenome.RarityTier} · Gen {displayGenome.Generation}";
+                string species = displayGenome.SecondarySpecies is string secondary
+                    ? $"{displayGenome.PrimarySpecies} / {secondary} Hybrid"
+                    : displayGenome.PrimarySpecies;
+                eggName = $"{species} Egg · {displayGenome.RarityTier} · Gen {displayGenome.Generation}";
             }
 
             bool hatched = active.HatchAnimalId is not null;
