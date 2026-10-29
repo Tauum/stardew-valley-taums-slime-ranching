@@ -29,6 +29,8 @@ internal static class FurnitureContent
     public const string SlimePondQualifiedId = "(BC)" + SlimePondItemId;
     public const string SlimeSwingItemId = "Taum.SlimeRanching_SlimeSwing";
     public const string SlimeSwingQualifiedId = "(BC)" + SlimeSwingItemId;
+    public const string SlimeSeesawItemId = "Taum.SlimeRanching_SlimeSeesaw";
+    public const string SlimeSeesawQualifiedId = "(BC)" + SlimeSeesawItemId;
     public const string SlimeFairyLightsItemId = "Taum.SlimeRanching_SlimeFairyLights";
     public const string SlimeFairyLightsQualifiedId = "(BC)" + SlimeFairyLightsItemId;
     private const string TrampolineTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeTrampoline";
@@ -41,6 +43,7 @@ internal static class FurnitureContent
     private const string HeatedStoneTexture = "Mods/Taum.SlimeRanching/Furniture/HeatedSlimeStone";
     private const string PondTexture = "Mods/Taum.SlimeRanching/Furniture/SlimePond";
     private const string SwingTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeSwing";
+    private const string SeesawTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeSeesaw";
     private const string FairyLightsTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeFairyLights";
 
     public static void LoadAssets(AssetRequestedEventArgs e)
@@ -65,6 +68,8 @@ internal static class FurnitureContent
             e.LoadFrom(() => CreatePondTexture(Game1.graphics.GraphicsDevice), AssetLoadPriority.Exclusive);
         else if (e.NameWithoutLocale.IsEquivalentTo(SwingTexture))
             e.LoadFrom(() => CreateSwingTexture(Game1.graphics.GraphicsDevice), AssetLoadPriority.Exclusive);
+        else if (e.NameWithoutLocale.IsEquivalentTo(SeesawTexture))
+            e.LoadFrom(() => CreateSeesawTexture(Game1.graphics.GraphicsDevice), AssetLoadPriority.Exclusive);
         else if (e.NameWithoutLocale.IsEquivalentTo(FairyLightsTexture))
             e.LoadFrom(() => CreateFairyLightsTexture(Game1.graphics.GraphicsDevice), AssetLoadPriority.Exclusive);
     }
@@ -185,6 +190,17 @@ internal static class FurnitureContent
                 CanBePlacedOutdoors = false,
                 Fragility = 0,
                 Texture = SwingTexture,
+                SpriteIndex = 0
+            });
+            craftables.TryAdd(SlimeSeesawItemId, new BigCraftableData
+            {
+                Name = "Slime Seesaw",
+                DisplayName = "Slime Seesaw",
+                Description = "A balanced beam where two Ranch Slimes can play together.",
+                CanBePlacedIndoors = true,
+                CanBePlacedOutdoors = false,
+                Fragility = 0,
+                Texture = SeesawTexture,
                 SpriteIndex = 0
             });
             craftables.TryAdd(SlimeFairyLightsItemId, new BigCraftableData
@@ -537,6 +553,43 @@ internal static class FurnitureContent
             SetPixel(pixels, width, x, 15, outline);
         }
         for (int x = 4; x <= 11; x++) SetPixel(pixels, width, x, 16, new Color(67, 43, 56));
+        texture.SetData(pixels);
+        return texture;
+    }
+
+    private static Texture2D CreateSeesawTexture(GraphicsDevice graphicsDevice)
+    {
+        const int width = 16;
+        const int height = 32;
+        var texture = new Texture2D(graphicsDevice, width, height);
+        var pixels = new Color[width * height];
+        Color outline = new(63, 47, 60);
+        Color darkWood = new(112, 70, 53);
+        Color wood = new(172, 118, 72);
+        Color lightWood = new(215, 164, 104);
+        Color seat = new(213, 102, 143);
+        for (int x = 3; x <= 12; x++) SetPixel(pixels, width, x, 15, new Color(67, 43, 56));
+        for (int y = 10; y <= 14; y++)
+        {
+            SetPixel(pixels, width, 7, y, outline);
+            SetPixel(pixels, width, 8, y, darkWood);
+        }
+        for (int x = 5; x <= 10; x++)
+        {
+            SetPixel(pixels, width, x, 14, outline);
+            if (x is 6 or 9)
+                SetPixel(pixels, width, x, 13, wood);
+        }
+        for (int x = 1; x <= 14; x++)
+        {
+            SetPixel(pixels, width, x, 8, outline);
+            SetPixel(pixels, width, x, 9, x is 2 or 13 ? seat : wood);
+            SetPixel(pixels, width, x, 10, outline);
+        }
+        for (int x = 3; x <= 6; x++) SetPixel(pixels, width, x, 9, lightWood);
+        for (int x = 9; x <= 12; x++) SetPixel(pixels, width, x, 9, lightWood);
+        SetPixel(pixels, width, 2, 7, outline);
+        SetPixel(pixels, width, 13, 7, outline);
         texture.SetData(pixels);
         return texture;
     }

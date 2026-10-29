@@ -59,8 +59,8 @@ internal sealed class EnrichmentInteractionService
 
     private void StopActiveInteractions()
     {
-        foreach (Interaction bounce in this.active.Values)
-            bounce.Animal.drawOffset = bounce.OriginalDrawOffset;
+        foreach (Interaction interaction in this.active.Values.Distinct())
+            interaction.RestoreDrawOffsets();
         this.active.Clear();
     }
 
@@ -71,70 +71,87 @@ internal sealed class EnrichmentInteractionService
 
     private void UpdateActiveInteractions(AnimalHouse house, float elapsedGameMinutes, SlimeRegistry? registry)
     {
-        List<long>? completed = null;
+        List<Interaction>? completed = null;
+        var updated = new HashSet<Interaction>();
         foreach (KeyValuePair<long, Interaction> entry in this.active)
         {
-            long id = entry.Key;
-            Interaction bounce = entry.Value;
-            if (registry?.IsReserved(id) == true
-                || !house.animals.TryGetValue(id, out FarmAnimal? currentAnimal)
-                || !ReferenceEquals(currentAnimal, bounce.Animal)
-                || !house.Objects.TryGetValue(bounce.FurnitureTile, out StardewValley.Object? currentFurniture)
-                || currentFurniture.QualifiedItemId != bounce.FurnitureQualifiedItemId)
+            Interaction interaction = entry.Value;
+            if (!updated.Add(interaction))
+                continue;
+
+            bool interrupted = interaction.Animals.Any(animal => registry?.IsReserved(animal.myID.Value) == true
+                || !house.animals.TryGetValue(animal.myID.Value, out FarmAnimal? currentAnimal)
+                || !ReferenceEquals(currentAnimal, animal));
+            if (interrupted
+                || !house.Objects.TryGetValue(interaction.FurnitureTile, out StardewValley.Object? currentFurniture)
+                || currentFurniture.QualifiedItemId != interaction.FurnitureQualifiedItemId)
             {
-                bounce.Animal.drawOffset = bounce.OriginalDrawOffset;
-                (completed ??= new List<long>()).Add(id);
+                interaction.RestoreDrawOffsets();
+                (completed ??= new List<Interaction>()).Add(interaction);
                 continue;
             }
 
-            bounce.ElapsedMinutes += elapsedGameMinutes;
-            if (bounce.ElapsedMinutes >= bounce.DurationMinutes)
+            interaction.ElapsedMinutes += elapsedGameMinutes;
+            if (interaction.ElapsedMinutes >= interaction.DurationMinutes)
             {
-                bounce.Animal.drawOffset = bounce.OriginalDrawOffset;
-                (completed ??= new List<long>()).Add(id);
+                interaction.RestoreDrawOffsets();
+                (completed ??= new List<Interaction>()).Add(interaction);
                 continue;
             }
 
-            if (bounce.SwingDistancePixels > 0)
+            for (int i = 0; i < interaction.Animals.Length; i++)
             {
-                float progress = bounce.ElapsedMinutes / bounce.DurationMinutes;
-                float sway = MathF.Sin(progress * MathF.PI * 2f);
-                bounce.Animal.drawOffset = bounce.OriginalDrawOffset
-                    + new Vector2(sway * bounce.SwingDistancePixels, -MathF.Abs(sway) * 2f);
-                continue;
-            }
+                FarmAnimal animal = interaction.Animals[i];
+                if (interaction.SwingDistancePixels > 0)
+                {
+                    float progress = interaction.ElapsedMinutes / interaction.DurationMinutes;
+                    float sway = MathF.Sin(progress * MathF.PI * 2f + interaction.SwayPhases[i]);
+                    Vector2 swayOffset = interaction.IsSeesaw
+                        ? new Vector2(sway * interaction.SwingDistancePixels, -sway * 6f)
+                        : new Vector2(sway * interaction.SwingDistancePixels, -MathF.Abs(sway) * 2f);
+                    if (interaction.IsSeesaw)
+                    {
+                        Vector2 seat = interaction.FurnitureTile * 64f + new Vector2(i == 0 ? 20f : 44f, 32f);
+                        animal.drawOffset = interaction.OriginalDrawOffsets[i] + (seat - animal.Position) + swayOffset;
+                    }
+                    else
+                        animal.drawOffset = interaction.OriginalDrawOffsets[i] + swayOffset;
+                    continue;
+                }
 
-            float elapsedMinutesFloat = bounce.ElapsedMinutes;
-            float compressionProgress = Math.Clamp(elapsedMinutesFloat / bounce.CompressionDurationMinutes, 0f, 1f);
-            if (bounce.IsResting)
-            {
-                float restProgress = elapsedMinutesFloat / bounce.DurationMinutes;
-                float restAmount = restProgress < 0.2f
-                    ? MathF.Sin(Math.Clamp(restProgress / 0.2f, 0f, 1f) * MathF.PI / 2f)
-                    : restProgress > 0.8f
-                        ? MathF.Sin(Math.Clamp((1f - restProgress) / 0.2f, 0f, 1f) * MathF.PI / 2f)
-                        : 1f;
-                bounce.Animal.drawOffset = bounce.OriginalDrawOffset + new Vector2(0f, bounce.CompressionHeightPixels * restAmount);
-                continue;
-            }
+                float elapsedMinutesFloat = interaction.ElapsedMinutes;
+                float compressionProgress = Math.Clamp(elapsedMinutesFloat / interaction.CompressionDurationMinutes, 0f, 1f);
+                if (interaction.IsResting)
+                {
+                    float restProgress = elapsedMinutesFloat / interaction.DurationMinutes;
+                    float restAmount = restProgress < 0.2f
+                        ? MathF.Sin(Math.Clamp(restProgress / 0.2f, 0f, 1f) * MathF.PI / 2f)
+                        : restProgress > 0.8f
+                            ? MathF.Sin(Math.Clamp((1f - restProgress) / 0.2f, 0f, 1f) * MathF.PI / 2f)
+                            : 1f;
+                    animal.drawOffset = interaction.OriginalDrawOffsets[i] + new Vector2(0f, interaction.CompressionHeightPixels * restAmount);
+                    continue;
+                }
 
-            if (elapsedMinutesFloat < bounce.CompressionDurationMinutes)
-            {
-                bounce.Animal.drawOffset = bounce.OriginalDrawOffset
-                    + new Vector2(0f, bounce.CompressionHeightPixels * MathF.Sin(compressionProgress * MathF.PI / 2f));
-                continue;
-            }
+                if (elapsedMinutesFloat < interaction.CompressionDurationMinutes)
+                {
+                    animal.drawOffset = interaction.OriginalDrawOffsets[i]
+                        + new Vector2(0f, interaction.CompressionHeightPixels * MathF.Sin(compressionProgress * MathF.PI / 2f));
+                    continue;
+                }
 
-            float flightDuration = Math.Max(0.01f, bounce.DurationMinutes - bounce.CompressionDurationMinutes);
-            float flightProgress = Math.Clamp((elapsedMinutesFloat - bounce.CompressionDurationMinutes) / flightDuration, 0f, 1f);
-            float hop = MathF.Sin(flightProgress * MathF.PI);
-            float slide = bounce.HorizontalTravelPixels * flightProgress;
-            bounce.Animal.drawOffset = bounce.OriginalDrawOffset + new Vector2(slide, -hop * bounce.BounceHeightPixels);
+                float flightDuration = Math.Max(0.01f, interaction.DurationMinutes - interaction.CompressionDurationMinutes);
+                float flightProgress = Math.Clamp((elapsedMinutesFloat - interaction.CompressionDurationMinutes) / flightDuration, 0f, 1f);
+                float hop = MathF.Sin(flightProgress * MathF.PI);
+                float slide = interaction.HorizontalTravelPixels * flightProgress;
+                animal.drawOffset = interaction.OriginalDrawOffsets[i] + new Vector2(slide, -hop * interaction.BounceHeightPixels);
+            }
         }
 
         if (completed is not null)
-            foreach (long id in completed)
-                this.active.Remove(id);
+            foreach (Interaction interaction in completed)
+                foreach (FarmAnimal animal in interaction.Animals)
+                    this.active.Remove(animal.myID.Value);
     }
 
     private void AssignNearbySlimes(AnimalHouse house, SlimeRegistry registry, int currentDay, int currentMinute)
@@ -146,6 +163,7 @@ internal sealed class EnrichmentInteractionService
             .Where(obj => obj.QualifiedItemId == FurnitureContent.TrampolineQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.SlimeCushionQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.SlimeSlideQualifiedId
+                || obj.QualifiedItemId == FurnitureContent.SlimeSeesawQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.SlimeTunnelQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.HeatedSlimeStoneQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.SlimePondQualifiedId
@@ -153,16 +171,16 @@ internal sealed class EnrichmentInteractionService
             .Select(obj => new FurnitureSpot(obj.TileLocation, obj.QualifiedItemId))
             .Where(spot => !occupiedTiles.Contains(spot.Tile))
             .ToList();
-        List<FarmAnimal> idleSlimes = house.animals.Values
-                     .Where(animal => animal.type.Value == FarmAnimalContent.RanchSlimeTypeId
-                         && !this.active.ContainsKey(animal.myID.Value)
-                         && !registry.IsReserved(animal.myID.Value))
-            .ToList();
-
-        foreach (FarmAnimal animal in idleSlimes)
+        var idleSlimes = new List<(FarmAnimal Animal, Models.SlimeRecord Record)>();
+        var activityCandidates = new List<(FarmAnimal Animal, Models.SlimeRecord Record)>();
+        var checkedThisPass = new HashSet<long>();
+        foreach (FarmAnimal animal in house.animals.Values.Where(animal => animal.type.Value == FarmAnimalContent.RanchSlimeTypeId
+            && !this.active.ContainsKey(animal.myID.Value)
+            && !registry.IsReserved(animal.myID.Value)))
         {
             if (!registry.TryGetSlimeRecord(animal.myID.Value, out Models.SlimeRecord record))
                 continue;
+            idleSlimes.Add((animal, record));
             if (record.EnrichmentActivityDay != currentDay)
             {
                 record.EnrichmentActivityDay = currentDay;
@@ -176,6 +194,7 @@ internal sealed class EnrichmentInteractionService
             if (currentMinute < record.NextEnrichmentCheckMinute)
                 continue;
 
+            checkedThisPass.Add(animal.myID.Value);
             // After each roaming period, each slime independently gets a 50% chance to use furniture.
             if (Game1.random.NextDouble() >= 0.5)
             {
@@ -183,37 +202,92 @@ internal sealed class EnrichmentInteractionService
                 continue;
             }
 
+            activityCandidates.Add((animal, record));
+        }
+
+        for (int i = activityCandidates.Count - 1; i > 0; i--)
+        {
+            int swapIndex = Game1.random.Next(i + 1);
+            (activityCandidates[i], activityCandidates[swapIndex]) = (activityCandidates[swapIndex], activityCandidates[i]);
+        }
+        HashSet<long> passedSelection = activityCandidates.Select(candidate => candidate.Animal.myID.Value).ToHashSet();
+
+        foreach ((FarmAnimal animal, Models.SlimeRecord record) in activityCandidates)
+        {
+            if (this.active.ContainsKey(animal.myID.Value) || record.EnrichmentActivitiesToday >= 4)
+                continue;
+
             Vector2 animalPosition = animal.Position;
-            int nearestIndex = -1;
-            float nearestDistance = InteractionRadiusPixels * InteractionRadiusPixels;
-            for (int i = 0; i < furnitureSpots.Count; i++)
+            FurnitureSpot? selectedSpot = null;
+            FarmAnimal? partner = null;
+            Models.SlimeRecord? partnerRecord = null;
+            foreach (FurnitureSpot spot in furnitureSpots
+                .OrderBy(spot => Vector2.DistanceSquared(animalPosition, spot.Tile * 64f + new Vector2(32f, 32f))))
             {
-                Vector2 center = furnitureSpots[i].Tile * 64f + new Vector2(32f, 32f);
+                Vector2 center = spot.Tile * 64f + new Vector2(32f, 32f);
                 float distance = Vector2.DistanceSquared(animalPosition, center);
-                if (distance >= nearestDistance)
+                if (distance >= InteractionRadiusPixels * InteractionRadiusPixels)
                     continue;
-                nearestDistance = distance;
-                nearestIndex = i;
+
+                if (spot.QualifiedItemId == FurnitureContent.SlimeSeesawQualifiedId)
+                {
+                    foreach ((FarmAnimal candidate, Models.SlimeRecord candidateRecord) in idleSlimes)
+                    {
+                        if (candidate.myID.Value == animal.myID.Value
+                            || this.active.ContainsKey(candidate.myID.Value)
+                            || candidateRecord.EnrichmentActivitiesToday >= 4
+                            || Vector2.DistanceSquared(candidate.Position, center) >= InteractionRadiusPixels * InteractionRadiusPixels)
+                            continue;
+
+                        long candidateId = candidate.myID.Value;
+                        if (checkedThisPass.Contains(candidateId) && !passedSelection.Contains(candidateId))
+                            continue;
+                        if (!checkedThisPass.Contains(candidateId))
+                        {
+                            checkedThisPass.Add(candidateId);
+                            if (Game1.random.NextDouble() >= 0.5)
+                            {
+                                candidateRecord.NextEnrichmentCheckMinute = currentMinute + Game1.random.Next(120, 241);
+                                continue;
+                            }
+                        }
+
+                        partner = candidate;
+                        partnerRecord = candidateRecord;
+                        break;
+                    }
+
+                    if (partner is null)
+                        continue;
+                }
+
+                selectedSpot = spot;
+                break;
             }
 
-            if (nearestIndex < 0)
+            if (selectedSpot is not FurnitureSpot spotToUse)
             {
                 record.NextEnrichmentCheckMinute = currentMinute + Game1.random.Next(120, 241);
                 continue;
             }
 
-            FurnitureSpot spot = furnitureSpots[nearestIndex];
-            furnitureSpots.RemoveAt(nearestIndex);
+            furnitureSpots.Remove(spotToUse);
             int durationMinutes = Game1.random.Next(120, 181);
-            record.EnrichmentActivitiesToday++;
-            record.NextEnrichmentCheckMinute = currentMinute + durationMinutes + Game1.random.Next(120, 241);
-            if (spot.QualifiedItemId == FurnitureContent.SlimeSwingQualifiedId)
+            this.RecordActivity(record, currentMinute, durationMinutes);
+            if (spotToUse.QualifiedItemId == FurnitureContent.SlimeSeesawQualifiedId && partner is not null && partnerRecord is not null)
             {
-                this.StartInteraction(animal, spot, durationMinutes, 2f, 2f, 0f, swingDistance: 8f);
+                this.RecordActivity(partnerRecord, currentMinute, durationMinutes);
+                this.StartPairedInteraction(animal, partner, spotToUse, durationMinutes);
                 continue;
             }
 
-            (float bounceHeight, float compressionHeight, float slideDistance, bool isResting) = spot.QualifiedItemId switch
+            if (spotToUse.QualifiedItemId == FurnitureContent.SlimeSwingQualifiedId)
+            {
+                this.StartInteraction(animal, spotToUse, durationMinutes, 2f, 2f, 0f, swingDistance: 8f);
+                continue;
+            }
+
+            (float bounceHeight, float compressionHeight, float slideDistance, bool isResting) = spotToUse.QualifiedItemId switch
             {
                 var id when id == FurnitureContent.SlimeCushionQualifiedId => (9f, 10f, 0f, false),
                 var id when id == FurnitureContent.SlimeSlideQualifiedId => (8f, 3f, 30f, false),
@@ -228,17 +302,39 @@ internal sealed class EnrichmentInteractionService
                     _ => (28f, 4f, 0f, false)
                 }
             };
-            this.StartInteraction(animal, spot, durationMinutes,
+            this.StartInteraction(animal, spotToUse, durationMinutes,
                 bounceHeight, compressionHeight, slideDistance, isResting);
         }
+    }
+
+    private void RecordActivity(Models.SlimeRecord record, int currentMinute, int durationMinutes)
+    {
+        record.EnrichmentActivitiesToday++;
+        record.NextEnrichmentCheckMinute = currentMinute + durationMinutes + Game1.random.Next(120, 241);
     }
 
     private void StartInteraction(FarmAnimal animal, FurnitureSpot furniture, int durationMinutes,
         float bounceHeight, float compressionHeight,
         float slideDistance = 0f, bool isResting = false, float swingDistance = 0f)
     {
-        this.active[animal.myID.Value] = new Interaction(animal, furniture.Tile, furniture.QualifiedItemId, animal.drawOffset,
-            durationMinutes, bounceHeight, compressionHeight, slideDistance, isResting, swingDistance);
+        this.StartInteraction(new[] { animal }, new[] { 0f }, furniture, durationMinutes,
+            bounceHeight, compressionHeight, slideDistance, isResting, swingDistance);
+    }
+
+    private void StartPairedInteraction(FarmAnimal first, FarmAnimal second, FurnitureSpot furniture, int durationMinutes)
+    {
+        this.StartInteraction(new[] { first, second }, new[] { 0f, MathF.PI }, furniture, durationMinutes,
+            0f, 0f, swingDistance: 8f, isSeesaw: true);
+    }
+
+    private void StartInteraction(FarmAnimal[] animals, float[] swayPhases, FurnitureSpot furniture, int durationMinutes,
+        float bounceHeight, float compressionHeight,
+        float slideDistance = 0f, bool isResting = false, float swingDistance = 0f, bool isSeesaw = false)
+    {
+        var interaction = new Interaction(animals, swayPhases, furniture.Tile, furniture.QualifiedItemId,
+            durationMinutes, bounceHeight, compressionHeight, slideDistance, isResting, swingDistance, isSeesaw);
+        foreach (FarmAnimal animal in animals)
+            this.active[animal.myID.Value] = interaction;
     }
 
     private static int GetMinutesOfDay(int timeOfDay) => timeOfDay / 100 * 60 + timeOfDay % 100;
@@ -247,34 +343,44 @@ internal sealed class EnrichmentInteractionService
 
     private sealed class Interaction
     {
-        public Interaction(FarmAnimal animal, Vector2 furnitureTile, string furnitureQualifiedItemId, Vector2 originalDrawOffset,
+        public Interaction(FarmAnimal[] animals, float[] swayPhases, Vector2 furnitureTile, string furnitureQualifiedItemId,
             int durationMinutes, float bounceHeightPixels, float compressionHeightPixels, float horizontalTravelPixels,
-            bool isResting, float swingDistancePixels)
+            bool isResting, float swingDistancePixels, bool isSeesaw)
         {
-            this.Animal = animal;
+            this.Animals = animals;
+            this.SwayPhases = swayPhases;
+            this.OriginalDrawOffsets = animals.Select(animal => animal.drawOffset).ToArray();
             this.FurnitureTile = furnitureTile;
             this.FurnitureQualifiedItemId = furnitureQualifiedItemId;
-            this.OriginalDrawOffset = originalDrawOffset;
             this.DurationMinutes = durationMinutes;
             this.BounceHeightPixels = bounceHeightPixels;
             this.CompressionHeightPixels = compressionHeightPixels;
             this.HorizontalTravelPixels = horizontalTravelPixels;
             this.IsResting = isResting;
             this.SwingDistancePixels = swingDistancePixels;
+            this.IsSeesaw = isSeesaw;
             this.CompressionDurationMinutes = durationMinutes * 0.16f;
         }
 
-        public FarmAnimal Animal { get; }
+        public FarmAnimal[] Animals { get; }
+        public Vector2[] OriginalDrawOffsets { get; }
+        public float[] SwayPhases { get; }
         public Vector2 FurnitureTile { get; }
         public string FurnitureQualifiedItemId { get; }
-        public Vector2 OriginalDrawOffset { get; }
         public int DurationMinutes { get; }
         public float BounceHeightPixels { get; }
         public float CompressionHeightPixels { get; }
         public float HorizontalTravelPixels { get; }
         public bool IsResting { get; }
         public float SwingDistancePixels { get; }
+        public bool IsSeesaw { get; }
         public float CompressionDurationMinutes { get; }
         public float ElapsedMinutes { get; set; }
+
+        public void RestoreDrawOffsets()
+        {
+            for (int i = 0; i < this.Animals.Length; i++)
+                this.Animals[i].drawOffset = this.OriginalDrawOffsets[i];
+        }
     }
 }

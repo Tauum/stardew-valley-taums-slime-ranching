@@ -82,6 +82,7 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("slime_ranching_give_heated_stone", "Give one Heated Slime Stone for testing. Usage: slime_ranching_give_heated_stone <exact save folder name>.", this.OnGiveHeatedStoneCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_pond", "Give one Slime Pond for testing. Usage: slime_ranching_give_pond <exact save folder name>.", this.OnGivePondCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_swing", "Give one Slime Swing for testing. Usage: slime_ranching_give_swing <exact save folder name>.", this.OnGiveSwingCommand);
+        helper.ConsoleCommands.Add("slime_ranching_give_seesaw", "Give one Slime Seesaw for paired activity testing. Usage: slime_ranching_give_seesaw <exact save folder name>.", this.OnGiveSeesawCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_fairy_lights", "Give one set of Slime Fairy Lights for testing. Usage: slime_ranching_give_fairy_lights <exact save folder name>.", this.OnGiveFairyLightsCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_test_eggs", "Create test eggs, use 'random' for one randomized egg, or pass key=value metadata for two controlled eggs. Usage: slime_ranching_give_test_eggs <save name> [random|species=Name ...].", this.OnGiveTestEggsCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_color_eggs", "Create seven color test eggs. Usage: slime_ranching_give_color_eggs <exact save folder name>.", this.OnGiveColorEggsCommand);
@@ -2834,6 +2835,31 @@ public sealed class ModEntry : Mod
         }
 
         this.Monitor.Log("Added one set of Slime Fairy Lights. Place them in the Slime Daycare; their colored glow is on from 6:00 PM until 2:00 AM.", LogLevel.Info);
+    }
+
+    private void OnGiveSeesawCommand(string command, string[] args)
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
+        {
+            this.Monitor.Log("Load a single-player save with available external slime state before requesting a Slime Seesaw.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 1 || args[0] != saveName)
+        {
+            this.Monitor.Log($"To give a Slime Seesaw to the currently loaded save, use: slime_ranching_give_seesaw {saveName}", LogLevel.Warn);
+            return;
+        }
+
+        Item seesaw = ItemRegistry.Create(FurnitureContent.SlimeSeesawQualifiedId);
+        if (!Game1.player.couldInventoryAcceptThisItem(seesaw) || !Game1.player.addItemToInventoryBool(seesaw))
+        {
+            this.Monitor.Log("Make room in your inventory for the Slime Seesaw, then try again.", LogLevel.Warn);
+            return;
+        }
+
+        this.Monitor.Log("Added one Slime Seesaw. Place it in the Slime Daycare; two nearby idle Ranch Slimes can play together.", LogLevel.Info);
     }
 
     private bool StartRefineryBatch(string machineKey, Building daycare)
