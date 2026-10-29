@@ -114,6 +114,7 @@ internal sealed class EnrichmentInteractionService
                 || !ReferenceEquals(currentAnimal, animal));
             if (interrupted
                 || !house.Objects.TryGetValue(interaction.FurnitureTile, out StardewValley.Object? currentFurniture)
+                || !ReferenceEquals(currentFurniture, interaction.FurnitureObject)
                 || currentFurniture.QualifiedItemId != interaction.FurnitureQualifiedItemId)
             {
                 interaction.RestoreDrawOffsets();
@@ -235,7 +236,7 @@ internal sealed class EnrichmentInteractionService
                 || !EnrichmentStationCatalog.TryGet(obj.QualifiedItemId, out EnrichmentStationDefinition definition))
                 continue;
 
-            furnitureSpots.Add(new FurnitureSpot(obj.TileLocation, definition));
+            furnitureSpots.Add(new FurnitureSpot(obj.TileLocation, definition, obj));
         }
         var idleSlimes = new List<(FarmAnimal Animal, Models.SlimeRecord Record)>();
         var activityCandidates = new List<(FarmAnimal Animal, Models.SlimeRecord Record)>();
@@ -488,7 +489,7 @@ internal sealed class EnrichmentInteractionService
         float bounceHeight, float compressionHeight,
         float slideDistance = 0f, bool isResting = false, float swingDistance = 0f, bool isSeesaw = false, bool isBallPit = false, bool isLampGathering = false)
     {
-        var interaction = new Interaction(animals, swayPhases, furniture.Tile, furniture.QualifiedItemId,
+        var interaction = new Interaction(animals, swayPhases, furniture.Tile, furniture.QualifiedItemId, furniture.Object,
             durationMinutes, bounceHeight, compressionHeight, slideDistance, isResting, swingDistance, isSeesaw, isBallPit, isLampGathering);
         foreach (FarmAnimal animal in animals)
             this.active[animal.myID.Value] = interaction;
@@ -496,7 +497,7 @@ internal sealed class EnrichmentInteractionService
 
     private static int GetMinutesOfDay(int timeOfDay) => timeOfDay / 100 * 60 + timeOfDay % 100;
 
-    private readonly record struct FurnitureSpot(Vector2 Tile, EnrichmentStationDefinition Definition)
+    private readonly record struct FurnitureSpot(Vector2 Tile, EnrichmentStationDefinition Definition, StardewValley.Object Object)
     {
         public string QualifiedItemId => this.Definition.QualifiedItemId;
     }
@@ -504,6 +505,7 @@ internal sealed class EnrichmentInteractionService
     private sealed class Interaction
     {
         public Interaction(FarmAnimal[] animals, float[] swayPhases, Vector2 furnitureTile, string furnitureQualifiedItemId,
+            StardewValley.Object furnitureObject,
             int durationMinutes, float bounceHeightPixels, float compressionHeightPixels, float horizontalTravelPixels,
             bool isResting, float swingDistancePixels, bool isSeesaw, bool isBallPit, bool isLampGathering)
         {
@@ -512,6 +514,7 @@ internal sealed class EnrichmentInteractionService
             this.OriginalDrawOffsets = animals.Select(animal => animal.drawOffset).ToArray();
             this.FurnitureTile = furnitureTile;
             this.FurnitureQualifiedItemId = furnitureQualifiedItemId;
+            this.FurnitureObject = furnitureObject;
             this.DurationMinutes = durationMinutes;
             this.BounceHeightPixels = bounceHeightPixels;
             this.CompressionHeightPixels = compressionHeightPixels;
@@ -529,6 +532,7 @@ internal sealed class EnrichmentInteractionService
         public float[] SwayPhases { get; }
         public Vector2 FurnitureTile { get; }
         public string FurnitureQualifiedItemId { get; }
+        public StardewValley.Object FurnitureObject { get; }
         public int DurationMinutes { get; }
         public float BounceHeightPixels { get; }
         public float CompressionHeightPixels { get; }
