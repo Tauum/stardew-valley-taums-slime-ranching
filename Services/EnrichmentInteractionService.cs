@@ -121,6 +121,12 @@ internal sealed class EnrichmentInteractionService
             for (int i = 0; i < interaction.Animals.Length; i++)
             {
                 FarmAnimal animal = interaction.Animals[i];
+                if (!Utility.isOnScreen(animal.TilePoint, 192, house))
+                {
+                    animal.drawOffset = interaction.OriginalDrawOffsets[i];
+                    continue;
+                }
+
                 if (interaction.IsLampGathering)
                 {
                     float angle = interaction.SwayPhases[i] - MathF.PI / 2f;
