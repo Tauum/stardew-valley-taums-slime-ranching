@@ -86,6 +86,8 @@ Add an animal ID to inspect one managed Ranch Slime's genome, favorite food, mat
 slime_ranching_inspect <Ranch Slime animal ID>
 ```
 
+The assignment is reported as **Available**, **Selected for breeding**, **Breeding**, **Mutagenic Pool**, **Incubator hatch**, or **Companion**. Friendship, happiness, and fullness are the native animal values; the Feeding Trough and custom feeding effects are still under development.
+
 ### Sanctuary quest progress diagnostic
 
 On a copied development save, run:
