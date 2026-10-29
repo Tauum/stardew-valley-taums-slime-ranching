@@ -4,7 +4,7 @@
 
 **Purpose:** This is the single active development reference for product direction, gameplay rules, release scope, and technical boundaries. Read and update it when designing or implementing features. The archived v7 notes and older specs are source history; the decisions here reconcile them with the owner's later directions.
 
-**Current work branch:** `feature/2.0-egg-stack-inspection`, extending inventory and CryoLab diagnostics with per-item stack counts and an explicit invalid-stack warning for unique eggs. This is read-only and adds no save fields. Feature 14 remains in progress; fixed desk placement and Furniture Edit Mode depend on the still-pending fixed-slot/map implementation. Taum requested continued 2.0 development across features and a later bulk in-game test pass. Keep every in-game acceptance status pending until Taum reports the result. The separate 1.x test remains paused at Stage 6; see `FEATURE_TESTING_WALKTHROUGH.md` for current 2.0 steps and that checkpoint. The [Mod TL;DR](../Guides/MOD_TLDR.md) summarizes current implementation status; these notes remain the canonical design source.
+**Current work branch:** `feature/2.0-cutscene-authoring-note`, recording Event Studio as the authoring aid for future Sanctuary cutscenes. The inventory duplicate-egg tester helper is next. Feature 14 remains in progress; fixed desk placement and Furniture Edit Mode depend on the still-pending fixed-slot/map implementation. Taum requested continued 2.0 development across features and a later bulk in-game test pass. Keep every in-game acceptance status pending until Taum reports the result. The separate 1.x test remains paused at Stage 6; see `FEATURE_TESTING_WALKTHROUGH.md` for current 2.0 steps and that checkpoint. The [Mod TL;DR](../Guides/MOD_TLDR.md) summarizes current implementation status; these notes remain the canonical design source.
 
 ## Shared design principles
 
@@ -30,6 +30,10 @@ Before implementing a feature that depends on Stardew behavior—especially rend
 3. Prefer supported SMAPI/game APIs over Harmony patches. Use Harmony only when no suitable supported extension point exists, and scope any patch narrowly.
 4. Make the smallest testable change that proves the behavior.
 5. Verify that change in-game before building further features on top of it; record what was verified and any remaining limits.
+
+### Cutscene authoring
+
+Use [Stardew Valley Event Studio](https://www.nexusmods.com/stardewvalley/mods/51824?tab=posts) to draft and sequence future Sanctuary cutscenes, including the Lewis → Wizard → Marnie → Robin introduction and later Pool-repair handoff. Its page currently lists version 1.0.0-beta.2; the author's Beta 2 post describes a Sequence view for action order, estimated start times, and simultaneous actions. Treat generated event scripts as drafts: review the exported commands, actors, trigger conditions, dialogue, saved milestone/idempotency behavior, and missed-event recovery against these canonical notes and the supported game event flow, then verify each scene in-game.
 
 The decompiled source tree is reference-only: never edit it, generate files into it, or include any of it in the mod or its distributable packages. `AGENTS.md` points future development work to this required workflow; this section remains the source of truth.
 
