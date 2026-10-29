@@ -73,7 +73,9 @@ internal sealed class EnrichmentInteractionService
         string activity = EnrichmentStationCatalog.TryGet(interaction.FurnitureQualifiedItemId, out EnrichmentStationDefinition station)
             ? station.ActivityKind.ToString()
             : interaction.FurnitureQualifiedItemId;
-        return $"{activity}; participants {interaction.Animals.Length}; elapsed {interaction.ElapsedMinutes:0}/{interaction.DurationMinutes} in-game minutes";
+        int tileX = (int)interaction.FurnitureTile.X;
+        int tileY = (int)interaction.FurnitureTile.Y;
+        return $"{activity} {interaction.FurnitureQualifiedItemId} at tile {tileX},{tileY}; participants {interaction.Animals.Length}; elapsed {interaction.ElapsedMinutes:0}/{interaction.DurationMinutes} in-game minutes";
     }
 
     private void StopActiveInteractions()

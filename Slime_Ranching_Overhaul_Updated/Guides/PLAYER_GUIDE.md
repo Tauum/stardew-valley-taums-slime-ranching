@@ -90,7 +90,7 @@ slime_ranching_inspect
 
 In the Daycare, this reports Ranch Slime and genome counts, assignment-status totals, native resident capacity as `occupied/limit`, each incubator's saved Rare Lab chance state, and every marked Egg CryoLab slot's egg ID, genome summary, registry match, incubation eligibility, and duplicate-ID status. In the vanilla Slime Hutch, it reports the monster slime count and confirms those slimes remain unchanged.
 
-Add an animal ID to inspect one managed Ranch Slime's genome, favorite food, maturity, mutation pity, assignment status, native friendship/happiness/fullness values, enrichment activities used today, its next roaming check, and its live activity summary:
+Add an animal ID to inspect one managed Ranch Slime's genome, favorite food, maturity, mutation pity, assignment status, native friendship/happiness/fullness values, enrichment activities used today, its next roaming check, and its live activity summary. While active, the summary includes activity kind, furniture item ID, furniture tile, participant count, and elapsed/total in-game minutes:
 
 ```text
 slime_ranching_inspect <Ranch Slime animal ID>
