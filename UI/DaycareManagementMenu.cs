@@ -82,7 +82,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             new Rectangle(this.xPositionOnScreen + 377, this.yPositionOnScreen + 82, 326, 48),
             new Rectangle(this.xPositionOnScreen + 720, this.yPositionOnScreen + 82, 326, 48)
         };
-        this.registryRows = new Rectangle(this.xPositionOnScreen + 48, this.yPositionOnScreen + 190, 382, 360);
+        this.registryRows = new Rectangle(this.xPositionOnScreen + 48, this.yPositionOnScreen + 198, 382, 360);
         this.wikiCategoryButtons = new[]
         {
             new Rectangle(this.xPositionOnScreen + 48, this.yPositionOnScreen + 166, 112, 42),
@@ -208,8 +208,10 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         Rectangle detailPanel = new(this.xPositionOnScreen + 466, this.yPositionOnScreen + 146, 582, 432);
         DrawPanel(b, listPanel, new Color(35, 51, 92), new Color(90, 128, 190));
         DrawPanel(b, detailPanel, new Color(35, 51, 92), new Color(90, 128, 190));
-        b.DrawString(Game1.smallFont, $"RESIDENTS | {this.residents.Count}/{this.daycare.animalLimit.Value}",
-            new Vector2(listPanel.X + 16, listPanel.Y + 12), new Color(139, 226, 255));
+        b.DrawString(Game1.tinyFont, $"RANCH SLIMES: {this.residents.Count}",
+            new Vector2(listPanel.X + 16, listPanel.Y + 10), new Color(139, 226, 255));
+        b.DrawString(Game1.tinyFont, $"LIVING CAPACITY: {this.daycare.animalsThatLiveHere.Count}/{this.daycare.animalLimit.Value}",
+            new Vector2(listPanel.X + 16, listPanel.Y + 29), new Color(178, 214, 249));
 
         int end = Math.Min(this.firstResident + VisibleRows, this.residents.Count);
         for (int index = this.firstResident; index < end; index++)
