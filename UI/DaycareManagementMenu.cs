@@ -346,7 +346,10 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         WikiEntry entry = entries[this.selectedWikiIndex];
         b.DrawString(Game1.smallFont, entry.Name, new Vector2(detailPanel.X + 20, detailPanel.Y + 18), new Color(139, 226, 255));
         string abilityList = entry.Abilities.Count == 0 ? "No base ability" : string.Join(" + ", entry.Abilities);
-        int y = DrawWrappedText(b, $"Current genome ability label: {abilityList}", new Vector2(detailPanel.X + 20, detailPanel.Y + 58),
+        string abilityLabel = entry.Category == "RARE"
+            ? "Current base-color ability: none; rare companion direction is planned."
+            : $"Current genome ability label: {abilityList}";
+        int y = DrawWrappedText(b, abilityLabel, new Vector2(detailPanel.X + 20, detailPanel.Y + 58),
             detailPanel.Width - 40, Game1.tinyFont, Color.White, 18f);
         y = DrawWrappedText(b, entry.Summary, new Vector2(detailPanel.X + 20, y + 8),
             detailPanel.Width - 40, Game1.tinyFont, Color.White, 18f);
