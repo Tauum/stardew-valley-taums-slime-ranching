@@ -102,6 +102,20 @@ internal sealed class EnrichmentInteractionService
             for (int i = 0; i < interaction.Animals.Length; i++)
             {
                 FarmAnimal animal = interaction.Animals[i];
+                if (interaction.IsLampGathering)
+                {
+                    float angle = interaction.SwayPhases[i] - MathF.PI / 2f;
+                    float horizontalRadius = Math.Min(30f, 16f + interaction.Animals.Length * 1.2f);
+                    float verticalRadius = Math.Min(20f, 9f + interaction.Animals.Length * 0.8f);
+                    Vector2 lampBase = interaction.FurnitureTile * 64f + new Vector2(32f, 32f);
+                    Vector2 gatheringPoint = lampBase + new Vector2(MathF.Cos(angle) * horizontalRadius, MathF.Sin(angle) * verticalRadius);
+                    float gentleBob = MathF.Sin(interaction.ElapsedMinutes * 0.12f + interaction.SwayPhases[i]) * 1.5f;
+                    animal.drawOffset = interaction.OriginalDrawOffsets[i]
+                        + (gatheringPoint - animal.Position)
+                        + new Vector2(0f, gentleBob);
+                    continue;
+                }
+
                 if (interaction.IsBallPit)
                 {
                     float cycleMinute = interaction.ElapsedMinutes % 24f;
@@ -187,7 +201,8 @@ internal sealed class EnrichmentInteractionService
                 || obj.QualifiedItemId == FurnitureContent.SlimeTunnelQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.HeatedSlimeStoneQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.SlimePondQualifiedId
-                || obj.QualifiedItemId == FurnitureContent.SlimeSwingQualifiedId)
+                || obj.QualifiedItemId == FurnitureContent.SlimeSwingQualifiedId
+                || obj.QualifiedItemId == FurnitureContent.SlimeLampQualifiedId)
             .Select(obj => new FurnitureSpot(obj.TileLocation, obj.QualifiedItemId))
             .Where(spot => !occupiedTiles.Contains(spot.Tile))
             .ToList();
@@ -291,8 +306,27 @@ internal sealed class EnrichmentInteractionService
                 continue;
             }
 
-            furnitureSpots.Remove(spotToUse);
             int durationMinutes = Game1.random.Next(120, 181);
+            if (spotToUse.QualifiedItemId == FurnitureContent.SlimeLampQualifiedId)
+            {
+                Vector2 lampCenter = spotToUse.Tile * 64f + new Vector2(32f, 32f);
+                var gatherers = activityCandidates
+                    .Where(candidate => candidate.Animal.myID.Value != animal.myID.Value
+                        && !this.active.ContainsKey(candidate.Animal.myID.Value)
+                        && candidate.Record.EnrichmentActivitiesToday < 4
+                        && Vector2.DistanceSquared(candidate.Animal.Position, lampCenter) < InteractionRadiusPixels * InteractionRadiusPixels
+                        && IsNearestAvailableSpot(candidate.Animal, spotToUse, furnitureSpots))
+                    .Select(candidate => (candidate.Animal, candidate.Record))
+                    .Prepend((animal, record))
+                    .ToArray();
+                furnitureSpots.Remove(spotToUse);
+                foreach ((FarmAnimal gatherer, Models.SlimeRecord gathererRecord) in gatherers)
+                    this.RecordActivity(gathererRecord, currentMinute, durationMinutes);
+                this.StartLampGathering(gatherers.Select(gatherer => gatherer.Item1).ToArray(), spotToUse, durationMinutes);
+                continue;
+            }
+
+            furnitureSpots.Remove(spotToUse);
             this.RecordActivity(record, currentMinute, durationMinutes);
             if (spotToUse.QualifiedItemId == FurnitureContent.SlimeSeesawQualifiedId && partner is not null && partnerRecord is not null)
             {
@@ -353,12 +387,41 @@ internal sealed class EnrichmentInteractionService
             0f, 0f, swingDistance: 8f, isSeesaw: true);
     }
 
+    private void StartLampGathering(FarmAnimal[] animals, FurnitureSpot furniture, int durationMinutes)
+    {
+        float[] phases = Enumerable.Range(0, animals.Length)
+            .Select(index => MathF.PI * 2f * index / animals.Length)
+            .ToArray();
+        this.StartInteraction(animals, phases, furniture, durationMinutes,
+            0f, 0f, isLampGathering: true);
+    }
+
+    private static bool IsNearestAvailableSpot(FarmAnimal animal, FurnitureSpot expectedSpot, List<FurnitureSpot> availableSpots)
+    {
+        Vector2 animalPosition = animal.Position;
+        FurnitureSpot? nearestSpot = null;
+        float nearestDistance = InteractionRadiusPixels * InteractionRadiusPixels;
+        foreach (FurnitureSpot spot in availableSpots)
+        {
+            float distance = Vector2.DistanceSquared(animalPosition, spot.Tile * 64f + new Vector2(32f, 32f));
+            if (distance >= nearestDistance)
+                continue;
+
+            nearestSpot = spot;
+            nearestDistance = distance;
+        }
+
+        return nearestSpot is FurnitureSpot nearest
+            && nearest.Tile == expectedSpot.Tile
+            && nearest.QualifiedItemId == expectedSpot.QualifiedItemId;
+    }
+
     private void StartInteraction(FarmAnimal[] animals, float[] swayPhases, FurnitureSpot furniture, int durationMinutes,
         float bounceHeight, float compressionHeight,
-        float slideDistance = 0f, bool isResting = false, float swingDistance = 0f, bool isSeesaw = false, bool isBallPit = false)
+        float slideDistance = 0f, bool isResting = false, float swingDistance = 0f, bool isSeesaw = false, bool isBallPit = false, bool isLampGathering = false)
     {
         var interaction = new Interaction(animals, swayPhases, furniture.Tile, furniture.QualifiedItemId,
-            durationMinutes, bounceHeight, compressionHeight, slideDistance, isResting, swingDistance, isSeesaw, isBallPit);
+            durationMinutes, bounceHeight, compressionHeight, slideDistance, isResting, swingDistance, isSeesaw, isBallPit, isLampGathering);
         foreach (FarmAnimal animal in animals)
             this.active[animal.myID.Value] = interaction;
     }
@@ -371,7 +434,7 @@ internal sealed class EnrichmentInteractionService
     {
         public Interaction(FarmAnimal[] animals, float[] swayPhases, Vector2 furnitureTile, string furnitureQualifiedItemId,
             int durationMinutes, float bounceHeightPixels, float compressionHeightPixels, float horizontalTravelPixels,
-            bool isResting, float swingDistancePixels, bool isSeesaw, bool isBallPit)
+            bool isResting, float swingDistancePixels, bool isSeesaw, bool isBallPit, bool isLampGathering)
         {
             this.Animals = animals;
             this.SwayPhases = swayPhases;
@@ -386,6 +449,7 @@ internal sealed class EnrichmentInteractionService
             this.SwingDistancePixels = swingDistancePixels;
             this.IsSeesaw = isSeesaw;
             this.IsBallPit = isBallPit;
+            this.IsLampGathering = isLampGathering;
             this.CompressionDurationMinutes = durationMinutes * 0.16f;
         }
 
@@ -402,6 +466,7 @@ internal sealed class EnrichmentInteractionService
         public float SwingDistancePixels { get; }
         public bool IsSeesaw { get; }
         public bool IsBallPit { get; }
+        public bool IsLampGathering { get; }
         public float CompressionDurationMinutes { get; }
         public float ElapsedMinutes { get; set; }
 
