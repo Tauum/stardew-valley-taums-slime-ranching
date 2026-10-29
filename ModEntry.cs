@@ -147,7 +147,7 @@ public sealed class ModEntry : Mod
         }
         catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException or System.Text.Json.JsonException or NotSupportedException)
         {
-            this.Monitor.Log($"External slime state is disabled for this save: {exception.Message}", LogLevel.Error);
+            this.Monitor.Log($"Ranch Slime save data is unavailable for this save: {exception.Message}", LogLevel.Error);
         }
     }
 
@@ -228,7 +228,7 @@ public sealed class ModEntry : Mod
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
-            this.Monitor.Log($"Could not save external slime state: {exception.Message}", LogLevel.Error);
+            this.Monitor.Log($"Could not save Ranch Slime data to the current save: {exception.Message}", LogLevel.Error);
         }
     }
 
@@ -302,7 +302,7 @@ public sealed class ModEntry : Mod
                 ready.Pair.ReadyNotificationSent = false;
             foreach (RefineryJobRecord job in refineryReady)
                 job.ReadyNotificationSent = false;
-            this.Monitor.Log("A completed breeding or mutation result could not be saved; notifications will retry after the next external-state save.", LogLevel.Error);
+            this.Monitor.Log("A completed breeding or mutation result could not be saved; notifications will retry after the next save-data write.", LogLevel.Error);
             return;
         }
         if (maturityChanged)
@@ -1162,7 +1162,7 @@ public sealed class ModEntry : Mod
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
-            this.Monitor.Log($"Could not save Ranch Slime data to external mod state: {exception.Message}", LogLevel.Error);
+            this.Monitor.Log($"Could not save Ranch Slime data to the current save: {exception.Message}", LogLevel.Error);
             return false;
         }
     }
@@ -1400,7 +1400,7 @@ public sealed class ModEntry : Mod
             return;
 
         this.Monitor.Log(
-            $"Reconciled external Ranch Slime state: detached {detachedAnimals} missing animal link(s) while preserving their genomes; cancelled {cancelledCycles} cycle(s) without a saved egg.",
+            $"Reconciled Ranch Slime save data: detached {detachedAnimals} missing animal link(s) while preserving their genomes; cancelled {cancelledCycles} cycle(s) without a saved egg.",
             LogLevel.Info);
     }
 
@@ -1744,7 +1744,7 @@ public sealed class ModEntry : Mod
         }
 
         if (!this.SaveExternalStateNow())
-            this.Monitor.Log("An Egg CryoLab transfer is saved with the native chest; its external Slime Egg record will be recovered from item metadata when needed.", LogLevel.Warn);
+            this.Monitor.Log("An Egg CryoLab transfer is saved with the native chest; its Ranch Slime Egg record can be rebuilt from item metadata if needed.", LogLevel.Warn);
         Game1.playSound("Ship");
         this.OpenEggCryoLabMenu(chest);
     }
@@ -1863,7 +1863,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available external slime state before requesting test eggs.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting test eggs.", LogLevel.Warn);
             return;
         }
 
@@ -2101,7 +2101,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available external slime state before requesting color test eggs.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting color test eggs.", LogLevel.Warn);
             return;
         }
 
@@ -2181,7 +2181,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available external slime state before spawning a Ranch Slime.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before spawning a Ranch Slime.", LogLevel.Warn);
             return;
         }
 
@@ -2265,7 +2265,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available external slime state before changing Rare Lab test values.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before changing Rare Lab test values.", LogLevel.Warn);
             return;
         }
 
@@ -2330,7 +2330,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available external slime state before setting Mutagenic Pool test values.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before setting Mutagenic Pool test values.", LogLevel.Warn);
             return;
         }
 
@@ -2388,7 +2388,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available external slime state before changing a test genome.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before changing a test genome.", LogLevel.Warn);
             return;
         }
 
@@ -2413,7 +2413,7 @@ public sealed class ModEntry : Mod
             if (animalToRestore is not null)
                 FarmAnimalContent.ApplyAppearance(animalToRestore,
                     this.registry.GetGenomeColor(animalId), this.registry.GetGenomeSize(animalId), this.registry.GetGenomeIsShiny(animalId));
-            this.Monitor.Log("Could not save external state; the original genome size was restored.", LogLevel.Error);
+            this.Monitor.Log("Could not save Ranch Slime save data; the original genome size was restored.", LogLevel.Error);
             return;
         }
 
@@ -2428,7 +2428,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available external slime state before changing a test genome.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before changing a test genome.", LogLevel.Warn);
             return;
         }
 
@@ -2451,7 +2451,7 @@ public sealed class ModEntry : Mod
         {
             this.registry.SetGenomeShiny(animalId, oldValue);
             this.RefreshRanchSlimeAppearance(animalId);
-            this.Monitor.Log("Could not save external state; the original shiny flag was restored.", LogLevel.Error);
+            this.Monitor.Log("Could not save Ranch Slime save data; the original shiny flag was restored.", LogLevel.Error);
             return;
         }
 
@@ -2463,7 +2463,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available external slime state before changing a test genome.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before changing a test genome.", LogLevel.Warn);
             return;
         }
 
@@ -2485,7 +2485,7 @@ public sealed class ModEntry : Mod
         {
             this.registry.RestoreGenomeColorState(animalId, oldState.Value);
             this.RefreshRanchSlimeAppearance(animalId);
-            this.Monitor.Log("Could not save external state; the original species and color were restored.", LogLevel.Error);
+            this.Monitor.Log("Could not save Ranch Slime save data; the original species and color were restored.", LogLevel.Error);
             return;
         }
 
@@ -2497,7 +2497,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available external slime state before changing a test genome.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before changing a test genome.", LogLevel.Warn);
             return;
         }
 
@@ -2524,7 +2524,7 @@ public sealed class ModEntry : Mod
         if (!this.SaveExternalStateNow())
         {
             this.registry.SetMutationTrait(animalId, oldTrait);
-            this.Monitor.Log("Could not save external state; the original mutation trait was restored.", LogLevel.Error);
+            this.Monitor.Log("Could not save Ranch Slime save data; the original mutation trait was restored.", LogLevel.Error);
             return;
         }
 
@@ -2535,7 +2535,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available external slime state before binding a companion.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before binding a companion.", LogLevel.Warn);
             return;
         }
 
@@ -2570,7 +2570,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available external slime state before dismissing a companion.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before dismissing a companion.", LogLevel.Warn);
             return;
         }
 
@@ -2610,7 +2610,7 @@ public sealed class ModEntry : Mod
         SlimeRegistry? currentRegistry = this.registry;
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady || currentRegistry is null)
         {
-            this.Monitor.Log("Load a single-player save with available external slime state before opening the Daycare Management Desk preview.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before opening the Daycare Management Desk preview.", LogLevel.Warn);
             return;
         }
 
@@ -2644,7 +2644,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available external slime state before requesting a guidebook.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting a guidebook.", LogLevel.Warn);
             return;
         }
 
@@ -2669,7 +2669,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available external slime state before requesting a breeder.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting a breeder.", LogLevel.Warn);
             return;
         }
 
@@ -2694,7 +2694,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available external slime state before requesting an incubator.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting an incubator.", LogLevel.Warn);
             return;
         }
 
@@ -2719,7 +2719,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available external slime state before requesting an Egg CryoLab tester chest.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting an Egg CryoLab tester chest.", LogLevel.Warn);
             return;
         }
 
@@ -2791,7 +2791,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available external slime state before requesting a Mutagenic Pool.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting a Mutagenic Pool.", LogLevel.Warn);
             return;
         }
 
@@ -2816,7 +2816,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available external slime state before requesting a Gel Refinery.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting a Gel Refinery.", LogLevel.Warn);
             return;
         }
 
@@ -2841,7 +2841,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available external slime state before requesting a Slime Tunnel.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting a Slime Tunnel.", LogLevel.Warn);
             return;
         }
 
@@ -2866,7 +2866,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available external slime state before requesting a Heated Slime Stone.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting a Heated Slime Stone.", LogLevel.Warn);
             return;
         }
 
@@ -2891,7 +2891,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available external slime state before requesting a Slime Pond.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting a Slime Pond.", LogLevel.Warn);
             return;
         }
 
@@ -2916,7 +2916,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available external slime state before requesting a Slime Swing.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting a Slime Swing.", LogLevel.Warn);
             return;
         }
 
@@ -2941,7 +2941,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available external slime state before requesting Slime Fairy Lights.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting Slime Fairy Lights.", LogLevel.Warn);
             return;
         }
 
@@ -2966,7 +2966,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available external slime state before requesting a Slime Seesaw.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting a Slime Seesaw.", LogLevel.Warn);
             return;
         }
 
@@ -2991,7 +2991,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available external slime state before requesting a Slime Ball Pit.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting a Slime Ball Pit.", LogLevel.Warn);
             return;
         }
 
@@ -3016,7 +3016,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available external slime state before requesting a Slime Lamp.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting a Slime Lamp.", LogLevel.Warn);
             return;
         }
 
@@ -3141,7 +3141,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available external slime state before creating a backup.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before creating a backup.", LogLevel.Warn);
             return;
         }
 
@@ -3179,7 +3179,7 @@ public sealed class ModEntry : Mod
 
         if (!this.stateReady)
         {
-            this.Monitor.Log("External slime state is unavailable for this save; see earlier log errors.", LogLevel.Warn);
+            this.Monitor.Log("Ranch Slime save data is unavailable for this save; see earlier log errors.", LogLevel.Warn);
             return;
         }
 
