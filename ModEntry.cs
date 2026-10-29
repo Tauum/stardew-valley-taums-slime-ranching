@@ -2374,6 +2374,7 @@ public sealed class ModEntry : Mod
 
         if (Game1.currentLocation is StardewValley.AnimalHouse animalHouse)
         {
+            bool isDaycare = BuildingContent.IsSlimeDaycare(animalHouse.ParentBuilding?.buildingType.Value);
             FarmAnimal[] residents = animalHouse.animals.Values
                 .Where(animal => animal.type.Value == FarmAnimalContent.RanchSlimeTypeId)
                 .ToArray();
@@ -2392,6 +2393,8 @@ public sealed class ModEntry : Mod
                 .Where(status => status.Count > 0)
                 .Select(status => $"{status.Label}: {status.Count}"));
             this.Monitor.Log($"This animal house contains {residents.Length} Ranch Slime(s), including {mutatedResidents} with mutation traits. Save data contains {loadedRegistry.Count} Ranch Slime record(s).", LogLevel.Info);
+            if (isDaycare)
+                this.Monitor.Log($"Daycare living residents: {animalHouse.animalsThatLiveHere.Count}/{animalHouse.animalLimit.Value} capacity.", LogLevel.Info);
             this.Monitor.Log($"Ranch Slime assignment status: {residentStatuses}.", LogLevel.Info);
             this.Monitor.Log($"Jobs in this room: {activeCycles} breeder cycle(s), {readyEggs} ready egg(s), {activeIncubations} incubation(s), {activeMutations} Mutagenic Pool attempt(s), {activeRefineryBatches} Gel Refinery batch(es).", LogLevel.Info);
 
