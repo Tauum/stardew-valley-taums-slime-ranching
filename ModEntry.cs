@@ -88,7 +88,7 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("slime_ranching_give_ball_pit", "Give one Slime Ball Pit for activity testing. Usage: slime_ranching_give_ball_pit <exact save folder name>.", this.OnGiveBallPitCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_lamp", "Give one Slime Lamp for activity testing. Usage: slime_ranching_give_lamp <exact save folder name>.", this.OnGiveLampCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_fairy_lights", "Give one set of Slime Fairy Lights for testing. Usage: slime_ranching_give_fairy_lights <exact save folder name>.", this.OnGiveFairyLightsCommand);
-        helper.ConsoleCommands.Add("slime_ranching_give_test_eggs", "Create test eggs, use 'random' for one randomized egg, or pass key=value metadata for two controlled eggs. Usage: slime_ranching_give_test_eggs <save name> [random|species=Name ...].", this.OnGiveTestEggsCommand);
+        helper.ConsoleCommands.Add("slime_ranching_give_test_eggs", "Create test eggs, use 'random' for one randomized egg, 'malformed' for two deliberately invalid eggs, or pass key=value metadata for two controlled eggs. Usage: slime_ranching_give_test_eggs <save name> [random|malformed|species=Name ...].", this.OnGiveTestEggsCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_color_eggs", "Create seven color test eggs. Usage: slime_ranching_give_color_eggs <exact save folder name>.", this.OnGiveColorEggsCommand);
         helper.ConsoleCommands.Add("slime_ranching_give_crystals", "Give one of each Chromatic Crystal for breeder testing. Usage: slime_ranching_give_crystals <exact save folder name>.", this.OnGiveCrystalsCommand);
     }
@@ -1870,21 +1870,22 @@ public sealed class ModEntry : Mod
         string? saveName = Constants.SaveFolderName;
         if (args.Length < 1 || args[0] != saveName)
         {
-            this.Monitor.Log($"Usage: slime_ranching_give_test_eggs {saveName} [species=Name] [secondary=Name|none] [color=#RRGGBB] [size=Small|Normal|Large|Giant] [rarity=Tier] [shiny=true|false] [food=(O)itemId] [generation=number] [mutation=Starry|Spotted|Glowing|Crystalline|Mossy|Bubbly|Mushroom|Blooming|Firefly|Crowned|Cowboy|Smelly|none].", LogLevel.Warn);
+            this.Monitor.Log($"Usage: slime_ranching_give_test_eggs {saveName} [random|malformed|species=Name] [secondary=Name|none] [color=#RRGGBB] [size=Small|Normal|Large|Giant] [rarity=Tier] [shiny=true|false] [food=(O)itemId] [generation=number] [mutation=Starry|Spotted|Glowing|Crystalline|Mossy|Bubbly|Mushroom|Blooming|Firefly|Crowned|Cowboy|Smelly|none].", LogLevel.Warn);
             return;
         }
 
         bool randomMode = args.Skip(1).Any(argument => argument.Equals("random", StringComparison.OrdinalIgnoreCase));
-        if (randomMode && args.Length != 2)
+        bool malformedMode = args.Skip(1).Any(argument => argument.Equals("malformed", StringComparison.OrdinalIgnoreCase));
+        if ((randomMode || malformedMode) && (args.Length != 2 || randomMode && malformedMode))
         {
-            this.Monitor.Log($"Use either 'slime_ranching_give_test_eggs {saveName} random' or the optional key=value fields, not both.", LogLevel.Warn);
+            this.Monitor.Log($"Use either 'slime_ranching_give_test_eggs {saveName} random', 'slime_ranching_give_test_eggs {saveName} malformed', or the optional key=value fields, not more than one mode.", LogLevel.Warn);
             return;
         }
 
         Dictionary<string, string> metadata = new(StringComparer.OrdinalIgnoreCase);
-        if (!randomMode && !TryParseTestEggMetadata(args.Skip(1), out metadata, out string? metadataError))
+        if (!randomMode && !malformedMode && !TryParseTestEggMetadata(args.Skip(1), out metadata, out string? metadataError))
         {
-            this.Monitor.Log($"Invalid test egg metadata: {metadataError} Usage: slime_ranching_give_test_eggs {saveName} [key=value ...].", LogLevel.Warn);
+            this.Monitor.Log($"Invalid test egg metadata: {metadataError} Usage: slime_ranching_give_test_eggs {saveName} [random|malformed|key=value ...].", LogLevel.Warn);
             return;
         }
 
@@ -1901,6 +1902,11 @@ public sealed class ModEntry : Mod
         {
             eggs = new[] { this.CreateRandomTestEgg() };
             description = "one genome-specific Ranch Slime Egg with randomized traits";
+        }
+        else if (malformedMode)
+        {
+            eggs = Array.Empty<taums_slime_ranching.Models.SlimeEggRecord>();
+            description = "two deliberately malformed Ranch Slime Egg items for non-stacking diagnostics";
         }
         else
         {
@@ -1932,6 +1938,18 @@ public sealed class ModEntry : Mod
             if (!this.SaveCurrentSaveDataNow())
                 return;
             this.InvalidateEggObjectData();
+            if (malformedMode)
+            {
+                for (int index = 0; index < 2; index++)
+                {
+                    Item malformedEgg = ItemRegistry.Create("(O)Taum.SlimeRanching_Egg_Red");
+                    malformedEgg.modData[SlimeEggContent.EggIdModDataKey] = "not-a-guid";
+                    malformedEgg.modData[SlimeEggContent.EggRecordModDataKey] = "{}";
+                    if (!Game1.player.addItemToInventoryBool(malformedEgg))
+                        throw new InvalidOperationException("Inventory space changed while the malformed test eggs were being added.");
+                }
+            }
+
             foreach (taums_slime_ranching.Models.SlimeEggRecord egg in eggs)
             {
                 Item item = SlimeEggContent.CreateItem(egg);
@@ -1939,7 +1957,10 @@ public sealed class ModEntry : Mod
                     throw new InvalidOperationException("Inventory space changed while the test eggs were being added.");
             }
 
-            this.Monitor.Log($"Added {description}. Egg identity is stored on each item.", LogLevel.Info);
+            string identityMessage = malformedMode
+                ? "Each item's identity metadata is intentionally invalid; do not incubate them."
+                : "Egg identity is stored on each item.";
+            this.Monitor.Log($"Added {description}. {identityMessage}", LogLevel.Info);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException)
         {

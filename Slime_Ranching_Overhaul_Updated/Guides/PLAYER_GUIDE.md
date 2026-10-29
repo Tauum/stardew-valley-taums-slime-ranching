@@ -98,6 +98,8 @@ slime_ranching_inspect
 
 In the Daycare, this reports Ranch Slime and genome counts, assignment-status totals, native resident capacity as `occupied/limit`, each incubator's saved Rare Lab chance state, every marked Egg CryoLab slot's egg ID and genome summary, and each Ranch Slime Egg in your inventory with its egg/genome IDs, registry match, incubation eligibility, and duplicate checks against inventory and this Daycare's CryoLab. In the vanilla Slime Hutch, it reports the monster slime count and confirms those slimes remain unchanged.
 
+For a disposable-save stack-safety check, run `slime_ranching_give_test_eggs <exact save folder name> malformed`. It adds two intentionally invalid Ranch Slime Egg items. Run `slime_ranching_inspect` inside the Daycare; both slots should be reported as invalid and neither item should merge with the other in inventory or an ordinary chest. These are diagnostics only and cannot be incubated or stored in the Egg CryoLab.
+
 Add an animal ID to inspect one managed Ranch Slime's genome, favorite food, maturity, mutation pity, assignment status, native friendship/happiness/fullness values, enrichment activities used today, its next roaming check, and its live activity summary. While active, the summary includes activity kind, furniture item ID, furniture tile, participant count, and elapsed/total in-game minutes:
 
 ```text

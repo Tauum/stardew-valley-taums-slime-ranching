@@ -47,6 +47,11 @@ internal static class SlimeEggContent
     public static string GetQualifiedId(SlimeGenome genome) => "(O)" + GetItemId(genome);
     public static string GetLegacyItemId(Guid genomeId) => $"{LegacyEggItemPrefix}{genomeId:N}";
 
+    public static bool IsUniqueEggItem(Item item) =>
+        item.ItemId.StartsWith(LegacyEggItemPrefix, StringComparison.Ordinal)
+        || item.modData.ContainsKey(EggIdModDataKey)
+        || item.modData.ContainsKey(EggRecordModDataKey);
+
     public static bool TryGetEggId(Item item, out string eggId)
     {
         if (item.modData.TryGetValue(EggIdModDataKey, out string? storedId)
