@@ -67,6 +67,7 @@ public sealed class ModEntry : Mod
         helper.ConsoleCommands.Add("slime_ranching_spawn_ranch_slime", $"Spawn one Ranch Slime at a chosen age in the Slime Daycare, optionally with randomized genome traits. Usage: slime_ranching_spawn_ranch_slime <exact save folder name> <age days 0-{FarmAnimalContent.RanchSlimeDaysToMature}> [random].", this.OnSpawnRanchSlimeCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_size", "Set a managed Ranch Slime's test genome size. Usage: slime_ranching_set_size <exact save folder name> <animal ID> <Small|Normal|Large|Giant>.", this.OnSetSlimeSizeCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_rare_lab", "Set Rare Lab pity and contribution for deterministic hatch testing. Usage: slime_ranching_set_rare_lab <exact save folder name> <incubator number> <pity 0-100> <contribution 0-100>.", this.OnSetRareLabCommand);
+        helper.ConsoleCommands.Add("slime_ranching_set_pool_test_state", "Set a mature Ranch Slime's Mutagenic Pool misses and contribution for testing. Usage: slime_ranching_set_pool_test_state <exact save folder name> <animal ID> <failures 0-90> <contribution 0-90; total <= 90>.", this.OnSetMutagenicPoolTestStateCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_color", "Set a managed Ranch Slime's test base color. Usage: slime_ranching_set_color <exact save folder name> <animal ID> <Red|Orange|Yellow|Green|Blue|Purple|Pink>.", this.OnSetSlimeColorCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_shiny", "Set a managed Ranch Slime's test shiny flag. Usage: slime_ranching_set_shiny <exact save folder name> <animal ID> <true|false>.", this.OnSetSlimeShinyCommand);
         helper.ConsoleCommands.Add("slime_ranching_set_mutation", "Set a managed Ranch Slime's test mutation. Usage: slime_ranching_set_mutation <exact save folder name> <animal ID> <Starry|Spotted|Glowing|Crystalline|Mossy|Bubbly|Mushroom|Blooming|Firefly|Crowned|Cowboy|Smelly|none>.", this.OnSetSlimeMutationCommand);
@@ -2324,6 +2325,64 @@ public sealed class ModEntry : Mod
         }
 
         this.Monitor.Log($"Set Rare Lab {incubatorNumber} to base {lab.BaseChancePoints}%, pity {lab.PityPoints}%, contribution {lab.ContributionPoints}%, total {this.registry.GetRareLabChancePoints(machineKey)}%.", LogLevel.Info);
+    }
+
+    private void OnSetMutagenicPoolTestStateCommand(string command, string[] args)
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
+        {
+            this.Monitor.Log("Load a single-player save with available external slime state before setting Mutagenic Pool test values.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 4 || args[0] != saveName
+            || !long.TryParse(args[1], out long animalId)
+            || !int.TryParse(args[2], out int failurePoints)
+            || !int.TryParse(args[3], out int contributionPoints))
+        {
+            this.Monitor.Log($"Usage: slime_ranching_set_pool_test_state {saveName} <animal ID> <failures 0-90> <contribution 0-90; total <= 90>", LogLevel.Warn);
+            return;
+        }
+
+        if (failurePoints is < 0 or > 90 || contributionPoints < 0 || contributionPoints > 90 - failurePoints)
+        {
+            this.Monitor.Log("Failure points must be 0-90 and contribution points 0-90, with a combined total no greater than 90.", LogLevel.Warn);
+            return;
+        }
+
+        SlimeRegistry? loadedRegistry = this.registry;
+        if (loadedRegistry is null || !loadedRegistry.TryGetSlimeRecord(animalId, out SlimeRecord slime))
+        {
+            this.Monitor.Log("That ID is not a managed Ranch Slime.", LogLevel.Warn);
+            return;
+        }
+
+        FarmAnimal? animal = GetFarmAnimals().FirstOrDefault(candidate => candidate.myID.Value == animalId
+            && candidate.type.Value == FarmAnimalContent.RanchSlimeTypeId);
+        if (animal is null
+            || loadedRegistry.GetMaturityAgeDays(animalId, animal.age.Value) < FarmAnimalContent.RanchSlimeDaysToMature
+            || !string.IsNullOrWhiteSpace(slime.Genome.MutationTrait)
+            || loadedRegistry.IsReserved(animalId))
+        {
+            this.Monitor.Log("Choose a mature, unmutated, unreserved Ranch Slime before setting its Pool test state.", LogLevel.Warn);
+            return;
+        }
+
+        int oldFailures = slime.MutagenicPoolFailures;
+        double oldContribution = slime.MutagenicPoolContribution;
+        slime.MutagenicPoolFailures = failurePoints;
+        slime.MutagenicPoolContribution = contributionPoints / 100.0;
+        if (!this.SaveExternalStateNow())
+        {
+            slime.MutagenicPoolFailures = oldFailures;
+            slime.MutagenicPoolContribution = oldContribution;
+            this.Monitor.Log("Could not save the Mutagenic Pool test state; the prior values were restored.", LogLevel.Error);
+            return;
+        }
+
+        double chance = MutagenicPoolRules.Instance.GetChance(failurePoints, contributionPoints / 100.0);
+        this.Monitor.Log($"Set Ranch Slime {animalId} Pool test state: {failurePoints} failed attempts, {contributionPoints}% contribution, {chance:P0} chance. No attempt was started.", LogLevel.Info);
     }
 
     private void OnSetSlimeSizeCommand(string command, string[] args)
