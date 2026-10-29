@@ -200,20 +200,15 @@ internal sealed class EnrichmentInteractionService
         HashSet<Vector2> occupiedTiles = this.active.Values
             .Select(interaction => interaction.FurnitureTile)
             .ToHashSet();
-        var furnitureSpots = house.Objects.Values
-            .Where(obj => obj.QualifiedItemId == FurnitureContent.TrampolineQualifiedId
-                || obj.QualifiedItemId == FurnitureContent.SlimeCushionQualifiedId
-                || obj.QualifiedItemId == FurnitureContent.SlimeSlideQualifiedId
-                || obj.QualifiedItemId == FurnitureContent.SlimeSeesawQualifiedId
-                || obj.QualifiedItemId == FurnitureContent.SlimeBallPitQualifiedId
-                || obj.QualifiedItemId == FurnitureContent.SlimeTunnelQualifiedId
-                || obj.QualifiedItemId == FurnitureContent.HeatedSlimeStoneQualifiedId
-                || obj.QualifiedItemId == FurnitureContent.SlimePondQualifiedId
-                || obj.QualifiedItemId == FurnitureContent.SlimeSwingQualifiedId
-                || obj.QualifiedItemId == FurnitureContent.SlimeLampQualifiedId)
-            .Select(obj => new FurnitureSpot(obj.TileLocation, obj.QualifiedItemId))
-            .Where(spot => !occupiedTiles.Contains(spot.Tile))
-            .ToList();
+        var furnitureSpots = new List<FurnitureSpot>();
+        foreach (StardewValley.Object obj in house.Objects.Values)
+        {
+            if (occupiedTiles.Contains(obj.TileLocation)
+                || !EnrichmentStationCatalog.TryGet(obj.QualifiedItemId, out EnrichmentStationDefinition definition))
+                continue;
+
+            furnitureSpots.Add(new FurnitureSpot(obj.TileLocation, definition));
+        }
         var idleSlimes = new List<(FarmAnimal Animal, Models.SlimeRecord Record)>();
         var activityCandidates = new List<(FarmAnimal Animal, Models.SlimeRecord Record)>();
         var reachabilityCache = new Dictionary<(long AnimalId, Vector2 Tile), bool>();
@@ -274,7 +269,7 @@ internal sealed class EnrichmentInteractionService
                     || !HasReachableApproach(house, animal, spot, reachabilityCache))
                     continue;
 
-                if (spot.QualifiedItemId == FurnitureContent.SlimeSeesawQualifiedId)
+                if (spot.Definition.ActivityKind == EnrichmentActivityKind.PairedSwing)
                 {
                     foreach ((FarmAnimal candidate, Models.SlimeRecord candidateRecord) in idleSlimes)
                     {
@@ -318,7 +313,7 @@ internal sealed class EnrichmentInteractionService
             }
 
             int durationMinutes = Game1.random.Next(120, 181);
-            if (spotToUse.QualifiedItemId == FurnitureContent.SlimeLampQualifiedId)
+            if (spotToUse.Definition.ActivityKind == EnrichmentActivityKind.LampGathering)
             {
                 Vector2 lampCenter = spotToUse.Tile * 64f + new Vector2(32f, 32f);
                 var gatherers = activityCandidates
@@ -339,42 +334,31 @@ internal sealed class EnrichmentInteractionService
 
             furnitureSpots.Remove(spotToUse);
             this.RecordActivity(record, currentMinute, durationMinutes);
-            if (spotToUse.QualifiedItemId == FurnitureContent.SlimeSeesawQualifiedId && partner is not null && partnerRecord is not null)
+            if (spotToUse.Definition.ActivityKind == EnrichmentActivityKind.PairedSwing && partner is not null && partnerRecord is not null)
             {
                 this.RecordActivity(partnerRecord, currentMinute, durationMinutes);
                 this.StartPairedInteraction(animal, partner, spotToUse, durationMinutes);
                 continue;
             }
 
-            if (spotToUse.QualifiedItemId == FurnitureContent.SlimeBallPitQualifiedId)
+            if (spotToUse.Definition.ActivityKind == EnrichmentActivityKind.BallPit)
             {
                 this.StartInteraction(animal, spotToUse, durationMinutes, 0f, 0f, isBallPit: true);
                 continue;
             }
 
-            if (spotToUse.QualifiedItemId == FurnitureContent.SlimeSwingQualifiedId)
+            if (spotToUse.Definition.ActivityKind == EnrichmentActivityKind.Swing)
             {
-                this.StartInteraction(animal, spotToUse, durationMinutes, 2f, 2f, 0f, swingDistance: 8f);
+                this.StartInteraction(animal, spotToUse, durationMinutes, 0f, 0f,
+                    swingDistance: spotToUse.Definition.SwingDistancePixels);
                 continue;
             }
 
-            (float bounceHeight, float compressionHeight, float slideDistance, bool isResting) = spotToUse.QualifiedItemId switch
-            {
-                var id when id == FurnitureContent.SlimeCushionQualifiedId => (9f, 10f, 0f, false),
-                var id when id == FurnitureContent.SlimeSlideQualifiedId => (8f, 3f, 30f, false),
-                var id when id == FurnitureContent.SlimeTunnelQualifiedId => (5f, 2f, 42f, false),
-                var id when id == FurnitureContent.HeatedSlimeStoneQualifiedId => (0f, 6f, 0f, true),
-                var id when id == FurnitureContent.SlimePondQualifiedId => (4f, 0f, 0f, false),
-                _ => registry.GetGenomeSize(animal.myID.Value)?.ToLowerInvariant() switch
-                {
-                    "small" => (32f, 3f, 0f, false),
-                    "large" => (24f, 7f, 0f, false),
-                    "giant" => (21f, 9f, 0f, false),
-                    _ => (28f, 4f, 0f, false)
-                }
-            };
+            (float bounceHeight, float compressionHeight, float slideDistance, bool isResting) =
+                GetBounceParameters(animal.myID.Value, registry, spotToUse.Definition);
             this.StartInteraction(animal, spotToUse, durationMinutes,
-                bounceHeight, compressionHeight, slideDistance, isResting);
+                bounceHeight, compressionHeight, slideDistance, isResting,
+                swingDistance: spotToUse.Definition.SwingDistancePixels);
         }
     }
 
@@ -395,7 +379,7 @@ internal sealed class EnrichmentInteractionService
     private void StartPairedInteraction(FarmAnimal first, FarmAnimal second, FurnitureSpot furniture, int durationMinutes)
     {
         this.StartInteraction(new[] { first, second }, new[] { 0f, MathF.PI }, furniture, durationMinutes,
-            0f, 0f, swingDistance: 8f, isSeesaw: true);
+            0f, 0f, swingDistance: furniture.Definition.SwingDistancePixels, isSeesaw: true);
     }
 
     private void StartLampGathering(FarmAnimal[] animals, FurnitureSpot furniture, int durationMinutes)
@@ -457,6 +441,21 @@ internal sealed class EnrichmentInteractionService
         return false;
     }
 
+    private static (float BounceHeight, float CompressionHeight, float SlideDistance, bool IsResting) GetBounceParameters(
+        long animalId, SlimeRegistry registry, EnrichmentStationDefinition station)
+    {
+        if (!station.UsesGenomeSizeBounce)
+            return (station.BounceHeightPixels, station.CompressionHeightPixels, station.HorizontalTravelPixels, station.IsResting);
+
+        return registry.GetGenomeSize(animalId)?.ToLowerInvariant() switch
+        {
+            "small" => (32f, 3f, 0f, false),
+            "large" => (24f, 7f, 0f, false),
+            "giant" => (21f, 9f, 0f, false),
+            _ => (28f, 4f, 0f, false)
+        };
+    }
+
     private void StartInteraction(FarmAnimal[] animals, float[] swayPhases, FurnitureSpot furniture, int durationMinutes,
         float bounceHeight, float compressionHeight,
         float slideDistance = 0f, bool isResting = false, float swingDistance = 0f, bool isSeesaw = false, bool isBallPit = false, bool isLampGathering = false)
@@ -469,7 +468,10 @@ internal sealed class EnrichmentInteractionService
 
     private static int GetMinutesOfDay(int timeOfDay) => timeOfDay / 100 * 60 + timeOfDay % 100;
 
-    private readonly record struct FurnitureSpot(Vector2 Tile, string QualifiedItemId);
+    private readonly record struct FurnitureSpot(Vector2 Tile, EnrichmentStationDefinition Definition)
+    {
+        public string QualifiedItemId => this.Definition.QualifiedItemId;
+    }
 
     private sealed class Interaction
     {
