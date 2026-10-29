@@ -513,11 +513,17 @@ internal sealed class DaycareManagementMenu : IClickableMenu
 
         FarmAnimal selectedAnimal = this.residents[this.selectedResidentIndex];
         b.DrawString(Game1.smallFont, selectedAnimal.Name, new Vector2(detailPanel.X + 20, detailPanel.Y + 16), new Color(139, 226, 255));
+        DrawResidentNeedBar(b,
+            new Rectangle(detailPanel.X + 20, detailPanel.Y + 44, 260, 38),
+            "HAPPINESS", selectedAnimal.happiness.Value, 255, new Color(111, 214, 157));
+        DrawResidentNeedBar(b,
+            new Rectangle(detailPanel.X + 298, detailPanel.Y + 44, detailPanel.Width - 318, 38),
+            "FULLNESS", selectedAnimal.fullness.Value, 255, new Color(239, 184, 99));
         if (!this.registry.TryGetSlimeRecord(selectedAnimal.myID.Value, out SlimeRecord selectedRecord))
         {
             this.registryDetailScroll = 0;
             this.registryDetailMaxScroll = 0;
-            b.DrawString(Game1.smallFont, "Genome record unavailable.", new Vector2(detailPanel.X + 20, detailPanel.Y + 58), Color.White);
+            b.DrawString(Game1.smallFont, "Genome record unavailable.", new Vector2(detailPanel.X + 20, detailPanel.Y + 106), Color.White);
             return;
         }
 
@@ -539,16 +545,16 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             $"Mutation: {genome.MutationTrait ?? "none"}",
             $"Favorite food: {FoodLikeCatalog.GetDisplayName(genome.LikedFoodItemId)}",
             $"Age: {ageDays}/{FarmAnimalContent.RanchSlimeDaysToMature} days",
-            $"Friendship {selectedAnimal.friendshipTowardFarmer.Value}/1000 | happiness {selectedAnimal.happiness.Value}/255 | fullness {selectedAnimal.fullness.Value}/255",
+            $"Friendship {selectedAnimal.friendshipTowardFarmer.Value}/1000",
             $"Assignment: {SlimeRegistry.GetResidentStatusLabel(this.registry.GetResidentStatus(selectedAnimal.myID.Value))}",
             $"Current activity: {this.getActiveActivitySummary(selectedAnimal.myID.Value) ?? "none"}"
         };
-        Rectangle detailBody = new(detailPanel.X + 20, detailPanel.Y + 56, detailPanel.Width - 40, detailPanel.Height - 68);
+        Rectangle detailBody = new(detailPanel.X + 20, detailPanel.Y + 104, detailPanel.Width - 40, detailPanel.Height - 116);
         this.registryDetailScroll = DrawScrollableParagraphs(b,
             details.Select(text => (Text: text, Color: Color.White)), detailBody, Game1.tinyFont,
             18f, 4f, this.registryDetailScroll, out this.registryDetailMaxScroll);
         if (this.registryDetailMaxScroll > 0)
-            b.DrawString(Game1.tinyFont, "Mouse wheel: scroll details", new Vector2(detailPanel.X + 20, detailPanel.Y + 39), new Color(178, 214, 249));
+            b.DrawString(Game1.tinyFont, "Mouse wheel: scroll details", new Vector2(detailPanel.X + 20, detailPanel.Y + 86), new Color(178, 214, 249));
     }
 
     private void DrawProgressionSection(SpriteBatch b)
@@ -737,6 +743,17 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         b.Draw(Game1.staminaRect, rect, border);
         if (rect.Width > 4 && rect.Height > 4)
             b.Draw(Game1.staminaRect, new Rectangle(rect.X + 2, rect.Y + 2, rect.Width - 4, rect.Height - 4), fill);
+    }
+
+    private static void DrawResidentNeedBar(SpriteBatch b, Rectangle bounds, string label, int value, int maximum, Color fillColor)
+    {
+        b.DrawString(Game1.tinyFont, $"{label} {value}/{maximum}", new Vector2(bounds.X, bounds.Y), Color.White);
+        Rectangle bar = new(bounds.X, bounds.Y + 18, bounds.Width, 15);
+        DrawPanel(b, bar, new Color(20, 28, 52), new Color(91, 124, 173));
+        float progress = Math.Clamp(value / (float)maximum, 0f, 1f);
+        int fillWidth = (int)((bar.Width - 4) * progress);
+        if (fillWidth > 0)
+            b.Draw(Game1.staminaRect, new Rectangle(bar.X + 2, bar.Y + 2, fillWidth, bar.Height - 4), fillColor);
     }
 
     private static void DrawCentered(SpriteBatch b, string text, SpriteFont font, Rectangle rect, Color color)
