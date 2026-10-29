@@ -16,6 +16,7 @@ internal sealed class SlimeRegistry
     private readonly Dictionary<string, BreedingPairRecord> breedingPairs = new(StringComparer.Ordinal);
     private readonly Dictionary<string, SlimeEggRecord> eggs = new(StringComparer.Ordinal);
     private readonly Dictionary<string, IncubationRecord> incubations = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, RareLabRecord> rareLabs = new(StringComparer.Ordinal);
     private readonly Dictionary<string, MutagenicAttemptRecord> mutagenicAttempts = new(StringComparer.Ordinal);
     private readonly Dictionary<string, MutagenicContributionRecord> pendingMutagenicContributions = new(StringComparer.Ordinal);
     private readonly Dictionary<string, RefineryJobRecord> refineryJobs = new(StringComparer.Ordinal);
@@ -31,6 +32,7 @@ internal sealed class SlimeRegistry
     public int Count => this.records.Count;
     public IReadOnlyCollection<SlimeEggRecord> Eggs => this.eggs.Values;
     public IReadOnlyCollection<IncubationRecord> Incubations => this.incubations.Values;
+    public IReadOnlyCollection<RareLabRecord> RareLabs => this.rareLabs.Values;
     public IReadOnlyCollection<IncubationRecord> PendingIncubationCancellations => this.pendingIncubationCancellations.Values;
     public IReadOnlyCollection<BreedingPairRecord> BreedingPairs => this.breedingPairs.Values;
     public IReadOnlyCollection<MutagenicAttemptRecord> MutagenicAttempts => this.mutagenicAttempts.Values;
@@ -125,6 +127,59 @@ internal sealed class SlimeRegistry
 
     public IncubationRecord? GetIncubation(string machineKey) =>
         this.incubations.TryGetValue(machineKey, out IncubationRecord? record) ? record : null;
+
+    public RareLabRecord? GetRareLab(string machineKey) =>
+        this.rareLabs.TryGetValue(machineKey, out RareLabRecord? record) ? record : null;
+
+    public int GetRareLabChancePoints(string machineKey) =>
+        RareLabRules.GetChancePoints(this.GetRareLab(machineKey));
+
+    public bool UnlockRareLab(string machineKey, int baseChancePoints)
+    {
+        if (string.IsNullOrWhiteSpace(machineKey)
+            || baseChancePoints is not (RareLabRules.FirstTierBaseChancePoints or RareLabRules.FinalTierBaseChancePoints))
+            return false;
+
+        return this.rareLabs.TryAdd(machineKey, new RareLabRecord
+        {
+            MachineKey = machineKey,
+            IsUnlocked = true,
+            BaseChancePoints = baseChancePoints
+        });
+    }
+
+    public bool UpgradeRareLabsToFinalTier()
+    {
+        bool changed = false;
+        foreach (RareLabRecord lab in this.rareLabs.Values)
+        {
+            if (lab.IsUnlocked && lab.BaseChancePoints != RareLabRules.FinalTierBaseChancePoints)
+            {
+                RareLabRules.SetFinalTier(lab);
+                changed = true;
+            }
+        }
+
+        return changed;
+    }
+
+    public bool AddRareLabContribution(string machineKey)
+    {
+        return this.incubations.ContainsKey(machineKey)
+            && this.rareLabs.TryGetValue(machineKey, out RareLabRecord? lab)
+            && RareLabRules.AddContribution(lab);
+    }
+
+    public bool ResolveRareLabOutcome(string machineKey, bool rareOffspringProduced)
+    {
+        if (!this.incubations.ContainsKey(machineKey)
+            || !this.rareLabs.TryGetValue(machineKey, out RareLabRecord? lab)
+            || !lab.IsUnlocked)
+            return false;
+
+        RareLabRules.ApplyOutcome(lab, rareOffspringProduced);
+        return true;
+    }
 
     public bool IsUnclaimedIncubationHatch(long farmAnimalId) =>
         this.incubations.Values.Any(incubation => incubation.HatchAnimalId == farmAnimalId);
@@ -939,6 +994,7 @@ internal sealed class SlimeRegistry
         this.breedingPairs.Clear();
         this.eggs.Clear();
         this.incubations.Clear();
+        this.rareLabs.Clear();
         this.mutagenicAttempts.Clear();
         this.pendingMutagenicContributions.Clear();
         this.nextMutagenicContributionSequence = 1;
@@ -1092,6 +1148,17 @@ internal sealed class SlimeRegistry
         if (this.activeCompanionFarmAnimalId is null)
             this.activeCompanionFarmAnimalId = this.records.Values.FirstOrDefault(record => record.IsCompanion)?.FarmAnimalId;
 
+        foreach (RareLabRecord lab in data?.RareLabs ?? Enumerable.Empty<RareLabRecord>())
+        {
+            if (lab is null || !RareLabRules.IsValid(lab) || this.rareLabs.ContainsKey(lab.MachineKey))
+            {
+                this.monitor.Log("Skipped a malformed or duplicate Rare Lab record.", LogLevel.Warn);
+                continue;
+            }
+
+            this.rareLabs.Add(lab.MachineKey, lab);
+        }
+
         foreach (MutagenicAttemptRecord attempt in data?.MutagenicAttempts ?? Enumerable.Empty<MutagenicAttemptRecord>())
         {
             if (attempt is null || string.IsNullOrWhiteSpace(attempt.MachineKey)
@@ -1130,6 +1197,7 @@ internal sealed class SlimeRegistry
     {
         BreedingPairs = this.breedingPairs.Values.OrderBy(pair => pair.MachineKey, StringComparer.Ordinal).ToList(),
         Incubations = this.incubations.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList(),
+        RareLabs = this.rareLabs.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList(),
         MutagenicAttempts = this.mutagenicAttempts.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList(),
         PendingMutagenicContributions = this.pendingMutagenicContributions.Values.OrderBy(record => record.Sequence).ToList(),
         RefineryJobs = this.refineryJobs.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList(),

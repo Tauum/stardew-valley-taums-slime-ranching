@@ -98,6 +98,12 @@ internal sealed class ModStateStore
             if (saveData.SchemaVersion == 17)
             {
                 saveData.PendingMutagenicContributions ??= new List<MutagenicContributionRecord>();
+                saveData.SchemaVersion = 18;
+                this.MigratedSaveData = true;
+            }
+            if (saveData.SchemaVersion == 18)
+            {
+                saveData.RareLabs ??= new List<RareLabRecord>();
                 saveData.SchemaVersion = SlimeSaveData.CurrentSchemaVersion;
                 this.MigratedSaveData = true;
             }
@@ -217,8 +223,14 @@ internal sealed class ModStateStore
 
         if (root is JsonObject schemaSeventeen && schemaSeventeen["SchemaVersion"]?.GetValue<int>() == 17)
         {
-            schemaSeventeen["SchemaVersion"] = SlimeSaveData.CurrentSchemaVersion;
+            schemaSeventeen["SchemaVersion"] = 18;
             schemaSeventeen["PendingMutagenicContributions"] = new JsonArray();
+        }
+
+        if (root is JsonObject schemaEighteen && schemaEighteen["SchemaVersion"]?.GetValue<int>() == 18)
+        {
+            schemaEighteen["SchemaVersion"] = SlimeSaveData.CurrentSchemaVersion;
+            schemaEighteen["RareLabs"] = new JsonArray();
         }
 
         if (root is JsonObject jsonData && jsonData["Slimes"] is JsonArray slimes)
