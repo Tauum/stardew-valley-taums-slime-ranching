@@ -3314,19 +3314,21 @@ public sealed class ModEntry : Mod
                         if (!SlimeEggContent.TryReadRecord(item, out SlimeEggRecord egg)
                             || !SlimeEggContent.TryGetEggId(item, out string eggId))
                         {
-                            this.Monitor.Log($"Egg CryoLab {chestIndex + 1}, slot {slot + 1}: invalid or non-Ranch item {item.QualifiedItemId}.", LogLevel.Info);
+                            this.Monitor.Log($"Egg CryoLab {chestIndex + 1}, slot {slot + 1}: invalid or non-Ranch item {item.QualifiedItemId}; stack size {item.Stack}.", LogLevel.Info);
                             continue;
                         }
 
                         bool duplicate = !storedEggIds.Add(eggId);
                         bool recordMatches = loadedRegistry.TryGetEgg(eggId, out SlimeEggRecord registeredEgg)
                             && registeredEgg.Genome.Id == egg.Genome.Id;
-                        this.Monitor.Log($"Egg CryoLab {chestIndex + 1}, slot {slot + 1}: egg ID {eggId}; {egg.Genome.PrimarySpecies}; size {egg.Genome.Size}; rarity {egg.Genome.RarityTier}; registry record {(recordMatches ? "matches" : "missing or mismatched")}; incubator eligible {loadedRegistry.CanIncubate(eggId)}; duplicate ID in this Daycare {duplicate}.", LogLevel.Info);
+                        string stackStatus = item.Stack == 1 ? "stack size 1" : $"INVALID stack size {item.Stack} (unique eggs must be 1)";
+                        this.Monitor.Log($"Egg CryoLab {chestIndex + 1}, slot {slot + 1}: egg ID {eggId}; {egg.Genome.PrimarySpecies}; size {egg.Genome.Size}; rarity {egg.Genome.RarityTier}; {stackStatus}; registry record {(recordMatches ? "matches" : "missing or mismatched")}; incubator eligible {loadedRegistry.CanIncubate(eggId)}; duplicate ID in this Daycare {duplicate}.", LogLevel.Info);
                     }
                 }
 
                 var inventoryEggIds = new HashSet<string>(StringComparer.Ordinal);
                 int inventoryEggCount = 0;
+                int inventoryEggStackCount = 0;
                 int validInventoryEggCount = 0;
                 for (int slot = 0; slot < Game1.player.Items.Count; slot++)
                 {
@@ -3338,10 +3340,12 @@ public sealed class ModEntry : Mod
                         continue;
 
                     inventoryEggCount++;
+                    inventoryEggStackCount += item.Stack;
+                    string stackStatus = item.Stack == 1 ? "stack size 1" : $"INVALID stack size {item.Stack} (unique eggs must be 1)";
                     if (!SlimeEggContent.TryReadRecord(item, out SlimeEggRecord egg)
                         || !SlimeEggContent.TryGetEggId(item, out string eggId))
                     {
-                        this.Monitor.Log($"Ranch Slime Egg inventory slot {slot + 1}: invalid identity or genome metadata; item ID {item.QualifiedItemId}.", LogLevel.Info);
+                        this.Monitor.Log($"Ranch Slime Egg inventory slot {slot + 1}: invalid identity or genome metadata; item ID {item.QualifiedItemId}; {stackStatus}.", LogLevel.Info);
                         continue;
                     }
 
@@ -3353,10 +3357,10 @@ public sealed class ModEntry : Mod
                     string species = egg.Genome.SecondarySpecies is null
                         ? egg.Genome.PrimarySpecies
                         : $"{egg.Genome.PrimarySpecies} / {egg.Genome.SecondarySpecies}";
-                    this.Monitor.Log($"Ranch Slime Egg inventory slot {slot + 1}: egg ID {eggId}; genome {egg.Genome.Id:N}; {species}; color {egg.Genome.VisualColor}; size {egg.Genome.Size}; rarity {egg.Genome.RarityTier}; registry record {(recordMatches ? "matches" : "missing or mismatched")}; incubator eligible {loadedRegistry.CanIncubate(eggId)}; duplicate ID in inventory {duplicate}; also stored in this Daycare's Egg CryoLab {storedInCryoLab}.", LogLevel.Info);
+                    this.Monitor.Log($"Ranch Slime Egg inventory slot {slot + 1}: egg ID {eggId}; genome {egg.Genome.Id:N}; {species}; color {egg.Genome.VisualColor}; size {egg.Genome.Size}; rarity {egg.Genome.RarityTier}; {stackStatus}; registry record {(recordMatches ? "matches" : "missing or mismatched")}; incubator eligible {loadedRegistry.CanIncubate(eggId)}; duplicate ID in inventory {duplicate}; also stored in this Daycare's Egg CryoLab {storedInCryoLab}.", LogLevel.Info);
                 }
 
-                this.Monitor.Log($"Ranch Slime Eggs in inventory: {inventoryEggCount} item(s); {validInventoryEggCount} with valid metadata; {inventoryEggIds.Count} distinct valid ID(s).", LogLevel.Info);
+                this.Monitor.Log($"Ranch Slime Eggs in inventory: {inventoryEggCount} slot(s), {inventoryEggStackCount} total stack unit(s); {validInventoryEggCount} item(s) with valid metadata; {inventoryEggIds.Count} distinct valid ID(s).", LogLevel.Info);
                 this.Monitor.Log($"Rare Labs saved in this Daycare: {roomRareLabs.Length}.", LogLevel.Info);
                 var placedIncubatorKeys = new HashSet<string>(roomIncubatorMachineKeys, StringComparer.Ordinal);
                 for (int index = 0; index < roomIncubators.Length; index++)
