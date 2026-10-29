@@ -69,6 +69,17 @@ Reply with any collision, sizing, or warp issues and a screenshot if the room di
 5. Before the ready day, cancel the cycle. Confirm no egg is created, both parents are selectable again, and starting a new cycle sets a new 18-day ready date.
 6. Let the replacement cycle reach its ready day. Confirm the egg-ready notice appears, both parents are released into the Daycare, the egg remains collectible once, and the saved genome remains available after reload.
 
+## 2.0 bulk-test check — Feature 6: fixed incubator timing and capacity
+
+**Status:** New incubation jobs take seven in-game days; saved active jobs retain their recorded ready day. Existing hatch naming and full-capacity blocking remain in place. In-game checks are pending; cancellation is not implemented yet.
+
+1. On a disposable single-player save with a completed Daycare, run `slime_ranching_give_test_eggs <exact save folder name> random` and `slime_ranching_give_incubator <exact save folder name>`. Place the incubator inside the Daycare.
+2. Open the incubator with the test egg in inventory. Confirm the menu shows **7 Days**, select the egg, and start incubation. Confirm exactly one egg is removed.
+3. Sleep one night and reopen the incubator. Confirm progress is `1 / 7 days`. After six total nights, confirm it is still incubating at `6 / 7` and no animal has hatched.
+4. Sleep the seventh night. Confirm exactly one Ranch Slime hatches in the Daycare with the egg's stored genome. Reopen the incubator and use **Name & Take**; confirm the name prompt appears and the egg cannot hatch again from a copied item with the same genome ID.
+5. To verify capacity blocking, fill the Daycare to its 10-resident limit with mature Ranch Slimes, start one egg, and sleep seven nights. Confirm the incubator reports it is ready but waiting for space, and the Daycare never exceeds 10 residents. Sell one test Ranch Slime through its normal Animal Query menu (its configured sell price is 0g), sleep once, and confirm the waiting hatch then appears.
+6. On a separate copied save, start an incubation with the previous build's 15-day config, save, then update to this build. Confirm that job retains its original ready day while a new job takes seven days.
+
 ## How to use this walkthrough
 
 The 2.0 checks are being collected for one bulk test pass at Taum's request. Run the checks marked ready on disposable copied saves, then report results and issues together. Keep each feature's acceptance pending until its in-game checks pass. The separate 1.x sequence remains paused at Stage 6; resume it only if requested.
