@@ -2387,6 +2387,9 @@ public sealed class ModEntry : Mod
             int activeIncubations = loadedRegistry.Incubations.Count(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal));
             int activeMutations = loadedRegistry.MutagenicAttempts.Count(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal));
             int activeRefineryBatches = loadedRegistry.RefineryJobs.Count(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal));
+            RareLabRecord[] roomRareLabs = isDaycare
+                ? loadedRegistry.RareLabs.Where(lab => lab.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal)).ToArray()
+                : Array.Empty<RareLabRecord>();
             int mutatedResidents = residents.Count(animal => loadedRegistry.GetMutationTrait(animal.myID.Value) is not null);
             string residentStatuses = string.Join(", ", Enum.GetValues<SlimeResidentStatus>()
                 .Select(status => (Label: SlimeRegistry.GetResidentStatusLabel(status), Count: residents.Count(animal => loadedRegistry.GetResidentStatus(animal.myID.Value) == status)))
@@ -2397,6 +2400,15 @@ public sealed class ModEntry : Mod
                 this.Monitor.Log($"Daycare living residents: {animalHouse.animalsThatLiveHere.Count}/{animalHouse.animalLimit.Value} capacity.", LogLevel.Info);
             this.Monitor.Log($"Ranch Slime assignment status: {residentStatuses}.", LogLevel.Info);
             this.Monitor.Log($"Jobs in this room: {activeCycles} breeder cycle(s), {readyEggs} ready egg(s), {activeIncubations} incubation(s), {activeMutations} Mutagenic Pool attempt(s), {activeRefineryBatches} Gel Refinery batch(es).", LogLevel.Info);
+            if (isDaycare)
+            {
+                this.Monitor.Log($"Rare Labs saved in this Daycare: {roomRareLabs.Length}.", LogLevel.Info);
+                foreach (RareLabRecord lab in roomRareLabs)
+                {
+                    int totalChance = loadedRegistry.GetRareLabChancePoints(lab.MachineKey);
+                    this.Monitor.Log($"Rare Lab [{lab.MachineKey}]: {(lab.IsUnlocked ? "unlocked" : "locked")}; base {lab.BaseChancePoints}%, pity {lab.PityPoints}%, contribution {lab.ContributionPoints}%, total {totalChance}%.", LogLevel.Info);
+                }
+            }
 
             foreach (BreedingPairRecord pair in roomBreedingPairs)
             {

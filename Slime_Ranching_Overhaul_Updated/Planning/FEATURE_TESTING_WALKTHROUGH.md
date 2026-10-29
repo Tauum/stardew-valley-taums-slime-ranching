@@ -147,7 +147,7 @@ Reply with any collision, sizing, or warp issues and a screenshot if the room di
 
 1. On a disposable copy at schema 18 with an active incubator job, run `slime_ranching_inspect` in the Daycare before updating and record the reported schema and that incubator's egg and ready day.
 2. Load that copy with this build and run `slime_ranching_inspect` again. Confirm the reported schema is 19, the incubation count and ready day are unchanged, and the SMAPI log reports save-data migration.
-3. Save, return to title, reload, and inspect again. Confirm schema 19 and the same incubator egg and ready day. Rare Lab state has no player-facing access until upgrade and menu integration land, so verify no Pool or breeding behavior changed during this migration pass.
+3. Save, return to title, reload, and inspect again. Confirm schema 19 and the same incubator egg and ready day. The Daycare diagnostic should report zero Rare Labs for a schema-18 source save; migration must not fabricate an unlocked lab. Verify no Pool or breeding behavior changed during this migration pass.
 
 ## 2.0 bulk-test check — Feature 15 partial: enrichment schedule and cleanup
 
