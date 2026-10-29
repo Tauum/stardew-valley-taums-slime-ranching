@@ -36,6 +36,10 @@ This guide covers the current early prototype. The Slime Breeder can reserve two
 - Ranch Slime offspring and genome-specific egg icons use a tint selected from the genome color. Hybrid genomes store a blend of their two base colors; the current sprite resolves that blend to the nearest base tint.
 - The Slime Incubator, Gel Refinery, and Mutagenic Pool use 3Ã—2 placement and collision areas. The Slime Breeder retains its 5Ã—2 footprint.
 
+## Daycare construction and upgrades
+
+Robin's Carpenter menu offers the Slime Daycare for 10,000g, 350 Wood, 150 Stone, and 50 vanilla Slime. Its three farmhouse-matched upgrades cost 10,000g + 450 Wood, 65,000g + 100 Hardwood, and 100,000g with no materials. Capacities are 10 at basic tier, 20 at upgrades 1 and 2, and 30 at the final tier. The first upgrade also unlocks Daycare-specific room renovations, the Egg CryoLab, and Rare Labs; the final upgrade adds the cellar and unlocks the last-tier facilities. The full facility and furniture progression is still under development.
+
 ## Slime Incubator
 
 The Slime Incubator accepts a genome-specific Ranch Slime Egg from the player's inventory. Vanilla Slime Eggs are not accepted.

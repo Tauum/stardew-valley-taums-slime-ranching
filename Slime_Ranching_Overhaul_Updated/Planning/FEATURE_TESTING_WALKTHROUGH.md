@@ -91,15 +91,18 @@ Reply with any collision, sizing, or warp issues and a screenshot if the room di
 10. Load a schema-14 copy with an active incubation, allow migration to schema 23, save/reload, and verify its ready day is unchanged. Confirm a saved cancellation stays finalized after reload.
 11. On a tier-1-or-higher copied save with a fresh Rare Lab, run `slime_ranching_give_test_eggs <exact save folder name> species=Red secondary=Yellow`, start incubation, and confirm the active egg label names both species and says **Hybrid**. During this incubation, contribute 990 vanilla Slime (99 contributions of 10) to bring the lab's 1% base chance to 100%. Sleep seven nights and reopen the Incubator before naming/taking the hatch; confirm the displayed outcome uses the resolved Gold, Void, or Prismatic Slime and **Rare** label, rather than the original Red/Yellow hybrid. Keep enough Daycare space for the hatch.
 
-## 2.0 bulk-test check — Feature 8 partial: upgrade-aware breeder timing
+## 2.0 bulk-test check — Feature 8 partial: Daycare prices and upgrade-aware breeder timing
 
-**Status:** New cycles use 18 days at the basic Daycare and 14 days at upgrade tiers 1–3. Existing cycles retain their saved ready day. Other Feature 8 progression, upgrade costs, and room/facility assignments remain pending.
+**Status:** Robin's Carpenter menu now uses the approved 10,000g + 350 Wood + 150 Stone + 50 Slime basic construction price and the three farmhouse-matched upgrade prices: 10,000g + 450 Wood, 65,000g + 100 Hardwood, and 100,000g with no materials. New cycles use 18 days at the basic Daycare and 14 days at upgrade tiers 1–3; existing cycles retain their saved ready day. Other Feature 8 progression and room/facility assignments remain pending.
 
-1. On a disposable save with the basic Daycare, run `slime_ranching_give_breeder <exact save folder name>` and `slime_ranching_spawn_ranch_slime <exact save folder name> 7` twice. Place the Breeder inside the Daycare, select the two mature Ranch Slimes, and confirm the new-cycle preview says **18 Days**.
-2. Start the cycle and run `slime_ranching_inspect` while inside the Daycare. Confirm the breeder record's ready day is 18 days after its saved start day.
-3. On a separate copy with Daycare upgrade 1 complete, give and place a new Breeder, then select two mature Ranch Slimes. Confirm the new-cycle preview says **14 Days**, start it, and confirm the status message says **Breeding cycle started: 14 days**. Verify the ready day is 14 days after the start day.
-4. Repeat the new-cycle preview at upgrade tiers 2 and 3; each should remain **14 Days**. On a separate copy, start an 18-day cycle before upgrading and, if its breeder record survives the building upgrade, confirm the saved ready day is unchanged afterward.
-5. Save/reload the tiered copies and confirm the active cycle's ready day remains unchanged. Keep Feature 8 acceptance pending until capacity, construction costs, furniture/facility progression, and all upgrade behavior pass their in-game checks.
+1. On a disposable save without a Daycare, open Robin's Carpenter menu and select **Slime Daycare**. Confirm the listed cost is exactly 10,000g, 350 Wood, 150 Stone, and 50 vanilla Slime. Build it on a separate copy with enough resources, then confirm precisely those resources are spent.
+2. On a copy with the basic Daycare, inspect its first upgrade and confirm the quote is exactly 10,000g + 450 Wood. Complete the upgrade on another copy and confirm the stated money and materials are spent.
+3. From upgrade tier 1, inspect the next tier and confirm the quote is exactly 65,000g + 100 Hardwood. Complete it on another copy and confirm the stated money and materials are spent. From tier 2, confirm the final upgrade costs 100,000g with no materials; complete it on another copy and verify only that money is deducted.
+4. On a disposable save with the basic Daycare, run `slime_ranching_give_breeder <exact save folder name>` and `slime_ranching_spawn_ranch_slime <exact save folder name> 7` twice. Place the Breeder inside the Daycare, select the two mature Ranch Slimes, and confirm the new-cycle preview says **18 Days**.
+5. Start the cycle and run `slime_ranching_inspect` while inside the Daycare. Confirm the breeder record's ready day is 18 days after its saved start day.
+6. On a separate copy with Daycare upgrade 1 complete, give and place a new Breeder, then select two mature Ranch Slimes. Confirm the new-cycle preview says **14 Days**, start it, and confirm the status message says **Breeding cycle started: 14 days**. Verify the ready day is 14 days after the start day.
+7. Repeat the new-cycle preview at upgrade tiers 2 and 3; each should remain **14 Days**. On a separate copy, start an 18-day cycle before upgrading and, if its breeder record survives the building upgrade, confirm the saved ready day is unchanged afterward.
+8. Save/reload the tiered copies and confirm the active cycle's ready day remains unchanged. Keep Feature 8 acceptance pending until price display, resource deductions, capacity, furniture/facility progression, and all upgrade behavior pass their in-game checks.
 
 ### Feature 8 capacity check
 

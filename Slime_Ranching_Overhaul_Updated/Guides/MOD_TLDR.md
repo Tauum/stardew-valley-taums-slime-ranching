@@ -22,12 +22,12 @@ This is an in-progress 2.0 redesign. Several gameplay services and tester protot
 
 The Daycare remains an `AnimalHouse` but reuses Stardew's farmhouse maps and room art. Its four building states are:
 
-| Daycare state | Native resident capacity | Facility progression |
-| --- | ---: | --- |
-| Basic | 10 | One 18-day Breeder cycle, one 7-day Incubator, and a broken Mutagenic Pool. No Egg CryoLab or Rare Lab. |
-| First upgrade | 20 | New Breeder cycles take 14 days. Unlocks Daycare-specific farmhouse renovation choices, the Egg CryoLab, a Rare Lab per Incubator at 1% base chance, and the Robin-to-Maru Pool repair mission. |
-| Second upgrade | 20 | Breeder cycles remain 14 days; no additional machine unlock is currently specified. |
-| Final upgrade | 30 | Adds a second Breeder and Incubator, raises Rare Lab base chance to 5%, unlocks the Gel Refinery, and adds the cellar. |
+| Daycare state | Native resident capacity | Robin's Carpenter price | Facility progression |
+| --- | ---: | --- | --- |
+| Basic | 10 | 10,000g + 350 Wood + 150 Stone + 50 vanilla Slime | One 18-day Breeder cycle, one 7-day Incubator, and a broken Mutagenic Pool. No Egg CryoLab or Rare Lab. |
+| First upgrade | 20 | 10,000g + 450 Wood | New Breeder cycles take 14 days. Unlocks Daycare-specific farmhouse renovation choices, the Egg CryoLab, a Rare Lab per Incubator at 1% base chance, and the Robin-to-Maru Pool repair mission. |
+| Second upgrade | 20 | 65,000g + 100 Hardwood | Breeder cycles remain 14 days; no additional machine unlock is currently specified. |
+| Final upgrade | 30 | 100,000g | Adds a second Breeder and Incubator, raises Rare Lab base chance to 5%, unlocks the Gel Refinery, and adds the cellar. |
 
 The basic room uses `FarmHouse`, upgrade 1 uses `FarmHouse1`, and upgrades 2 and 3 use `FarmHouse2`; the final state also has the cellar. Interior renovation and wallpaper/flooring state belong to the Daycare, not the farmhouse. The saved tier and capacity behavior are implemented, but the complete building/map and facility fixture sequence still needs bulk acceptance.
 

@@ -57,8 +57,13 @@ internal static class BuildingContent
             daycare.IndoorMap = "FarmHouse";
             daycare.IndoorMapType = "StardewValley.AnimalHouse";
             daycare.BuildDays = 0;
-            daycare.BuildCost = 0;
-            daycare.BuildMaterials = new();
+            daycare.BuildCost = 10_000;
+            daycare.BuildMaterials = new List<BuildingMaterial>
+            {
+                new() { ItemId = "(O)388", Amount = 350 },
+                new() { ItemId = "(O)390", Amount = 150 },
+                new() { ItemId = "(O)766", Amount = 50 }
+            };
             daycare.MaxOccupants = 10;
             daycare.HayCapacity = 0;
             // Explicitly allow this custom animal's House ID. Some animal
