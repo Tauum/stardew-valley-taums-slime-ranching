@@ -28,6 +28,14 @@ internal static class BuildingContent
     public static bool IsSlimeDaycare(string? buildingId) =>
         buildingId is not null && SlimeDaycareIds.Contains(buildingId);
 
+    public static int GetUpgradeTier(string? buildingId) => buildingId switch
+    {
+        SlimeDaycareUpgrade1Id => 1,
+        SlimeDaycareUpgrade2Id => 2,
+        SlimeDaycareUpgrade3Id => 3,
+        _ => 0
+    };
+
     public static void EditAsset(AssetRequestedEventArgs e)
     {
         if (!e.NameWithoutLocale.IsEquivalentTo("Data/Buildings"))

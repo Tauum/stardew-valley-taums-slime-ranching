@@ -205,6 +205,48 @@ internal sealed class SlimeRegistry
         return changed;
     }
 
+    public bool SynchronizeRareLabs(IEnumerable<string> incubatorMachineKeys, int buildingTier)
+    {
+        if (buildingTier < 1)
+            return false;
+
+        bool changed = false;
+        int baseChancePoints = buildingTier >= 3
+            ? RareLabRules.FinalTierBaseChancePoints
+            : RareLabRules.FirstTierBaseChancePoints;
+        foreach (string machineKey in incubatorMachineKeys.Distinct(StringComparer.Ordinal))
+        {
+            if (string.IsNullOrWhiteSpace(machineKey))
+                continue;
+
+            if (!this.rareLabs.TryGetValue(machineKey, out RareLabRecord? lab))
+            {
+                changed |= this.UnlockRareLab(machineKey, baseChancePoints);
+                continue;
+            }
+
+            if (!lab.IsUnlocked)
+            {
+                lab.IsUnlocked = true;
+                lab.BaseChancePoints = baseChancePoints;
+                lab.PityPoints = 0;
+                lab.ContributionPoints = 0;
+                changed = true;
+            }
+            else if (baseChancePoints == RareLabRules.FinalTierBaseChancePoints
+                && lab.BaseChancePoints != RareLabRules.FinalTierBaseChancePoints)
+            {
+                RareLabRules.SetFinalTier(lab);
+                changed = true;
+            }
+        }
+
+        if (buildingTier >= 3)
+            changed |= this.UpgradeRareLabsToFinalTier();
+
+        return changed;
+    }
+
     public bool AddRareLabContribution(string machineKey)
     {
         return this.incubations.ContainsKey(machineKey)

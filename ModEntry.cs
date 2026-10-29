@@ -101,6 +101,7 @@ public sealed class ModEntry : Mod
             this.ApplyRanchSlimeAppearances();
             bool maturityChanged = this.registry.SynchronizeMaturity(GetFarmAnimals(), Game1.Date.TotalDays);
             this.stateReady = true;
+            bool rareLabProgressionChanged = this.SynchronizeRareLabProgression();
             bool repairTransactionRecovered = this.ReconcileMaruRepairDelivery();
             bool incubationCancellationRecovered = this.ReconcileIncubationCancellations();
             bool mutagenicContributionRecovered = this.ReconcileMutagenicContributionTransactions();
@@ -112,7 +113,7 @@ public sealed class ModEntry : Mod
                 this.Monitor.Log("Imported the previous mod-folder slime registry into this save. The original legacy file was left untouched.", LogLevel.Info);
             if (this.stateStore.MigratedSaveData)
                 this.Monitor.Log("Migrated the saved Ranch Slime data to the current schema.", LogLevel.Info);
-            if (needsPersistenceMigration || registeredRanchSlimes > 0 || recoveredHatches > 0 || detachedAnimals > 0 || cancelledCycles > 0 || maturityChanged || repairTransactionRecovered || incubationCancellationRecovered || mutagenicContributionRecovered || refineryTransactionRecovered || constructionProgressChanged || repairQuestProgressChanged)
+            if (needsPersistenceMigration || registeredRanchSlimes > 0 || recoveredHatches > 0 || detachedAnimals > 0 || cancelledCycles > 0 || maturityChanged || rareLabProgressionChanged || repairTransactionRecovered || incubationCancellationRecovered || mutagenicContributionRecovered || refineryTransactionRecovered || constructionProgressChanged || repairQuestProgressChanged)
             {
                 if (!this.SaveExternalStateNow())
                     this.Monitor.Log("Imported or reconciled Ranch Slime state remains in memory but could not yet be written to the current save.", LogLevel.Error);
@@ -201,6 +202,7 @@ public sealed class ModEntry : Mod
             (int detachedAnimals, int cancelledCycles) = this.registry.ReconcileRanchSlimes(GetFarmAnimals());
             this.LogRegistryReconciliation(detachedAnimals, cancelledCycles);
             this.registry.WriteEntityModData(GetFarmAnimals());
+            this.SynchronizeRareLabProgression();
             this.stateStore!.Save(this.registry!.Capture());
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
@@ -217,6 +219,7 @@ public sealed class ModEntry : Mod
         bool repairTransactionRecovered = this.ReconcileMaruRepairDelivery();
         bool mutagenicContributionRecovered = this.ReconcileMutagenicContributionTransactions();
         bool refineryTransactionRecovered = this.ReconcileRefineryTransactions();
+        bool rareLabProgressionChanged = this.SynchronizeRareLabProgression();
         bool constructionProgressChanged = this.TryRecordCompletedDaycareConstruction();
         bool repairQuestProgressChanged = this.TryStartMaruRepairQuest();
         bool maturityChanged = this.registry!.SynchronizeMaturity(GetFarmAnimals(), Game1.Date.TotalDays);
@@ -247,7 +250,7 @@ public sealed class ModEntry : Mod
 
         if (readyToNotify.Count == 0 && refineryReady.Count == 0 && this.pendingMutagenicNotifications.Count == 0)
         {
-            bool needsSave = maturityChanged || repairTransactionRecovered || mutagenicContributionRecovered
+            bool needsSave = maturityChanged || rareLabProgressionChanged || repairTransactionRecovered || mutagenicContributionRecovered
                 || refineryTransactionRecovered || constructionProgressChanged || repairQuestProgressChanged;
             if (needsSave)
             {
@@ -711,6 +714,7 @@ public sealed class ModEntry : Mod
         if (!this.stateReady || !Context.IsMainPlayer)
             return;
 
+        bool rareLabProgressionChanged = this.SynchronizeRareLabProgression(e.Location as AnimalHouse);
         bool removedBreederPair = false;
         string locationPrefix = e.Location.NameOrUniqueName + ":";
         foreach (KeyValuePair<Vector2, StardewValley.Object> removed in e.Removed)
@@ -722,13 +726,23 @@ public sealed class ModEntry : Mod
             removedBreederPair |= this.registry!.RemoveBreederPair(machineKey);
         }
 
-        if (!removedBreederPair)
+        if (!removedBreederPair && !rareLabProgressionChanged)
             return;
 
         if (this.SaveExternalStateNow())
-            this.Monitor.Log("The Slime Breeder was removed; its cycle and pending egg were discarded, and its parents are free to roam. A replacement starts with a blank selection.", LogLevel.Info);
+        {
+            if (removedBreederPair)
+                this.Monitor.Log("The Slime Breeder was removed; its cycle and pending egg were discarded, and its parents are free to roam. A replacement starts with a blank selection.", LogLevel.Info);
+            if (rareLabProgressionChanged)
+                this.Monitor.Log("Synchronized saved Rare Lab progression for the Daycare's placed incubators.", LogLevel.Info);
+        }
         else
-            this.Monitor.Log("The Slime Breeder was removed and its parents are free to roam in memory, but the cleared cycle could not yet be saved.", LogLevel.Error);
+        {
+            if (removedBreederPair)
+                this.Monitor.Log("The Slime Breeder was removed and its parents are free to roam in memory, but the cleared cycle could not yet be saved.", LogLevel.Error);
+            if (rareLabProgressionChanged)
+                this.Monitor.Log("Rare Lab progression changed in memory but could not yet be saved.", LogLevel.Error);
+        }
     }
 
     private void OnRenderedWorld(object? sender, StardewModdingAPI.Events.RenderedWorldEventArgs e)
@@ -915,6 +929,51 @@ public sealed class ModEntry : Mod
                 this.registry.GetGenomeSize(animal.myID.Value),
                 this.registry.GetGenomeIsShiny(animal.myID.Value));
         }
+    }
+
+    private bool SynchronizeRareLabProgression()
+    {
+        if (this.registry is null || !Context.IsWorldReady)
+            return false;
+
+        bool changed = false;
+        foreach (Building building in Game1.getFarm().buildings)
+        {
+            if (!BuildingContent.IsSlimeDaycare(building.buildingType.Value)
+                || building.GetIndoors() is not AnimalHouse daycare)
+                continue;
+
+            changed |= this.SynchronizeRareLabProgression(daycare, building.buildingType.Value);
+        }
+
+        return changed;
+    }
+
+    private bool SynchronizeRareLabProgression(AnimalHouse? daycare)
+    {
+        if (daycare?.ParentBuilding is not Building building
+            || !BuildingContent.IsSlimeDaycare(building.buildingType.Value))
+            return false;
+
+        return this.SynchronizeRareLabProgression(daycare, building.buildingType.Value);
+    }
+
+    private bool SynchronizeRareLabProgression(Building building)
+    {
+        if (!BuildingContent.IsSlimeDaycare(building.buildingType.Value)
+            || building.GetIndoors() is not AnimalHouse daycare)
+            return false;
+
+        return this.SynchronizeRareLabProgression(daycare, building.buildingType.Value);
+    }
+
+    private bool SynchronizeRareLabProgression(AnimalHouse daycare, string buildingType)
+    {
+        string[] incubatorMachineKeys = daycare.Objects.Pairs
+            .Where(pair => pair.Value.QualifiedItemId == RanchingItemContent.IncubatorQualifiedId)
+            .Select(pair => $"{daycare.NameOrUniqueName}:{(int)pair.Key.X},{(int)pair.Key.Y}")
+            .ToArray();
+        return this.registry!.SynchronizeRareLabs(incubatorMachineKeys, BuildingContent.GetUpgradeTier(buildingType));
     }
 
     private bool SaveExternalStateNow()
@@ -1216,6 +1275,9 @@ public sealed class ModEntry : Mod
                 this.Monitor.Log("The Slime Incubator only works inside the Slime Daycare.", LogLevel.Warn);
                 return;
             }
+
+            if (this.SynchronizeRareLabProgression(daycare) && !this.SaveExternalStateNow())
+                this.Monitor.Log("The incubator's Rare Lab progression changed in memory but could not yet be saved.", LogLevel.Error);
 
             this.Helper.Input.Suppress(e.Button);
             string key = $"{Game1.currentLocation.NameOrUniqueName}:{(int)incubatorAnchor.X},{(int)incubatorAnchor.Y}";
@@ -2477,6 +2539,12 @@ public sealed class ModEntry : Mod
             RareLabRecord[] roomRareLabs = isDaycare
                 ? loadedRegistry.RareLabs.Where(lab => lab.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal)).ToArray()
                 : Array.Empty<RareLabRecord>();
+            string[] roomIncubatorMachineKeys = isDaycare
+                ? animalHouse.Objects.Pairs
+                    .Where(pair => pair.Value.QualifiedItemId == RanchingItemContent.IncubatorQualifiedId)
+                    .Select(pair => $"{animalHouse.NameOrUniqueName}:{(int)pair.Key.X},{(int)pair.Key.Y}")
+                    .ToArray()
+                : Array.Empty<string>();
             int mutatedResidents = residents.Count(animal => loadedRegistry.GetMutationTrait(animal.myID.Value) is not null);
             string residentStatuses = string.Join(", ", Enum.GetValues<SlimeResidentStatus>()
                 .Select(status => (Label: SlimeRegistry.GetResidentStatusLabel(status), Count: residents.Count(animal => loadedRegistry.GetResidentStatus(animal.myID.Value) == status)))
@@ -2489,11 +2557,26 @@ public sealed class ModEntry : Mod
             this.Monitor.Log($"Jobs in this room: {activeCycles} breeder cycle(s), {readyEggs} ready egg(s), {activeIncubations} incubation(s), {activeMutations} Mutagenic Pool attempt(s), {activeRefineryBatches} Gel Refinery batch(es).", LogLevel.Info);
             if (isDaycare)
             {
+                this.Monitor.Log($"Slime Incubators placed in this Daycare: {roomIncubatorMachineKeys.Length}.", LogLevel.Info);
                 this.Monitor.Log($"Rare Labs saved in this Daycare: {roomRareLabs.Length}.", LogLevel.Info);
-                foreach (RareLabRecord lab in roomRareLabs)
+                var placedIncubatorKeys = new HashSet<string>(roomIncubatorMachineKeys, StringComparer.Ordinal);
+                foreach (string machineKey in roomIncubatorMachineKeys)
                 {
+                    RareLabRecord? lab = loadedRegistry.GetRareLab(machineKey);
+                    if (lab is null)
+                    {
+                        this.Monitor.Log($"Rare Lab [{machineKey}]: locked; no saved lab record; base 0%, pity 0%, contribution 0%, total 0%.", LogLevel.Info);
+                        continue;
+                    }
+
                     int totalChance = loadedRegistry.GetRareLabChancePoints(lab.MachineKey);
                     this.Monitor.Log($"Rare Lab [{lab.MachineKey}]: {(lab.IsUnlocked ? "unlocked" : "locked")}; base {lab.BaseChancePoints}%, pity {lab.PityPoints}%, contribution {lab.ContributionPoints}%, total {totalChance}%.", LogLevel.Info);
+                }
+
+                foreach (RareLabRecord lab in roomRareLabs.Where(lab => !placedIncubatorKeys.Contains(lab.MachineKey)))
+                {
+                    int totalChance = loadedRegistry.GetRareLabChancePoints(lab.MachineKey);
+                    this.Monitor.Log($"Saved Rare Lab [{lab.MachineKey}] has no incubator at its recorded tile; {(lab.IsUnlocked ? "unlocked" : "locked")}; base {lab.BaseChancePoints}%, pity {lab.PityPoints}%, contribution {lab.ContributionPoints}%, total {totalChance}%.", LogLevel.Info);
                 }
             }
 
