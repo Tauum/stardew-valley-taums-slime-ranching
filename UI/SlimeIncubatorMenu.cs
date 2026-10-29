@@ -20,6 +20,7 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
     private readonly Func<string, bool> takeHatchedSlime;
     private readonly Action requestIncubationCancellation;
     private readonly Func<string, bool> contributeSlime;
+    private readonly Func<string, bool> addGoldCatalyst;
     private readonly Texture2D incubatorTexture;
     private readonly FarmAnimal? hatchedAnimal;
     private readonly List<(int InventoryIndex, string Name, int Stack)> candidates;
@@ -27,11 +28,12 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
     private readonly int listBottom;
     private readonly Rectangle actionButton;
     private readonly Rectangle contributionButton;
+    private readonly Rectangle catalystButton;
     private int firstVisible;
     private int? selectedInventoryIndex;
     private string? statusMessage;
 
-    public SlimeIncubatorMenu(SlimeRegistry registry, string machineKey, Func<int, bool> startIncubation, Func<string, bool> takeHatchedSlime, Action requestIncubationCancellation, Func<string, bool> contributeSlime, Texture2D incubatorTexture)
+    public SlimeIncubatorMenu(SlimeRegistry registry, string machineKey, Func<int, bool> startIncubation, Func<string, bool> takeHatchedSlime, Action requestIncubationCancellation, Func<string, bool> contributeSlime, Func<string, bool> addGoldCatalyst, Texture2D incubatorTexture)
         : base(Game1.uiViewport.Width / 2 - 450, Game1.uiViewport.Height / 2 - 280, 900, 560)
     {
         this.registry = registry;
@@ -40,14 +42,16 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
         this.takeHatchedSlime = takeHatchedSlime;
         this.requestIncubationCancellation = requestIncubationCancellation;
         this.contributeSlime = contributeSlime;
+        this.addGoldCatalyst = addGoldCatalyst;
         this.incubatorTexture = incubatorTexture;
         if (registry.GetIncubation(machineKey)?.HatchAnimalId is long animalId
             && Game1.currentLocation is StardewValley.AnimalHouse animalHouse)
             this.hatchedAnimal = animalHouse.animals.Values.FirstOrDefault(animal => animal.myID.Value == animalId);
         this.listTop = this.yPositionOnScreen + 166;
         this.listBottom = this.listTop + 184;
-        this.actionButton = new Rectangle(this.xPositionOnScreen + 660, this.yPositionOnScreen + this.height - 88, 204, 58);
-        this.contributionButton = new Rectangle(this.xPositionOnScreen + 400, this.yPositionOnScreen + this.height - 88, 230, 58);
+        this.actionButton = new Rectangle(this.xPositionOnScreen + 710, this.yPositionOnScreen + this.height - 88, 148, 58);
+        this.contributionButton = new Rectangle(this.xPositionOnScreen + 400, this.yPositionOnScreen + this.height - 88, 142, 58);
+        this.catalystButton = new Rectangle(this.xPositionOnScreen + 550, this.yPositionOnScreen + this.height - 88, 145, 58);
         this.candidates = Game1.player.Items
             .Select((item, index) => (item, index))
             .Where(pair =>
@@ -100,6 +104,27 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
                 else
                     Game1.playSound("smallSelect");
             }, "Name your new slime", suggestedName);
+            return;
+        }
+
+        if (active?.HatchAnimalId is null && this.catalystButton.Contains(x, y))
+        {
+            RareLabRecord? lab = this.registry.GetRareLab(this.machineKey);
+            if (lab is not { IsUnlocked: true })
+                this.statusMessage = "The Rare Lab unlocks after the first Daycare upgrade.";
+            else if (lab.CatalystSpecies is not null)
+                this.statusMessage = "This Rare Lab already holds a Gold catalyst.";
+            else if (active is { RareOutcomeResolved: true })
+                this.statusMessage = "This egg's outcome is fixed; load a catalyst for the next egg.";
+            else if (active is not null && Game1.Date.TotalDays >= active.ReadyOnDay)
+                this.statusMessage = "This egg is ready; its Rare Lab result will resolve before hatching.";
+            else if (CountInventoryItem(RareLabRules.GoldBarQualifiedItemId) < RareLabRules.GoldBarsPerCatalyst)
+                this.statusMessage = $"Bring {RareLabRules.GoldBarsPerCatalyst} Gold Bars to load a Gold catalyst.";
+            else if (this.addGoldCatalyst(this.machineKey))
+                this.statusMessage = "Gold catalyst loaded; retained on failed roll, used on success.";
+            else
+                this.statusMessage = "Could not save the Gold catalyst; your bars were restored.";
+            Game1.playSound(this.statusMessage.StartsWith("Gold catalyst loaded", StringComparison.Ordinal) ? "coin" : "cancel");
             return;
         }
 
@@ -223,6 +248,10 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
                     this.CanContribute(active) ? new Color(39, 135, 105) : new Color(65, 73, 103),
                     this.CanContribute(active) ? new Color(118, 228, 183) : new Color(110, 122, 160));
                 DrawCentered(b, this.GetContributionButtonLabel(active), Game1.tinyFont, this.contributionButton, Color.White);
+                DrawPanel(b, this.catalystButton,
+                    this.CanAddGoldCatalyst(active) ? new Color(152, 111, 40) : new Color(75, 74, 74),
+                    this.CanAddGoldCatalyst(active) ? new Color(255, 211, 95) : new Color(135, 131, 120));
+                DrawCentered(b, this.GetGoldCatalystButtonLabel(active), Game1.tinyFont, this.catalystButton, Color.White);
                 DrawPanel(b, this.actionButton,
                     active.RareOutcomeResolved ? new Color(65, 79, 105) : new Color(146, 63, 66),
                     active.RareOutcomeResolved ? new Color(117, 131, 159) : new Color(242, 142, 137));
@@ -234,6 +263,7 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
             b.DrawString(Game1.smallFont, "SELECT EGG", new Vector2(panel.X + 24, panel.Y + 22), new Color(130, 231, 255));
             DrawCentered(b, "No eligible eggs in your inventory.", Game1.smallFont, new Rectangle(panel.X + 20, panel.Y + 100, panel.Width - 40, 100), Color.White);
             DrawIncubationControls(b, panel);
+            this.DrawGoldCatalystButton(b);
         }
         else
         {
@@ -254,6 +284,7 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
             if (this.candidates.Count > VisibleEggs)
                 b.DrawString(Game1.tinyFont, $"Scroll · {this.firstVisible + 1}-{end} / {this.candidates.Count}", new Vector2(panel.X + 178, this.listBottom + 6), Color.White);
             DrawIncubationControls(b, panel);
+            this.DrawGoldCatalystButton(b);
         }
 
         this.DrawRareLabMeter(b, panel, this.registry.GetRareLab(this.machineKey));
@@ -284,6 +315,39 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
             && CountVanillaSlimeItems() >= RareLabRules.SlimeUnitsPerContributionPoint;
     }
 
+    private bool CanAddGoldCatalyst(IncubationRecord? active)
+    {
+        RareLabRecord? lab = this.registry.GetRareLab(this.machineKey);
+        return lab is { IsUnlocked: true, CatalystSpecies: null }
+            && (active is null || (active.HatchAnimalId is null && !active.RareOutcomeResolved && Game1.Date.TotalDays < active.ReadyOnDay))
+            && CountInventoryItem(RareLabRules.GoldBarQualifiedItemId) >= RareLabRules.GoldBarsPerCatalyst;
+    }
+
+    private string GetGoldCatalystButtonLabel(IncubationRecord? active)
+    {
+        RareLabRecord? lab = this.registry.GetRareLab(this.machineKey);
+        if (lab is not { IsUnlocked: true })
+            return "RARE LAB LOCKED";
+        if (lab.CatalystSpecies is not null)
+            return "GOLD HELD";
+        if (active is { RareOutcomeResolved: true })
+            return "OUTCOME FIXED";
+        if (active is not null && Game1.Date.TotalDays >= active.ReadyOnDay)
+            return "INCUBATION DONE";
+        if (CountInventoryItem(RareLabRules.GoldBarQualifiedItemId) < RareLabRules.GoldBarsPerCatalyst)
+            return $"NEED {RareLabRules.GoldBarsPerCatalyst} GOLD";
+        return $"ADD {RareLabRules.GoldBarsPerCatalyst} GOLD";
+    }
+
+    private void DrawGoldCatalystButton(SpriteBatch b)
+    {
+        IncubationRecord? active = this.registry.GetIncubation(this.machineKey);
+        DrawPanel(b, this.catalystButton,
+            this.CanAddGoldCatalyst(active) ? new Color(152, 111, 40) : new Color(75, 74, 74),
+            this.CanAddGoldCatalyst(active) ? new Color(255, 211, 95) : new Color(135, 131, 120));
+        DrawCentered(b, this.GetGoldCatalystButtonLabel(active), Game1.tinyFont, this.catalystButton, Color.White);
+    }
+
     private string GetContributionButtonLabel(IncubationRecord active)
     {
         RareLabRecord? lab = this.registry.GetRareLab(this.machineKey);
@@ -302,7 +366,7 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
 
     private void DrawRareLabMeter(SpriteBatch b, Rectangle panel, RareLabRecord? lab)
     {
-        Rectangle bounds = new(panel.X + 18, panel.Y + 316, panel.Width - 36, 54);
+        Rectangle bounds = new(panel.X + 18, panel.Y + 316, panel.Width - 36, 70);
         DrawPanel(b, bounds, new Color(55, 72, 134), new Color(101, 138, 205));
         bool unlocked = lab is { IsUnlocked: true };
         int total = RareLabRules.GetChancePoints(lab);
@@ -332,6 +396,12 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
             ? $"Base {lab.BaseChancePoints}%  ·  Pity +{lab.PityPoints}%  ·  You +{lab.ContributionPoints}%"
             : "Unlocks after the first Daycare upgrade.";
         b.DrawString(Game1.tinyFont, detail, new Vector2(bounds.X + 12, bounds.Y + 34), Color.White);
+        string catalystDetail = lab is not { IsUnlocked: true }
+            ? "Catalyst: unlocks after the first Daycare upgrade"
+            : lab.CatalystSpecies is not null
+                ? $"Catalyst: {lab.CatalystSpecies} (kept if roll fails)"
+                : $"Catalyst: none · {RareLabRules.GoldBarsPerCatalyst} Gold Bars loads Gold";
+        b.DrawString(Game1.tinyFont, catalystDetail, new Vector2(bounds.X + 12, bounds.Y + 50), new Color(255, 223, 158));
     }
 
     private static void DrawChanceSegment(SpriteBatch b, Rectangle bar, int startPoints, int points, Color color)
@@ -351,6 +421,10 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
 
     private static int CountVanillaSlimeItems() => Game1.player.Items
         .Where(item => item is not null && item.QualifiedItemId == "(O)766")
+        .Sum(item => item!.Stack);
+
+    private static int CountInventoryItem(string qualifiedItemId) => Game1.player.Items
+        .Where(item => item is not null && item.QualifiedItemId == qualifiedItemId)
         .Sum(item => item!.Stack);
 
     private static void DrawPanel(SpriteBatch b, Rectangle rect, Color fill, Color border)

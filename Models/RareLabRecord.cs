@@ -8,4 +8,5 @@ public sealed class RareLabRecord
     public int BaseChancePoints { get; set; }
     public int PityPoints { get; set; }
     public int ContributionPoints { get; set; }
+    public string? CatalystSpecies { get; set; }
 }

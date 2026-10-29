@@ -17,6 +17,7 @@ public sealed class ModEntry : Mod
     private const string IncubationCancellationReceiptPrefix = "Taum.SlimeRanching/IncubationCancellation/";
     private const string MutagenicContributionReceiptPrefix = "Taum.SlimeRanching/MutagenicContribution/";
     private const string RareLabContributionReceiptPrefix = "Taum.SlimeRanching/RareLabContribution/";
+    private const string RareLabCatalystReceiptPrefix = "Taum.SlimeRanching/RareLabCatalyst/";
     private const string RefineryTransactionReceiptPrefix = "Taum.SlimeRanching/RefineryTransaction/";
 
     private SlimeRegistry? registry;
@@ -29,6 +30,7 @@ public sealed class ModEntry : Mod
     private readonly List<(long SlimeId, bool Success, double Chance)> pendingMutagenicNotifications = new();
     private readonly HashSet<string> mutagenicContributionReceiptsToClear = new(StringComparer.Ordinal);
     private readonly HashSet<string> rareLabContributionReceiptsToClear = new(StringComparer.Ordinal);
+    private readonly HashSet<string> rareLabCatalystReceiptsToClear = new(StringComparer.Ordinal);
     private readonly HashSet<string> refineryTransactionReceiptsToClear = new(StringComparer.Ordinal);
 
     public override void Entry(IModHelper helper)
@@ -109,6 +111,7 @@ public sealed class ModEntry : Mod
             bool incubationCancellationRecovered = this.ReconcileIncubationCancellations();
             bool mutagenicContributionRecovered = this.ReconcileMutagenicContributionTransactions();
             bool rareLabContributionRecovered = this.ReconcileRareLabContributionTransactions();
+            bool rareLabCatalystRecovered = this.ReconcileRareLabCatalystTransactions();
             bool refineryTransactionRecovered = this.ReconcileRefineryTransactions();
             bool constructionProgressChanged = this.TryRecordCompletedDaycareConstruction();
             bool repairQuestProgressChanged = this.TryStartMaruRepairQuest();
@@ -117,7 +120,7 @@ public sealed class ModEntry : Mod
                 this.Monitor.Log("Imported the previous mod-folder slime registry into this save. The original legacy file was left untouched.", LogLevel.Info);
             if (this.stateStore.MigratedSaveData)
                 this.Monitor.Log("Migrated the saved Ranch Slime data to the current schema.", LogLevel.Info);
-            if (needsPersistenceMigration || registeredRanchSlimes > 0 || recoveredHatches > 0 || detachedAnimals > 0 || cancelledCycles > 0 || maturityChanged || rareLabProgressionChanged || repairTransactionRecovered || incubationCancellationRecovered || mutagenicContributionRecovered || rareLabContributionRecovered || refineryTransactionRecovered || constructionProgressChanged || repairQuestProgressChanged)
+            if (needsPersistenceMigration || registeredRanchSlimes > 0 || recoveredHatches > 0 || detachedAnimals > 0 || cancelledCycles > 0 || maturityChanged || rareLabProgressionChanged || repairTransactionRecovered || incubationCancellationRecovered || mutagenicContributionRecovered || rareLabContributionRecovered || rareLabCatalystRecovered || refineryTransactionRecovered || constructionProgressChanged || repairQuestProgressChanged)
             {
                 if (!this.SaveExternalStateNow())
                     this.Monitor.Log("Imported or reconciled Ranch Slime state remains in memory but could not yet be written to the current save.", LogLevel.Error);
@@ -127,6 +130,7 @@ public sealed class ModEntry : Mod
                         this.InvalidateEggObjectData();
                     this.ClearFinalizedMutagenicContributionReceipts();
                     this.ClearFinalizedRareLabContributionReceipts();
+                    this.ClearFinalizedRareLabCatalystReceipts();
                     this.ClearFinalizedRefineryTransactionReceipts();
                 }
             }
@@ -224,6 +228,7 @@ public sealed class ModEntry : Mod
         bool repairTransactionRecovered = this.ReconcileMaruRepairDelivery();
         bool mutagenicContributionRecovered = this.ReconcileMutagenicContributionTransactions();
         bool rareLabContributionRecovered = this.ReconcileRareLabContributionTransactions();
+        bool rareLabCatalystRecovered = this.ReconcileRareLabCatalystTransactions();
         bool refineryTransactionRecovered = this.ReconcileRefineryTransactions();
         bool rareLabProgressionChanged = this.SynchronizeRareLabProgression();
         bool constructionProgressChanged = this.TryRecordCompletedDaycareConstruction();
@@ -256,7 +261,7 @@ public sealed class ModEntry : Mod
 
         if (readyToNotify.Count == 0 && refineryReady.Count == 0 && this.pendingMutagenicNotifications.Count == 0)
         {
-            bool needsSave = maturityChanged || rareLabProgressionChanged || repairTransactionRecovered || mutagenicContributionRecovered || rareLabContributionRecovered
+            bool needsSave = maturityChanged || rareLabProgressionChanged || repairTransactionRecovered || mutagenicContributionRecovered || rareLabContributionRecovered || rareLabCatalystRecovered
                 || refineryTransactionRecovered || constructionProgressChanged || repairQuestProgressChanged;
             if (needsSave)
             {
@@ -269,6 +274,7 @@ public sealed class ModEntry : Mod
                     if (mutagenicContributionRecovered)
                         this.ClearFinalizedMutagenicContributionReceipts();
                     this.ClearFinalizedRareLabContributionReceipts();
+                    this.ClearFinalizedRareLabCatalystReceipts();
                     this.ClearFinalizedRefineryTransactionReceipts();
                 }
             }
@@ -291,6 +297,7 @@ public sealed class ModEntry : Mod
         if (mutagenicContributionRecovered)
             this.ClearFinalizedMutagenicContributionReceipts();
         this.ClearFinalizedRareLabContributionReceipts();
+        this.ClearFinalizedRareLabCatalystReceipts();
         this.ClearFinalizedRefineryTransactionReceipts();
 
         foreach (var ready in readyToNotify)
@@ -534,6 +541,36 @@ public sealed class ModEntry : Mod
         return changed;
     }
 
+    private bool ReconcileRareLabCatalystTransactions()
+    {
+        if (this.registry is null)
+            return false;
+
+        bool changed = false;
+        foreach (RareLabCatalystTransactionRecord pending in this.registry.PendingRareLabCatalystTransactions
+                     .OrderByDescending(transaction => transaction.Sequence).ToArray())
+        {
+            string receiptKey = RareLabCatalystReceiptPrefix + pending.Id;
+            if (Game1.player.modData.ContainsKey(receiptKey))
+            {
+                changed |= this.registry.FinalizeRareLabCatalystTransaction(pending.Id);
+                this.rareLabCatalystReceiptsToClear.Add(receiptKey);
+            }
+            else
+                changed |= this.registry.RollbackRareLabCatalystTransaction(pending.Id);
+        }
+
+        foreach (string receiptKey in Game1.player.modData.Keys
+                     .Where(key => key.StartsWith(RareLabCatalystReceiptPrefix, StringComparison.Ordinal))
+                     .ToArray())
+        {
+            this.rareLabCatalystReceiptsToClear.Add(receiptKey);
+            changed = true;
+        }
+
+        return changed;
+    }
+
     private bool ReconcileRefineryTransactions()
     {
         if (this.registry is null)
@@ -601,6 +638,13 @@ public sealed class ModEntry : Mod
         this.rareLabContributionReceiptsToClear.Clear();
     }
 
+    private void ClearFinalizedRareLabCatalystReceipts()
+    {
+        foreach (string receiptKey in this.rareLabCatalystReceiptsToClear)
+            Game1.player.modData.Remove(receiptKey);
+        this.rareLabCatalystReceiptsToClear.Clear();
+    }
+
     private bool ContributeMutagenicPoolSlime(string machineKey)
     {
         if (!this.stateReady || !Context.IsMainPlayer || Context.IsMultiplayer || this.registry is null
@@ -666,6 +710,41 @@ public sealed class ModEntry : Mod
         RestoreInventorySnapshot(inventorySnapshot);
         if (!this.SaveExternalStateNow())
             this.Monitor.Log("Could not persist the rollback after a Rare Lab contribution save failure; the prior chance and inventory were restored in memory and will be reconciled on reload.", LogLevel.Error);
+        return false;
+    }
+
+    private bool AddRareLabGoldCatalyst(string machineKey)
+    {
+        if (!this.stateReady || !Context.IsMainPlayer || Context.IsMultiplayer || this.registry is null
+            || CountInventoryItem(RareLabRules.GoldBarQualifiedItemId) < RareLabRules.GoldBarsPerCatalyst)
+            return false;
+
+        string? transactionId = this.registry.BeginRareLabCatalystTransaction(
+            machineKey, RareLabRules.GoldCatalystSpecies, Game1.Date.TotalDays);
+        if (transactionId is null)
+            return false;
+        if (!this.SaveExternalStateNow())
+        {
+            this.registry.FinalizeRareLabCatalystTransaction(transactionId);
+            return false;
+        }
+
+        (Item? Item, int Stack)[] inventorySnapshot = Game1.player.Items
+            .Select(item => (Item: (Item?)item, Stack: item?.Stack ?? 0))
+            .ToArray();
+        ConsumeInventoryItems(RareLabRules.GoldBarQualifiedItemId, RareLabRules.GoldBarsPerCatalyst);
+        bool applied = this.registry.ApplyRareLabCatalystTransaction(transactionId);
+        string receiptKey = RareLabCatalystReceiptPrefix + transactionId;
+        if (applied)
+            Game1.player.modData[receiptKey] = "1";
+        if (applied && this.SaveExternalStateNow())
+            return true;
+
+        this.registry.RollbackRareLabCatalystTransaction(transactionId);
+        Game1.player.modData.Remove(receiptKey);
+        RestoreInventorySnapshot(inventorySnapshot);
+        if (!this.SaveExternalStateNow())
+            this.Monitor.Log("Could not persist the rollback after a Rare Lab catalyst save failure; the catalyst and inventory were restored in memory and will be reconciled on reload.", LogLevel.Error);
         return false;
     }
 
@@ -758,6 +837,7 @@ public sealed class ModEntry : Mod
         this.pendingMutagenicNotifications.Clear();
         this.refineryTransactionReceiptsToClear.Clear();
         this.rareLabContributionReceiptsToClear.Clear();
+        this.rareLabCatalystReceiptsToClear.Clear();
         this.stateReady = false;
         this.registry = new SlimeRegistry(this.Monitor);
         this.stateStore = new ModStateStore(this.Helper.Data, this.Helper.DirectoryPath);
@@ -1227,7 +1307,7 @@ public sealed class ModEntry : Mod
                 bool rareOffspringProduced = lab is { IsUnlocked: true }
                     && Game1.random.Next(RareLabRules.MaximumChancePoints) < chancePoints;
                 string? rareSpecies = rareOffspringProduced
-                    ? RareLabRules.RareOffspringSpecies[Game1.random.Next(RareLabRules.RareOffspringSpecies.Count)]
+                    ? lab?.CatalystSpecies ?? RareLabRules.RareOffspringSpecies[Game1.random.Next(RareLabRules.RareOffspringSpecies.Count)]
                     : null;
 
                 if (!this.registry.ResolveIncubationOutcome(incubation.MachineKey, rareOffspringProduced, rareSpecies,
@@ -1419,6 +1499,7 @@ public sealed class ModEntry : Mod
                 },
                 () => this.RequestIncubationCancellation(key),
                 this.ContributeRareLabSlime,
+                this.AddRareLabGoldCatalyst,
                 IncubatorPlacementGeometry.Texture);
             return;
         }
@@ -2760,13 +2841,13 @@ public sealed class ModEntry : Mod
                     }
 
                     int totalChance = loadedRegistry.GetRareLabChancePoints(lab.MachineKey);
-                    this.Monitor.Log($"{location} Rare Lab [{lab.MachineKey}]: {(lab.IsUnlocked ? "unlocked" : "locked")}; base {lab.BaseChancePoints}%, pity {lab.PityPoints}%, contribution {lab.ContributionPoints}%, total {totalChance}%.", LogLevel.Info);
+                    this.Monitor.Log($"{location} Rare Lab [{lab.MachineKey}]: {(lab.IsUnlocked ? "unlocked" : "locked")}; base {lab.BaseChancePoints}%, pity {lab.PityPoints}%, contribution {lab.ContributionPoints}%, total {totalChance}%; catalyst {lab.CatalystSpecies ?? "none"}.", LogLevel.Info);
                 }
 
                 foreach (RareLabRecord lab in roomRareLabs.Where(lab => !placedIncubatorKeys.Contains(lab.MachineKey)))
                 {
                     int totalChance = loadedRegistry.GetRareLabChancePoints(lab.MachineKey);
-                    this.Monitor.Log($"Saved Rare Lab [{lab.MachineKey}] has no incubator at its recorded tile; {(lab.IsUnlocked ? "unlocked" : "locked")}; base {lab.BaseChancePoints}%, pity {lab.PityPoints}%, contribution {lab.ContributionPoints}%, total {totalChance}%.", LogLevel.Info);
+                    this.Monitor.Log($"Saved Rare Lab [{lab.MachineKey}] has no incubator at its recorded tile; {(lab.IsUnlocked ? "unlocked" : "locked")}; base {lab.BaseChancePoints}%, pity {lab.PityPoints}%, contribution {lab.ContributionPoints}%, total {totalChance}%; catalyst {lab.CatalystSpecies ?? "none"}.", LogLevel.Info);
                 }
             }
 
