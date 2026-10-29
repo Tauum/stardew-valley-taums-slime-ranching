@@ -250,6 +250,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         string speciesName = genome.SecondarySpecies is null
             ? genome.PrimarySpecies
             : $"{genome.PrimarySpecies} / {genome.SecondarySpecies}";
+        int ageDays = selectedRecord.AgeClockInitialized ? selectedRecord.AgeDays : selectedAnimal.age.Value;
         string[] details =
         {
             $"FarmAnimal ID: {selectedAnimal.myID.Value}",
@@ -259,7 +260,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             $"Color {genome.VisualColor} | size {genome.Size} | rarity {genome.RarityTier} | shiny {genome.IsShiny}",
             $"Mutation: {genome.MutationTrait ?? "none"}",
             $"Favorite food: {FoodLikeCatalog.GetDisplayName(genome.LikedFoodItemId)}",
-            $"Age: {selectedRecord.AgeDays}/{FarmAnimalContent.RanchSlimeDaysToMature} days",
+            $"Age: {ageDays}/{FarmAnimalContent.RanchSlimeDaysToMature} days",
             $"Friendship {selectedAnimal.friendshipTowardFarmer.Value}/1000 | happiness {selectedAnimal.happiness.Value}/255 | fullness {selectedAnimal.fullness.Value}/255",
             $"Assignment: {SlimeRegistry.GetResidentStatusLabel(this.registry.GetResidentStatus(selectedAnimal.myID.Value))}",
             $"Current activity: {this.getActiveActivitySummary(selectedAnimal.myID.Value) ?? "none"}"
