@@ -21,8 +21,8 @@ internal sealed class DaycareManagementMenu : IClickableMenu
     {
         ["Fighter"] = "May occasionally increase the chance of double monster drops.",
         ["Revealer"] = "May find artifact spots or other supported hidden clues.",
-        ["Irrigator"] = "May occasionally double fishing trash or treasure-chest catches; it does not improve fish quality or irrigate crops.",
-        ["Collector"] = "The current genome label is Collector. Green's recorded direction is crop care; its final role and name are still being reconciled.",
+        ["Irrigator"] = "Blue's saved genome label is Irrigator. Its approved direction is an occasional double of fishing trash or treasure-chest catches only; it does not improve fish quality or irrigate crops.",
+        ["Collector"] = "Green's saved genome label is Collector. Its approved direction is to randomly fertilize eligible existing crops and remove weeds. Role/name, fertilizer source/type, eligible states, timing, chance, and limits remain under review.",
         ["Nurturer"] = "May occasionally double furnace output and cooked-food output.",
         ["Prospector"] = "May occasionally double ore from mining.",
         ["Healer"] = "May very slowly restore player health and energy."
