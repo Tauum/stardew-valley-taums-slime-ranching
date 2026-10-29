@@ -64,7 +64,7 @@ Reply with any collision, sizing, or warp issues and a screenshot if the room di
 
 1. On a disposable single-player save with a completed Daycare, run `slime_ranching_spawn_ranch_slime <exact save folder name> 7` twice and note both animal IDs. Run `slime_ranching_give_breeder <exact save folder name>`, place the Breeder in the Daycare, and open it.
 2. Open the breeder before selecting a parent and confirm the compatibility label says **CHOOSE TWO PARENTS**. Check that each base resident row shows its base species and ability, and each hybrid row shows both contributing species, **Hybrid**, and both abilities. Select the two mature Ranch Slimes. Confirm both appear in the chamber, the label says **PAIR ELIGIBLE**, and the basic cycle displays **18 Days**. For an unbreedable rare slime, confirm its row says **Cannot breed** with the rare species named and selection is refused.
-3. Start breeding. Confirm the compatibility label changes to **PARENTS RESERVED**, the UI reports 18 days remaining, and the parent reservations persist after closing and reopening the menu.
+3. Start breeding. Confirm the compatibility label changes to **PARENTS RESERVED**, the status message says **Breeding cycle started: 18 days**, the UI reports 18 days remaining, and the parent reservations persist after closing and reopening the menu.
 4. Sleep five nights. Confirm 13 days remain. Save, return to title, reload, and confirm the same ready date and remaining time are shown.
 5. Before the ready day, cancel the cycle. Confirm no egg is created, both parents are selectable again, and starting a new cycle sets a new 18-day ready date.
 6. Let the replacement cycle reach its ready day. Confirm the compatibility label says **EGG READY**, the egg-ready notice appears, both parents are released into the Daycare, the egg remains collectible once, and the saved genome remains available after reload.
@@ -97,7 +97,7 @@ Reply with any collision, sizing, or warp issues and a screenshot if the room di
 
 1. On a disposable save with the basic Daycare, run `slime_ranching_give_breeder <exact save folder name>` and `slime_ranching_spawn_ranch_slime <exact save folder name> 7` twice. Place the Breeder inside the Daycare, select the two mature Ranch Slimes, and confirm the new-cycle preview says **18 Days**.
 2. Start the cycle and run `slime_ranching_inspect` while inside the Daycare. Confirm the breeder record's ready day is 18 days after its saved start day.
-3. On a separate copy with Daycare upgrade 1 complete, give and place a new Breeder, then select two mature Ranch Slimes. Confirm the new-cycle preview says **14 Days**, start it, and verify the ready day is 14 days after the start day.
+3. On a separate copy with Daycare upgrade 1 complete, give and place a new Breeder, then select two mature Ranch Slimes. Confirm the new-cycle preview says **14 Days**, start it, and confirm the status message says **Breeding cycle started: 14 days**. Verify the ready day is 14 days after the start day.
 4. Repeat the new-cycle preview at upgrade tiers 2 and 3; each should remain **14 Days**. On a separate copy, start an 18-day cycle before upgrading and, if its breeder record survives the building upgrade, confirm the saved ready day is unchanged afterward.
 5. Save/reload the tiered copies and confirm the active cycle's ready day remains unchanged. Keep Feature 8 acceptance pending until capacity, construction costs, furniture/facility progression, and all upgrade behavior pass their in-game checks.
 

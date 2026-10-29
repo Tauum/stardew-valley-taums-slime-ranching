@@ -134,7 +134,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
                         if (this.TryStartBreedingCycle())
                         {
                             this.pairReserved = true;
-                            this.statusMessage = "Two-day cycle started; parents are reserved.";
+                            this.statusMessage = $"Breeding cycle started: {this.cycleDurationDays} days. Parents are reserved.";
                         }
                         else
                         {
@@ -179,7 +179,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
                 {
                     if (this.TryStartBreedingCycle())
                     {
-                        this.statusMessage = "Two-day breeding cycle started.";
+                        this.statusMessage = $"Breeding cycle started: {this.cycleDurationDays} days.";
                     }
                     else
                         this.statusMessage = "Reserve two parents first.";
