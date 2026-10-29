@@ -3440,11 +3440,29 @@ public sealed class ModEntry : Mod
 
             foreach (BreedingPairRecord pair in roomBreedingPairs)
             {
-                string status = pair.OutputEggItemId is not null
-                    ? $"egg ready ({pair.OutputEggItemId})"
-                    : pair.CycleReadyOnDay > Game1.Date.TotalDays
+                string status;
+                if (pair.OutputEggItemId is string outputEggId)
+                {
+                    if (loadedRegistry.TryGetEgg(outputEggId, out SlimeEggRecord outputEgg))
+                    {
+                        SlimeGenome genome = outputEgg.Genome;
+                        string species = genome.SecondarySpecies is null
+                            ? genome.PrimarySpecies
+                            : $"{genome.PrimarySpecies} / {genome.SecondarySpecies}";
+                        status = $"egg ready; egg ID {outputEggId}; genome {genome.Id:N}; {species}; color {genome.VisualColor}; size {genome.Size}; rarity {genome.RarityTier}";
+                    }
+                    else
+                    {
+                        status = $"egg ready; egg ID {outputEggId}; genome record missing";
+                    }
+                }
+                else
+                {
+                    status = pair.CycleReadyOnDay > Game1.Date.TotalDays
                         ? $"cycle ready day {pair.CycleReadyOnDay}"
                         : pair.CycleReadyOnDay > 0 ? "cycle ready to collect" : "parents reserved; no active cycle";
+                }
+
                 this.Monitor.Log($"Breeder [{pair.MachineKey}]: parents {pair.ParentAId}/{pair.ParentBId}; {status}.", LogLevel.Info);
             }
 
