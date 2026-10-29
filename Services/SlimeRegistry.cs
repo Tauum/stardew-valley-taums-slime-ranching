@@ -27,6 +27,7 @@ internal sealed class SlimeRegistry
     private readonly Dictionary<string, SlimeEggRecord> eggs = new(StringComparer.Ordinal);
     private readonly Dictionary<string, IncubationRecord> incubations = new(StringComparer.Ordinal);
     private readonly Dictionary<string, RareLabRecord> rareLabs = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, RareLabContributionRecord> pendingRareLabContributions = new(StringComparer.Ordinal);
     private readonly Dictionary<string, MutagenicAttemptRecord> mutagenicAttempts = new(StringComparer.Ordinal);
     private readonly Dictionary<string, MutagenicContributionRecord> pendingMutagenicContributions = new(StringComparer.Ordinal);
     private readonly Dictionary<string, RefineryJobRecord> refineryJobs = new(StringComparer.Ordinal);
@@ -37,6 +38,7 @@ internal sealed class SlimeRegistry
     private long? activeCompanionFarmAnimalId;
     private SanctuaryQuestRecord sanctuaryQuest = new();
     private long nextMutagenicContributionSequence = 1;
+    private long nextRareLabContributionSequence = 1;
     private long nextRefineryTransactionSequence = 1;
 
     public SlimeRegistry(IMonitor monitor) => this.monitor = monitor;
@@ -45,6 +47,7 @@ internal sealed class SlimeRegistry
     public IReadOnlyCollection<SlimeEggRecord> Eggs => this.eggs.Values;
     public IReadOnlyCollection<IncubationRecord> Incubations => this.incubations.Values;
     public IReadOnlyCollection<RareLabRecord> RareLabs => this.rareLabs.Values;
+    public IReadOnlyCollection<RareLabContributionRecord> PendingRareLabContributions => this.pendingRareLabContributions.Values;
     public IReadOnlyCollection<IncubationRecord> PendingIncubationCancellations => this.pendingIncubationCancellations.Values;
     public IReadOnlyCollection<BreedingPairRecord> BreedingPairs => this.breedingPairs.Values;
     public IReadOnlyCollection<MutagenicAttemptRecord> MutagenicAttempts => this.mutagenicAttempts.Values;
@@ -253,6 +256,57 @@ internal sealed class SlimeRegistry
             && this.rareLabs.TryGetValue(machineKey, out RareLabRecord? lab)
             && RareLabRules.AddContribution(lab);
     }
+
+    public string? BeginRareLabContribution(string machineKey, int currentDay)
+    {
+        if (string.IsNullOrWhiteSpace(machineKey)
+            || !this.incubations.TryGetValue(machineKey, out IncubationRecord? incubation)
+            || incubation.HatchAnimalId is not null || currentDay >= incubation.ReadyOnDay
+            || !this.rareLabs.TryGetValue(machineKey, out RareLabRecord? lab)
+            || !lab.IsUnlocked || RareLabRules.GetChancePoints(lab) >= RareLabRules.MaximumChancePoints)
+            return null;
+
+        string transactionId = Guid.NewGuid().ToString("N");
+        this.pendingRareLabContributions[transactionId] = new RareLabContributionRecord
+        {
+            Id = transactionId,
+            MachineKey = machineKey,
+            EggItemId = incubation.EggItemId,
+            Sequence = this.nextRareLabContributionSequence,
+            PreviousContributionPoints = lab.ContributionPoints
+        };
+        if (this.nextRareLabContributionSequence < long.MaxValue)
+            this.nextRareLabContributionSequence++;
+        return transactionId;
+    }
+
+    public bool ApplyRareLabContribution(string transactionId)
+    {
+        if (!this.pendingRareLabContributions.TryGetValue(transactionId, out RareLabContributionRecord? transaction)
+            || transaction.ContributionApplied
+            || !this.incubations.TryGetValue(transaction.MachineKey, out IncubationRecord? incubation)
+            || incubation.EggItemId != transaction.EggItemId || incubation.HatchAnimalId is not null
+            || !this.rareLabs.TryGetValue(transaction.MachineKey, out RareLabRecord? lab)
+            || !RareLabRules.AddContribution(lab))
+            return false;
+
+        transaction.ContributionApplied = true;
+        return true;
+    }
+
+    public bool RollbackRareLabContribution(string transactionId)
+    {
+        if (!this.pendingRareLabContributions.Remove(transactionId, out RareLabContributionRecord? transaction))
+            return false;
+
+        if (transaction.ContributionApplied
+            && this.rareLabs.TryGetValue(transaction.MachineKey, out RareLabRecord? lab))
+            lab.ContributionPoints = transaction.PreviousContributionPoints;
+        return true;
+    }
+
+    public bool FinalizeRareLabContribution(string transactionId) =>
+        this.pendingRareLabContributions.Remove(transactionId);
 
     public bool ResolveRareLabOutcome(string machineKey, bool rareOffspringProduced)
     {
@@ -1167,9 +1221,11 @@ internal sealed class SlimeRegistry
         this.eggs.Clear();
         this.incubations.Clear();
         this.rareLabs.Clear();
+        this.pendingRareLabContributions.Clear();
         this.mutagenicAttempts.Clear();
         this.pendingMutagenicContributions.Clear();
         this.nextMutagenicContributionSequence = 1;
+        this.nextRareLabContributionSequence = 1;
         this.refineryJobs.Clear();
         this.pendingRefineryTransactions.Clear();
         this.nextRefineryTransactionSequence = 1;
@@ -1333,6 +1389,28 @@ internal sealed class SlimeRegistry
             this.rareLabs.Add(lab.MachineKey, lab);
         }
 
+        foreach (RareLabContributionRecord transaction in data?.PendingRareLabContributions ?? Enumerable.Empty<RareLabContributionRecord>())
+        {
+            string eggItemId = string.IsNullOrWhiteSpace(transaction?.EggItemId)
+                ? string.Empty
+                : NormalizeEggToken(transaction.EggItemId);
+            if (transaction is null || !Guid.TryParseExact(transaction.Id, "N", out _)
+                || string.IsNullOrWhiteSpace(transaction.MachineKey)
+                || !Guid.TryParseExact(eggItemId, "N", out _)
+                || transaction.Sequence < 0
+                || transaction.PreviousContributionPoints is < 0 or > RareLabRules.MaximumChancePoints
+                || !this.rareLabs.ContainsKey(transaction.MachineKey))
+            {
+                this.monitor.Log("Skipped a malformed Rare Lab contribution transaction.", LogLevel.Warn);
+                continue;
+            }
+
+            transaction.EggItemId = eggItemId;
+            this.pendingRareLabContributions.TryAdd(transaction.Id, transaction);
+            if (transaction.Sequence >= this.nextRareLabContributionSequence && transaction.Sequence < long.MaxValue)
+                this.nextRareLabContributionSequence = transaction.Sequence + 1;
+        }
+
         foreach (MutagenicAttemptRecord attempt in data?.MutagenicAttempts ?? Enumerable.Empty<MutagenicAttemptRecord>())
         {
             if (attempt is null || string.IsNullOrWhiteSpace(attempt.MachineKey)
@@ -1386,6 +1464,7 @@ internal sealed class SlimeRegistry
         BreedingPairs = this.breedingPairs.Values.OrderBy(pair => pair.MachineKey, StringComparer.Ordinal).ToList(),
         Incubations = this.incubations.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList(),
         RareLabs = this.rareLabs.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList(),
+        PendingRareLabContributions = this.pendingRareLabContributions.Values.OrderBy(record => record.Sequence).ToList(),
         MutagenicAttempts = this.mutagenicAttempts.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList(),
         PendingMutagenicContributions = this.pendingMutagenicContributions.Values.OrderBy(record => record.Sequence).ToList(),
         RefineryJobs = this.refineryJobs.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList(),

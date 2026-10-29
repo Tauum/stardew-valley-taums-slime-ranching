@@ -19,17 +19,19 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
     private readonly Func<int, bool> startIncubation;
     private readonly Func<string, bool> takeHatchedSlime;
     private readonly Action requestIncubationCancellation;
+    private readonly Func<string, bool> contributeSlime;
     private readonly Texture2D incubatorTexture;
     private readonly FarmAnimal? hatchedAnimal;
     private readonly List<(int InventoryIndex, string Name, int Stack)> candidates;
     private readonly int listTop;
     private readonly int listBottom;
     private readonly Rectangle actionButton;
+    private readonly Rectangle contributionButton;
     private int firstVisible;
     private int? selectedInventoryIndex;
     private string? statusMessage;
 
-    public SlimeIncubatorMenu(SlimeRegistry registry, string machineKey, Func<int, bool> startIncubation, Func<string, bool> takeHatchedSlime, Action requestIncubationCancellation, Texture2D incubatorTexture)
+    public SlimeIncubatorMenu(SlimeRegistry registry, string machineKey, Func<int, bool> startIncubation, Func<string, bool> takeHatchedSlime, Action requestIncubationCancellation, Func<string, bool> contributeSlime, Texture2D incubatorTexture)
         : base(Game1.uiViewport.Width / 2 - 450, Game1.uiViewport.Height / 2 - 280, 900, 560)
     {
         this.registry = registry;
@@ -37,6 +39,7 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
         this.startIncubation = startIncubation;
         this.takeHatchedSlime = takeHatchedSlime;
         this.requestIncubationCancellation = requestIncubationCancellation;
+        this.contributeSlime = contributeSlime;
         this.incubatorTexture = incubatorTexture;
         if (registry.GetIncubation(machineKey)?.HatchAnimalId is long animalId
             && Game1.currentLocation is StardewValley.AnimalHouse animalHouse)
@@ -44,6 +47,7 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
         this.listTop = this.yPositionOnScreen + 166;
         this.listBottom = this.listTop + 184;
         this.actionButton = new Rectangle(this.xPositionOnScreen + 660, this.yPositionOnScreen + this.height - 88, 204, 58);
+        this.contributionButton = new Rectangle(this.xPositionOnScreen + 400, this.yPositionOnScreen + this.height - 88, 230, 58);
         this.candidates = Game1.player.Items
             .Select((item, index) => (item, index))
             .Where(pair =>
@@ -96,6 +100,25 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
                 else
                     Game1.playSound("smallSelect");
             }, "Name your new slime", suggestedName);
+            return;
+        }
+
+        if (active is { HatchAnimalId: null } && this.contributionButton.Contains(x, y))
+        {
+            RareLabRecord? lab = this.registry.GetRareLab(this.machineKey);
+            if (lab is not { IsUnlocked: true })
+                this.statusMessage = "The Rare Lab unlocks after the first Daycare upgrade.";
+            else if (Game1.Date.TotalDays >= active.ReadyOnDay)
+                this.statusMessage = "This egg's incubation is complete; no more Slime can be contributed.";
+            else if (this.registry.GetRareLabChancePoints(this.machineKey) >= RareLabRules.MaximumChancePoints)
+                this.statusMessage = "This Rare Lab chance is already at 100%.";
+            else if (CountVanillaSlimeItems() < RareLabRules.SlimeUnitsPerContributionPoint)
+                this.statusMessage = $"Bring {RareLabRules.SlimeUnitsPerContributionPoint} vanilla Slime to contribute.";
+            else if (this.contributeSlime(this.machineKey))
+                this.statusMessage = $"Contributed {RareLabRules.SlimeUnitsPerContributionPoint} Slime. Rare Lab chance is now {this.registry.GetRareLabChancePoints(this.machineKey)}%.";
+            else
+                this.statusMessage = "Could not save the contribution; your Slime was restored.";
+            Game1.playSound(this.statusMessage.StartsWith("Contributed", StringComparison.Ordinal) ? "coin" : "cancel");
             return;
         }
 
@@ -185,9 +208,10 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
                 DrawCentered(b, daysLeft > 0 ? $"{daysLeft} Day{(daysLeft == 1 ? "" : "s")} Left" : "Ready to hatch · waiting for Daycare space", Game1.smallFont, new Rectangle(panel.X + 30, panel.Y + 134, panel.Width - 60, 38), Color.White);
                 DrawProgress(b, new Rectangle(panel.X + 32, panel.Y + 194, panel.Width - 64, 28), progress);
                 DrawCentered(b, $"{elapsed} / {duration} days  ({(int)(progress * 100)}%)", Game1.smallFont, new Rectangle(panel.X + 25, panel.Y + 232, panel.Width - 50, 34), Color.White);
-                DrawPanel(b, new Rectangle(panel.X + 18, panel.Y + 316, panel.Width - 36, 54), new Color(55, 72, 134), new Color(101, 138, 205));
-                b.DrawString(Game1.smallFont, "TEMPERATURE", new Vector2(panel.X + 30, panel.Y + 325), Color.White);
-                DrawProgress(b, new Rectangle(panel.X + 173, panel.Y + 335, panel.Width - 216, 16), progress);
+                DrawPanel(b, this.contributionButton,
+                    this.CanContribute(active) ? new Color(39, 135, 105) : new Color(65, 73, 103),
+                    this.CanContribute(active) ? new Color(118, 228, 183) : new Color(110, 122, 160));
+                DrawCentered(b, this.GetContributionButtonLabel(active), Game1.tinyFont, this.contributionButton, Color.White);
                 DrawPanel(b, this.actionButton, new Color(146, 63, 66), new Color(242, 142, 137));
                 DrawCentered(b, "CANCEL", Game1.smallFont, this.actionButton, Color.White);
             }
@@ -219,9 +243,11 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
             DrawIncubationControls(b, panel);
         }
 
+        this.DrawRareLabMeter(b, panel, this.registry.GetRareLab(this.machineKey));
         if (this.statusMessage is not null)
-            b.DrawString(Game1.smallFont, this.statusMessage, new Vector2(this.xPositionOnScreen + 32, this.yPositionOnScreen + this.height - 46), Color.White);
-        b.DrawString(Game1.smallFont, "Esc: close", new Vector2(this.xPositionOnScreen + this.width - 142, this.yPositionOnScreen + this.height - 34), Color.White);
+            b.DrawString(Game1.tinyFont, this.statusMessage.Length > 72 ? this.statusMessage[..69] + "..." : this.statusMessage,
+                new Vector2(this.xPositionOnScreen + 32, this.yPositionOnScreen + this.height - 22), Color.White);
+        b.DrawString(Game1.tinyFont, "Esc: close", new Vector2(this.xPositionOnScreen + this.width - 90, this.yPositionOnScreen + this.height - 22), Color.White);
         this.drawMouse(b);
     }
 
@@ -233,6 +259,77 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
         DrawPanel(b, this.actionButton, this.selectedInventoryIndex is null ? new Color(65, 79, 105) : new Color(43, 151, 73), this.selectedInventoryIndex is null ? new Color(117, 131, 159) : new Color(139, 240, 127));
         DrawCentered(b, "▶  START", Game1.smallFont, this.actionButton, Color.White);
     }
+
+    private bool CanContribute(IncubationRecord active)
+    {
+        RareLabRecord? lab = this.registry.GetRareLab(this.machineKey);
+        return active.HatchAnimalId is null
+            && Game1.Date.TotalDays < active.ReadyOnDay
+            && lab is { IsUnlocked: true }
+            && this.registry.GetRareLabChancePoints(this.machineKey) < RareLabRules.MaximumChancePoints
+            && CountVanillaSlimeItems() >= RareLabRules.SlimeUnitsPerContributionPoint;
+    }
+
+    private string GetContributionButtonLabel(IncubationRecord active)
+    {
+        RareLabRecord? lab = this.registry.GetRareLab(this.machineKey);
+        if (lab is not { IsUnlocked: true })
+            return "RARE LAB LOCKED";
+        if (Game1.Date.TotalDays >= active.ReadyOnDay)
+            return "INCUBATION COMPLETE";
+        if (this.registry.GetRareLabChancePoints(this.machineKey) >= RareLabRules.MaximumChancePoints)
+            return "CHANCE MAXED";
+        if (CountVanillaSlimeItems() < RareLabRules.SlimeUnitsPerContributionPoint)
+            return $"NEED {RareLabRules.SlimeUnitsPerContributionPoint} SLIME";
+        return $"ADD {RareLabRules.SlimeUnitsPerContributionPoint} SLIME (+1%)";
+    }
+
+    private void DrawRareLabMeter(SpriteBatch b, Rectangle panel, RareLabRecord? lab)
+    {
+        Rectangle bounds = new(panel.X + 18, panel.Y + 316, panel.Width - 36, 54);
+        DrawPanel(b, bounds, new Color(55, 72, 134), new Color(101, 138, 205));
+        bool unlocked = lab is { IsUnlocked: true };
+        int total = RareLabRules.GetChancePoints(lab);
+        b.DrawString(Game1.tinyFont,
+            unlocked ? $"RARE LAB · METER ONLY · TOTAL {total}%" : "RARE LAB LOCKED · TOTAL 0%",
+            new Vector2(bounds.X + 12, bounds.Y + 4), new Color(213, 227, 255));
+
+        Rectangle bar = new(bounds.X + 12, bounds.Y + 19, bounds.Width - 24, 12);
+        b.Draw(Game1.staminaRect, bar, new Color(18, 30, 62));
+        if (unlocked && lab is not null)
+        {
+            int cursor = 0;
+            DrawChanceSegment(b, bar, cursor, lab.BaseChancePoints, new Color(83, 207, 255));
+            cursor += lab.BaseChancePoints;
+            DrawChanceSegment(b, bar, cursor, lab.PityPoints, new Color(255, 198, 91));
+            cursor += lab.PityPoints;
+            DrawChanceSegment(b, bar, cursor, lab.ContributionPoints, new Color(200, 150, 255));
+        }
+
+        string detail = unlocked && lab is not null
+            ? $"Base {lab.BaseChancePoints}%  ·  Pity +{lab.PityPoints}%  ·  You +{lab.ContributionPoints}%"
+            : "Unlocks after the first Daycare upgrade.";
+        b.DrawString(Game1.tinyFont, detail, new Vector2(bounds.X + 12, bounds.Y + 34), Color.White);
+    }
+
+    private static void DrawChanceSegment(SpriteBatch b, Rectangle bar, int startPoints, int points, Color color)
+    {
+        if (points <= 0)
+            return;
+
+        int availableWidth = bar.Width - 4;
+        int left = bar.X + 2 + availableWidth * startPoints / RareLabRules.MaximumChancePoints;
+        int right = bar.X + 2 + availableWidth * Math.Min(RareLabRules.MaximumChancePoints, startPoints + points) / RareLabRules.MaximumChancePoints;
+        if (right <= left)
+            right = left + 1;
+        right = Math.Min(right, bar.Right - 2);
+        if (right > left)
+            b.Draw(Game1.staminaRect, new Rectangle(left, bar.Y + 2, right - left, bar.Height - 4), color);
+    }
+
+    private static int CountVanillaSlimeItems() => Game1.player.Items
+        .Where(item => item is not null && item.QualifiedItemId == "(O)766")
+        .Sum(item => item!.Stack);
 
     private static void DrawPanel(SpriteBatch b, Rectangle rect, Color fill, Color border)
     {

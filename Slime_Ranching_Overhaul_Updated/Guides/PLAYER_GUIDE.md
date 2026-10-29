@@ -40,7 +40,7 @@ The Slime Incubator accepts a genome-specific Ranch Slime Egg from the player's 
 4. While an egg is incubating, choose **Cancel** to review a confirmation. Confirming destroys that unique egg and gives you one Fried Egg; make sure your inventory has room. A canceled egg copy cannot be incubated later.
 5. The new Ranch Slime appears in the Daycare with the egg's stored genome. If the Daycare is full, the ready hatch waits until space is available.
 
-Rare Lab progression is saved separately for each incubator: 0% at the basic Daycare, 1% after the first building upgrade, and 5% at the final tier. In this build those values are recorded for progression checks but do not yet affect hatching; rare rolls, Slime contributions, catalysts, and the Egg CryoLab are still in development.
+Rare Lab progression is saved separately for each incubator: 0% at the basic Daycare, 1% after the first building upgrade, and 5% at the final tier. While an egg is incubating, contribute 10 vanilla Slime for +1 percentage point; the meter shows base chance, pity, and your contribution. The meter is informational in this build and does not yet affect hatching. Rare rolls, catalysts, and the Egg CryoLab are still in development.
 
 In 2.0, newly hatched Ranch Slimes mature after **7 in-game days**. The breeder marks growing slimes in its list and won't let them be selected. The testing spawn command lets you choose an age from 0 to 7 days.
 
