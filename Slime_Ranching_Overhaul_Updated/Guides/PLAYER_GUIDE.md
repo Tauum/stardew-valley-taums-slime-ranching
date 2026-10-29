@@ -92,6 +92,8 @@ Available keys: `species`, `secondary` (`none` clears it), `color` (`#RRGGBB`), 
 
 ## Hutch inspection
 
+Incubator job entries also show the saved egg genome and, once a Rare Lab outcome is fixed, the hatch genome. A regular hatch keeps the egg genome; a rare hatch shows its distinct genome ID and resolved species.
+
 Enter the Slime Daycare or a vanilla Slime Hutch and run:
 
 ```text

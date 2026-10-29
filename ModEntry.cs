@@ -3473,7 +3473,12 @@ public sealed class ModEntry : Mod
                     : job.RareOffspringProduced
                         ? $"fixed rare {job.HatchGenome?.PrimarySpecies ?? "unknown"}"
                         : "fixed regular offspring";
-                this.Monitor.Log($"Incubator [{job.MachineKey}]: egg {job.EggItemId}; ready day {job.ReadyOnDay}; {outcome}; reserved hatch ID {job.HatchAnimalId?.ToString() ?? "none"}.", LogLevel.Info);
+                SlimeGenome? eggGenome = job.EggGenome;
+                if (eggGenome is null && loadedRegistry.TryGetEgg(job.EggItemId, out SlimeEggRecord savedEgg))
+                    eggGenome = savedEgg.Genome;
+                SlimeGenome? hatchGenome = job.RareOutcomeResolved ? job.HatchGenome ?? eggGenome : null;
+                string hatchGenomeStatus = job.RareOutcomeResolved ? FormatGenomeSummary(hatchGenome) : "not fixed";
+                this.Monitor.Log($"Incubator [{job.MachineKey}]: egg ID {job.EggItemId}; ready day {job.ReadyOnDay}; {outcome}; egg genome [{FormatGenomeSummary(eggGenome)}]; hatch genome [{hatchGenomeStatus}]; reserved hatch ID {job.HatchAnimalId?.ToString() ?? "none"}.", LogLevel.Info);
             }
 
             foreach (MutagenicAttemptRecord job in loadedRegistry.MutagenicAttempts.Where(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal)))
@@ -3495,6 +3500,17 @@ public sealed class ModEntry : Mod
             hour = 12;
         string meridiem = hour24 < 12 ? "AM" : "PM";
         return $"{hour}:{scheduledMinute % 60:00} {meridiem}";
+    }
+
+    private static string FormatGenomeSummary(SlimeGenome? genome)
+    {
+        if (genome is null)
+            return "missing";
+
+        string species = genome.SecondarySpecies is null
+            ? genome.PrimarySpecies
+            : $"{genome.PrimarySpecies} / {genome.SecondarySpecies}";
+        return $"ID {genome.Id:N}; {species}; color {genome.VisualColor}; size {genome.Size}; rarity {genome.RarityTier}";
     }
 
     private void OnSanctuaryQuestStatusCommand(string command, string[] args)
