@@ -17,8 +17,5 @@
     <ItemGroup>
         <Compile Remove="decompiled game/**/*.cs" />
     </ItemGroup>
-    <ItemGroup>
-      <Folder Include="assets\Maps\" />
-    </ItemGroup>
 
 </Project>
