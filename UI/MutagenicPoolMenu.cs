@@ -213,7 +213,10 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
         b.DrawString(Game1.tinyFont, "100% guarantees a", new Vector2(right + 14, top + 342), Color.White);
         b.DrawString(Game1.tinyFont, "cosmetic mutation.", new Vector2(right + 14, top + 362), Color.White);
         if (active is not null)
-            b.DrawString(Game1.tinyFont, $"Locked at {active.ChanceAtStart:P0} for this attempt.", new Vector2(right + 14, top + 360), Color.White);
+        {
+            b.DrawString(Game1.tinyFont, "Chance locked:", new Vector2(right + 14, top + 390), new Color(208, 219, 255));
+            b.DrawString(Game1.tinyFont, $"{active.ChanceAtStart:P0} this attempt", new Vector2(right + 14, top + 410), new Color(208, 219, 255));
+        }
 
         if (!string.IsNullOrEmpty(this.statusMessage))
             b.DrawString(Game1.tinyFont, this.statusMessage.Length > 72 ? this.statusMessage[..69] + "..." : this.statusMessage,
