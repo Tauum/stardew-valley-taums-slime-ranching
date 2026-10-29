@@ -76,7 +76,11 @@ internal sealed class EnrichmentInteractionService
         {
             long id = entry.Key;
             Interaction bounce = entry.Value;
-            if (registry?.IsReserved(id) == true || !house.Objects.ContainsKey(bounce.FurnitureTile))
+            if (registry?.IsReserved(id) == true
+                || !house.animals.TryGetValue(id, out FarmAnimal? currentAnimal)
+                || !ReferenceEquals(currentAnimal, bounce.Animal)
+                || !house.Objects.TryGetValue(bounce.FurnitureTile, out StardewValley.Object? currentFurniture)
+                || currentFurniture.QualifiedItemId != bounce.FurnitureQualifiedItemId)
             {
                 bounce.Animal.drawOffset = bounce.OriginalDrawOffset;
                 (completed ??= new List<long>()).Add(id);
@@ -142,8 +146,8 @@ internal sealed class EnrichmentInteractionService
             .Where(obj => obj.QualifiedItemId == FurnitureContent.TrampolineQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.SlimeCushionQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.SlimeSlideQualifiedId
-            || obj.QualifiedItemId == FurnitureContent.SlimeTunnelQualifiedId
-            || obj.QualifiedItemId == FurnitureContent.HeatedSlimeStoneQualifiedId
+                || obj.QualifiedItemId == FurnitureContent.SlimeTunnelQualifiedId
+                || obj.QualifiedItemId == FurnitureContent.HeatedSlimeStoneQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.SlimePondQualifiedId
                 || obj.QualifiedItemId == FurnitureContent.SlimeSwingQualifiedId)
             .Select(obj => new FurnitureSpot(obj.TileLocation, obj.QualifiedItemId))
@@ -205,7 +209,7 @@ internal sealed class EnrichmentInteractionService
             record.NextEnrichmentCheckMinute = currentMinute + durationMinutes + Game1.random.Next(120, 241);
             if (spot.QualifiedItemId == FurnitureContent.SlimeSwingQualifiedId)
             {
-                this.StartInteraction(animal, spot.Tile, durationMinutes, 2f, 2f, 0f, swingDistance: 8f);
+                this.StartInteraction(animal, spot, durationMinutes, 2f, 2f, 0f, swingDistance: 8f);
                 continue;
             }
 
@@ -224,16 +228,16 @@ internal sealed class EnrichmentInteractionService
                     _ => (28f, 4f, 0f, false)
                 }
             };
-            this.StartInteraction(animal, spot.Tile, durationMinutes,
+            this.StartInteraction(animal, spot, durationMinutes,
                 bounceHeight, compressionHeight, slideDistance, isResting);
         }
     }
 
-    private void StartInteraction(FarmAnimal animal, Vector2 furnitureTile, int durationMinutes,
+    private void StartInteraction(FarmAnimal animal, FurnitureSpot furniture, int durationMinutes,
         float bounceHeight, float compressionHeight,
         float slideDistance = 0f, bool isResting = false, float swingDistance = 0f)
     {
-        this.active[animal.myID.Value] = new Interaction(animal, furnitureTile, animal.drawOffset,
+        this.active[animal.myID.Value] = new Interaction(animal, furniture.Tile, furniture.QualifiedItemId, animal.drawOffset,
             durationMinutes, bounceHeight, compressionHeight, slideDistance, isResting, swingDistance);
     }
 
@@ -243,12 +247,13 @@ internal sealed class EnrichmentInteractionService
 
     private sealed class Interaction
     {
-        public Interaction(FarmAnimal animal, Vector2 furnitureTile, Vector2 originalDrawOffset,
+        public Interaction(FarmAnimal animal, Vector2 furnitureTile, string furnitureQualifiedItemId, Vector2 originalDrawOffset,
             int durationMinutes, float bounceHeightPixels, float compressionHeightPixels, float horizontalTravelPixels,
             bool isResting, float swingDistancePixels)
         {
             this.Animal = animal;
             this.FurnitureTile = furnitureTile;
+            this.FurnitureQualifiedItemId = furnitureQualifiedItemId;
             this.OriginalDrawOffset = originalDrawOffset;
             this.DurationMinutes = durationMinutes;
             this.BounceHeightPixels = bounceHeightPixels;
@@ -261,6 +266,7 @@ internal sealed class EnrichmentInteractionService
 
         public FarmAnimal Animal { get; }
         public Vector2 FurnitureTile { get; }
+        public string FurnitureQualifiedItemId { get; }
         public Vector2 OriginalDrawOffset { get; }
         public int DurationMinutes { get; }
         public float BounceHeightPixels { get; }

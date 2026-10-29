@@ -149,6 +149,18 @@ Reply with any collision, sizing, or warp issues and a screenshot if the room di
 2. Load that copy with this build and run `slime_ranching_inspect` again. Confirm the reported schema is 19, the incubation count and ready day are unchanged, and the SMAPI log reports save-data migration.
 3. Save, return to title, reload, and inspect again. Confirm schema 19 and the same incubator egg and ready day. Rare Lab state has no player-facing access until upgrade and menu integration land, so verify no Pool or breeding behavior changed during this migration pass.
 
+## 2.0 bulk-test check — Feature 15 partial: enrichment schedule and cleanup
+
+**Status:** The scheduler uses the approved 2–4 in-game-hour roaming checks, 50% chance to use nearby furniture, 2–3 hour activity duration, and a four-activity daily cap. Animation cleanup now handles reservations, resident removal, furniture removal/replacement, activity completion, day change, room transition, and return to title. In-game timing and interruption checks remain pending.
+
+1. On a disposable save, place at least one available enrichment item in the Daycare and keep one unreserved Ranch Slime nearby. Let time advance from the start of the day. Observe the slime through several schedule windows; activity checks should be staggered within 2–4 in-game hours, and eligible checks should sometimes pass without an activity due to the 50% selection chance.
+2. When an activity starts, confirm its visual interaction finishes within 2–3 in-game hours and the slime returns to its original draw position. Repeat enough times on a disposable copy to check that one slime does not start more than four activities in the same in-game day.
+3. During an activity, select that slime for a breeder job or start a Pool attempt with it. Confirm the visual offset resets immediately and the reserved slime stops using furniture. Cancel the job and confirm the slime can use furniture again later.
+4. During separate active interactions, remove the furniture item, then replace it at the same tile with a different furniture item. Confirm the old interaction resets immediately in both cases.
+5. During another interaction, remove the Ranch Slime from the Daycare through the game's normal animal management flow. Confirm it returns to its original draw position and no stale interaction continues.
+6. Start an interaction, leave the Daycare, and re-enter; repeat while crossing into a new in-game day and when returning to title. Confirm each transition clears the old visual offset and a later eligible activity can start normally.
+7. Complete an interaction, sleep to save, and reload. Confirm no temporary draw offset remains and the activity schedule resumes from its saved daily count/check time. Keep Feature 15 pending until these interruption cases and the schedule limits pass in-game.
+
 ## How to use this walkthrough
 
 The 2.0 checks are being collected for one bulk test pass at Taum's request. Run the checks marked ready on disposable copied saves, then report results and issues together. Keep each feature's acceptance pending until its in-game checks pass. The separate 1.x sequence remains paused at Stage 6; resume it only if requested.
