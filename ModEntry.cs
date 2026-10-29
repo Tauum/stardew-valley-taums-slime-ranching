@@ -2279,12 +2279,11 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        StardewValley.Buildings.Building? building = Game1.getFarm().buildings.FirstOrDefault(candidate =>
-            BuildingContent.IsSlimeDaycare(candidate.buildingType.Value)
-            && candidate.GetIndoors() is StardewValley.AnimalHouse);
-        if (building?.GetIndoors() is not StardewValley.AnimalHouse daycare)
+        if (Game1.currentLocation is not StardewValley.AnimalHouse daycare
+            || !BuildingContent.IsSlimeDaycare(daycare.ParentBuilding?.buildingType.Value)
+            || !ReferenceEquals(daycare.ParentBuilding?.GetIndoors(), daycare))
         {
-            this.Monitor.Log("The loaded save has no available Slime Daycare interior.", LogLevel.Warn);
+            this.Monitor.Log("Enter the Slime Daycare containing the target incubator before setting Rare Lab test values.", LogLevel.Warn);
             return;
         }
 
