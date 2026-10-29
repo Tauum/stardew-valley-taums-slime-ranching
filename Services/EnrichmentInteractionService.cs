@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using StardewValley;
+using StardewValley.Pathfinding;
 
 namespace taums_slime_ranching.Services;
 
@@ -8,6 +9,13 @@ internal sealed class EnrichmentInteractionService
 {
     private const int AssignmentIntervalTicks = 30;
     private const float InteractionRadiusPixels = 128f;
+    private static readonly Point[] ApproachTileOffsets =
+    {
+        new(0, -1),
+        new(1, 0),
+        new(0, 1),
+        new(-1, 0)
+    };
     private readonly Dictionary<long, Interaction> active = new();
     private int assignmentTicks;
     private AnimalHouse? activeHouse;
@@ -208,6 +216,7 @@ internal sealed class EnrichmentInteractionService
             .ToList();
         var idleSlimes = new List<(FarmAnimal Animal, Models.SlimeRecord Record)>();
         var activityCandidates = new List<(FarmAnimal Animal, Models.SlimeRecord Record)>();
+        var reachabilityCache = new Dictionary<(long AnimalId, Vector2 Tile), bool>();
         var checkedThisPass = new HashSet<long>();
         foreach (FarmAnimal animal in house.animals.Values.Where(animal => animal.type.Value == FarmAnimalContent.RanchSlimeTypeId
             && !this.active.ContainsKey(animal.myID.Value)
@@ -261,7 +270,8 @@ internal sealed class EnrichmentInteractionService
             {
                 Vector2 center = spot.Tile * 64f + new Vector2(32f, 32f);
                 float distance = Vector2.DistanceSquared(animalPosition, center);
-                if (distance >= InteractionRadiusPixels * InteractionRadiusPixels)
+                if (distance >= InteractionRadiusPixels * InteractionRadiusPixels
+                    || !HasReachableApproach(house, animal, spot, reachabilityCache))
                     continue;
 
                 if (spot.QualifiedItemId == FurnitureContent.SlimeSeesawQualifiedId)
@@ -271,7 +281,8 @@ internal sealed class EnrichmentInteractionService
                         if (candidate.myID.Value == animal.myID.Value
                             || this.active.ContainsKey(candidate.myID.Value)
                             || candidateRecord.EnrichmentActivitiesToday >= 4
-                            || Vector2.DistanceSquared(candidate.Position, center) >= InteractionRadiusPixels * InteractionRadiusPixels)
+                            || Vector2.DistanceSquared(candidate.Position, center) >= InteractionRadiusPixels * InteractionRadiusPixels
+                            || !HasReachableApproach(house, candidate, spot, reachabilityCache))
                             continue;
 
                         long candidateId = candidate.myID.Value;
@@ -315,7 +326,7 @@ internal sealed class EnrichmentInteractionService
                         && !this.active.ContainsKey(candidate.Animal.myID.Value)
                         && candidate.Record.EnrichmentActivitiesToday < 4
                         && Vector2.DistanceSquared(candidate.Animal.Position, lampCenter) < InteractionRadiusPixels * InteractionRadiusPixels
-                        && IsNearestAvailableSpot(candidate.Animal, spotToUse, furnitureSpots))
+                        && IsNearestAvailableSpot(house, candidate.Animal, spotToUse, furnitureSpots, reachabilityCache))
                     .Select(candidate => (candidate.Animal, candidate.Record))
                     .Prepend((animal, record))
                     .ToArray();
@@ -396,7 +407,8 @@ internal sealed class EnrichmentInteractionService
             0f, 0f, isLampGathering: true);
     }
 
-    private static bool IsNearestAvailableSpot(FarmAnimal animal, FurnitureSpot expectedSpot, List<FurnitureSpot> availableSpots)
+    private static bool IsNearestAvailableSpot(AnimalHouse house, FarmAnimal animal, FurnitureSpot expectedSpot,
+        List<FurnitureSpot> availableSpots, Dictionary<(long AnimalId, Vector2 Tile), bool> reachabilityCache)
     {
         Vector2 animalPosition = animal.Position;
         FurnitureSpot? nearestSpot = null;
@@ -404,7 +416,7 @@ internal sealed class EnrichmentInteractionService
         foreach (FurnitureSpot spot in availableSpots)
         {
             float distance = Vector2.DistanceSquared(animalPosition, spot.Tile * 64f + new Vector2(32f, 32f));
-            if (distance >= nearestDistance)
+            if (distance >= nearestDistance || !HasReachableApproach(house, animal, spot, reachabilityCache))
                 continue;
 
             nearestSpot = spot;
@@ -414,6 +426,35 @@ internal sealed class EnrichmentInteractionService
         return nearestSpot is FurnitureSpot nearest
             && nearest.Tile == expectedSpot.Tile
             && nearest.QualifiedItemId == expectedSpot.QualifiedItemId;
+    }
+
+    private static bool HasReachableApproach(AnimalHouse house, FarmAnimal animal, FurnitureSpot station,
+        Dictionary<(long AnimalId, Vector2 Tile), bool> reachabilityCache)
+    {
+        var cacheKey = (animal.myID.Value, station.Tile);
+        if (reachabilityCache.TryGetValue(cacheKey, out bool reachable))
+            return reachable;
+
+        Point stationTile = new((int)station.Tile.X, (int)station.Tile.Y);
+        int pathSearchLimit = house.map.Layers[0].LayerWidth * house.map.Layers[0].LayerHeight;
+        foreach (Point approachOffset in ApproachTileOffsets)
+        {
+            Point approachTile = stationTile + approachOffset;
+            if (approachTile.X < 0 || approachTile.Y < 0
+                || approachTile.X >= house.map.Layers[0].LayerWidth
+                || approachTile.Y >= house.map.Layers[0].LayerHeight)
+                continue;
+
+            if (PathFindController.findPath(animal.TilePoint, approachTile, PathFindController.isAtEndPoint,
+                house, animal, pathSearchLimit) is not null)
+            {
+                reachabilityCache[cacheKey] = true;
+                return true;
+            }
+        }
+
+        reachabilityCache[cacheKey] = false;
+        return false;
     }
 
     private void StartInteraction(FarmAnimal[] animals, float[] swayPhases, FurnitureSpot furniture, int durationMinutes,
