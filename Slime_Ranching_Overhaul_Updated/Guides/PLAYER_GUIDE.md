@@ -150,7 +150,7 @@ The Registry, Progression, and Slime Wiki sections have a read-only tester previ
 slime_ranching_open_management_desk <exact save folder name>
 ```
 
-The Registry lists resident Ranch Slimes and their genome, status, and current activity. Progression shows the building tier, facilities found in that Daycare, current breeding-cycle duration, and facility unlock guidance. Slime Wiki browses base, hybrid, and rare types; its ability effects are planned companion directions and do not activate in normal play. Press Escape to close the preview. It does not change the save. Furniture editing and opening the menu from a placed desk are still under development.
+The Registry lists resident Ranch Slimes and their genome, status, and current activity. Progression shows the building tier, facilities found in that Daycare, current breeding-cycle duration, and whether upgrade facilities are unlocked, including the current base Rare Lab chance. Slime Wiki browses base, hybrid, and rare types; its ability effects are planned companion directions and do not activate in normal play. Press Escape to close the preview. It does not change the save. Furniture editing and opening the menu from a placed desk are still under development.
 
 ## Features still under development
 

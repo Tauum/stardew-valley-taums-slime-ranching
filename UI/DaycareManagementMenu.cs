@@ -271,6 +271,12 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         };
         int residents = this.daycare.animalsThatLiveHere.Count;
         string prefix = this.daycare.NameOrUniqueName + ":";
+        string rareLabStatus = this.buildingTier == 0
+            ? "CryoLab / Rare Labs: locked until first upgrade"
+            : $"CryoLab / Rare Labs: unlocked | { (this.buildingTier >= 3 ? 5 : 1)}% base chance";
+        string finalFacilityStatus = this.buildingTier >= 3
+            ? "Second breeder / incubator and Gel Refinery: unlocked"
+            : "Second breeder / incubator and Gel Refinery: locked until final upgrade";
         string[] status =
         {
             $"Building tier: {tierName} ({this.buildingTier}/3)",
@@ -280,25 +286,27 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             $"Egg CryoLab tester chests: {this.daycare.Objects.Values.OfType<Chest>().Count(EggCryoLabContent.IsEggCryoLab)}",
             $"Rare Lab records: {this.registry.RareLabs.Count(lab => lab.MachineKey.StartsWith(prefix, StringComparison.Ordinal))}",
             $"Mutagenic Pool facilities: {this.CountPlaced(MutagenicPoolContent.QualifiedItemId)}",
-            $"Gel Refinery facilities: {this.CountPlaced(GelRefineryContent.QualifiedItemId)}"
+            $"Gel Refinery facilities: {this.CountPlaced(GelRefineryContent.QualifiedItemId)}",
+            rareLabStatus,
+            finalFacilityStatus
         };
         b.DrawString(Game1.smallFont, "CURRENT DAYCARE", new Vector2(content.X + 24, content.Y + 22), new Color(139, 226, 255));
         int y = content.Y + 64;
         foreach (string line in status)
         {
             b.DrawString(Game1.tinyFont, line, new Vector2(content.X + 30, y), Color.White);
-            y += 30;
+            y += 26;
         }
 
-        Rectangle guidance = new(content.X + 20, content.Y + 300, content.Width - 40, 112);
+        Rectangle guidance = new(content.X + 20, content.Y + 320, content.Width - 40, 92);
         DrawPanel(b, guidance, new Color(47, 66, 111), new Color(95, 134, 194));
         b.DrawString(Game1.tinyFont, "PROGRESSION GUIDE", new Vector2(guidance.X + 12, guidance.Y + 5), new Color(139, 226, 255));
         int currentCycleDays = this.buildingTier == 0 ? 18 : 14;
         string guidanceText = $"New breeder cycles: {currentCycleDays} days at this tier (14 days from the first upgrade onward). "
             + "First upgrade unlocks the Egg CryoLab and Rare Labs at 1% base chance. Final upgrade adds a second breeder and incubator, "
             + "raises Rare Lab base chance to 5%, and unlocks the Gel Refinery. Robin handles upgrades; Marnie sells furniture recipes.";
-        DrawWrappedText(b, guidanceText, new Vector2(guidance.X + 12, guidance.Y + 23), guidance.Width - 24,
-            Game1.tinyFont, new Color(230, 239, 255), 15f);
+        DrawWrappedText(b, guidanceText, new Vector2(guidance.X + 12, guidance.Y + 21), guidance.Width - 24,
+            Game1.tinyFont, new Color(230, 239, 255), 14f);
     }
 
     private void DrawWikiSection(SpriteBatch b)
