@@ -65,6 +65,17 @@ internal sealed class EnrichmentInteractionService
         this.assignmentTicks = 0;
     }
 
+    public string? GetActiveActivitySummary(long animalId)
+    {
+        if (!this.active.TryGetValue(animalId, out Interaction? interaction))
+            return null;
+
+        string activity = EnrichmentStationCatalog.TryGet(interaction.FurnitureQualifiedItemId, out EnrichmentStationDefinition station)
+            ? station.ActivityKind.ToString()
+            : interaction.FurnitureQualifiedItemId;
+        return $"{activity}; participants {interaction.Animals.Length}; elapsed {interaction.ElapsedMinutes:0}/{interaction.DurationMinutes} in-game minutes";
+    }
+
     private void StopActiveInteractions()
     {
         foreach (Interaction interaction in this.active.Values.Distinct())

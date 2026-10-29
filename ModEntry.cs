@@ -3088,6 +3088,20 @@ public sealed class ModEntry : Mod
             string residentStatus = SlimeRegistry.GetResidentStatusLabel(loadedRegistry.GetResidentStatus(animalId));
             this.Monitor.Log($"Ranch Slime {animalId}: genome {genome.Id:N}, {species}, color {genome.VisualColor}, size {genome.Size}, shiny {genome.IsShiny}, rarity {genome.RarityTier}, mutation {mutation}.", LogLevel.Info);
             this.Monitor.Log($"Generation {genome.Generation}; abilities [{string.Join(", ", genome.AbilityIds)}]; likes {likedFood}; age {age}/{FarmAnimalContent.RanchSlimeDaysToMature} days; friendship {resident?.friendshipTowardFarmer.Value ?? 0}/1000; happiness {resident?.happiness.Value ?? 0}/255; fullness {resident?.fullness.Value ?? 0}/255; Pool pity {loadedRegistry.GetMutagenicPoolFailures(animalId)}, contribution {loadedRegistry.GetMutagenicPoolContribution(animalId):P0}; assignment {residentStatus}.", LogLevel.Info);
+            int activitiesToday = record.EnrichmentActivityDay == Game1.Date.TotalDays ? record.EnrichmentActivitiesToday : 0;
+            string nextActivityCheck;
+            if (record.EnrichmentActivityDay != Game1.Date.TotalDays)
+                nextActivityCheck = "not initialized today";
+            else if (activitiesToday >= 4)
+                nextActivityCheck = "daily limit reached";
+            else if (record.NextEnrichmentCheckMinute < 0)
+                nextActivityCheck = "not scheduled";
+            else if (record.NextEnrichmentCheckMinute > 26 * 60)
+                nextActivityCheck = "next day after schedule reset";
+            else
+                nextActivityCheck = FormatActivityClock(record.NextEnrichmentCheckMinute);
+            string activeActivity = this.trampolineInteractions.GetActiveActivitySummary(animalId) ?? "none";
+            this.Monitor.Log($"Enrichment today: {activitiesToday}/4 activities; next roaming check {nextActivityCheck}; live activity {activeActivity}.", LogLevel.Info);
             return;
         }
 
@@ -3220,6 +3234,16 @@ public sealed class ModEntry : Mod
         }
 
         this.Monitor.Log("Enter the Slime Daycare or a vanilla Slime Hutch to inspect ranching status.", LogLevel.Info);
+    }
+
+    private static string FormatActivityClock(int scheduledMinute)
+    {
+        int hour24 = scheduledMinute / 60;
+        int hour = hour24 % 12;
+        if (hour == 0)
+            hour = 12;
+        string meridiem = hour24 < 12 ? "AM" : "PM";
+        return $"{hour}:{scheduledMinute % 60:00} {meridiem}";
     }
 
     private void OnSanctuaryQuestStatusCommand(string command, string[] args)
