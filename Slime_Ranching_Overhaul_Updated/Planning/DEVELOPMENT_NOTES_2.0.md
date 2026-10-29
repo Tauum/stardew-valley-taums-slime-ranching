@@ -4,7 +4,7 @@
 
 **Purpose:** This is the single active development reference for product direction, gameplay rules, release scope, and technical boundaries. Read and update it when designing or implementing features. The archived v7 notes and older specs are source history; the decisions here reconcile them with the owner's later directions.
 
-**Current work branch:** `feature/2.0-management-registry-scroll`, refining Registry selection while scrolling. Feature 14 remains in progress; fixed desk placement and Furniture Edit Mode depend on the still-pending fixed-slot/map implementation. Taum requested continued 2.0 development across features and a later bulk in-game test pass. Keep every in-game acceptance status pending until Taum reports the result. The separate 1.x test remains paused at Stage 6; see `FEATURE_TESTING_WALKTHROUGH.md` for current 2.0 steps and that checkpoint. A concise player-facing overview is in `Guides/PLAYER_GUIDE.md`.
+**Current work branch:** `docs/2.0-mod-tldr`, adding an orientation summary of machines, furniture, and the Stardew integration. Feature 14 remains in progress; fixed desk placement and Furniture Edit Mode depend on the still-pending fixed-slot/map implementation. Taum requested continued 2.0 development across features and a later bulk in-game test pass. Keep every in-game acceptance status pending until Taum reports the result. The separate 1.x test remains paused at Stage 6; see `FEATURE_TESTING_WALKTHROUGH.md` for current 2.0 steps and that checkpoint. The [Mod TL;DR](../Guides/MOD_TLDR.md) summarizes current implementation status; these notes remain the canonical design source.
 
 ## Shared design principles
 

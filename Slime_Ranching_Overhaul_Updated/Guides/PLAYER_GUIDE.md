@@ -1,18 +1,6 @@
 # Slime Ranching Overhaul â€” Player Guide
 
-## The mod at a glance (TL;DR)
-
-Slime Ranching Overhaul adds a separate, player-managed Slime Daycare to Stardew Valley. It leaves vanilla Slimes and the Slime Hutch alone. Ranch Slimes live in the Daycare, where the player raises them, chooses when to breed them, incubates their unique eggs, and gradually unlocks more facilities and activities.
-
-- **Breeding and eggs:** The Slime Breeder reserves two eligible Ranch Slimes for a player-started cycle. New cycles take 18 days in the basic Daycare and 14 days after its first upgrade. The resulting genome-specific egg can be stored in the Egg CryoLab or loaded into a seven-day Slime Incubator. Hatching waits safely if the Daycare has no open resident capacity.
-- **Research and production:** Each unlocked incubator has its own Rare Lab, which resolves rare offspring and keeps its own chance, pity, contribution, and catalyst state. Maru's repair mission activates the Mutagenic Pool for cosmetic mutation attempts. The final Daycare tier unlocks the Slime Gel Refinery, which uses vanilla Slime as fuel to process existing Stardew items.
-- **Care and furniture:** Fixed water amenities and the Feeding Trough are part of the planned care loop; their custom behavior is still under development. Enrichment furniture includes the Trampoline, Cushion, Slide, Seesaw, Ball Pit, Lamp, Tunnel, Heated Slime Stone, Pond, and Swing. Ranch Slimes may choose nearby reachable stations on staggered checks, use them for a short visual activity, and return to roaming. These prototype activities do not grant happiness or breeding bonuses. Fixed furniture slots and the desk's edit mode are still pending; testers currently use movable prototypes.
-- **Progression and information:** Daycare building upgrades expand resident capacity and unlock machines and furniture. The Management Desk preview provides a read-only Registry, upgrade guidance, and Slime Wiki; its permanent in-world fixture and furniture editor are not yet integrated.
-- **Save safety:** Save-wide jobs and progression use per-save SMAPI data; Ranch Slime identity and genome data live with each animal, and unique egg identity and genome data travel with each egg item. Unique eggs are guarded against stacking and duplicate hatches. Legacy registry data is treated as a migration source, not the active save store.
-
-**Designed as part of Stardew:** This is an extension to the existing game, not a separate simulation. The Daycare keeps Stardew's `AnimalHouse` behavior and reuses its farmhouse maps and art; Ranch Slimes use native farm-animal entities, and facilities build on native objects, menus, time, pathfinding, and save lifecycles. The mod favors SMAPI events, content/data loading, and supported game APIs. A narrowly scoped Harmony patch handles unique egg non-stacking because Stardew's item data has no stack-limit field. Decompiled game code is reference-only and is never shipped with the mod.
-
-This is an in-progress 2.0 design and implementation summary, not a claim that every listed system is finished or accepted in-game. Use the walkthrough for exact bulk test steps and check each feature's pending status before relying on it.
+For a compact tour of the mod's machines, furniture, and Stardew integration, see the [Mod TL;DR](MOD_TLDR.md).
 
 ## 2.0 Daycare progression currently being implemented
 
