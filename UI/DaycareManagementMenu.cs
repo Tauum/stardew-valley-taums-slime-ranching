@@ -162,51 +162,103 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         };
         if (sectionIndex >= 0)
         {
-            this.activeSection = sectionIndex switch
-            {
-                0 => "REGISTRY",
-                1 => "PROGRESSION",
-                _ => "SLIME WIKI"
-            };
-            Game1.playSound("smallSelect");
+            this.SetSection(sectionIndex);
             return;
         }
 
-        if (this.activeSection == "REGISTRY" && key is Keys.Up or Keys.Down)
+        if (key is Keys.Up or Keys.Down)
+        {
+            int delta = key == Keys.Up ? -1 : 1;
+            this.MoveCurrentSelection(delta);
+        }
+        else if (key is Keys.Left or Keys.Right && this.activeSection == "SLIME WIKI")
+        {
+            this.ChangeWikiCategory(key == Keys.Left ? -1 : 1);
+        }
+    }
+
+    public override bool areGamePadControlsImplemented() => true;
+
+    public override void receiveGamePadButton(Buttons button)
+    {
+        base.receiveGamePadButton(button);
+        switch (button)
+        {
+            case Buttons.B:
+                this.exitThisMenu();
+                break;
+            case Buttons.LeftTrigger:
+                this.ChangeSection(-1);
+                break;
+            case Buttons.RightTrigger:
+                this.ChangeSection(1);
+                break;
+            case Buttons.DPadUp:
+                this.MoveCurrentSelection(-1);
+                break;
+            case Buttons.DPadDown:
+                this.MoveCurrentSelection(1);
+                break;
+            case Buttons.DPadLeft:
+                if (this.activeSection == "SLIME WIKI")
+                    this.ChangeWikiCategory(-1);
+                else
+                    this.ChangeSection(-1);
+                break;
+            case Buttons.DPadRight:
+                if (this.activeSection == "SLIME WIKI")
+                    this.ChangeWikiCategory(1);
+                else
+                    this.ChangeSection(1);
+                break;
+        }
+    }
+
+    private void SetSection(int index)
+    {
+        this.activeSection = index switch
+        {
+            0 => "REGISTRY",
+            1 => "PROGRESSION",
+            _ => "SLIME WIKI"
+        };
+        Game1.playSound("smallSelect");
+    }
+
+    private void ChangeSection(int delta)
+    {
+        string[] sections = { "REGISTRY", "PROGRESSION", "SLIME WIKI" };
+        int current = Array.IndexOf(sections, this.activeSection);
+        this.SetSection((current + delta + sections.Length) % sections.Length);
+    }
+
+    private void ChangeWikiCategory(int delta)
+    {
+        string[] categories = { "BASE", "HYBRID", "RARE" };
+        int current = Array.IndexOf(categories, this.activeWikiCategory);
+        this.activeWikiCategory = categories[(current + delta + categories.Length) % categories.Length];
+        this.firstWikiEntry = 0;
+        this.selectedWikiIndex = 0;
+        Game1.playSound("smallSelect");
+    }
+
+    private void MoveCurrentSelection(int delta)
+    {
+        if (this.activeSection == "REGISTRY")
         {
             if (this.residents.Count == 0)
                 return;
 
-            int delta = key == Keys.Up ? -1 : 1;
             this.selectedResidentIndex = Math.Clamp(this.selectedResidentIndex + delta, 0, this.residents.Count - 1);
             if (this.selectedResidentIndex < this.firstResident)
                 this.firstResident = this.selectedResidentIndex;
             else if (this.selectedResidentIndex >= this.firstResident + VisibleRows)
                 this.firstResident = this.selectedResidentIndex - VisibleRows + 1;
             Game1.playSound("smallSelect");
-            return;
         }
-
-        if (this.activeSection != "SLIME WIKI")
-            return;
-
-        string[] categories = { "BASE", "HYBRID", "RARE" };
-        if (key is Keys.Left or Keys.Right)
-        {
-            int currentCategory = Array.IndexOf(categories, this.activeWikiCategory);
-            int delta = key == Keys.Left ? -1 : 1;
-            int nextCategory = (currentCategory + delta + categories.Length) % categories.Length;
-            this.activeWikiCategory = categories[nextCategory];
-            this.firstWikiEntry = 0;
-            this.selectedWikiIndex = 0;
-            Game1.playSound("smallSelect");
-            return;
-        }
-
-        if (key is Keys.Up or Keys.Down)
+        else if (this.activeSection == "SLIME WIKI")
         {
             List<WikiEntry> entries = this.GetVisibleWikiEntries();
-            int delta = key == Keys.Up ? -1 : 1;
             this.selectedWikiIndex = Math.Clamp(this.selectedWikiIndex + delta, 0, Math.Max(0, entries.Count - 1));
             if (this.selectedWikiIndex < this.firstWikiEntry)
                 this.firstWikiEntry = this.selectedWikiIndex;
