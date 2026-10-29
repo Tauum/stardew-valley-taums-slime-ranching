@@ -171,6 +171,14 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             int delta = key == Keys.Up ? -1 : 1;
             this.MoveCurrentSelection(delta);
         }
+        else if (key is Keys.PageUp or Keys.PageDown)
+        {
+            this.MoveCurrentSelectionByPage(key == Keys.PageUp ? -1 : 1);
+        }
+        else if (key is Keys.Home or Keys.End)
+        {
+            this.MoveCurrentSelectionToBoundary(key == Keys.End);
+        }
         else if (key is Keys.Left or Keys.Right && this.activeSection == "SLIME WIKI")
         {
             this.ChangeWikiCategory(key == Keys.Left ? -1 : 1);
@@ -192,6 +200,12 @@ internal sealed class DaycareManagementMenu : IClickableMenu
                 break;
             case Buttons.RightTrigger:
                 this.ChangeSection(1);
+                break;
+            case Buttons.LeftShoulder:
+                this.MoveCurrentSelectionByPage(-1);
+                break;
+            case Buttons.RightShoulder:
+                this.MoveCurrentSelectionByPage(1);
                 break;
             case Buttons.DPadUp:
                 this.MoveCurrentSelection(-1);
@@ -268,6 +282,69 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         }
     }
 
+    private void MoveCurrentSelectionToBoundary(bool last)
+    {
+        if (this.activeSection == "REGISTRY")
+        {
+            if (this.residents.Count == 0)
+                return;
+
+            this.selectedResidentIndex = last ? this.residents.Count - 1 : 0;
+            this.firstResident = last ? Math.Max(0, this.residents.Count - VisibleRows) : 0;
+            Game1.playSound("smallSelect");
+        }
+        else if (this.activeSection == "SLIME WIKI")
+        {
+            List<WikiEntry> entries = this.GetVisibleWikiEntries();
+            if (entries.Count == 0)
+                return;
+
+            this.selectedWikiIndex = last ? entries.Count - 1 : 0;
+            this.firstWikiEntry = last ? Math.Max(0, entries.Count - VisibleRows) : 0;
+            Game1.playSound("smallSelect");
+        }
+    }
+
+    private void MoveCurrentSelectionByPage(int pageDelta)
+    {
+        if (pageDelta == 0)
+            return;
+
+        if (this.activeSection == "REGISTRY")
+        {
+            if (this.residents.Count == 0)
+                return;
+
+            (this.firstResident, this.selectedResidentIndex) = GetPagedSelection(
+                this.firstResident, this.selectedResidentIndex, this.residents.Count, pageDelta);
+            Game1.playSound("smallSelect");
+        }
+        else if (this.activeSection == "SLIME WIKI")
+        {
+            int count = this.GetVisibleWikiEntries().Count;
+            if (count == 0)
+                return;
+
+            (this.firstWikiEntry, this.selectedWikiIndex) = GetPagedSelection(
+                this.firstWikiEntry, this.selectedWikiIndex, count, pageDelta);
+            Game1.playSound("smallSelect");
+        }
+    }
+
+    private static (int FirstIndex, int SelectedIndex) GetPagedSelection(
+        int firstIndex, int selectedIndex, int count, int pageDelta)
+    {
+        int maximumFirstIndex = Math.Max(0, count - VisibleRows);
+        int newFirstIndex = Math.Clamp(firstIndex + pageDelta * VisibleRows, 0, maximumFirstIndex);
+        int newSelectedIndex = Math.Clamp(selectedIndex + pageDelta * VisibleRows, 0, count - 1);
+        if (newSelectedIndex < newFirstIndex)
+            newFirstIndex = newSelectedIndex;
+        else if (newSelectedIndex >= newFirstIndex + VisibleRows)
+            newFirstIndex = newSelectedIndex - VisibleRows + 1;
+
+        return (newFirstIndex, newSelectedIndex);
+    }
+
     public override void receiveScrollWheelAction(int direction)
     {
         base.receiveScrollWheelAction(direction);
@@ -307,7 +384,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         else
             this.DrawWikiSection(b);
 
-        b.DrawString(Game1.tinyFont, "1-3: sections | Up/Down: lists | Left/Right: Wiki tabs", new Vector2(panel.X + 30, panel.Bottom - 24), Color.White);
+        b.DrawString(Game1.tinyFont, "1-3 sections | Up/Down rows | PgUp/PgDn or LB/RB pages | Home/End list | Left/Right Wiki", new Vector2(panel.X + 30, panel.Bottom - 24), Color.White);
         b.DrawString(Game1.tinyFont, "Esc: close", new Vector2(panel.Right - 86, panel.Bottom - 24), Color.White);
         this.drawMouse(b);
     }
