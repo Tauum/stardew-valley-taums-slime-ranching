@@ -33,8 +33,8 @@ Reply with any collision, sizing, or warp issues and a screenshot if the room di
 
 1. Make a fresh copy of a 2.0 save with schema 12 or 13. Keep the original and the main farm untouched.
 2. Run **3 Build, Deploy, Run**, then load that copied save.
-3. In the SMAPI console, run `slime_ranching_quest_status`. Confirm it reports schema **19** as the target schema and lists the Sanctuary milestones. On a new save, `lewis_concern` should report `prerequisites met` (available but incomplete); the remaining milestones should report `waiting`.
-4. Save, return to title, reload the same copied save, and run `slime_ranching_quest_status` again. Confirm schema 19 is retained and the milestone list is unchanged.
+3. In the SMAPI console, run `slime_ranching_quest_status`. Confirm it reports schema **20** as the target schema and lists the Sanctuary milestones. On a new save, `lewis_concern` should report `prerequisites met` (available but incomplete); the remaining milestones should report `waiting`.
+4. Save, return to title, reload the same copied save, and run `slime_ranching_quest_status` again. Confirm schema 20 is retained and the milestone list is unchanged.
 
 ### Maru repair handoff check — can be tested before the opening scenes are complete
 
@@ -88,7 +88,7 @@ Reply with any collision, sizing, or warp issues and a screenshot if the room di
 7. On a copied save with a free inventory slot, start another incubation and reopen that machine before hatch. Select **Cancel** and then **Keep incubating**; confirm the same egg and progress remain. Select **Cancel** again and confirm **Destroy egg**; verify the job disappears and exactly one Fried Egg appears in inventory.
 8. Before canceling, keep a copy of that same unique egg item in a chest. After confirming cancellation, try to incubate the copied item; confirm the incubator rejects it. Also attempt cancellation with a full inventory and verify the job remains intact and the game explains that space is needed for the Fried Egg.
 9. After confirming cancellation, sleep to save and reload. Verify the job stays canceled, the Fried Egg remains, and the copied egg ID remains unusable. On a separate copy, cancel and return to title without saving; reload and confirm the pending transaction restores the original incubation and does not award an unsaved Fried Egg.
-10. Load a schema-14 copy with an active incubation, allow migration to schema 19, save/reload, and verify its ready day is unchanged. Confirm a saved cancellation stays finalized after reload.
+10. Load a schema-14 copy with an active incubation, allow migration to schema 20, save/reload, and verify its ready day is unchanged. Confirm a saved cancellation stays finalized after reload.
 
 ## 2.0 bulk-test check — Feature 8 partial: upgrade-aware breeder timing
 
@@ -137,17 +137,29 @@ Reply with any collision, sizing, or warp issues and a screenshot if the room di
 6. To verify the 100% guarantee from a fresh 10% attempt with no pity or contribution, add 90 contributions (900 vanilla Slime total) while it is active. Confirm the meter reaches 100%, the action reports maximum chance, and the item count decreases by 10 per contribution. Sleep two nights and confirm the attempt succeeds with exactly one of Starry, Spotted, Glowing, Crystalline, Mossy, Bubbly, Mushroom, Blooming, Firefly, Crowned, Cowboy, or Smelly. `slime_ranching_inspect <animal ID>` should show the saved mutation.
 7. For failure carryover, use a separate unmutated slime and repeat attempts until one fails. Confirm the slime remains alive and unmutated, its pity increases by exactly 1 percentage point, and its next attempt uses the higher chance. If stored contribution is above 2%, confirm failure reduces it by 1 point; at 2% or lower, confirm it carries forward unchanged. After a later success, confirm contribution clears while pity remains. Use `slime_ranching_inspect <animal ID>` after each result.
 8. On one copy, run `slime_ranching_set_mutation <exact save folder name> <animal ID> Starry`; confirm the test command accepts an approved outcome and inspection shows it. Repeat with `none` on another unreserved slime. Confirm legacy `Shadow Clone` records remain readable but cannot be selected for a new Pool attempt.
-9. Load a schema-17 copy with existing slimes and, if available, an active Pool attempt. Run `slime_ranching_inspect`; confirm migration reaches schema 19, preserves existing pity, contribution, and ready day, and does not invent pending contribution transactions or Rare Labs. Save/reload and confirm the migrated state is unchanged.
+9. Load a schema-17 copy with existing slimes and, if available, an active Pool attempt. Run `slime_ranching_inspect`; confirm migration reaches schema 20, preserves existing pity, contribution, and ready day, and does not invent pending contribution transactions or Rare Labs. Save/reload and confirm the migrated state is unchanged.
 10. On two different slimes, compare pity and contribution before and after attempts. Confirm their values never cross between slimes or into Rare Lab state.
 11. Test each visual deterministically on an unreserved Ranch Slime with `slime_ranching_set_mutation <exact save folder name> <animal ID> <trait>`. Cycle through Starry, Spotted, Glowing, Crystalline, Mossy, Bubbly, Mushroom, Blooming, Firefly, Crowned, Cowboy, and Smelly; verify each has the appearance listed in the Player Guide, stays attached while the slime moves or jumps, and does not create extra animals or gameplay effects. For Glowing, compare midday with evening/night; for Bubbly, Firefly, Starry, and Smelly, confirm the animation remains bounded and legible. Run `slime_ranching_set_size <exact save folder name> <animal ID> <Small|Normal|Large|Giant>` and repeat several traits at each size to check placement and scale. Leave and re-enter the Daycare, save/reload, and confirm the accents still match each saved mutation. Keep Feature 11 acceptance pending until the rule, recovery, migration, menu, and visual checks all pass in-game.
 
 ## 2.0 bulk-test check — Feature 12: Rare Lab save-state foundation
 
-**Status:** Per-incubator Rare Lab state and schema-18-to-19 migration are implemented. CryoLab storage, building-upgrade unlocks, player menus, contributions, and rare rolls are not implemented yet; their bulk checks will be added with those stages.
+**Status:** Per-incubator Rare Lab state and schema-18-to-20 migration are implemented. CryoLab storage, building-upgrade unlocks, player menus, contributions, and rare rolls are not implemented yet; their bulk checks will be added with those stages.
 
 1. On a disposable copy at schema 18 with an active incubator job, run `slime_ranching_inspect` in the Daycare before updating and record the reported schema and that incubator's egg and ready day.
-2. Load that copy with this build and run `slime_ranching_inspect` again. Confirm the reported schema is 19, the incubation count and ready day are unchanged, and the SMAPI log reports save-data migration.
-3. Save, return to title, reload, and inspect again. Confirm schema 19 and the same incubator egg and ready day. The Daycare diagnostic should report zero Rare Labs for a schema-18 source save; migration must not fabricate an unlocked lab. Verify no Pool or breeding behavior changed during this migration pass.
+2. Load that copy with this build and run `slime_ranching_inspect` again. Confirm the reported schema is 20, the incubation count and ready day are unchanged, and the SMAPI log reports save-data migration.
+3. Save, return to title, reload, and inspect again. Confirm schema 20 and the same incubator egg and ready day. The Daycare diagnostic should report zero Rare Labs for a schema-18 source save; migration must not fabricate an unlocked lab. Verify no Pool or breeding behavior changed during this migration pass.
+
+## 2.0 bulk-test check — Feature 13 partial: refinery save transactions
+
+**Status:** The provisional Broken Glasses + Slime → Refined Quartz batch now has receipt-backed start and collection transactions. The one-recipe design, configurable fuel/time, final-tier facility unlock, later conversions, and balance review remain pending.
+
+1. On a disposable copied save, give and place a Gel Refinery with `slime_ranching_give_gel_refinery <exact save folder name>`. Carry at least 1 Broken Glasses and the configured amount of vanilla Slime.
+2. Start a batch, then return to title without sleeping or saving. If the game asks whether to save, choose not to. Reload the same copy. Confirm the input items are still present and `slime_ranching_inspect` reports no batch for that machine.
+3. Start another batch and sleep to save. Reload and inspect. Confirm the Broken Glasses and fuel remain spent, the same batch is still present, and its ready day did not move.
+4. At the ready day, fill every inventory slot with unrelated items at maximum stack so Refined Quartz cannot be accepted. Try to collect; confirm the batch remains ready and no output is added. Make room and collect, then return to title without saving. If prompted, choose not to save. Reload and confirm the batch is still ready and the unsaved output is absent.
+5. Collect again, sleep to save, reload, and confirm exactly one Refined Quartz is present and the batch has been removed. Try to collect again and confirm no second output is produced.
+6. On a ready batch, collect and immediately start a new batch in the same machine before sleeping. Return to title without saving and reload. Confirm the older ready batch is restored, the newer unsaved batch is removed, its inputs are restored, and no unsaved output remains.
+7. Load a schema-19 copy with an in-progress refinery batch, then inspect after migration to schema 20. Confirm input/output IDs and counts plus the original ready day are unchanged. Save/reload and confirm the job remains intact.
 
 ## 2.0 bulk-test check — Feature 15 partial: enrichment schedule and cleanup
 

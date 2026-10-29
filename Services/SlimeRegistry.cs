@@ -30,12 +30,14 @@ internal sealed class SlimeRegistry
     private readonly Dictionary<string, MutagenicAttemptRecord> mutagenicAttempts = new(StringComparer.Ordinal);
     private readonly Dictionary<string, MutagenicContributionRecord> pendingMutagenicContributions = new(StringComparer.Ordinal);
     private readonly Dictionary<string, RefineryJobRecord> refineryJobs = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, RefineryTransactionRecord> pendingRefineryTransactions = new(StringComparer.Ordinal);
     private readonly HashSet<string> hatchedEggIds = new(StringComparer.Ordinal);
     private readonly HashSet<string> destroyedEggIds = new(StringComparer.Ordinal);
     private readonly Dictionary<string, IncubationRecord> pendingIncubationCancellations = new(StringComparer.Ordinal);
     private long? activeCompanionFarmAnimalId;
     private SanctuaryQuestRecord sanctuaryQuest = new();
     private long nextMutagenicContributionSequence = 1;
+    private long nextRefineryTransactionSequence = 1;
 
     public SlimeRegistry(IMonitor monitor) => this.monitor = monitor;
 
@@ -48,6 +50,7 @@ internal sealed class SlimeRegistry
     public IReadOnlyCollection<MutagenicAttemptRecord> MutagenicAttempts => this.mutagenicAttempts.Values;
     public IReadOnlyCollection<MutagenicContributionRecord> PendingMutagenicContributions => this.pendingMutagenicContributions.Values;
     public IReadOnlyCollection<RefineryJobRecord> RefineryJobs => this.refineryJobs.Values;
+    public IReadOnlyCollection<RefineryTransactionRecord> PendingRefineryTransactions => this.pendingRefineryTransactions.Values;
 
     public IReadOnlyCollection<long> RanchSlimeFarmAnimalIds => this.farmAnimalRecords.Keys;
     public SlimeResidentStatus GetResidentStatus(long farmAnimalId, string? exceptMachineKey = null)
@@ -375,14 +378,15 @@ internal sealed class SlimeRegistry
     public RefineryJobRecord? GetRefineryJob(string machineKey) =>
         this.refineryJobs.TryGetValue(machineKey, out RefineryJobRecord? job) ? job : null;
 
-    public bool StartRefineryJob(string machineKey, int currentDay, int durationDays, int slimeFuelCount)
+    public RefineryTransactionRecord? StartRefineryJob(string machineKey, int currentDay, int durationDays, int slimeFuelCount)
     {
         if (string.IsNullOrWhiteSpace(machineKey) || this.refineryJobs.ContainsKey(machineKey)
             || durationDays is < 1 or > 28 || slimeFuelCount is < 1 or > 999_999)
-            return false;
+            return null;
 
-        this.refineryJobs.Add(machineKey, new RefineryJobRecord
+        var job = new RefineryJobRecord
         {
+            Id = Guid.NewGuid().ToString("N"),
             MachineKey = machineKey,
             InputItemId = "(O)170",
             InputCount = 1,
@@ -391,11 +395,123 @@ internal sealed class SlimeRegistry
             OutputCount = 1,
             StartedOnDay = currentDay,
             ReadyOnDay = currentDay + durationDays
-        });
+        };
+        this.refineryJobs.Add(machineKey, job);
+        return this.BeginRefineryTransaction(RefineryTransactionKind.Start, job);
+    }
+
+    public RefineryTransactionRecord? BeginRefineryCollection(string machineKey)
+    {
+        if (!this.refineryJobs.Remove(machineKey, out RefineryJobRecord? job))
+            return null;
+
+        return this.BeginRefineryTransaction(RefineryTransactionKind.Collect, job);
+    }
+
+    public bool ResolveRefineryTransaction(string transactionId, bool nativeSaveCommitted)
+    {
+        if (!this.pendingRefineryTransactions.Remove(transactionId, out RefineryTransactionRecord? transaction))
+            return false;
+
+        this.ApplyRefineryTransaction(transaction, nativeSaveCommitted);
         return true;
     }
 
-    public bool RemoveRefineryJob(string machineKey) => this.refineryJobs.Remove(machineKey);
+    public bool ReconcileOrphanRefineryReceipt(RefineryTransactionRecord transaction)
+    {
+        if (!IsValidRefineryTransaction(transaction))
+            return false;
+
+        if (transaction.Kind == RefineryTransactionKind.Start)
+        {
+            if (this.refineryJobs.TryGetValue(transaction.MachineKey, out RefineryJobRecord? existing))
+                return false;
+
+            this.refineryJobs.Add(transaction.MachineKey, CloneRefineryJob(transaction.Job));
+            return true;
+        }
+
+        if (this.refineryJobs.TryGetValue(transaction.MachineKey, out RefineryJobRecord? current)
+            && current.Id == transaction.Job.Id)
+            return this.refineryJobs.Remove(transaction.MachineKey);
+
+        return false;
+    }
+
+    private RefineryTransactionRecord BeginRefineryTransaction(RefineryTransactionKind kind, RefineryJobRecord job)
+    {
+        string id = Guid.NewGuid().ToString("N");
+        var transaction = new RefineryTransactionRecord
+        {
+            Id = id,
+            Sequence = this.nextRefineryTransactionSequence,
+            Kind = kind,
+            MachineKey = job.MachineKey,
+            Job = CloneRefineryJob(job)
+        };
+        if (this.nextRefineryTransactionSequence < long.MaxValue)
+            this.nextRefineryTransactionSequence++;
+        this.pendingRefineryTransactions.Add(id, transaction);
+        return transaction;
+    }
+
+    private void ApplyRefineryTransaction(RefineryTransactionRecord transaction, bool nativeSaveCommitted)
+    {
+        if (transaction.Kind == RefineryTransactionKind.Start)
+        {
+            if (nativeSaveCommitted)
+            {
+                if (!this.refineryJobs.ContainsKey(transaction.MachineKey))
+                    this.refineryJobs.Add(transaction.MachineKey, CloneRefineryJob(transaction.Job));
+                return;
+            }
+
+            if (this.refineryJobs.TryGetValue(transaction.MachineKey, out RefineryJobRecord? current)
+                && current.Id == transaction.Job.Id)
+                this.refineryJobs.Remove(transaction.MachineKey);
+            return;
+        }
+
+        if (nativeSaveCommitted)
+        {
+            if (this.refineryJobs.TryGetValue(transaction.MachineKey, out RefineryJobRecord? current)
+                && current.Id == transaction.Job.Id)
+                this.refineryJobs.Remove(transaction.MachineKey);
+            return;
+        }
+
+        if (!this.refineryJobs.ContainsKey(transaction.MachineKey))
+            this.refineryJobs.Add(transaction.MachineKey, CloneRefineryJob(transaction.Job));
+    }
+
+    private static RefineryJobRecord CloneRefineryJob(RefineryJobRecord job) => new()
+    {
+        Id = job.Id,
+        MachineKey = job.MachineKey,
+        InputItemId = job.InputItemId,
+        InputCount = job.InputCount,
+        SlimeFuelCount = job.SlimeFuelCount,
+        OutputItemId = job.OutputItemId,
+        OutputCount = job.OutputCount,
+        StartedOnDay = job.StartedOnDay,
+        ReadyOnDay = job.ReadyOnDay,
+        ReadyNotificationSent = job.ReadyNotificationSent
+    };
+
+    private static bool IsValidRefineryJob(RefineryJobRecord? job) =>
+        job is not null && Guid.TryParseExact(job.Id, "N", out _)
+        && !string.IsNullOrWhiteSpace(job.MachineKey)
+        && job.StartedOnDay >= 0 && job.ReadyOnDay >= job.StartedOnDay
+        && job.InputItemId == "(O)170" && job.InputCount == 1 && job.SlimeFuelCount is >= 1 and <= 999_999
+        && job.OutputItemId == "(O)338" && job.OutputCount == 1;
+
+    private static bool IsValidRefineryTransaction(RefineryTransactionRecord? transaction) =>
+        transaction is not null && Guid.TryParseExact(transaction.Id, "N", out _)
+        && transaction.Sequence > 0
+        && transaction.Kind is RefineryTransactionKind.Start or RefineryTransactionKind.Collect
+        && !string.IsNullOrWhiteSpace(transaction.MachineKey)
+        && IsValidRefineryJob(transaction.Job)
+        && transaction.Job.MachineKey == transaction.MachineKey;
 
     public bool AssignHatchAnimalId(string machineKey, long animalId)
     {
@@ -1013,6 +1129,8 @@ internal sealed class SlimeRegistry
         this.pendingMutagenicContributions.Clear();
         this.nextMutagenicContributionSequence = 1;
         this.refineryJobs.Clear();
+        this.pendingRefineryTransactions.Clear();
+        this.nextRefineryTransactionSequence = 1;
         this.hatchedEggIds.Clear();
         this.destroyedEggIds.Clear();
         this.pendingIncubationCancellations.Clear();
@@ -1191,16 +1309,30 @@ internal sealed class SlimeRegistry
 
         foreach (RefineryJobRecord job in data?.RefineryJobs ?? Enumerable.Empty<RefineryJobRecord>())
         {
-            if (job is null || string.IsNullOrWhiteSpace(job.MachineKey)
-                || job.StartedOnDay < 0 || job.ReadyOnDay < job.StartedOnDay
-                || job.InputItemId != "(O)170" || job.InputCount != 1 || job.SlimeFuelCount is < 1 or > 999_999
-                || job.OutputItemId != "(O)338" || job.OutputCount != 1
+            if (job is null)
+                continue;
+            if (string.IsNullOrWhiteSpace(job.Id))
+                job.Id = Guid.NewGuid().ToString("N");
+            if (!IsValidRefineryJob(job)
                 || this.refineryJobs.ContainsKey(job.MachineKey))
             {
                 this.monitor.Log("Skipped a malformed or duplicate external Gel Refinery job.", LogLevel.Warn);
                 continue;
             }
             this.refineryJobs.Add(job.MachineKey, job);
+        }
+
+        foreach (RefineryTransactionRecord transaction in data?.PendingRefineryTransactions ?? Enumerable.Empty<RefineryTransactionRecord>())
+        {
+            if (!IsValidRefineryTransaction(transaction)
+                || this.pendingRefineryTransactions.ContainsKey(transaction.Id))
+            {
+                this.monitor.Log("Skipped a malformed or duplicate pending Gel Refinery transaction.", LogLevel.Warn);
+                continue;
+            }
+            this.pendingRefineryTransactions.Add(transaction.Id, transaction);
+            if (transaction.Sequence >= this.nextRefineryTransactionSequence && transaction.Sequence < long.MaxValue)
+                this.nextRefineryTransactionSequence = transaction.Sequence + 1;
         }
 
         if (logSummary)
@@ -1215,6 +1347,7 @@ internal sealed class SlimeRegistry
         MutagenicAttempts = this.mutagenicAttempts.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList(),
         PendingMutagenicContributions = this.pendingMutagenicContributions.Values.OrderBy(record => record.Sequence).ToList(),
         RefineryJobs = this.refineryJobs.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList(),
+        PendingRefineryTransactions = this.pendingRefineryTransactions.Values.OrderBy(record => record.Sequence).ToList(),
         SanctuaryQuest = SanctuaryQuestProgression.Normalize(this.sanctuaryQuest),
         ActiveCompanionFarmAnimalId = this.activeCompanionFarmAnimalId,
         HatchedEggIds = this.hatchedEggIds.OrderBy(id => id, StringComparer.Ordinal).ToList(),

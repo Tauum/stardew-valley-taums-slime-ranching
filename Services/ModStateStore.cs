@@ -229,8 +229,14 @@ internal sealed class ModStateStore
 
         if (root is JsonObject schemaEighteen && schemaEighteen["SchemaVersion"]?.GetValue<int>() == 18)
         {
-            schemaEighteen["SchemaVersion"] = SlimeSaveData.CurrentSchemaVersion;
+            schemaEighteen["SchemaVersion"] = 19;
             schemaEighteen["RareLabs"] = new JsonArray();
+        }
+
+        if (root is JsonObject schemaNineteen && schemaNineteen["SchemaVersion"]?.GetValue<int>() == 19)
+        {
+            schemaNineteen["SchemaVersion"] = SlimeSaveData.CurrentSchemaVersion;
+            schemaNineteen["PendingRefineryTransactions"] = new JsonArray();
         }
 
         if (root is JsonObject jsonData && jsonData["Slimes"] is JsonArray slimes)

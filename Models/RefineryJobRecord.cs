@@ -3,6 +3,7 @@ namespace taums_slime_ranching.Models;
 /// <summary>One external Gel Refinery batch; its output stays reserved until collected.</summary>
 public sealed class RefineryJobRecord
 {
+    public string Id { get; set; } = string.Empty;
     public string MachineKey { get; set; } = "";
     public string InputItemId { get; set; } = "(O)170";
     public int InputCount { get; set; } = 1;

@@ -16,6 +16,7 @@ public sealed class ModEntry : Mod
 {
     private const string IncubationCancellationReceiptPrefix = "Taum.SlimeRanching/IncubationCancellation/";
     private const string MutagenicContributionReceiptPrefix = "Taum.SlimeRanching/MutagenicContribution/";
+    private const string RefineryTransactionReceiptPrefix = "Taum.SlimeRanching/RefineryTransaction/";
 
     private SlimeRegistry? registry;
     private ModStateStore? stateStore;
@@ -26,6 +27,7 @@ public sealed class ModEntry : Mod
     private readonly SlimeMutationVisualService mutationVisuals = new();
     private readonly List<(long SlimeId, bool Success, double Chance)> pendingMutagenicNotifications = new();
     private readonly HashSet<string> mutagenicContributionReceiptsToClear = new(StringComparer.Ordinal);
+    private readonly HashSet<string> refineryTransactionReceiptsToClear = new(StringComparer.Ordinal);
 
     public override void Entry(IModHelper helper)
     {
@@ -102,6 +104,7 @@ public sealed class ModEntry : Mod
             bool repairTransactionRecovered = this.ReconcileMaruRepairDelivery();
             bool incubationCancellationRecovered = this.ReconcileIncubationCancellations();
             bool mutagenicContributionRecovered = this.ReconcileMutagenicContributionTransactions();
+            bool refineryTransactionRecovered = this.ReconcileRefineryTransactions();
             bool constructionProgressChanged = this.TryRecordCompletedDaycareConstruction();
             bool repairQuestProgressChanged = this.TryStartMaruRepairQuest();
             this.LogRegistryReconciliation(detachedAnimals, cancelledCycles);
@@ -109,7 +112,7 @@ public sealed class ModEntry : Mod
                 this.Monitor.Log("Imported the previous mod-folder slime registry into this save. The original legacy file was left untouched.", LogLevel.Info);
             if (this.stateStore.MigratedSaveData)
                 this.Monitor.Log("Migrated the saved Ranch Slime data to the current schema.", LogLevel.Info);
-            if (needsPersistenceMigration || registeredRanchSlimes > 0 || recoveredHatches > 0 || detachedAnimals > 0 || cancelledCycles > 0 || maturityChanged || repairTransactionRecovered || incubationCancellationRecovered || mutagenicContributionRecovered || constructionProgressChanged || repairQuestProgressChanged)
+            if (needsPersistenceMigration || registeredRanchSlimes > 0 || recoveredHatches > 0 || detachedAnimals > 0 || cancelledCycles > 0 || maturityChanged || repairTransactionRecovered || incubationCancellationRecovered || mutagenicContributionRecovered || refineryTransactionRecovered || constructionProgressChanged || repairQuestProgressChanged)
             {
                 if (!this.SaveExternalStateNow())
                     this.Monitor.Log("Imported or reconciled Ranch Slime state remains in memory but could not yet be written to the current save.", LogLevel.Error);
@@ -118,6 +121,7 @@ public sealed class ModEntry : Mod
                     if (maturityChanged)
                         this.InvalidateEggObjectData();
                     this.ClearFinalizedMutagenicContributionReceipts();
+                    this.ClearFinalizedRefineryTransactionReceipts();
                 }
             }
         }
@@ -220,6 +224,7 @@ public sealed class ModEntry : Mod
 
         bool repairTransactionRecovered = this.ReconcileMaruRepairDelivery();
         bool mutagenicContributionRecovered = this.ReconcileMutagenicContributionTransactions();
+        bool refineryTransactionRecovered = this.ReconcileRefineryTransactions();
         bool constructionProgressChanged = this.TryRecordCompletedDaycareConstruction();
         bool repairQuestProgressChanged = this.TryStartMaruRepairQuest();
         bool maturityChanged = this.registry!.SynchronizeMaturity(GetFarmAnimals(), Game1.Date.TotalDays);
@@ -251,7 +256,7 @@ public sealed class ModEntry : Mod
         if (readyToNotify.Count == 0 && refineryReady.Count == 0 && this.pendingMutagenicNotifications.Count == 0)
         {
             bool needsSave = maturityChanged || repairTransactionRecovered || mutagenicContributionRecovered
-                || constructionProgressChanged || repairQuestProgressChanged;
+                || refineryTransactionRecovered || constructionProgressChanged || repairQuestProgressChanged;
             if (needsSave)
             {
                 if (!this.SaveExternalStateNow())
@@ -262,6 +267,7 @@ public sealed class ModEntry : Mod
                         this.InvalidateEggObjectData();
                     if (mutagenicContributionRecovered)
                         this.ClearFinalizedMutagenicContributionReceipts();
+                    this.ClearFinalizedRefineryTransactionReceipts();
                 }
             }
             else if (maturityChanged)
@@ -282,6 +288,7 @@ public sealed class ModEntry : Mod
             this.InvalidateEggObjectData();
         if (mutagenicContributionRecovered)
             this.ClearFinalizedMutagenicContributionReceipts();
+        this.ClearFinalizedRefineryTransactionReceipts();
 
         foreach (var ready in readyToNotify)
         {
@@ -494,6 +501,59 @@ public sealed class ModEntry : Mod
         return changed;
     }
 
+    private bool ReconcileRefineryTransactions()
+    {
+        if (this.registry is null)
+            return false;
+
+        bool changed = false;
+        foreach (RefineryTransactionRecord pending in this.registry.PendingRefineryTransactions
+                     .OrderByDescending(transaction => transaction.Sequence).ToArray())
+        {
+            string receiptKey = RefineryTransactionReceiptPrefix + pending.Id;
+            bool nativeSaveCommitted = Game1.player.modData.ContainsKey(receiptKey);
+            changed |= this.registry.ResolveRefineryTransaction(pending.Id, nativeSaveCommitted);
+            if (nativeSaveCommitted)
+                this.refineryTransactionReceiptsToClear.Add(receiptKey);
+        }
+
+        foreach (string receiptKey in Game1.player.modData.Keys
+                     .Where(key => key.StartsWith(RefineryTransactionReceiptPrefix, StringComparison.Ordinal))
+                     .ToArray())
+        {
+            string transactionId = receiptKey[RefineryTransactionReceiptPrefix.Length..];
+            if (this.registry.PendingRefineryTransactions.Any(transaction => transaction.Id == transactionId))
+                continue;
+
+            RefineryTransactionRecord? receipt = null;
+            try
+            {
+                receipt = System.Text.Json.JsonSerializer.Deserialize<RefineryTransactionRecord>(Game1.player.modData[receiptKey]);
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                // A malformed receipt can't safely be applied without its external pending record.
+            }
+
+            if (receipt?.Id == transactionId)
+                changed |= this.registry.ReconcileOrphanRefineryReceipt(receipt);
+            else
+                this.Monitor.Log("Skipped a malformed saved Gel Refinery transaction receipt.", LogLevel.Warn);
+
+            this.refineryTransactionReceiptsToClear.Add(receiptKey);
+            changed = true;
+        }
+
+        return changed;
+    }
+
+    private void ClearFinalizedRefineryTransactionReceipts()
+    {
+        foreach (string receiptKey in this.refineryTransactionReceiptsToClear)
+            Game1.player.modData.Remove(receiptKey);
+        this.refineryTransactionReceiptsToClear.Clear();
+    }
+
     private void ClearFinalizedMutagenicContributionReceipts()
     {
         foreach (string receiptKey in this.mutagenicContributionReceiptsToClear)
@@ -622,6 +682,7 @@ public sealed class ModEntry : Mod
         this.shadowCloneVisuals.Clear();
         this.mutationVisuals.Clear();
         this.pendingMutagenicNotifications.Clear();
+        this.refineryTransactionReceiptsToClear.Clear();
         this.stateReady = false;
         this.registry = new SlimeRegistry(this.Monitor);
         this.stateStore = new ModStateStore(this.Helper.Data, this.Helper.DirectoryPath);
@@ -877,7 +938,7 @@ public sealed class ModEntry : Mod
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
-            this.Monitor.Log($"Could not save the breeder pair to external mod state: {exception.Message}", LogLevel.Error);
+            this.Monitor.Log($"Could not save Ranch Slime data to external mod state: {exception.Message}", LogLevel.Error);
             return false;
         }
     }
@@ -2226,33 +2287,67 @@ public sealed class ModEntry : Mod
     private bool StartRefineryBatch(string machineKey)
     {
         GelRefineryRules rules = GelRefineryRules.FromConfig(this.config);
-        if (this.registry!.GetRefineryJob(machineKey) is not null
+        if (this.registry is null || this.registry.GetRefineryJob(machineKey) is not null
             || CountInventoryItem("(O)170") < 1 || CountInventoryItem("(O)766") < rules.FuelCost)
             return false;
 
+        SlimeRegistry registry = this.registry;
         List<(int Slot, Item Item, int OldStack)> removed = ConsumeInventoryItems("(O)170", 1)
             .Concat(ConsumeInventoryItems("(O)766", rules.FuelCost)).ToList();
-        if (!this.registry.StartRefineryJob(machineKey, Game1.Date.TotalDays, rules.DurationDays, rules.FuelCost))
+        RefineryTransactionRecord? transaction = registry.StartRefineryJob(machineKey, Game1.Date.TotalDays, rules.DurationDays, rules.FuelCost);
+        if (transaction is null)
         {
             RestoreInventoryItems(removed);
             return false;
         }
 
-        return true;
+        string receiptKey = RefineryTransactionReceiptPrefix + transaction.Id;
+        Game1.player.modData[receiptKey] = System.Text.Json.JsonSerializer.Serialize(transaction);
+        if (this.SaveExternalStateNow())
+            return true;
+
+        registry.ResolveRefineryTransaction(transaction.Id, nativeSaveCommitted: false);
+        Game1.player.modData.Remove(receiptKey);
+        RestoreInventoryItems(removed);
+        if (!this.SaveExternalStateNow())
+            this.Monitor.Log("Could not persist the Gel Refinery start rollback; inputs and the prior machine state were restored in memory.", LogLevel.Error);
+        return false;
     }
 
     private bool CollectRefineryBatch(string machineKey)
     {
-        RefineryJobRecord? job = this.registry!.GetRefineryJob(machineKey);
-        if (job is null || Game1.Date.TotalDays < job.ReadyOnDay)
+        SlimeRegistry? registry = this.registry;
+        RefineryJobRecord? job = registry?.GetRefineryJob(machineKey);
+        if (registry is null || job is null || Game1.Date.TotalDays < job.ReadyOnDay)
             return false;
 
         Item output = ItemRegistry.Create(job.OutputItemId);
-        if (!Game1.player.couldInventoryAcceptThisItem(output) || !Game1.player.addItemToInventoryBool(output))
+        if (!Game1.player.couldInventoryAcceptThisItem(output))
             return false;
 
-        this.registry.RemoveRefineryJob(machineKey);
-        return true;
+        (Item? Item, int Stack)[] inventorySnapshot = Game1.player.Items
+            .Select(item => (Item: (Item?)item, Stack: item?.Stack ?? 0))
+            .ToArray();
+        RefineryTransactionRecord? transaction = registry.BeginRefineryCollection(machineKey);
+        if (transaction is null)
+            return false;
+        if (!Game1.player.addItemToInventoryBool(output))
+        {
+            registry.ResolveRefineryTransaction(transaction.Id, nativeSaveCommitted: false);
+            return false;
+        }
+
+        string receiptKey = RefineryTransactionReceiptPrefix + transaction.Id;
+        Game1.player.modData[receiptKey] = System.Text.Json.JsonSerializer.Serialize(transaction);
+        if (this.SaveExternalStateNow())
+            return true;
+
+        registry.ResolveRefineryTransaction(transaction.Id, nativeSaveCommitted: false);
+        Game1.player.modData.Remove(receiptKey);
+        RestoreInventorySnapshot(inventorySnapshot);
+        if (!this.SaveExternalStateNow())
+            this.Monitor.Log("Could not persist the Gel Refinery collection rollback; the output and ready batch were restored in memory.", LogLevel.Error);
+        return false;
     }
 
     private static int CountInventoryItem(string qualifiedItemId) => Game1.player.Items
