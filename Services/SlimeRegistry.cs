@@ -37,7 +37,7 @@ internal sealed class SlimeRegistry
     private readonly HashSet<string> destroyedEggIds = new(StringComparer.Ordinal);
     private readonly Dictionary<string, IncubationRecord> pendingIncubationCancellations = new(StringComparer.Ordinal);
     private long? activeCompanionFarmAnimalId;
-    private SanctuaryQuestRecord sanctuaryQuest = new();
+    private SlimeDaycareQuestRecord slimeDaycareQuest = new();
     private long nextMutagenicContributionSequence = 1;
     private long nextRareLabContributionSequence = 1;
     private long nextRareLabCatalystTransactionSequence = 1;
@@ -101,15 +101,15 @@ internal sealed class SlimeRegistry
         .Where(farmAnimalId => this.IsReserved(farmAnimalId))
         .ToArray();
     public long? ActiveCompanionFarmAnimalId => this.activeCompanionFarmAnimalId;
-    public SanctuaryQuestRecord SanctuaryQuest => this.sanctuaryQuest;
-    public bool IsSanctuaryMilestoneCompleted(string milestone) =>
-        SanctuaryQuestProgression.IsCompleted(this.sanctuaryQuest, milestone);
-    public bool TryCompleteSanctuaryMilestone(string milestone) =>
-        SanctuaryQuestProgression.TryComplete(this.sanctuaryQuest, milestone);
-    public bool RecoverSanctuaryMilestoneFromDurableEvidence(string milestone) =>
-        SanctuaryQuestProgression.RecoverFromDurableEvidence(this.sanctuaryQuest, milestone);
-    public bool RemoveSanctuaryMilestone(string milestone) =>
-        this.sanctuaryQuest.CompletedMilestones.Remove(milestone);
+    public SlimeDaycareQuestRecord SlimeDaycareQuest => this.slimeDaycareQuest;
+    public bool IsSlimeDaycareQuestMilestoneCompleted(string milestone) =>
+        SlimeDaycareQuestProgression.IsCompleted(this.slimeDaycareQuest, milestone);
+    public bool TryCompleteSlimeDaycareQuestMilestone(string milestone) =>
+        SlimeDaycareQuestProgression.TryComplete(this.slimeDaycareQuest, milestone);
+    public bool RecoverSlimeDaycareQuestMilestoneFromDurableEvidence(string milestone) =>
+        SlimeDaycareQuestProgression.RecoverFromDurableEvidence(this.slimeDaycareQuest, milestone);
+    public bool RemoveSlimeDaycareQuestMilestone(string milestone) =>
+        this.slimeDaycareQuest.CompletedMilestones.Remove(milestone);
 
     public BreedingPairRecord? GetBreedingPair(string machineKey) =>
         this.breedingPairs.TryGetValue(machineKey, out BreedingPairRecord? pair) ? pair : null;
@@ -1362,7 +1362,7 @@ internal sealed class SlimeRegistry
         this.destroyedEggIds.Clear();
         this.pendingIncubationCancellations.Clear();
         this.activeCompanionFarmAnimalId = data?.ActiveCompanionFarmAnimalId;
-        this.sanctuaryQuest = SanctuaryQuestProgression.Normalize(data?.SanctuaryQuest);
+        this.slimeDaycareQuest = SlimeDaycareQuestProgression.Normalize(data?.SlimeDaycareQuest);
         foreach (string eggId in data?.HatchedEggIds ?? Enumerable.Empty<string>())
         {
             string normalizedEggId = NormalizeEggToken(eggId);
@@ -1629,7 +1629,7 @@ internal sealed class SlimeRegistry
         PendingMutagenicContributions = this.pendingMutagenicContributions.Values.OrderBy(record => record.Sequence).ToList(),
         RefineryJobs = this.refineryJobs.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList(),
         PendingRefineryTransactions = this.pendingRefineryTransactions.Values.OrderBy(record => record.Sequence).ToList(),
-        SanctuaryQuest = SanctuaryQuestProgression.Normalize(this.sanctuaryQuest),
+        SlimeDaycareQuest = SlimeDaycareQuestProgression.Normalize(this.slimeDaycareQuest),
         ActiveCompanionFarmAnimalId = this.activeCompanionFarmAnimalId,
         HatchedEggIds = this.hatchedEggIds.OrderBy(id => id, StringComparer.Ordinal).ToList(),
         DestroyedEggIds = this.destroyedEggIds.OrderBy(id => id, StringComparer.Ordinal).ToList(),

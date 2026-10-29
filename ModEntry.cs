@@ -47,8 +47,8 @@ public sealed class ModEntry : Mod
         BreederParentVisibilityPatch.SetActiveCycleLookup(id => this.registry?.IsInActiveBreedingCycle(id) == true);
         BreederParentVisibilityPatch.SetUnclaimedHatchLookup(id => this.registry?.IsUnclaimedIncubationHatch(id) == true);
         this.stateStore = new ModStateStore(helper.Data, helper.DirectoryPath);
-        SanctuaryQuestContent.SetDeliveryHandler(this.DeliverMaruRepairMaterials);
-        SanctuaryQuestContent.SetPromptHandler(this.RecordRobinPoolRepairPrompt);
+        SlimeDaycareQuestContent.SetDeliveryHandler(this.DeliverMaruRepairMaterials);
+        SlimeDaycareQuestContent.SetPromptHandler(this.RecordRobinPoolRepairPrompt);
 
         helper.Events.GameLoop.SaveLoaded += this.OnSaveLoaded;
         helper.Events.GameLoop.GameLaunched += this.OnGameLaunched;
@@ -63,7 +63,7 @@ public sealed class ModEntry : Mod
         helper.Events.Input.ButtonPressed += this.OnButtonPressed;
         helper.ConsoleCommands.Add("slime_ranching_inspect", "Inspect vanilla slime or Ranch Slime counts in the current Slime Hutch or Slime Daycare.", this.OnInspectCommand);
         helper.ConsoleCommands.Add("slime_ranching_open_management_desk", "Open a read-only tester preview of the Daycare Management Desk. Usage: slime_ranching_open_management_desk <exact save folder name>.", this.OnOpenManagementDeskCommand);
-        helper.ConsoleCommands.Add("slime_ranching_quest_status", "Report saved Sanctuary introduction milestones for the current save.", this.OnSanctuaryQuestStatusCommand);
+        helper.ConsoleCommands.Add("slime_ranching_quest_status", "Report saved Slime Daycare quest milestones for the current save.", this.OnSlimeDaycareQuestStatusCommand);
         helper.ConsoleCommands.Add("slime_ranching_test_maru_repair", "On a disposable save with a completed Daycare, seed the prerequisites for testing Robin's Maru repair handoff. Usage: slime_ranching_test_maru_repair <exact save folder name>.", this.OnTestMaruRepairCommand);
         helper.ConsoleCommands.Add("slime_ranching_backup_external_data", "Back up the current save's external mod data. Usage: slime_ranching_backup_external_data <exact save folder name>.", this.OnBackupExternalDataCommand);
         helper.ConsoleCommands.Add("slime_ranching_spawn_ranch_slime", $"Spawn one Ranch Slime at a chosen age in the Slime Daycare, optionally with randomized genome traits. Usage: slime_ranching_spawn_ranch_slime <exact save folder name> <age days 0-{FarmAnimalContent.RanchSlimeDaysToMature}> [random].", this.OnSpawnRanchSlimeCommand);
@@ -285,7 +285,7 @@ public sealed class ModEntry : Mod
             if (needsSave)
             {
                 if (!this.SaveCurrentSaveDataNow())
-                    this.Monitor.Log("Could not save Ranch Slime or Sanctuary quest progress; it will retry at the next save.", LogLevel.Error);
+                    this.Monitor.Log("Could not save Ranch Slime or Slime Daycare quest progress; it will retry at the next save.", LogLevel.Error);
                 else
                 {
                     if (maturityChanged)
@@ -346,15 +346,15 @@ public sealed class ModEntry : Mod
     private bool TryRecordCompletedDaycareConstruction()
     {
         if (this.registry is null
-            || !this.registry.IsSanctuaryMilestoneCompleted(SanctuaryQuestProgression.MarnieSecret)
-            || this.registry.IsSanctuaryMilestoneCompleted(SanctuaryQuestProgression.DaycareConstruction))
+            || !this.registry.IsSlimeDaycareQuestMilestoneCompleted(SlimeDaycareQuestProgression.MarnieSecret)
+            || this.registry.IsSlimeDaycareQuestMilestoneCompleted(SlimeDaycareQuestProgression.DaycareConstruction))
             return false;
 
         bool daycareIsComplete = Game1.getFarm().buildings.Any(building =>
             BuildingContent.IsSlimeDaycare(building.buildingType.Value)
             && building.daysOfConstructionLeft.Value <= 0);
         return daycareIsComplete
-            && this.registry.TryCompleteSanctuaryMilestone(SanctuaryQuestProgression.DaycareConstruction);
+            && this.registry.TryCompleteSlimeDaycareQuestMilestone(SlimeDaycareQuestProgression.DaycareConstruction);
     }
 
     private bool TryStartMaruRepairQuest()
@@ -362,82 +362,82 @@ public sealed class ModEntry : Mod
         if (this.registry is null)
             return false;
 
-        if (this.registry.IsSanctuaryMilestoneCompleted(SanctuaryQuestProgression.MaruRepairCompleted))
+        if (this.registry.IsSlimeDaycareQuestMilestoneCompleted(SlimeDaycareQuestProgression.MaruRepairCompleted))
         {
-            if (!Game1.player.hasQuest(SanctuaryQuestContent.MaruRepairQuestId))
+            if (!Game1.player.hasQuest(SlimeDaycareQuestContent.MaruRepairQuestId))
                 return false;
 
             // Recover the narrow crash window after the durable repair flag was
             // written but before Stardew marked the journal quest complete.
-            Game1.player.completeQuest(SanctuaryQuestContent.MaruRepairQuestId);
+            Game1.player.completeQuest(SlimeDaycareQuestContent.MaruRepairQuestId);
             return true;
         }
 
-        if (!this.registry.IsSanctuaryMilestoneCompleted(SanctuaryQuestProgression.DaycareConstruction))
+        if (!this.registry.IsSlimeDaycareQuestMilestoneCompleted(SlimeDaycareQuestProgression.DaycareConstruction))
             return false;
 
-        if (this.registry.IsSanctuaryMilestoneCompleted(SanctuaryQuestProgression.MaruRepairRequested))
+        if (this.registry.IsSlimeDaycareQuestMilestoneCompleted(SlimeDaycareQuestProgression.MaruRepairRequested))
         {
             // The mod ledger and Stardew's journal are saved separately. Re-add
             // the active mission if a save ended between those two writes.
-            if (!Game1.player.hasQuest(SanctuaryQuestContent.MaruRepairQuestId))
-                Game1.player.addQuest(SanctuaryQuestContent.MaruRepairQuestId);
+            if (!Game1.player.hasQuest(SlimeDaycareQuestContent.MaruRepairQuestId))
+                Game1.player.addQuest(SlimeDaycareQuestContent.MaruRepairQuestId);
             return false;
         }
 
-        if (!this.registry.IsSanctuaryMilestoneCompleted(SanctuaryQuestProgression.RobinPoolPrompt))
+        if (!this.registry.IsSlimeDaycareQuestMilestoneCompleted(SlimeDaycareQuestProgression.RobinPoolPrompt))
             return false;
 
-        if (this.registry.SanctuaryQuest.MaruRepairQuestAvailableOnDay is not int availableOnDay)
+        if (this.registry.SlimeDaycareQuest.MaruRepairQuestAvailableOnDay is not int availableOnDay)
         {
-            this.registry.SanctuaryQuest.MaruRepairQuestAvailableOnDay = Game1.Date.TotalDays + 1;
+            this.registry.SlimeDaycareQuest.MaruRepairQuestAvailableOnDay = Game1.Date.TotalDays + 1;
             return true;
         }
         if (Game1.Date.TotalDays < availableOnDay)
             return false;
 
-        if (!Game1.player.hasQuest(SanctuaryQuestContent.MaruRepairQuestId))
-            Game1.player.addQuest(SanctuaryQuestContent.MaruRepairQuestId);
-        if (!Game1.player.hasQuest(SanctuaryQuestContent.MaruRepairQuestId))
+        if (!Game1.player.hasQuest(SlimeDaycareQuestContent.MaruRepairQuestId))
+            Game1.player.addQuest(SlimeDaycareQuestContent.MaruRepairQuestId);
+        if (!Game1.player.hasQuest(SlimeDaycareQuestContent.MaruRepairQuestId))
             return false;
 
-        return this.registry.TryCompleteSanctuaryMilestone(SanctuaryQuestProgression.MaruRepairRequested);
+        return this.registry.TryCompleteSlimeDaycareQuestMilestone(SlimeDaycareQuestProgression.MaruRepairRequested);
     }
 
     private bool RecordRobinPoolRepairPrompt()
     {
         if (!this.stateReady || !Context.IsMainPlayer || Context.IsMultiplayer || this.registry is null
-            || !this.registry.TryCompleteSanctuaryMilestone(SanctuaryQuestProgression.RobinPoolPrompt))
+            || !this.registry.TryCompleteSlimeDaycareQuestMilestone(SlimeDaycareQuestProgression.RobinPoolPrompt))
             return false;
 
-        this.registry.SanctuaryQuest.MaruRepairQuestAvailableOnDay = Game1.Date.TotalDays + 1;
+        this.registry.SlimeDaycareQuest.MaruRepairQuestAvailableOnDay = Game1.Date.TotalDays + 1;
         if (this.SaveCurrentSaveDataNow())
             return true;
 
-        this.registry.RemoveSanctuaryMilestone(SanctuaryQuestProgression.RobinPoolPrompt);
-        this.registry.SanctuaryQuest.MaruRepairQuestAvailableOnDay = null;
+        this.registry.RemoveSlimeDaycareQuestMilestone(SlimeDaycareQuestProgression.RobinPoolPrompt);
+        this.registry.SlimeDaycareQuest.MaruRepairQuestAvailableOnDay = null;
         return false;
     }
 
     private bool DeliverMaruRepairMaterials()
     {
         if (!this.stateReady || !Context.IsMainPlayer || Context.IsMultiplayer || this.registry is null
-            || !this.registry.IsSanctuaryMilestoneCompleted(SanctuaryQuestProgression.MaruRepairRequested)
-            || this.registry.IsSanctuaryMilestoneCompleted(SanctuaryQuestProgression.MaruRepairCompleted)
-            || !SanctuaryQuestContent.TryConsumeRepairMaterials(Game1.player, out List<SanctuaryQuestContent.InventorySnapshot> snapshots))
+            || !this.registry.IsSlimeDaycareQuestMilestoneCompleted(SlimeDaycareQuestProgression.MaruRepairRequested)
+            || this.registry.IsSlimeDaycareQuestMilestoneCompleted(SlimeDaycareQuestProgression.MaruRepairCompleted)
+            || !SlimeDaycareQuestContent.TryConsumeRepairMaterials(Game1.player, out List<SlimeDaycareQuestContent.InventorySnapshot> snapshots))
             return false;
 
-        Game1.player.modData[SanctuaryQuestContent.RepairDeliveryReceiptKey] = "1";
-        if (!this.registry.TryCompleteSanctuaryMilestone(SanctuaryQuestProgression.MaruRepairCompleted)
+        Game1.player.modData[SlimeDaycareQuestContent.RepairDeliveryReceiptKey] = "1";
+        if (!this.registry.TryCompleteSlimeDaycareQuestMilestone(SlimeDaycareQuestProgression.MaruRepairCompleted)
             || !this.SaveCurrentSaveDataNow())
         {
-            Game1.player.modData.Remove(SanctuaryQuestContent.RepairDeliveryReceiptKey);
-            this.registry.RemoveSanctuaryMilestone(SanctuaryQuestProgression.MaruRepairCompleted);
-            SanctuaryQuestContent.RestoreRepairMaterials(Game1.player, snapshots);
+            Game1.player.modData.Remove(SlimeDaycareQuestContent.RepairDeliveryReceiptKey);
+            this.registry.RemoveSlimeDaycareQuestMilestone(SlimeDaycareQuestProgression.MaruRepairCompleted);
+            SlimeDaycareQuestContent.RestoreRepairMaterials(Game1.player, snapshots);
             return false;
         }
 
-        Game1.player.completeQuest(SanctuaryQuestContent.MaruRepairQuestId);
+        Game1.player.completeQuest(SlimeDaycareQuestContent.MaruRepairQuestId);
         return true;
     }
 
@@ -446,20 +446,20 @@ public sealed class ModEntry : Mod
         if (this.registry is null)
             return false;
 
-        bool hasVanillaSaveReceipt = Game1.player.modData.ContainsKey(SanctuaryQuestContent.RepairDeliveryReceiptKey);
-        bool repairRecorded = this.registry.IsSanctuaryMilestoneCompleted(SanctuaryQuestProgression.MaruRepairCompleted);
+        bool hasVanillaSaveReceipt = Game1.player.modData.ContainsKey(SlimeDaycareQuestContent.RepairDeliveryReceiptKey);
+        bool repairRecorded = this.registry.IsSlimeDaycareQuestMilestoneCompleted(SlimeDaycareQuestProgression.MaruRepairCompleted);
         if (hasVanillaSaveReceipt && !repairRecorded)
         {
             // The farmer inventory and its receipt are saved with the vanilla
             // world; recover the mod milestone if that save completed first.
-            return this.registry.RecoverSanctuaryMilestoneFromDurableEvidence(SanctuaryQuestProgression.MaruRepairCompleted);
+            return this.registry.RecoverSlimeDaycareQuestMilestoneFromDurableEvidence(SlimeDaycareQuestProgression.MaruRepairCompleted);
         }
 
         if (!hasVanillaSaveReceipt && repairRecorded)
         {
             // The external ledger may have reached disk before the vanilla
             // inventory save. Roll back repair so the player keeps the items.
-            return this.registry.RemoveSanctuaryMilestone(SanctuaryQuestProgression.MaruRepairCompleted);
+            return this.registry.RemoveSlimeDaycareQuestMilestone(SlimeDaycareQuestProgression.MaruRepairCompleted);
         }
 
         return false;
@@ -790,9 +790,9 @@ public sealed class ModEntry : Mod
     private bool TryHandleMaruRepairInteraction(SButton button, Vector2 clickedTile)
     {
         if (!this.stateReady || !Context.IsMainPlayer || Context.IsMultiplayer || this.registry is null
-            || !this.registry.IsSanctuaryMilestoneCompleted(SanctuaryQuestProgression.MaruRepairRequested)
-            || this.registry.IsSanctuaryMilestoneCompleted(SanctuaryQuestProgression.MaruRepairCompleted)
-            || !Game1.player.hasQuest(SanctuaryQuestContent.MaruRepairQuestId)
+            || !this.registry.IsSlimeDaycareQuestMilestoneCompleted(SlimeDaycareQuestProgression.MaruRepairRequested)
+            || this.registry.IsSlimeDaycareQuestMilestoneCompleted(SlimeDaycareQuestProgression.MaruRepairCompleted)
+            || !Game1.player.hasQuest(SlimeDaycareQuestContent.MaruRepairQuestId)
             || Game1.dialogueUp || Game1.eventUp || Game1.currentLocation.currentEvent is not null
             || Game1.player.isRidingHorse())
             return false;
@@ -804,7 +804,7 @@ public sealed class ModEntry : Mod
             return false;
 
         this.Helper.Input.Suppress(button);
-        if (!SanctuaryQuestContent.HasRepairMaterials(Game1.player, out string missing))
+        if (!SlimeDaycareQuestContent.HasRepairMaterials(Game1.player, out string missing))
         {
             Game1.drawObjectDialogue($"Maru still needs {missing} to repair the Mutagenic Pool.");
             return true;
@@ -824,8 +824,8 @@ public sealed class ModEntry : Mod
     private bool TryHandleRobinPoolRepairPrompt(SButton button, Vector2 clickedTile)
     {
         if (!this.stateReady || !Context.IsMainPlayer || Context.IsMultiplayer || this.registry is null
-            || !this.registry.IsSanctuaryMilestoneCompleted(SanctuaryQuestProgression.DaycareConstruction)
-            || this.registry.IsSanctuaryMilestoneCompleted(SanctuaryQuestProgression.RobinPoolPrompt)
+            || !this.registry.IsSlimeDaycareQuestMilestoneCompleted(SlimeDaycareQuestProgression.DaycareConstruction)
+            || this.registry.IsSlimeDaycareQuestMilestoneCompleted(SlimeDaycareQuestProgression.RobinPoolPrompt)
             || Game1.dialogueUp || Game1.eventUp || Game1.currentLocation.currentEvent is not null
             || Game1.player.isRidingHorse())
             return false;
@@ -1481,7 +1481,7 @@ public sealed class ModEntry : Mod
         GelRefineryContent.EditAsset(e);
         MutagenicPoolContent.LoadAssets(e);
         MutagenicPoolContent.EditAsset(e);
-        SanctuaryQuestContent.EditAsset(e);
+        SlimeDaycareQuestContent.EditAsset(e);
         BuildingContent.EditAsset(e);
     }
 
@@ -1653,7 +1653,7 @@ public sealed class ModEntry : Mod
             }
 
             this.Helper.Input.Suppress(e.Button);
-            if (!this.registry!.IsSanctuaryMilestoneCompleted(SanctuaryQuestProgression.MaruRepairCompleted))
+            if (!this.registry!.IsSlimeDaycareQuestMilestoneCompleted(SlimeDaycareQuestProgression.MaruRepairCompleted))
             {
                 Game1.drawObjectDialogue("The Mutagenic Pool is broken. Maru may be able to repair it.");
                 return;
@@ -3554,7 +3554,7 @@ public sealed class ModEntry : Mod
         return $"ID {genome.Id:N}; {species}; color {genome.VisualColor}; size {genome.Size}; rarity {genome.RarityTier}";
     }
 
-    private void OnSanctuaryQuestStatusCommand(string command, string[] args)
+    private void OnSlimeDaycareQuestStatusCommand(string command, string[] args)
     {
         if (args.Length != 0)
         {
@@ -3564,22 +3564,22 @@ public sealed class ModEntry : Mod
 
         if (!Context.IsWorldReady || !this.stateReady || this.registry is null)
         {
-            this.Monitor.Log("Load a save before inspecting Sanctuary quest progress.", LogLevel.Info);
+            this.Monitor.Log("Load a save before inspecting Slime Daycare quest progress.", LogLevel.Info);
             return;
         }
 
-        this.Monitor.Log($"Sanctuary quest save data schema: {this.stateStore?.LoadedSchemaVersion?.ToString() ?? "not written yet"}; target: {SlimeSaveData.CurrentSchemaVersion}.", LogLevel.Info);
-        if (this.registry.SanctuaryQuest.MaruRepairQuestAvailableOnDay is int availableOnDay)
+        this.Monitor.Log($"Slime Daycare quest save data schema: {this.stateStore?.LoadedSchemaVersion?.ToString() ?? "not written yet"}; target: {SlimeSaveData.CurrentSchemaVersion}.", LogLevel.Info);
+        if (this.registry.SlimeDaycareQuest.MaruRepairQuestAvailableOnDay is int availableOnDay)
             this.Monitor.Log($"Maru repair mission availability day: {availableOnDay}; current day: {Game1.Date.TotalDays}.", LogLevel.Info);
 
-        foreach (string milestone in SanctuaryQuestProgression.Milestones)
+        foreach (string milestone in SlimeDaycareQuestProgression.Milestones)
         {
-            string status = SanctuaryQuestProgression.IsCompleted(this.registry.SanctuaryQuest, milestone)
+            string status = SlimeDaycareQuestProgression.IsCompleted(this.registry.SlimeDaycareQuest, milestone)
                 ? "complete"
-                : SanctuaryQuestProgression.PrerequisitesMet(this.registry.SanctuaryQuest, milestone)
+                : SlimeDaycareQuestProgression.PrerequisitesMet(this.registry.SlimeDaycareQuest, milestone)
                     ? "prerequisites met"
                     : "waiting";
-            this.Monitor.Log($"Sanctuary milestone [{milestone}]: {status}.", LogLevel.Info);
+            this.Monitor.Log($"Slime Daycare quest milestone [{milestone}]: {status}.", LogLevel.Info);
         }
     }
 
@@ -3587,7 +3587,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady || this.registry is null)
         {
-            this.Monitor.Log("Load a single-player save with available Sanctuary save data before priming the Maru repair test.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Slime Daycare quest data before priming the Maru repair test.", LogLevel.Warn);
             return;
         }
 
@@ -3607,38 +3607,38 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        if (this.registry.IsSanctuaryMilestoneCompleted(SanctuaryQuestProgression.RobinPoolPrompt))
+        if (this.registry.IsSlimeDaycareQuestMilestoneCompleted(SlimeDaycareQuestProgression.RobinPoolPrompt))
         {
             this.Monitor.Log("The Robin-to-Maru handoff is already primed or complete in this save.", LogLevel.Info);
             return;
         }
 
-        var previousMilestones = new HashSet<string>(this.registry.SanctuaryQuest.CompletedMilestones, StringComparer.Ordinal);
-        int? previousAvailabilityDay = this.registry.SanctuaryQuest.MaruRepairQuestAvailableOnDay;
+        var previousMilestones = new HashSet<string>(this.registry.SlimeDaycareQuest.CompletedMilestones, StringComparer.Ordinal);
+        int? previousAvailabilityDay = this.registry.SlimeDaycareQuest.MaruRepairQuestAvailableOnDay;
         string[] prerequisites =
         {
-            SanctuaryQuestProgression.LewisConcern,
-            SanctuaryQuestProgression.WizardFailedPotion,
-            SanctuaryQuestProgression.MarnieSecret,
-            SanctuaryQuestProgression.DaycareConstruction
+            SlimeDaycareQuestProgression.LewisConcern,
+            SlimeDaycareQuestProgression.WizardFailedPotion,
+            SlimeDaycareQuestProgression.MarnieSecret,
+            SlimeDaycareQuestProgression.DaycareConstruction
         };
 
         foreach (string milestone in prerequisites)
         {
-            if (this.registry.IsSanctuaryMilestoneCompleted(milestone)
-                || this.registry.TryCompleteSanctuaryMilestone(milestone))
+            if (this.registry.IsSlimeDaycareQuestMilestoneCompleted(milestone)
+                || this.registry.TryCompleteSlimeDaycareQuestMilestone(milestone))
                 continue;
 
-            this.registry.SanctuaryQuest.CompletedMilestones = previousMilestones;
-            this.registry.SanctuaryQuest.MaruRepairQuestAvailableOnDay = previousAvailabilityDay;
+            this.registry.SlimeDaycareQuest.CompletedMilestones = previousMilestones;
+            this.registry.SlimeDaycareQuest.MaruRepairQuestAvailableOnDay = previousAvailabilityDay;
             this.Monitor.Log($"Couldn't prime the Maru repair test because prerequisite milestone '{milestone}' could not be recorded.", LogLevel.Error);
             return;
         }
 
         if (!this.SaveCurrentSaveDataNow())
         {
-            this.registry.SanctuaryQuest.CompletedMilestones = previousMilestones;
-            this.registry.SanctuaryQuest.MaruRepairQuestAvailableOnDay = previousAvailabilityDay;
+            this.registry.SlimeDaycareQuest.CompletedMilestones = previousMilestones;
+            this.registry.SlimeDaycareQuest.MaruRepairQuestAvailableOnDay = previousAvailabilityDay;
             this.Monitor.Log("Couldn't save the Maru repair test setup; the previous in-memory quest progress was restored.", LogLevel.Error);
             return;
         }

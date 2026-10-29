@@ -61,13 +61,13 @@ internal sealed class ModStateStore
             }
             if (saveData.SchemaVersion == 12)
             {
-                saveData.SanctuaryQuest ??= new SanctuaryQuestRecord();
+                saveData.SlimeDaycareQuest ??= new SlimeDaycareQuestRecord();
                 saveData.SchemaVersion = 13;
                 this.MigratedSaveData = true;
             }
             if (saveData.SchemaVersion == 13)
             {
-                saveData.SanctuaryQuest ??= new SanctuaryQuestRecord();
+                saveData.SlimeDaycareQuest ??= new SlimeDaycareQuestRecord();
                 saveData.SchemaVersion = 14;
                 this.MigratedSaveData = true;
             }

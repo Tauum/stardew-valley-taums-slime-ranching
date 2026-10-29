@@ -40,7 +40,7 @@ Reply with any collision, sizing, or warp issues and a screenshot if the room di
 
 1. Make a fresh copy of a 2.0 save with schema 12 or 13. Keep the original and the main farm untouched.
 2. Run **3 Build, Deploy, Run**, then load that copied save.
-3. In the SMAPI console, run `slime_ranching_quest_status`. Confirm it reports schema **22** as the target schema and lists the Sanctuary milestones. On a new save, `lewis_concern` should report `prerequisites met` (available but incomplete); the remaining milestones should report `waiting`.
+3. In the SMAPI console, run `slime_ranching_quest_status`. Confirm it reports schema **23** as the target schema and lists the Slime Daycare quest milestones. On a new save, `lewis_concern` should report `prerequisites met` (available but incomplete); the remaining milestones should report `waiting`.
 4. Save, return to title, reload the same copied save, and run `slime_ranching_quest_status` again. Confirm schema 23 is retained and the milestone list is unchanged.
 
 ### Maru repair handoff check — can be tested before the opening scenes are complete

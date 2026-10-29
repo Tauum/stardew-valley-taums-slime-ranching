@@ -5,7 +5,7 @@ using StardewValley.Menus;
 
 namespace taums_slime_ranching.Services;
 
-internal static class SanctuaryQuestContent
+internal static class SlimeDaycareQuestContent
 {
     public const string MaruRepairQuestId = "Taum.SlimeRanching_MaruPoolRepair";
     public const string RepairDeliveryReceiptKey = "Taum.SlimeRanching/MaruRepairDeliveryReceipt";

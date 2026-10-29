@@ -2,8 +2,8 @@ using taums_slime_ranching.Models;
 
 namespace taums_slime_ranching.Services;
 
-/// <summary>Defines durable milestone IDs and prerequisite rules for the Sanctuary introduction.</summary>
-internal static class SanctuaryQuestProgression
+/// <summary>Defines durable milestone IDs and prerequisite rules for the Slime Daycare quest.</summary>
+internal static class SlimeDaycareQuestProgression
 {
     public const string LewisConcern = "lewis_concern";
     public const string WizardFailedPotion = "wizard_failed_potion";
@@ -48,9 +48,9 @@ internal static class SanctuaryQuestProgression
             [FirstBreedingStarted] = new[] { WizardSplitReaction }
         };
 
-    public static SanctuaryQuestRecord Normalize(SanctuaryQuestRecord? record)
+    public static SlimeDaycareQuestRecord Normalize(SlimeDaycareQuestRecord? record)
     {
-        var normalized = new SanctuaryQuestRecord();
+        var normalized = new SlimeDaycareQuestRecord();
         normalized.MaruRepairQuestAvailableOnDay = record?.MaruRepairQuestAvailableOnDay;
         if (record?.CompletedMilestones is null)
             return normalized;
@@ -78,18 +78,18 @@ internal static class SanctuaryQuestProgression
         return normalized;
     }
 
-    public static bool IsCompleted(SanctuaryQuestRecord record, string milestone) =>
+    public static bool IsCompleted(SlimeDaycareQuestRecord record, string milestone) =>
         !string.IsNullOrWhiteSpace(milestone)
         && Prerequisites.ContainsKey(milestone)
         && record.CompletedMilestones.Contains(milestone);
 
-    public static bool PrerequisitesMet(SanctuaryQuestRecord record, string milestone) =>
+    public static bool PrerequisitesMet(SlimeDaycareQuestRecord record, string milestone) =>
         !string.IsNullOrWhiteSpace(milestone)
         && Prerequisites.TryGetValue(milestone, out string[]? requirements)
         && requirements.All(required => record.CompletedMilestones.Contains(required));
 
     /// <summary>Mark a milestone once, only after its prerequisite milestones are durable.</summary>
-    public static bool TryComplete(SanctuaryQuestRecord record, string milestone)
+    public static bool TryComplete(SlimeDaycareQuestRecord record, string milestone)
     {
         if (!PrerequisitesMet(record, milestone))
             return false;
@@ -98,7 +98,7 @@ internal static class SanctuaryQuestProgression
     }
 
     /// <summary>Recover a milestone proven by a durable vanilla-save transaction receipt.</summary>
-    public static bool RecoverFromDurableEvidence(SanctuaryQuestRecord record, string milestone)
+    public static bool RecoverFromDurableEvidence(SlimeDaycareQuestRecord record, string milestone)
     {
         if (!Prerequisites.ContainsKey(milestone) || !record.CompletedMilestones.Add(milestone))
             return false;

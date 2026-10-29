@@ -635,8 +635,8 @@ internal sealed class SlimeBreederMenu : IClickableMenu
         if (!this.registry.StartBreedingCycle(this.machineKey, Game1.Date.TotalDays, this.cycleDurationDays, this.selectedCrystalColor))
             return false;
 
-        bool firstBreedingAlreadyRecorded = this.registry.IsSanctuaryMilestoneCompleted(SanctuaryQuestProgression.FirstBreedingStarted);
-        bool recordedFirstBreeding = this.registry.TryCompleteSanctuaryMilestone(SanctuaryQuestProgression.FirstBreedingStarted);
+        bool firstBreedingAlreadyRecorded = this.registry.IsSlimeDaycareQuestMilestoneCompleted(SlimeDaycareQuestProgression.FirstBreedingStarted);
+        bool recordedFirstBreeding = this.registry.TryCompleteSlimeDaycareQuestMilestone(SlimeDaycareQuestProgression.FirstBreedingStarted);
 
         if (crystalItem is not null)
         {
@@ -650,7 +650,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
 
         this.registry.CancelBreedingCycle(this.machineKey);
         if (recordedFirstBreeding && !firstBreedingAlreadyRecorded)
-            this.registry.RemoveSanctuaryMilestone(SanctuaryQuestProgression.FirstBreedingStarted);
+            this.registry.RemoveSlimeDaycareQuestMilestone(SlimeDaycareQuestProgression.FirstBreedingStarted);
         if (crystalItem is not null)
         {
             if (crystalItem.Stack > 0)
