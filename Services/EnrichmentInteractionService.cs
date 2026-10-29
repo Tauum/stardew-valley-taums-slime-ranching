@@ -8,7 +8,6 @@ namespace taums_slime_ranching.Services;
 internal sealed class EnrichmentInteractionService
 {
     private const int AssignmentIntervalTicks = 30;
-    private const float InteractionRadiusPixels = 128f;
     private readonly Dictionary<long, Interaction> active = new();
     private int assignmentTicks;
     private AnimalHouse? activeHouse;
@@ -287,7 +286,9 @@ internal sealed class EnrichmentInteractionService
             {
                 Vector2 center = spot.Tile * 64f + new Vector2(32f, 32f);
                 float distance = Vector2.DistanceSquared(animalPosition, center);
-                if (distance >= InteractionRadiusPixels * InteractionRadiusPixels
+                float maximumDistanceSquared = spot.Definition.MaximumInteractionDistancePixels
+                    * spot.Definition.MaximumInteractionDistancePixels;
+                if (distance >= maximumDistanceSquared
                     || !HasReachableApproach(house, animal, spot, reachabilityCache))
                     continue;
 
@@ -304,7 +305,7 @@ internal sealed class EnrichmentInteractionService
                         if (candidate.myID.Value == animal.myID.Value
                             || this.active.ContainsKey(candidate.myID.Value)
                             || candidateRecord.EnrichmentActivitiesToday >= 4
-                            || Vector2.DistanceSquared(candidate.Position, center) >= InteractionRadiusPixels * InteractionRadiusPixels
+                            || Vector2.DistanceSquared(candidate.Position, center) >= maximumDistanceSquared
                             || !HasReachableApproach(house, candidate, spot, reachabilityCache))
                             continue;
 
@@ -353,7 +354,8 @@ internal sealed class EnrichmentInteractionService
                     .Where(candidate => candidate.Animal.myID.Value != animal.myID.Value
                         && !this.active.ContainsKey(candidate.Animal.myID.Value)
                         && candidate.Record.EnrichmentActivitiesToday < 4
-                        && Vector2.DistanceSquared(candidate.Animal.Position, lampCenter) < InteractionRadiusPixels * InteractionRadiusPixels
+                        && Vector2.DistanceSquared(candidate.Animal.Position, lampCenter)
+                            < spotToUse.Definition.MaximumInteractionDistancePixels * spotToUse.Definition.MaximumInteractionDistancePixels
                         && IsNearestAvailableSpot(house, candidate.Animal, spotToUse, furnitureSpots, reachabilityCache))
                     .Select(candidate => (candidate.Animal, candidate.Record))
                     .ToArray();
@@ -437,11 +439,14 @@ internal sealed class EnrichmentInteractionService
     {
         Vector2 animalPosition = animal.Position;
         FurnitureSpot? nearestSpot = null;
-        float nearestDistance = InteractionRadiusPixels * InteractionRadiusPixels;
+        float nearestDistance = float.PositiveInfinity;
         foreach (FurnitureSpot spot in availableSpots)
         {
             float distance = Vector2.DistanceSquared(animalPosition, spot.Tile * 64f + new Vector2(32f, 32f));
-            if (distance >= nearestDistance || !HasReachableApproach(house, animal, spot, reachabilityCache))
+            float maximumDistanceSquared = spot.Definition.MaximumInteractionDistancePixels
+                * spot.Definition.MaximumInteractionDistancePixels;
+            if (distance >= maximumDistanceSquared || distance >= nearestDistance
+                || !HasReachableApproach(house, animal, spot, reachabilityCache))
                 continue;
 
             nearestSpot = spot;

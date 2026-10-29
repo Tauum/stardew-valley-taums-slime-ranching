@@ -25,7 +25,8 @@ internal sealed record EnrichmentStationDefinition(
     IReadOnlyList<Point>? ApproachOffsets = null,
     int MinimumParticipants = 1,
     int MinimumDurationMinutes = 120,
-    int MaximumDurationMinutes = 180)
+    int MaximumDurationMinutes = 180,
+    float MaximumInteractionDistancePixels = 128f)
 {
     public IReadOnlyList<Point> ApproachTileOffsets =>
         this.ApproachOffsets ?? EnrichmentStationCatalog.DefaultApproachTileOffsets;
