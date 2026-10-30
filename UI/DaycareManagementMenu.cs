@@ -591,6 +591,13 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             2 => "Next Robin upgrade: Final | 100,000g",
             _ => "Daycare fully upgraded"
         };
+        string nextUpgradeUnlocks = this.buildingTier switch
+        {
+            0 => "Unlocks renovations, Egg CryoLab, 1% Rare Lab, Maru Pool mission",
+            1 => "No new machine unlock is currently specified",
+            2 => "Unlocks second Breeder/Incubator, 5% Rare Lab, Refinery, cellar",
+            _ => "All planned upgrade features are unlocked"
+        };
         string buildingId = this.daycare.ParentBuilding?.id.Value.ToString("N") ?? string.Empty;
         IReadOnlyList<DaycareFurnitureSlotDefinition> unlockedSlots = FurnitureSlotCatalog.GetSlotsUnlockedAtTier(this.buildingTier);
         HashSet<string> unlockedSlotIds = unlockedSlots.Select(slot => slot.SlotId).ToHashSet(StringComparer.Ordinal);
@@ -616,10 +623,12 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         foreach (string line in status)
         {
             b.DrawString(Game1.tinyFont, line, new Vector2(overview.X + 16, y), Color.White);
-            y += 25;
+            y += 23;
         }
         DrawFittedText(b, nextUpgradeGuidance, new Rectangle(overview.X + 16, y, overview.Width - 32, 22),
             Game1.tinyFont, new Color(255, 223, 151));
+        DrawFittedText(b, nextUpgradeUnlocks, new Rectangle(overview.X + 16, y + 22, overview.Width - 32, 20),
+            Game1.tinyFont, new Color(205, 218, 239));
 
         Rectangle inventory = new(overview.X + 10, overview.Bottom - 104, overview.Width - 20, 94);
         DrawPanel(b, inventory, new Color(47, 66, 111), new Color(95, 134, 194));
