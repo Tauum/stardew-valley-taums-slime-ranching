@@ -96,6 +96,7 @@ public sealed class ModEntry : Mod
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_ball_pit", "Give one Slime Ball Pit for activity testing. Usage: slime_ranching_give_ball_pit.", this.OnGiveBallPitCommand);
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_lamp", "Give one Slime Lamp for activity testing. Usage: slime_ranching_give_lamp.", this.OnGiveLampCommand);
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_fairy_lights", "Give one set of Slime Fairy Lights for testing. Usage: slime_ranching_give_fairy_lights.", this.OnGiveFairyLightsCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_washing_machine", "Give one Slime Washing Machine for recipe output and sprite testing. Usage: slime_ranching_give_washing_machine.", this.OnGiveWashingMachineCommand);
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_test_eggs", "Create test eggs, use 'random' for one randomized egg, 'malformed' for two deliberately invalid eggs, or pass key=value metadata for two controlled eggs. Usage: slime_ranching_give_test_eggs [random|malformed|species=Name ...].", this.OnGiveTestEggsCommand);
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_color_eggs", "Create seven color test eggs. Usage: slime_ranching_give_color_eggs.", this.OnGiveColorEggsCommand);
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_crystals", "Give one of each Chromatic Crystal for breeder testing. Usage: slime_ranching_give_crystals.", this.OnGiveCrystalsCommand);
@@ -3134,6 +3135,31 @@ public sealed class ModEntry : Mod
         }
 
         this.Monitor.Log("Added one set of Slime Fairy Lights. Place them in the Slime Daycare; their colored glow is on from 6:00 PM until 2:00 AM.", LogLevel.Info);
+    }
+
+    private void OnGiveWashingMachineCommand(string command, string[] args)
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
+        {
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before requesting a Slime Washing Machine.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 1 || args[0] != saveName)
+        {
+            this.Monitor.Log("To give a Slime Washing Machine to the currently loaded save, use: slime_ranching_give_washing_machine", LogLevel.Warn);
+            return;
+        }
+
+        Item machine = ItemRegistry.Create(FurnitureContent.SlimeWashingMachineQualifiedId);
+        if (!Game1.player.couldInventoryAcceptThisItem(machine) || !Game1.player.addItemToInventoryBool(machine))
+        {
+            this.Monitor.Log("Make room in your inventory for the Slime Washing Machine, then try again.", LogLevel.Warn);
+            return;
+        }
+
+        this.Monitor.Log("Added one Slime Washing Machine for sprite and placement testing. It has no washing interaction or slime effect yet.", LogLevel.Info);
     }
 
     private void OnGiveSeesawCommand(string command, string[] args)
