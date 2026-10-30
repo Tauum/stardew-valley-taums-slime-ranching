@@ -797,7 +797,7 @@ internal sealed class SlimeRegistry
     private static bool IsValidSlimePrinterJob(SlimePrinterJobRecord? job) =>
         job is not null && Guid.TryParseExact(job.Id, "N", out _)
         && !string.IsNullOrWhiteSpace(job.MachineKey)
-        && job.StartedOnDay >= 0 && job.ReadyOnDay >= job.StartedOnDay
+        && job.StartedOnDay >= 0 && job.ReadyOnDay > job.StartedOnDay
         && job.InputItemId == "(O)170" && job.InputCount == 1 && job.SlimeFuelCount is >= 1 and <= 999_999
         && job.OutputItemId == "(O)338" && job.OutputCount == 1;
 
