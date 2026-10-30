@@ -97,6 +97,8 @@ public sealed class ModEntry : Mod
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_lamp", "Give one Slime Lamp for activity testing. Usage: slime_ranching_give_lamp.", this.OnGiveLampCommand);
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_fairy_lights", "Give one set of Slime Fairy Lights for testing. Usage: slime_ranching_give_fairy_lights.", this.OnGiveFairyLightsCommand);
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_washing_machine", "Give one Slime Washing Machine for recipe output and sprite testing. Usage: slime_ranching_give_washing_machine.", this.OnGiveWashingMachineCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_set_furniture_slot_test", "Save a test furniture-slot assignment without placing or consuming an item. Usage: slime_ranching_set_furniture_slot_test <slot-id> <furniture-key> <tile-x> <tile-y>.", this.OnSetFurnitureSlotTestCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_clear_furniture_slot_test", "Clear a test furniture-slot assignment without removing an in-room object. Usage: slime_ranching_clear_furniture_slot_test <slot-id>.", this.OnClearFurnitureSlotTestCommand);
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_test_eggs", "Create test eggs, use 'random' for one randomized egg, 'malformed' for two deliberately invalid eggs, or pass key=value metadata for two controlled eggs. Usage: slime_ranching_give_test_eggs [random|malformed|species=Name ...].", this.OnGiveTestEggsCommand);
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_color_eggs", "Create seven color test eggs. Usage: slime_ranching_give_color_eggs.", this.OnGiveColorEggsCommand);
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_crystals", "Give one of each Chromatic Crystal for breeder testing. Usage: slime_ranching_give_crystals.", this.OnGiveCrystalsCommand);
@@ -3160,6 +3162,97 @@ public sealed class ModEntry : Mod
         }
 
         this.Monitor.Log("Added one Slime Washing Machine for sprite and placement testing. It has no washing interaction or slime effect yet.", LogLevel.Info);
+    }
+
+    private void OnSetFurnitureSlotTestCommand(string command, string[] args)
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady || this.registry is null)
+        {
+            this.Monitor.Log("Load a single-player save before setting a test furniture-slot assignment.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 5 || args[0] != saveName
+            || !int.TryParse(args[3], out int tileX) || !int.TryParse(args[4], out int tileY))
+        {
+            this.Monitor.Log("Usage: slime_ranching_set_furniture_slot_test <slot-id> <furniture-key> <tile-x> <tile-y>", LogLevel.Warn);
+            return;
+        }
+
+        if (Game1.currentLocation is not AnimalHouse daycare
+            || !BuildingContent.IsSlimeDaycare(daycare.ParentBuilding?.buildingType.Value)
+            || !ReferenceEquals(daycare.ParentBuilding?.GetIndoors(), daycare))
+        {
+            this.Monitor.Log("Enter the Slime Daycare before setting a test furniture-slot assignment.", LogLevel.Warn);
+            return;
+        }
+
+        if (tileX < 0 || tileY < 0
+            || tileX >= daycare.map.Layers[0].LayerWidth
+            || tileY >= daycare.map.Layers[0].LayerHeight)
+        {
+            this.Monitor.Log("Choose a nonnegative tile inside the current Daycare room.", LogLevel.Warn);
+            return;
+        }
+
+        if (!FurnitureSlotCatalog.TryGetFurnitureByCommandKey(args[2], out DaycareFurnitureRecipeListing furniture))
+        {
+            string keys = string.Join(", ", FurnitureSlotCatalog.GetRecipeListings().Select(FurnitureSlotCatalog.GetCommandKey));
+            this.Monitor.Log($"Unknown furniture key '{args[2]}'. Valid keys: {keys}.", LogLevel.Warn);
+            return;
+        }
+
+        string buildingId = daycare.ParentBuilding?.id.Value.ToString("N") ?? string.Empty;
+        var assignment = new DaycareFurnitureSlotRecord
+        {
+            DaycareBuildingId = buildingId,
+            SlotId = args[1],
+            FurnitureQualifiedItemId = furniture.QualifiedItemId,
+            TileX = tileX,
+            TileY = tileY
+        };
+        if (!this.registry.TryAssignFurnitureSlot(assignment, BuildingContent.GetUpgradeTier(daycare.ParentBuilding?.buildingType.Value), out string error))
+        {
+            this.Monitor.Log($"Couldn't save the furniture-slot test assignment: {error}", LogLevel.Warn);
+            return;
+        }
+
+        string displayName = ItemRegistry.Create(furniture.QualifiedItemId).DisplayName;
+        this.Monitor.Log($"Saved test assignment {args[1]}: {displayName} at tile ({tileX}, {tileY}). No item was consumed or placed; clear it with slime_ranching_clear_furniture_slot_test {args[1]}.", LogLevel.Info);
+    }
+
+    private void OnClearFurnitureSlotTestCommand(string command, string[] args)
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady || this.registry is null)
+        {
+            this.Monitor.Log("Load a single-player save before clearing a test furniture-slot assignment.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 2 || args[0] != saveName)
+        {
+            this.Monitor.Log("Usage: slime_ranching_clear_furniture_slot_test <slot-id>", LogLevel.Warn);
+            return;
+        }
+
+        if (Game1.currentLocation is not AnimalHouse daycare
+            || !BuildingContent.IsSlimeDaycare(daycare.ParentBuilding?.buildingType.Value)
+            || !ReferenceEquals(daycare.ParentBuilding?.GetIndoors(), daycare))
+        {
+            this.Monitor.Log("Enter the Slime Daycare before clearing a test furniture-slot assignment.", LogLevel.Warn);
+            return;
+        }
+
+        string buildingId = daycare.ParentBuilding?.id.Value.ToString("N") ?? string.Empty;
+        if (!this.registry.RemoveFurnitureSlot(buildingId, args[1]))
+        {
+            this.Monitor.Log($"No saved furniture-slot assignment exists for {args[1]} in this Daycare.", LogLevel.Warn);
+            return;
+        }
+
+        this.Monitor.Log($"Cleared test furniture-slot assignment {args[1]}. No in-room object was removed.", LogLevel.Info);
     }
 
     private void OnGiveSeesawCommand(string command, string[] args)

@@ -52,4 +52,15 @@ internal static class FurnitureSlotCatalog
 
     public static bool TryGetFurniture(string qualifiedItemId, out DaycareFurnitureRecipeListing recipe) =>
         RecipesByItemId.TryGetValue(qualifiedItemId, out recipe!);
+
+    public static bool TryGetFurnitureByCommandKey(string commandKey, out DaycareFurnitureRecipeListing recipe)
+    {
+        recipe = Recipes.FirstOrDefault(entry => string.Equals(GetCommandKey(entry), commandKey, StringComparison.OrdinalIgnoreCase))!;
+        return recipe is not null;
+    }
+
+    public static string GetCommandKey(DaycareFurnitureRecipeListing recipe) =>
+        recipe.ShopItemName.StartsWith("Slime", StringComparison.Ordinal)
+            ? recipe.ShopItemName["Slime".Length..]
+            : recipe.ShopItemName;
 }
