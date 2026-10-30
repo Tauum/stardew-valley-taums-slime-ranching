@@ -284,9 +284,9 @@ internal static class SlimeEggContent
             }
 
             Dictionary<Guid, string> parentNames = (data?.Slimes ?? new List<SlimeRecord>())
-                .Where(record => !string.IsNullOrWhiteSpace(record.AnimalName))
-                .GroupBy(record => record.Genome.Id)
-                .ToDictionary(group => group.Key, group => group.First().AnimalName!);
+                .Where(record => record is not null && record.Genome is not null && !string.IsNullOrWhiteSpace(record.AnimalName))
+                .GroupBy(record => record!.Genome!.Id)
+                .ToDictionary(group => group.Key, group => group.First()!.AnimalName!);
             foreach (SlimeEggRecord egg in data?.Eggs ?? Enumerable.Empty<SlimeEggRecord>())
             {
                 if (egg?.Genome is not { Id: var id } genome || id == Guid.Empty || egg.ItemId != GetLegacyItemId(id))
