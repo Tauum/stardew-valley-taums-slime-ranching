@@ -41,6 +41,11 @@ public sealed class ModEntry : Mod
         new Harmony(this.ModManifest.UniqueID).PatchAll(typeof(ModEntry).Assembly);
         DaycareDecorating.Initialize(helper, this.Monitor);
         this.config = helper.ReadConfig<ModConfig>();
+        if (GelRefineryRules.NormalizeFuelCost(this.config))
+        {
+            helper.WriteConfig(this.config);
+            this.Monitor.Log($"Normalized the configured Gel Refinery fuel cost to {this.config.GelRefinerySlimeFuelCost} Slime (supported range {GelRefineryRules.MinimumSlimeFuelCost}-{GelRefineryRules.MaximumSlimeFuelCost}; the minimum prevents direct sale-value arbitrage).", LogLevel.Info);
+        }
         this.registry = new SlimeRegistry(this.Monitor);
         DomesticatedSlimeShadowScalePatch.SetSizeLookup(id => this.registry?.GetGenomeSize(id));
         BreederMovementPatch.SetReservationLookup(id => this.registry?.IsBreedingParentReserved(id) == true);
@@ -211,7 +216,8 @@ public sealed class ModEntry : Mod
             () => this.config.GelRefinerySlimeFuelCost,
             value => this.config.GelRefinerySlimeFuelCost = value,
             () => "Slime fuel per batch",
-            () => "Vanilla Slime consumed for one Broken Glasses to Refined Quartz batch.", 1, 999_999, 1);
+            () => "At least 10 Slime per batch; this prevents the provisional recipe from producing direct sale-value profit.",
+            GelRefineryRules.MinimumSlimeFuelCost, GelRefineryRules.MaximumSlimeFuelCost, 1);
         api.AddNumberOption(this.ModManifest,
             () => (float)this.config.GelRefineryDurationDays,
             value => this.config.GelRefineryDurationDays = (int)MathF.Round(value),

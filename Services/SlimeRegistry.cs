@@ -594,7 +594,9 @@ internal sealed class SlimeRegistry
     public RefineryTransactionRecord? StartRefineryJob(string machineKey, int currentDay, int durationDays, int slimeFuelCount)
     {
         if (string.IsNullOrWhiteSpace(machineKey) || this.refineryJobs.ContainsKey(machineKey)
-            || durationDays is < 1 or > 28 || slimeFuelCount is < 1 or > 999_999)
+            || durationDays is < 1 or > 28
+            || slimeFuelCount < GelRefineryRules.MinimumSlimeFuelCost
+            || slimeFuelCount > GelRefineryRules.MaximumSlimeFuelCost)
             return null;
 
         var job = new RefineryJobRecord
