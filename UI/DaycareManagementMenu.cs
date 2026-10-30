@@ -36,6 +36,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
     private readonly int buildingTier;
     private readonly Func<long, string?> getActiveActivitySummary;
     private readonly List<FarmAnimal> residents;
+    private readonly string furnitureInventorySummary;
     private Rectangle registryRows;
     private Rectangle registryDetails;
     private Rectangle wikiRows;
@@ -61,6 +62,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         this.registry = registry;
         this.buildingTier = Math.Clamp(buildingTier, 0, 3);
         this.getActiveActivitySummary = getActiveActivitySummary;
+        this.furnitureInventorySummary = GetFurnitureInventorySummary();
         this.residents = daycare.animals.Values
             .Where(animal => animal.type.Value == FarmAnimalContent.DomesticatedSlimeTypeId)
             .OrderBy(animal => animal.Name, StringComparer.OrdinalIgnoreCase)
@@ -608,7 +610,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         string guidanceText = $"New breeder cycles: {currentCycleDays} days at this tier (14 days from the first upgrade onward). "
             + "First upgrade unlocks the Egg CryoLab and Rare Labs at 1% base chance. Final upgrade adds a second breeder and incubator, "
             + $"raises Rare Lab base chance to 5%, and unlocks the Gel Refinery. Furniture slots: {FurnitureSlotCatalog.GetSlotCountAtTier(this.buildingTier)}/15 unlocked, {assignedFurnitureSlots} assigned. "
-            + "Robin handles upgrades; Marnie sells furniture recipes. Fixed room positions and editing are still in development.";
+            + $"Furniture carried in backpack: {this.furnitureInventorySummary}. Robin handles upgrades; Marnie sells furniture recipes. Fixed room positions and editing are still in development.";
         DrawWrappedText(b, guidanceText, new Vector2(guidance.X + 12, guidance.Y + 21), guidance.Width - 24,
             Game1.tinyFont, new Color(230, 239, 255), 14f);
     }
@@ -691,6 +693,25 @@ internal sealed class DaycareManagementMenu : IClickableMenu
     private int CountPlaced(string qualifiedItemId) =>
         this.daycare.Objects.Values.Count(obj => obj.QualifiedItemId == qualifiedItemId);
 
+    private static string GetFurnitureInventorySummary()
+    {
+        List<string> carriedFurniture = FurnitureSlotCatalog.GetRecipeListings()
+            .Select(listing =>
+            {
+                int count = Game1.player.Items
+                    .Where(item => item?.QualifiedItemId == listing.QualifiedItemId)
+                    .Sum(item => item?.Stack ?? 0);
+                return count > 0
+                    ? $"{ItemRegistry.Create(listing.QualifiedItemId).DisplayName} x{count}"
+                    : null;
+            })
+            .Where(entry => entry is not null)
+            .Cast<string>()
+            .ToList();
+
+        return carriedFurniture.Count == 0 ? "none" : string.Join(", ", carriedFurniture);
+    }
+
     private static string FormatParent(string? name, Guid? genomeId)
     {
         if (genomeId is Guid id && id != Guid.Empty)
@@ -737,7 +758,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         entries.Add(new WikiEntry("RULES", "Fixed egg outcomes",
             "The Breeder saves the offspring's non-rarity genome when its cycle completes. The Incubator's Rare Lab resolves rarity once at incubation completion and saves the result before hatching; reloading cannot reroll it. If the Daycare is full, a ready hatch waits safely for room.", Array.Empty<string>()));
         entries.Add(new WikiEntry("RULES", "Furniture slot progression",
-            "The Daycare furniture catalog defines three fixed slots at the basic tier, seven at tiers 1 and 2, and fifteen at the final tier. Slots belong to the Daycare building and their saved assignments follow that building through upgrades. The current desk preview shows slot counts; fixed room positions and editing are still in development.", Array.Empty<string>()));
+            "The Daycare furniture catalog defines three fixed slots at the basic tier, seven at tiers 1 and 2, and fifteen at the final tier. Slots belong to the Daycare building and their saved assignments follow that building through upgrades. The desk preview shows slot counts and furniture carried in your backpack; it does not count chests or installed objects. Fixed room positions and editing are still in development.", Array.Empty<string>()));
         entries.Add(new WikiEntry("RULES", "Marnie's furniture recipes",
             "Marnie sells reusable learned recipes, not physical furniture. Trampoline, Cushion, Slide, Seesaw, and Heated Slime Stone recipes cost 2,000g after construction; Pond, Tunnel, Swing, and Lamp cost 5,000g from the first upgrade; Fairy Lights, Ball Pit, and Washing Machine cost 10,000g at the final tier. The Washing Machine is decorative for now and has no washing behavior. Recipe ingredients remain provisional.", Array.Empty<string>()));
         entries.Add(new WikiEntry("RULES", "Fairy Lights",
