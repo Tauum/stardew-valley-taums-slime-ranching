@@ -1605,17 +1605,29 @@ internal sealed class SlimeRegistry
         foreach (BreedingPairRecord pair in this.breedingPairs.Values.Where(pair => pair.OutputEggItemId is not null))
         {
             string eggId = pair.OutputEggItemId!;
-            if (pair.OutputEggGenome is null && this.eggs.TryGetValue(eggId, out SlimeEggRecord? migratedEgg))
-                pair.OutputEggGenome = migratedEgg.Genome;
-            if (pair.OutputEggGenome is not null && !this.eggs.ContainsKey(eggId))
+            if (this.eggs.TryGetValue(eggId, out SlimeEggRecord? savedEgg))
             {
-                this.eggs[eggId] = new SlimeEggRecord
-                {
-                    EggId = eggId,
-                    ItemId = SlimeEggContent.GetItemId(pair.OutputEggGenome),
-                    Genome = pair.OutputEggGenome
-                };
+                if (pair.OutputEggGenome is { } savedGenome && savedGenome.Id != savedEgg.Genome.Id)
+                    this.monitor.Log($"Reconciled breeder egg {eggId} to its matching saved egg record; the embedded genome ID did not match.", LogLevel.Warn);
+                pair.OutputEggGenome = savedEgg.Genome;
+                continue;
             }
+
+            if (pair.OutputEggGenome is not { } snapshot
+                || !Guid.TryParseExact(eggId, "N", out Guid outputEggId)
+                || snapshot.Id != outputEggId || string.IsNullOrWhiteSpace(snapshot.PrimarySpecies))
+            {
+                this.monitor.Log($"Breeder egg {eggId} has no matching saved genome record; its output remains unrecoverable until the save data is repaired.", LogLevel.Warn);
+                continue;
+            }
+
+            snapshot.Size = NormalizeSize(snapshot.Size);
+            this.eggs[eggId] = new SlimeEggRecord
+            {
+                EggId = eggId,
+                ItemId = SlimeEggContent.GetItemId(snapshot),
+                Genome = snapshot
+            };
         }
 
         if (this.activeCompanionFarmAnimalId is null)
