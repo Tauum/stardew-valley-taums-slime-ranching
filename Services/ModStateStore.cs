@@ -439,8 +439,11 @@ internal sealed class ModStateStore
         string saveName = Constants.SaveFolderName!;
         string backupDirectory = Path.Combine(this.modDirectory, "data", "backups");
         Directory.CreateDirectory(backupDirectory);
-        string fileName = $"{saveName}-{DateTime.UtcNow:yyyyMMdd-HHmmss-fff}.zip";
-        string backupPath = Path.Combine(backupDirectory, fileName);
+        string fileStem = $"{saveName}-{DateTime.UtcNow:yyyyMMdd-HHmmss-fff}";
+        string backupPath = Path.Combine(backupDirectory, $"{fileStem}.zip");
+        for (int suffix = 2; File.Exists(backupPath); suffix++)
+            backupPath = Path.Combine(backupDirectory, $"{fileStem}-{suffix}.zip");
+
         ZipFile.CreateFromDirectory(saveDirectory, backupPath, CompressionLevel.Optimal, includeBaseDirectory: false);
         return backupPath;
     }
