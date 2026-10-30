@@ -3446,7 +3446,26 @@ public sealed class ModEntry : Mod
                 .Select(status => $"{status.Label}: {status.Count}"));
             this.Monitor.Log($"This animal house contains {residents.Length} Domesticated Slime(s), including {mutatedResidents} with mutation traits. Save data contains {loadedRegistry.Count} Domesticated Slime record(s).", LogLevel.Info);
             if (isDaycare)
+            {
                 this.Monitor.Log($"Daycare living residents: {animalHouse.animalsThatLiveHere.Count}/{animalHouse.animalLimit.Value} capacity.", LogLevel.Info);
+                string buildingId = animalHouse.ParentBuilding?.id.Value.ToString("N") ?? string.Empty;
+                IReadOnlyList<DaycareFurnitureSlotRecord> furnitureSlots = loadedRegistry.GetFurnitureSlots(buildingId);
+                int tier = BuildingContent.GetUpgradeTier(animalHouse.ParentBuilding?.buildingType.Value);
+                this.Monitor.Log($"Daycare furniture slots: {FurnitureSlotCatalog.GetSlotCountAtTier(tier)}/15 unlocked; {furnitureSlots.Count} assigned.", LogLevel.Info);
+                foreach (DaycareFurnitureSlotRecord slot in furnitureSlots)
+                {
+                    Vector2 tile = new(slot.TileX, slot.TileY);
+                    bool hasObject = animalHouse.Objects.TryGetValue(tile, out StardewValley.Object? placed);
+                    bool matches = hasObject && placed!.QualifiedItemId == slot.FurnitureQualifiedItemId;
+                    bool protectedFromTools = matches && placed!.fragility.Value == StardewValley.Object.fragility_Indestructable;
+                    string placementStatus = !hasObject
+                        ? "object missing"
+                        : matches
+                            ? $"placed object matches; native protection {(protectedFromTools ? "on" : "off")}"
+                            : $"tile occupied by {placed!.QualifiedItemId}";
+                    this.Monitor.Log($"Furniture {slot.SlotId}: {slot.FurnitureQualifiedItemId} at tile {slot.TileX},{slot.TileY}; {placementStatus}.", LogLevel.Info);
+                }
+            }
             this.Monitor.Log($"Domesticated Slime assignment status: {residentStatuses}.", LogLevel.Info);
             this.Monitor.Log($"Jobs in this room: {activeCycles} breeder cycle(s), {readyEggs} ready egg(s), {activeIncubations} incubation(s), {activeMutations} Mutagenic Pool attempt(s), {activeRefineryBatches} Gel Refinery batch(es).", LogLevel.Info);
             if (isDaycare)
