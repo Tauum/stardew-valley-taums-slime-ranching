@@ -38,7 +38,7 @@ internal static class OtherMachinePlacementGeometry
 
         string textureAsset = currentMachine.QualifiedItemId switch
         {
-            var id when id == SlimePrinterContent.QualifiedItemId || id == SlimePrinterContent.LegacyQualifiedItemId => "Mods/Taum.SlimeRanching/Machines/SlimePrinter",
+            var id when id == SlimePrinterContent.QualifiedItemId => "Mods/Taum.SlimeRanching/Machines/SlimePrinter",
             _ => "Mods/Taum.SlimeRanching/Machines/MutagenicPool"
         };
         Texture2D texture = Game1.content.Load<Texture2D>(textureAsset);

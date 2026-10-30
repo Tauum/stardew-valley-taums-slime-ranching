@@ -18,7 +18,7 @@ internal sealed class ModStateStore
         "Eggs",
         "Incubations",
         "MutagenicAttempts",
-        "RefineryJobs",
+        "SlimePrinterJobs",
         "HatchedEggIds",
         "DestroyedEggIds",
         "PendingIncubationCancellations",
@@ -26,7 +26,7 @@ internal sealed class ModStateStore
         "RareLabs",
         "PendingRareLabContributions",
         "PendingRareLabCatalystTransactions",
-        "PendingRefineryTransactions",
+        "PendingSlimePrinterTransactions",
         "FurnitureSlots"
     };
     private readonly IDataHelper data;
@@ -160,6 +160,13 @@ internal sealed class ModStateStore
             if (saveData.SchemaVersion == 24)
             {
                 saveData.FurnitureSlots ??= new List<DaycareFurnitureSlotRecord>();
+                saveData.SchemaVersion = 25;
+                this.MigratedSaveData = true;
+            }
+            if (saveData.SchemaVersion == 25)
+            {
+                saveData.SlimePrinterJobs ??= new List<SlimePrinterJobRecord>();
+                saveData.PendingSlimePrinterTransactions ??= new List<SlimePrinterTransactionRecord>();
                 saveData.SchemaVersion = SlimeSaveData.CurrentSchemaVersion;
                 this.MigratedSaveData = true;
             }
@@ -234,7 +241,7 @@ internal sealed class ModStateStore
         if (root is JsonObject schemaNine && schemaNine["SchemaVersion"]?.GetValue<int>() == 9)
         {
             schemaNine["SchemaVersion"] = 10;
-            schemaNine["RefineryJobs"] = new JsonArray();
+            schemaNine["SlimePrinterJobs"] = new JsonArray();
         }
 
         if (root is JsonObject schemaTen && schemaTen["SchemaVersion"]?.GetValue<int>() == 10)
@@ -297,7 +304,7 @@ internal sealed class ModStateStore
         if (root is JsonObject schemaNineteen && schemaNineteen["SchemaVersion"]?.GetValue<int>() == 19)
         {
             schemaNineteen["SchemaVersion"] = 20;
-            schemaNineteen["PendingRefineryTransactions"] = new JsonArray();
+            schemaNineteen["PendingSlimePrinterTransactions"] = new JsonArray();
         }
 
         if (root is JsonObject schemaTwenty && schemaTwenty["SchemaVersion"]?.GetValue<int>() == 20)
@@ -325,8 +332,15 @@ internal sealed class ModStateStore
 
         if (root is JsonObject schemaTwentyFour && schemaTwentyFour["SchemaVersion"]?.GetValue<int>() == 24)
         {
-            schemaTwentyFour["SchemaVersion"] = SlimeSaveData.CurrentSchemaVersion;
+            schemaTwentyFour["SchemaVersion"] = 25;
             schemaTwentyFour["FurnitureSlots"] ??= new JsonArray();
+        }
+
+        if (root is JsonObject schemaTwentyFive && schemaTwentyFive["SchemaVersion"]?.GetValue<int>() == 25)
+        {
+            schemaTwentyFive["SchemaVersion"] = SlimeSaveData.CurrentSchemaVersion;
+            schemaTwentyFive["SlimePrinterJobs"] ??= new JsonArray();
+            schemaTwentyFive["PendingSlimePrinterTransactions"] ??= new JsonArray();
         }
 
         NormalizeLegacyCollectionFields(rootObject);

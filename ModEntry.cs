@@ -20,7 +20,7 @@ public sealed class ModEntry : Mod
     private const string MutagenicContributionReceiptPrefix = "Taum.SlimeRanching/MutagenicContribution/";
     private const string RareLabContributionReceiptPrefix = "Taum.SlimeRanching/RareLabContribution/";
     private const string RareLabCatalystReceiptPrefix = "Taum.SlimeRanching/RareLabCatalyst/";
-    private const string SlimePrinterTransactionReceiptPrefix = "Taum.SlimeRanching/RefineryTransaction/";
+    private const string SlimePrinterTransactionReceiptPrefix = "Taum.SlimeRanching/SlimePrinterTransaction/";
 
     private SlimeRegistry? registry;
     private ModStateStore? stateStore;
@@ -88,7 +88,6 @@ public sealed class ModEntry : Mod
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_duplicate_inventory_egg", "Deliberately duplicate one unused inventory egg ID for hatch-once testing on a disposable save. Usage: slime_ranching_duplicate_inventory_egg.", this.OnDuplicateInventoryEggCommand);
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_mutagenic_pool", "Give one Mutagenic Pool for testing. Usage: slime_ranching_give_mutagenic_pool.", this.OnGiveMutagenicPoolCommand);
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_slime_printer", "Give one Slime Printer for testing. Usage: slime_ranching_give_slime_printer.", this.OnGiveSlimePrinterCommand);
-        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_gel_refinery", "Legacy alias: give one Slime Printer for testing.", this.OnGiveSlimePrinterCommand);
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_tunnel", "Give one Slime Tunnel for testing. Usage: slime_ranching_give_tunnel.", this.OnGiveTunnelCommand);
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_heated_stone", "Give one Heated Slime Stone for testing. Usage: slime_ranching_give_heated_stone.", this.OnGiveHeatedStoneCommand);
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_pond", "Give one Slime Pond for testing. Usage: slime_ranching_give_pond.", this.OnGivePondCommand);
@@ -3590,7 +3589,7 @@ public sealed class ModEntry : Mod
             int readyEggs = roomBreedingPairs.Count(pair => pair.OutputEggItemId is not null);
             int activeIncubations = loadedRegistry.Incubations.Count(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal));
             int activeMutations = loadedRegistry.MutagenicAttempts.Count(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal));
-            int activeRefineryBatches = loadedRegistry.SlimePrinterJobs.Count(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal));
+            int activeSlimePrinterBatches = loadedRegistry.SlimePrinterJobs.Count(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal));
             RareLabRecord[] roomRareLabs = isDaycare
                 ? loadedRegistry.RareLabs.Where(lab => lab.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal)).ToArray()
                 : Array.Empty<RareLabRecord>();
@@ -3656,7 +3655,7 @@ public sealed class ModEntry : Mod
                     this.Monitor.Log($"Furniture slot {lockedSlot.SlotId}: saved assignment is locked at the current Daycare tier.", LogLevel.Warn);
             }
             this.Monitor.Log($"Domesticated Slime assignment status: {residentStatuses}.", LogLevel.Info);
-            this.Monitor.Log($"Jobs in this room: {activeCycles} breeder cycle(s), {readyEggs} ready egg(s), {activeIncubations} incubation(s), {activeMutations} Mutagenic Pool attempt(s), {activeRefineryBatches} Slime Printer batch(es).", LogLevel.Info);
+            this.Monitor.Log($"Jobs in this room: {activeCycles} breeder cycle(s), {readyEggs} ready egg(s), {activeIncubations} incubation(s), {activeMutations} Mutagenic Pool attempt(s), {activeSlimePrinterBatches} Slime Printer batch(es).", LogLevel.Info);
             if (isDaycare)
             {
                 this.Monitor.Log($"Slime Incubators placed in this Daycare: {roomIncubatorMachineKeys.Length}.", LogLevel.Info);

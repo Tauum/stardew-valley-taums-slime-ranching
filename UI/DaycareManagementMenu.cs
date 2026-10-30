@@ -615,7 +615,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             $"Breeder / incubator fixtures: {this.CountPlaced(RanchingItemContent.BreederQualifiedId)} / {this.CountPlaced(RanchingItemContent.IncubatorQualifiedId)}",
             $"Egg CryoLab tester chests: {this.daycare.Objects.Values.OfType<Chest>().Count(EggCryoLabContent.IsEggCryoLab)}",
             $"Rare Lab records: {this.registry.RareLabs.Count(lab => lab.MachineKey.StartsWith(prefix, StringComparison.Ordinal))}",
-            $"Pool / Slime Printer fixtures: {this.CountPlaced(MutagenicPoolContent.QualifiedItemId)} / {this.CountPlaced(SlimePrinterContent.QualifiedItemId) + this.CountPlaced(SlimePrinterContent.LegacyQualifiedItemId)}",
+            $"Pool / Slime Printer fixtures: {this.CountPlaced(MutagenicPoolContent.QualifiedItemId)} / {this.CountPlaced(SlimePrinterContent.QualifiedItemId)}",
             rareLabStatus,
             finalFacilityStatus
         };

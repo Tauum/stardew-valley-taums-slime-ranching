@@ -10,12 +10,10 @@ internal static class SlimePrinterContent
 {
     public const string ItemId = "Taum.SlimeRanching_SlimePrinter";
     public const string QualifiedItemId = "(BC)" + ItemId;
-    public const string LegacyItemId = "Taum.SlimeRanching_GelRefinery";
-    public const string LegacyQualifiedItemId = "(BC)" + LegacyItemId;
     private const string TextureName = "Mods/Taum.SlimeRanching/Machines/SlimePrinter";
 
     public static bool IsSlimePrinter(StardewValley.Object obj) =>
-        obj.QualifiedItemId is QualifiedItemId or LegacyQualifiedItemId;
+        obj.QualifiedItemId == QualifiedItemId;
 
     public static void LoadAssets(AssetRequestedEventArgs e)
     {
@@ -32,7 +30,6 @@ internal static class SlimePrinterContent
         {
             var craftables = asset.AsDictionary<string, BigCraftableData>().Data;
             craftables.TryAdd(ItemId, CreateBigCraftableData());
-            craftables.TryAdd(LegacyItemId, CreateBigCraftableData());
         });
     }
 

@@ -4,7 +4,7 @@ namespace taums_slime_ranching.Models;
 
 public sealed class SlimeSaveData
 {
-    public const int CurrentSchemaVersion = 25;
+    public const int CurrentSchemaVersion = 26;
 
     public int SchemaVersion { get; set; }
     public List<SlimeRecord> Slimes { get; set; } = new();
@@ -12,8 +12,8 @@ public sealed class SlimeSaveData
     public List<SlimeEggRecord> Eggs { get; set; } = new();
     public List<IncubationRecord> Incubations { get; set; } = new();
     public List<MutagenicAttemptRecord> MutagenicAttempts { get; set; } = new();
-    [Newtonsoft.Json.JsonProperty("RefineryJobs")]
-    [JsonPropertyName("RefineryJobs")]
+    [Newtonsoft.Json.JsonProperty("SlimePrinterJobs")]
+    [JsonPropertyName("SlimePrinterJobs")]
     public List<SlimePrinterJobRecord> SlimePrinterJobs { get; set; } = new();
     public SlimeDaycareQuestRecord SlimeDaycareQuest { get; set; } = new();
     public long? ActiveCompanionFarmAnimalId { get; set; }
@@ -24,8 +24,8 @@ public sealed class SlimeSaveData
     public List<RareLabRecord> RareLabs { get; set; } = new();
     public List<RareLabContributionRecord> PendingRareLabContributions { get; set; } = new();
     public List<RareLabCatalystTransactionRecord> PendingRareLabCatalystTransactions { get; set; } = new();
-    [Newtonsoft.Json.JsonProperty("PendingRefineryTransactions")]
-    [JsonPropertyName("PendingRefineryTransactions")]
+    [Newtonsoft.Json.JsonProperty("PendingSlimePrinterTransactions")]
+    [JsonPropertyName("PendingSlimePrinterTransactions")]
     public List<SlimePrinterTransactionRecord> PendingSlimePrinterTransactions { get; set; } = new();
     public List<DaycareFurnitureSlotRecord> FurnitureSlots { get; set; } = new();
 }
