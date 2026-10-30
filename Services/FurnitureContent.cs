@@ -37,6 +37,8 @@ internal static class FurnitureContent
     public const string SlimeLampQualifiedId = "(BC)" + SlimeLampItemId;
     public const string SlimeFairyLightsItemId = "Taum.SlimeRanching_SlimeFairyLights";
     public const string SlimeFairyLightsQualifiedId = "(BC)" + SlimeFairyLightsItemId;
+    public const string SlimeWashingMachineItemId = "Taum.SlimeRanching_SlimeWashingMachine";
+    public const string SlimeWashingMachineQualifiedId = "(BC)" + SlimeWashingMachineItemId;
     private const string TrampolineTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeTrampoline";
     private const string CushionTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeCushion";
     private const string PlaygroundTexture = "Mods/Taum.SlimeRanching/Furniture/SlimePlayground";
@@ -51,6 +53,7 @@ internal static class FurnitureContent
     private const string BallPitTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeBallPit";
     private const string LampTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeLamp";
     private const string FairyLightsTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeFairyLights";
+    private const string WashingMachineTexture = "Mods/Taum.SlimeRanching/Furniture/SlimeWashingMachine";
 
     public static void LoadAssets(AssetRequestedEventArgs e)
     {
@@ -82,6 +85,8 @@ internal static class FurnitureContent
             e.LoadFrom(() => CreateLampTexture(Game1.graphics.GraphicsDevice), AssetLoadPriority.Exclusive);
         else if (e.NameWithoutLocale.IsEquivalentTo(FairyLightsTexture))
             e.LoadFrom(() => CreateFairyLightsTexture(Game1.graphics.GraphicsDevice), AssetLoadPriority.Exclusive);
+        else if (e.NameWithoutLocale.IsEquivalentTo(WashingMachineTexture))
+            e.LoadFrom(() => CreateWashingMachineTexture(Game1.graphics.GraphicsDevice), AssetLoadPriority.Exclusive);
     }
 
     public static void EditAsset(AssetRequestedEventArgs e)
@@ -245,6 +250,17 @@ internal static class FurnitureContent
                 CanBePlacedOutdoors = false,
                 Fragility = 0,
                 Texture = FairyLightsTexture,
+                SpriteIndex = 0
+            });
+            craftables.TryAdd(SlimeWashingMachineItemId, new BigCraftableData
+            {
+                Name = "Slime Washing Machine",
+                DisplayName = "Slime Washing Machine",
+                Description = "A tidy little washing machine, sized for the Slime Daycare.",
+                CanBePlacedIndoors = true,
+                CanBePlacedOutdoors = false,
+                Fragility = 0,
+                Texture = WashingMachineTexture,
                 SpriteIndex = 0
             });
         });
@@ -739,6 +755,57 @@ internal static class FurnitureContent
 
         for (int x = 1; x <= 14; x++)
             SetPixel(pixels, width, x, 11, new Color(67, 43, 56));
+        texture.SetData(pixels);
+        return texture;
+    }
+
+    private static Texture2D CreateWashingMachineTexture(GraphicsDevice graphicsDevice)
+    {
+        const int width = 16;
+        const int height = 32;
+        var texture = new Texture2D(graphicsDevice, width, height);
+        var pixels = new Color[width * height];
+        Color outline = new(61, 49, 62);
+        Color darkMetal = new(109, 119, 137);
+        Color metal = new(188, 197, 205);
+        Color lightMetal = new(229, 231, 225);
+        Color glass = new(91, 157, 183);
+        Color brightGlass = new(139, 206, 218);
+        Color accent = new(226, 114, 153);
+
+        for (int y = 5; y <= 25; y++)
+        {
+            SetPixel(pixels, width, 3, y, outline);
+            SetPixel(pixels, width, 12, y, outline);
+            for (int x = 4; x <= 11; x++)
+                SetPixel(pixels, width, x, y, x <= 5 ? lightMetal : metal);
+        }
+        for (int x = 4; x <= 11; x++)
+        {
+            SetPixel(pixels, width, x, 4, outline);
+            SetPixel(pixels, width, x, 26, outline);
+        }
+        for (int x = 5; x <= 10; x++)
+            SetPixel(pixels, width, x, 7, x == 9 ? accent : darkMetal);
+
+        for (int x = 5; x <= 10; x++)
+        {
+            SetPixel(pixels, width, x, 10, outline);
+            SetPixel(pixels, width, x, 19, outline);
+        }
+        for (int y = 11; y <= 18; y++)
+        {
+            SetPixel(pixels, width, 4, y, outline);
+            SetPixel(pixels, width, 11, y, outline);
+            for (int x = 5; x <= 10; x++)
+                SetPixel(pixels, width, x, y, x is 5 or 10 ? glass : darkMetal);
+        }
+        SetPixel(pixels, width, 6, 12, brightGlass);
+        SetPixel(pixels, width, 7, 12, brightGlass);
+        SetPixel(pixels, width, 9, 17, brightGlass);
+        for (int x = 4; x <= 11; x++)
+            SetPixel(pixels, width, x, 27, new Color(67, 43, 56));
+
         texture.SetData(pixels);
         return texture;
     }

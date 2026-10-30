@@ -739,7 +739,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         entries.Add(new WikiEntry("RULES", "Furniture slot progression",
             "The Daycare furniture catalog defines three fixed slots at the basic tier, seven at tiers 1 and 2, and fifteen at the final tier. Slots belong to the Daycare building and their saved assignments follow that building through upgrades. The current desk preview shows slot counts; fixed room positions and editing are still in development.", Array.Empty<string>()));
         entries.Add(new WikiEntry("RULES", "Marnie's furniture recipes",
-            "Marnie sells reusable learned recipes, not physical furniture. Trampoline, Cushion, Slide, Seesaw, and Heated Slime Stone recipes cost 2,000g after construction; Pond, Tunnel, Swing, and Lamp cost 5,000g from the first upgrade; Fairy Lights and Ball Pit cost 10,000g at the final tier. Recipe ingredients remain provisional.", Array.Empty<string>()));
+            "Marnie sells reusable learned recipes, not physical furniture. Trampoline, Cushion, Slide, Seesaw, and Heated Slime Stone recipes cost 2,000g after construction; Pond, Tunnel, Swing, and Lamp cost 5,000g from the first upgrade; Fairy Lights, Ball Pit, and Washing Machine cost 10,000g at the final tier. The Washing Machine is decorative for now and has no washing behavior. Recipe ingredients remain provisional.", Array.Empty<string>()));
         entries.Add(new WikiEntry("RULES", "Fairy Lights",
             "Fairy Lights use one furniture slot, while their cosmetic glow applies throughout the Daycare interior. Their exact fixed position and final light timing remain under review.", Array.Empty<string>()));
         entries.Add(new WikiEntry("LIFE", "Incubation and hatching",

@@ -17,7 +17,8 @@ internal static class FurnitureRecipeContent
         ["Slime Swing"] = CreateRecipe("388 60 771 20 335 2", FurnitureContent.SlimeSwingItemId, "Slime Swing"),
         ["Slime Lamp"] = CreateRecipe("388 30 335 2 382 5", FurnitureContent.SlimeLampItemId, "Slime Lamp"),
         ["Slime Fairy Lights"] = CreateRecipe("771 50 92 20 768 5", FurnitureContent.SlimeFairyLightsItemId, "Slime Fairy Lights"),
-        ["Slime Ball Pit"] = CreateRecipe("388 50 771 50 766 20", FurnitureContent.SlimeBallPitItemId, "Slime Ball Pit")
+        ["Slime Ball Pit"] = CreateRecipe("388 50 771 50 766 20", FurnitureContent.SlimeBallPitItemId, "Slime Ball Pit"),
+        ["Slime Washing Machine"] = CreateRecipe("388 100 335 10 766 20", FurnitureContent.SlimeWashingMachineItemId, "Slime Washing Machine")
     };
 
     private static readonly HashSet<string> RecipeNames = new(Recipes.Keys, StringComparer.Ordinal);

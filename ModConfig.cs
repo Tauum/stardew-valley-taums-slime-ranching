@@ -17,4 +17,5 @@ public sealed class ModConfig
     public int SlimeLampRecipePrice { get; set; } = 5000;
     public int SlimeFairyLightsRecipePrice { get; set; } = 10000;
     public int SlimeBallPitRecipePrice { get; set; } = 10000;
+    public int SlimeWashingMachineRecipePrice { get; set; } = 10000;
 }

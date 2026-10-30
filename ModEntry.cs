@@ -212,6 +212,7 @@ public sealed class ModEntry : Mod
         this.AddShopPriceOption(api, "Slime Lamp Recipe", "Price to learn the reusable Lamp recipe.", () => this.config.SlimeLampRecipePrice, value => this.config.SlimeLampRecipePrice = value);
         this.AddShopPriceOption(api, "Slime Fairy Lights Recipe", "Price to learn the reusable Fairy Lights recipe.", () => this.config.SlimeFairyLightsRecipePrice, value => this.config.SlimeFairyLightsRecipePrice = value);
         this.AddShopPriceOption(api, "Slime Ball Pit Recipe", "Price to learn the reusable Ball Pit recipe.", () => this.config.SlimeBallPitRecipePrice, value => this.config.SlimeBallPitRecipePrice = value);
+        this.AddShopPriceOption(api, "Slime Washing Machine Recipe", "Price to learn the reusable Washing Machine recipe.", () => this.config.SlimeWashingMachineRecipePrice, value => this.config.SlimeWashingMachineRecipePrice = value);
         api.AddSectionTitle(this.ModManifest, () => "Gel Refinery");
         api.AddParagraph(this.ModManifest, () => "The first recipe is provisional: Broken Glasses and vanilla Slime fuel become Refined Quartz.");
         api.AddNumberOption(this.ModManifest,

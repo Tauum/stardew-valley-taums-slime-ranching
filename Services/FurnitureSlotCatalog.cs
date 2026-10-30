@@ -30,7 +30,8 @@ internal static class FurnitureSlotCatalog
         new DaycareFurnitureRecipeListing("SlimeSwing", FurnitureContent.SlimeSwingQualifiedId, 1, config => config.SlimeSwingRecipePrice),
         new DaycareFurnitureRecipeListing("SlimeLamp", FurnitureContent.SlimeLampQualifiedId, 1, config => config.SlimeLampRecipePrice),
         new DaycareFurnitureRecipeListing("SlimeFairyLights", FurnitureContent.SlimeFairyLightsQualifiedId, 3, config => config.SlimeFairyLightsRecipePrice),
-        new DaycareFurnitureRecipeListing("SlimeBallPit", FurnitureContent.SlimeBallPitQualifiedId, 3, config => config.SlimeBallPitRecipePrice)
+        new DaycareFurnitureRecipeListing("SlimeBallPit", FurnitureContent.SlimeBallPitQualifiedId, 3, config => config.SlimeBallPitRecipePrice),
+        new DaycareFurnitureRecipeListing("SlimeWashingMachine", FurnitureContent.SlimeWashingMachineQualifiedId, 3, config => config.SlimeWashingMachineRecipePrice)
     });
     private static readonly IReadOnlyDictionary<string, DaycareFurnitureRecipeListing> RecipesByItemId =
         Recipes.ToDictionary(recipe => recipe.QualifiedItemId, StringComparer.Ordinal);
