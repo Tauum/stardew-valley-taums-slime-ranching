@@ -109,6 +109,16 @@ internal sealed class SlimeRegistry
             return false;
         }
 
+        if (this.furnitureSlots.Values.Any(existing =>
+                existing.DaycareBuildingId == assignment.DaycareBuildingId
+                && existing.SlotId != assignment.SlotId
+                && existing.TileX == assignment.TileX
+                && existing.TileY == assignment.TileY))
+        {
+            error = "Another furniture slot already uses that room tile.";
+            return false;
+        }
+
         string key = GetFurnitureSlotKey(assignment.DaycareBuildingId, assignment.SlotId);
         this.furnitureSlots[key] = CloneFurnitureSlot(assignment);
         error = string.Empty;
@@ -1633,6 +1643,7 @@ internal sealed class SlimeRegistry
                 this.nextRareLabCatalystTransactionSequence = transaction.Sequence + 1;
         }
 
+        var furnitureTiles = new HashSet<string>(StringComparer.Ordinal);
         foreach (DaycareFurnitureSlotRecord slot in data?.FurnitureSlots ?? Enumerable.Empty<DaycareFurnitureSlotRecord>())
         {
             if (slot is null || string.IsNullOrWhiteSpace(slot.DaycareBuildingId)
@@ -1647,8 +1658,14 @@ internal sealed class SlimeRegistry
             }
 
             string key = GetFurnitureSlotKey(slot.DaycareBuildingId, slot.SlotId);
-            if (!this.furnitureSlots.TryAdd(key, slot))
+            string tileKey = GetFurnitureTileKey(slot.DaycareBuildingId, slot.TileX, slot.TileY);
+            if (this.furnitureSlots.ContainsKey(key) || !furnitureTiles.Add(tileKey))
+            {
                 this.monitor.Log("Skipped a duplicate Slime Daycare furniture-slot record.", LogLevel.Warn);
+                continue;
+            }
+
+            this.furnitureSlots.Add(key, CloneFurnitureSlot(slot));
         }
 
         foreach (MutagenicAttemptRecord attempt in data?.MutagenicAttempts ?? Enumerable.Empty<MutagenicAttemptRecord>())
@@ -1745,6 +1762,9 @@ internal sealed class SlimeRegistry
 
     private static string GetFurnitureSlotKey(string daycareBuildingId, string slotId) =>
         $"{daycareBuildingId}\u001f{slotId}";
+
+    private static string GetFurnitureTileKey(string daycareBuildingId, int tileX, int tileY) =>
+        $"{daycareBuildingId}\u001f{tileX},{tileY}";
 
     private static DaycareFurnitureSlotRecord CloneFurnitureSlot(DaycareFurnitureSlotRecord slot) => new()
     {
