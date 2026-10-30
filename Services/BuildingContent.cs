@@ -17,7 +17,7 @@ internal static class BuildingContent
     public const string SlimeDaycareUpgrade3Id = "Taum.SlimeRanching_SlimeDaycare_Upgrade3";
 
     private const string VanillaDeluxeBarnBuildingId = "Deluxe Barn";
-    private static readonly HashSet<string> SlimeDaycareIds = new(StringComparer.Ordinal)
+    private static readonly string[] SlimeDaycareIds =
     {
         SlimeDaycareBuildingId,
         SlimeDaycareUpgrade1Id,
@@ -35,6 +35,9 @@ internal static class BuildingContent
         SlimeDaycareUpgrade3Id => 3,
         _ => 0
     };
+
+    public static IEnumerable<string> GetBuildingIdsAtOrAboveTier(int minimumTier) =>
+        SlimeDaycareIds.Where(id => GetUpgradeTier(id) >= minimumTier);
 
     public static void EditAsset(AssetRequestedEventArgs e)
     {

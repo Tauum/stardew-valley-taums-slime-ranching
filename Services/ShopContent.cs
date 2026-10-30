@@ -20,27 +20,12 @@ internal static class ShopContent
                 return;
 
             shop.Items ??= new List<ShopItemData>();
-            string anyDaycareCondition = GetDaycareTierCondition(
-                BuildingContent.SlimeDaycareBuildingId,
-                BuildingContent.SlimeDaycareUpgrade1Id,
-                BuildingContent.SlimeDaycareUpgrade2Id,
-                BuildingContent.SlimeDaycareUpgrade3Id);
-            AddIfMissing(shop, "Trampoline", FurnitureContent.TrampolineQualifiedId, config.TrampolineRecipePrice, anyDaycareCondition);
-            AddIfMissing(shop, "SlimeCushion", FurnitureContent.SlimeCushionQualifiedId, config.SlimeCushionRecipePrice, anyDaycareCondition);
-            AddIfMissing(shop, "SlimeSlide", FurnitureContent.SlimeSlideQualifiedId, config.SlimeSlideRecipePrice, anyDaycareCondition);
-            AddIfMissing(shop, "SlimeSeesaw", FurnitureContent.SlimeSeesawQualifiedId, config.SlimeSeesawRecipePrice, anyDaycareCondition);
-            string firstUpgradeCondition = GetDaycareTierCondition(
-                BuildingContent.SlimeDaycareUpgrade1Id,
-                BuildingContent.SlimeDaycareUpgrade2Id,
-                BuildingContent.SlimeDaycareUpgrade3Id);
-            string finalUpgradeCondition = GetDaycareTierCondition(BuildingContent.SlimeDaycareUpgrade3Id);
-            AddIfMissing(shop, "SlimeTunnel", FurnitureContent.SlimeTunnelQualifiedId, config.SlimeTunnelRecipePrice, firstUpgradeCondition);
-            AddIfMissing(shop, "HeatedSlimeStone", FurnitureContent.HeatedSlimeStoneQualifiedId, config.HeatedSlimeStoneRecipePrice, anyDaycareCondition);
-            AddIfMissing(shop, "SlimePond", FurnitureContent.SlimePondQualifiedId, config.SlimePondRecipePrice, firstUpgradeCondition);
-            AddIfMissing(shop, "SlimeSwing", FurnitureContent.SlimeSwingQualifiedId, config.SlimeSwingRecipePrice, firstUpgradeCondition);
-            AddIfMissing(shop, "SlimeLamp", FurnitureContent.SlimeLampQualifiedId, config.SlimeLampRecipePrice, firstUpgradeCondition);
-            AddIfMissing(shop, "SlimeFairyLights", FurnitureContent.SlimeFairyLightsQualifiedId, config.SlimeFairyLightsRecipePrice, finalUpgradeCondition);
-            AddIfMissing(shop, "SlimeBallPit", FurnitureContent.SlimeBallPitQualifiedId, config.SlimeBallPitRecipePrice, finalUpgradeCondition);
+            foreach (DaycareFurnitureRecipeListing listing in FurnitureSlotCatalog.GetRecipeListings())
+            {
+                string condition = GetDaycareTierCondition(
+                    BuildingContent.GetBuildingIdsAtOrAboveTier(listing.RequiredBuildingTier).ToArray());
+                AddIfMissing(shop, listing.ShopItemName, listing.QualifiedItemId, listing.GetPrice(config), condition);
+            }
         });
     }
 
