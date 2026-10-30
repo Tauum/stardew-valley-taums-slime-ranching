@@ -7,7 +7,7 @@ using StardewValley.Tools;
 
 namespace taums_slime_ranching.Services;
 
-/// <summary>Uses a vanilla 3x2 furniture footprint for the refinery and mutation pool.</summary>
+/// <summary>Uses a vanilla 3x2 furniture footprint for the Slime Printer and Mutagenic Pool.</summary>
 internal static class OtherMachinePlacementGeometry
 {
     private const int TileSize = 64;
@@ -17,7 +17,7 @@ internal static class OtherMachinePlacementGeometry
     private static Furniture? footprintPreview;
     private static StardewValley.Object? currentMachine;
 
-    public static bool IsSupported(StardewValley.Object obj) => obj.QualifiedItemId == GelRefineryContent.QualifiedItemId
+    public static bool IsSupported(StardewValley.Object obj) => SlimePrinterContent.IsSlimePrinter(obj)
         || obj.QualifiedItemId == MutagenicPoolContent.QualifiedItemId;
 
     public static bool IsFootprintPreview(Furniture furniture) => ReferenceEquals(furniture, footprintPreview);
@@ -38,7 +38,7 @@ internal static class OtherMachinePlacementGeometry
 
         string textureAsset = currentMachine.QualifiedItemId switch
         {
-            var id when id == GelRefineryContent.QualifiedItemId => "Mods/Taum.SlimeRanching/Machines/GelRefinery",
+            var id when id == SlimePrinterContent.QualifiedItemId || id == SlimePrinterContent.LegacyQualifiedItemId => "Mods/Taum.SlimeRanching/Machines/SlimePrinter",
             _ => "Mods/Taum.SlimeRanching/Machines/MutagenicPool"
         };
         Texture2D texture = Game1.content.Load<Texture2D>(textureAsset);

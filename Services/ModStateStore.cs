@@ -128,14 +128,14 @@ internal sealed class ModStateStore
             }
             if (saveData.SchemaVersion == 19)
             {
-                saveData.PendingRefineryTransactions ??= new List<RefineryTransactionRecord>();
+                saveData.PendingSlimePrinterTransactions ??= new List<SlimePrinterTransactionRecord>();
                 saveData.SchemaVersion = 20;
                 this.MigratedSaveData = true;
             }
             if (saveData.SchemaVersion == 20)
             {
                 saveData.RareLabs ??= new List<RareLabRecord>();
-                saveData.PendingRefineryTransactions ??= new List<RefineryTransactionRecord>();
+                saveData.PendingSlimePrinterTransactions ??= new List<SlimePrinterTransactionRecord>();
                 saveData.PendingRareLabContributions ??= new List<RareLabContributionRecord>();
                 saveData.SchemaVersion = 21;
                 this.MigratedSaveData = true;
@@ -357,7 +357,7 @@ internal sealed class ModStateStore
             || data.Eggs is null
             || data.Incubations is null
             || data.MutagenicAttempts is null
-            || data.RefineryJobs is null
+            || data.SlimePrinterJobs is null
             || data.HatchedEggIds is null
             || data.DestroyedEggIds is null
             || data.PendingIncubationCancellations is null
@@ -365,7 +365,7 @@ internal sealed class ModStateStore
             || data.RareLabs is null
             || data.PendingRareLabContributions is null
             || data.PendingRareLabCatalystTransactions is null
-            || data.PendingRefineryTransactions is null
+            || data.PendingSlimePrinterTransactions is null
             || data.FurnitureSlots is null
             || data.SlimeDaycareQuest is null;
         data.Slimes ??= new List<SlimeRecord>();
@@ -373,7 +373,7 @@ internal sealed class ModStateStore
         data.Eggs ??= new List<SlimeEggRecord>();
         data.Incubations ??= new List<IncubationRecord>();
         data.MutagenicAttempts ??= new List<MutagenicAttemptRecord>();
-        data.RefineryJobs ??= new List<RefineryJobRecord>();
+        data.SlimePrinterJobs ??= new List<SlimePrinterJobRecord>();
         data.HatchedEggIds ??= new List<string>();
         data.DestroyedEggIds ??= new List<string>();
         data.PendingIncubationCancellations ??= new List<IncubationRecord>();
@@ -381,7 +381,7 @@ internal sealed class ModStateStore
         data.RareLabs ??= new List<RareLabRecord>();
         data.PendingRareLabContributions ??= new List<RareLabContributionRecord>();
         data.PendingRareLabCatalystTransactions ??= new List<RareLabCatalystTransactionRecord>();
-        data.PendingRefineryTransactions ??= new List<RefineryTransactionRecord>();
+        data.PendingSlimePrinterTransactions ??= new List<SlimePrinterTransactionRecord>();
         data.FurnitureSlots ??= new List<DaycareFurnitureSlotRecord>();
         data.SlimeDaycareQuest ??= new SlimeDaycareQuestRecord();
         changed |= RemoveNullEntries(data.Slimes);
@@ -389,7 +389,7 @@ internal sealed class ModStateStore
         changed |= RemoveNullEntries(data.Eggs);
         changed |= RemoveNullEntries(data.Incubations);
         changed |= RemoveNullEntries(data.MutagenicAttempts);
-        changed |= RemoveNullEntries(data.RefineryJobs);
+        changed |= RemoveNullEntries(data.SlimePrinterJobs);
         changed |= RemoveNullEntries(data.HatchedEggIds);
         changed |= RemoveNullEntries(data.DestroyedEggIds);
         changed |= RemoveNullEntries(data.PendingIncubationCancellations);
@@ -397,7 +397,7 @@ internal sealed class ModStateStore
         changed |= RemoveNullEntries(data.RareLabs);
         changed |= RemoveNullEntries(data.PendingRareLabContributions);
         changed |= RemoveNullEntries(data.PendingRareLabCatalystTransactions);
-        changed |= RemoveNullEntries(data.PendingRefineryTransactions);
+        changed |= RemoveNullEntries(data.PendingSlimePrinterTransactions);
         changed |= RemoveNullEntries(data.FurnitureSlots);
         return changed;
     }

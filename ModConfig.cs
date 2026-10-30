@@ -8,8 +8,12 @@ public sealed class ModConfig
     public int SlimeSlideRecipePrice { get; set; } = 2000;
     public int SlimeSeesawRecipePrice { get; set; } = 2000;
     public bool ShowShadowCloneVisualEchoes { get; set; } = true;
-    public int GelRefinerySlimeFuelCost { get; set; } = 10;
-    public int GelRefineryDurationDays { get; set; } = 1;
+    [Newtonsoft.Json.JsonProperty("GelRefinerySlimeFuelCost")]
+    [System.Text.Json.Serialization.JsonPropertyName("GelRefinerySlimeFuelCost")]
+    public int SlimePrinterFuelCost { get; set; } = 10;
+    [Newtonsoft.Json.JsonProperty("GelRefineryDurationDays")]
+    [System.Text.Json.Serialization.JsonPropertyName("GelRefineryDurationDays")]
+    public int SlimePrinterDurationDays { get; set; } = 1;
     public int SlimeTunnelRecipePrice { get; set; } = 5000;
     public int HeatedSlimeStoneRecipePrice { get; set; } = 2000;
     public int SlimePondRecipePrice { get; set; } = 5000;

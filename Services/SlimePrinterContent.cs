@@ -6,11 +6,16 @@ using StardewValley.GameData.BigCraftables;
 
 namespace taums_slime_ranching.Services;
 
-internal static class GelRefineryContent
+internal static class SlimePrinterContent
 {
-    public const string ItemId = "Taum.SlimeRanching_GelRefinery";
+    public const string ItemId = "Taum.SlimeRanching_SlimePrinter";
     public const string QualifiedItemId = "(BC)" + ItemId;
-    private const string TextureName = "Mods/Taum.SlimeRanching/Machines/GelRefinery";
+    public const string LegacyItemId = "Taum.SlimeRanching_GelRefinery";
+    public const string LegacyQualifiedItemId = "(BC)" + LegacyItemId;
+    private const string TextureName = "Mods/Taum.SlimeRanching/Machines/SlimePrinter";
+
+    public static bool IsSlimePrinter(StardewValley.Object obj) =>
+        obj.QualifiedItemId is QualifiedItemId or LegacyQualifiedItemId;
 
     public static void LoadAssets(AssetRequestedEventArgs e)
     {
@@ -26,19 +31,22 @@ internal static class GelRefineryContent
         e.Edit(asset =>
         {
             var craftables = asset.AsDictionary<string, BigCraftableData>().Data;
-            craftables.TryAdd(ItemId, new BigCraftableData
-            {
-                Name = "Gel Refinery",
-                DisplayName = "Gel Refinery",
-                Description = "Recycle discarded items with vanilla Slime fuel.",
-                CanBePlacedIndoors = true,
-                CanBePlacedOutdoors = false,
-                Fragility = 0,
-                Texture = TextureName,
-                SpriteIndex = 0
-            });
+            craftables.TryAdd(ItemId, CreateBigCraftableData());
+            craftables.TryAdd(LegacyItemId, CreateBigCraftableData());
         });
     }
+
+    private static BigCraftableData CreateBigCraftableData() => new()
+    {
+        Name = "Slime Printer",
+        DisplayName = "Slime Printer",
+        Description = "Recycle discarded items with vanilla Slime fuel.",
+        CanBePlacedIndoors = true,
+        CanBePlacedOutdoors = false,
+        Fragility = 0,
+        Texture = TextureName,
+        SpriteIndex = 0
+    };
 
     private static Texture2D CreateTexture(GraphicsDevice graphicsDevice)
     {

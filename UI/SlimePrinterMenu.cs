@@ -8,13 +8,13 @@ using taums_slime_ranching.Services;
 namespace taums_slime_ranching.UI;
 
 /// <summary>Runs the provisional Broken Glasses recycling recipe inside the Slime Daycare.</summary>
-internal sealed class GelRefineryMenu : IClickableMenu
+internal sealed class SlimePrinterMenu : IClickableMenu
 {
     private const int SlimeItemId = 766;
     private const int BrokenGlassesItemId = 170;
     private readonly SlimeRegistry registry;
     private readonly string machineKey;
-    private readonly GelRefineryRules rules;
+    private readonly SlimePrinterRules rules;
     private readonly Func<bool> canStartBatch;
     private readonly Func<bool> startBatch;
     private readonly Func<bool> collectBatch;
@@ -24,7 +24,7 @@ internal sealed class GelRefineryMenu : IClickableMenu
     private bool showRecipes;
     private string? statusMessage;
 
-    public GelRefineryMenu(SlimeRegistry registry, string machineKey, GelRefineryRules rules,
+    public SlimePrinterMenu(SlimeRegistry registry, string machineKey, SlimePrinterRules rules,
         Func<bool> canStartBatch, Func<bool> startBatch, Func<bool> collectBatch)
         : base(Game1.uiViewport.Width / 2 - 450, Game1.uiViewport.Height / 2 - 290, 900, 580)
     {
@@ -63,12 +63,12 @@ internal sealed class GelRefineryMenu : IClickableMenu
         if (!this.actionButton.Contains(x, y))
             return;
 
-        RefineryJobRecord? job = this.registry.GetRefineryJob(this.machineKey);
+        SlimePrinterJobRecord? job = this.registry.GetSlimePrinterJob(this.machineKey);
         if (job is null)
         {
             if (!this.canStartBatch())
             {
-                this.statusMessage = "The Gel Refinery unlocks at the final Daycare tier.";
+                this.statusMessage = "The Slime Printer unlocks at the final Daycare tier.";
                 Game1.playSound("cancel");
                 return;
             }
@@ -82,7 +82,7 @@ internal sealed class GelRefineryMenu : IClickableMenu
 
             bool started = this.startBatch();
             this.statusMessage = started
-                ? $"Batch started. Sleep for {GelRefineryRules.FormatInGameDays(this.rules.DurationDays)} to finish it."
+                ? $"Batch started. Sleep for {SlimePrinterRules.FormatInGameDays(this.rules.DurationDays)} to finish it."
                 : "Bring 1 Broken Glasses and enough vanilla Slime, then try again.";
             Game1.playSound(started ? "smallSelect" : "cancel");
         }
@@ -100,7 +100,7 @@ internal sealed class GelRefineryMenu : IClickableMenu
     {
         DrawMachineFrame(b, new Rectangle(this.xPositionOnScreen, this.yPositionOnScreen, this.width, this.height));
         DrawInset(b, new Rectangle(this.xPositionOnScreen + 20, this.yPositionOnScreen + 12, this.width - 80, 54), new Color(154, 93, 51));
-        b.DrawString(Game1.dialogueFont, "SLIME GEL REFINERY", new Vector2(this.xPositionOnScreen + 42, this.yPositionOnScreen + 22), Color.White);
+        b.DrawString(Game1.dialogueFont, "SLIME PRINTER", new Vector2(this.xPositionOnScreen + 42, this.yPositionOnScreen + 22), Color.White);
         DrawButton(b, this.closeButton, "X", new Color(205, 62, 57));
 
         int left = this.xPositionOnScreen + 30;
@@ -131,12 +131,12 @@ internal sealed class GelRefineryMenu : IClickableMenu
         DrawObjectIcon(b, 338, new Rectangle(left + 328, top + 252, 64, 64));
         b.DrawString(Game1.smallFont, "Refined Quartz ×1", new Vector2(left + 396, top + 268), Color.White);
 
-        RefineryJobRecord? job = this.registry.GetRefineryJob(this.machineKey);
+        SlimePrinterJobRecord? job = this.registry.GetSlimePrinterJob(this.machineKey);
         if (job is null)
         {
             bool unlocked = this.canStartBatch();
             bool hasInputs = this.HasBatchInputs();
-            b.DrawString(Game1.tinyFont, $"Prototype time: {GelRefineryRules.FormatInGameDays(this.rules.DurationDays)}",
+            b.DrawString(Game1.tinyFont, $"Prototype time: {SlimePrinterRules.FormatInGameDays(this.rules.DurationDays)}",
                 new Vector2(left + 28, top + 342), Color.White);
             DrawProgressBar(b, new Rectangle(left + 260, top + 346, 270, 22), 0f, "Ready");
             DrawButton(b, this.actionButton, !unlocked ? "LOCKED" : hasInputs ? "START BATCH" : "NEED INPUTS",
@@ -154,7 +154,7 @@ internal sealed class GelRefineryMenu : IClickableMenu
                 new Vector2(left + 28, top + 342), Color.White);
             DrawProgressBar(b, new Rectangle(left + 260, top + 346, 270, 22), progress,
                 ready ? "Complete" : $"{elapsed} / {duration} days");
-            b.DrawString(Game1.tinyFont, ready ? "Output reserved until collected." : $"Configured processing time: {GelRefineryRules.FormatInGameDays(duration)}",
+            b.DrawString(Game1.tinyFont, ready ? "Output reserved until collected." : $"Configured processing time: {SlimePrinterRules.FormatInGameDays(duration)}",
                 new Vector2(left + 28, top + 370), Color.White);
             bool buttonEnabled = ready;
             DrawButton(b, this.actionButton, buttonEnabled ? "COLLECT OUTPUT" : "PROCESSING",
@@ -239,14 +239,14 @@ internal sealed class GelRefineryMenu : IClickableMenu
         int x = this.xPositionOnScreen + (this.width - width) / 2;
         int y = this.yPositionOnScreen + (this.height - height) / 2;
         DrawMachineFrame(b, new Rectangle(x, y, width, height));
-        b.DrawString(Game1.dialogueFont, "CURRENT REFINERY RECIPE", new Vector2(x + 28, y + 22), Color.White);
+        b.DrawString(Game1.dialogueFont, "SLIME PRINTER RECIPE", new Vector2(x + 28, y + 22), Color.White);
         b.DrawString(Game1.smallFont, this.canStartBatch() ? "PROTOTYPE RECIPE ENABLED" : "RECIPE UNLOCKS AT FINAL TIER",
             new Vector2(x + 32, y + 78), new Color(92, 220, 255));
         b.DrawString(Game1.smallFont, $"1 Broken Glasses + {this.rules.FuelCost} Slime fuel  →  1 Refined Quartz",
             new Vector2(x + 32, y + 108), Color.White);
         b.DrawString(Game1.smallFont, "BATCH RULES", new Vector2(x + 32, y + 158), Color.White);
         b.DrawString(Game1.smallFont, "Inputs are consumed when you start.", new Vector2(x + 46, y + 190), Color.White);
-        b.DrawString(Game1.smallFont, "One batch runs per refinery.", new Vector2(x + 46, y + 220), Color.White);
+        b.DrawString(Game1.smallFont, "One batch runs per Slime Printer.", new Vector2(x + 46, y + 220), Color.White);
         b.DrawString(Game1.smallFont, "Finished output waits until collected.", new Vector2(x + 46, y + 250), Color.White);
         b.DrawString(Game1.tinyFont, "Fuel and time settings apply to new batches.",
             new Vector2(x + 32, y + 306), Color.White);

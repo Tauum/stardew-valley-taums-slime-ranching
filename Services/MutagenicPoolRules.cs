@@ -37,8 +37,8 @@ internal sealed class MutagenicPoolRules
 
     public static void NormalizeConfig(ModConfig config)
     {
-        config.GelRefinerySlimeFuelCost = Math.Clamp(config.GelRefinerySlimeFuelCost, 1, 999_999);
-        config.GelRefineryDurationDays = Math.Clamp(config.GelRefineryDurationDays, 1, 28);
+        config.SlimePrinterFuelCost = Math.Clamp(config.SlimePrinterFuelCost, 1, 999_999);
+        config.SlimePrinterDurationDays = Math.Clamp(config.SlimePrinterDurationDays, 1, 28);
         config.TrampolineRecipePrice = Math.Clamp(config.TrampolineRecipePrice, 0, 999_999);
         config.SlimeCushionRecipePrice = Math.Clamp(config.SlimeCushionRecipePrice, 0, 999_999);
         config.SlimeSlideRecipePrice = Math.Clamp(config.SlimeSlideRecipePrice, 0, 999_999);

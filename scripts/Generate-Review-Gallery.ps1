@@ -41,7 +41,7 @@ $cards = foreach ($file in $imageFiles) {
     if (-not $isCurrentUiPreview -and $name -match '(?i)furnature|furniture|feeding trough|trampoline|cushion|slide|tunnel|pond|swing|bed') {
         $categories.Add('Furniture')
     }
-    if (-not $isCurrentUiPreview -and $name -match '(?i)breeder|incubat|machine|crystal|mutagenic|refinery') {
+    if (-not $isCurrentUiPreview -and $name -match '(?i)breeder|incubat|machine|crystal|mutagenic|printer') {
         $categories.Add('Machines')
         $categories.Add('UI')
         $categories.Add('Slimes')

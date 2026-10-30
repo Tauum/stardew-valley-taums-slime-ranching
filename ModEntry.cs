@@ -20,7 +20,7 @@ public sealed class ModEntry : Mod
     private const string MutagenicContributionReceiptPrefix = "Taum.SlimeRanching/MutagenicContribution/";
     private const string RareLabContributionReceiptPrefix = "Taum.SlimeRanching/RareLabContribution/";
     private const string RareLabCatalystReceiptPrefix = "Taum.SlimeRanching/RareLabCatalyst/";
-    private const string RefineryTransactionReceiptPrefix = "Taum.SlimeRanching/RefineryTransaction/";
+    private const string SlimePrinterTransactionReceiptPrefix = "Taum.SlimeRanching/RefineryTransaction/";
 
     private SlimeRegistry? registry;
     private ModStateStore? stateStore;
@@ -33,7 +33,7 @@ public sealed class ModEntry : Mod
     private readonly HashSet<string> mutagenicContributionReceiptsToClear = new(StringComparer.Ordinal);
     private readonly HashSet<string> rareLabContributionReceiptsToClear = new(StringComparer.Ordinal);
     private readonly HashSet<string> rareLabCatalystReceiptsToClear = new(StringComparer.Ordinal);
-    private readonly HashSet<string> refineryTransactionReceiptsToClear = new(StringComparer.Ordinal);
+    private readonly HashSet<string> slimePrinterTransactionReceiptsToClear = new(StringComparer.Ordinal);
     private HashSet<string>? marnieFurnitureRecipesKnownOnShopOpen;
 
     public override void Entry(IModHelper helper)
@@ -41,10 +41,10 @@ public sealed class ModEntry : Mod
         new Harmony(this.ModManifest.UniqueID).PatchAll(typeof(ModEntry).Assembly);
         DaycareDecorating.Initialize(helper, this.Monitor);
         this.config = helper.ReadConfig<ModConfig>();
-        if (GelRefineryRules.NormalizeFuelCost(this.config))
+        if (SlimePrinterRules.NormalizeFuelCost(this.config))
         {
             helper.WriteConfig(this.config);
-            this.Monitor.Log($"Normalized the configured Gel Refinery fuel cost to {this.config.GelRefinerySlimeFuelCost} Slime (supported range {GelRefineryRules.MinimumSlimeFuelCost}-{GelRefineryRules.MaximumSlimeFuelCost}; the minimum prevents direct sale-value arbitrage).", LogLevel.Info);
+            this.Monitor.Log($"Normalized the configured Slime Printer fuel cost to {this.config.SlimePrinterFuelCost} Slime (supported range {SlimePrinterRules.MinimumSlimeFuelCost}-{SlimePrinterRules.MaximumSlimeFuelCost}; the minimum prevents direct sale-value arbitrage).", LogLevel.Info);
         }
         this.registry = new SlimeRegistry(this.Monitor);
         DomesticatedSlimeShadowScalePatch.SetSizeLookup(id => this.registry?.GetGenomeSize(id));
@@ -87,7 +87,8 @@ public sealed class ModEntry : Mod
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_duplicate_cryolab_egg", "Deliberately duplicate a stored egg ID for CryoLab guard testing on a disposable save. Usage: slime_ranching_duplicate_cryolab_egg.", this.OnDuplicateCryoLabEggCommand);
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_duplicate_inventory_egg", "Deliberately duplicate one unused inventory egg ID for hatch-once testing on a disposable save. Usage: slime_ranching_duplicate_inventory_egg.", this.OnDuplicateInventoryEggCommand);
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_mutagenic_pool", "Give one Mutagenic Pool for testing. Usage: slime_ranching_give_mutagenic_pool.", this.OnGiveMutagenicPoolCommand);
-        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_gel_refinery", "Give one Gel Refinery for testing. Usage: slime_ranching_give_gel_refinery.", this.OnGiveGelRefineryCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_slime_printer", "Give one Slime Printer for testing. Usage: slime_ranching_give_slime_printer.", this.OnGiveSlimePrinterCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_gel_refinery", "Legacy alias: give one Slime Printer for testing.", this.OnGiveSlimePrinterCommand);
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_tunnel", "Give one Slime Tunnel for testing. Usage: slime_ranching_give_tunnel.", this.OnGiveTunnelCommand);
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_heated_stone", "Give one Heated Slime Stone for testing. Usage: slime_ranching_give_heated_stone.", this.OnGiveHeatedStoneCommand);
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_pond", "Give one Slime Pond for testing. Usage: slime_ranching_give_pond.", this.OnGivePondCommand);
@@ -177,7 +178,7 @@ public sealed class ModEntry : Mod
             bool mutagenicContributionRecovered = this.ReconcileMutagenicContributionTransactions();
             bool rareLabContributionRecovered = this.ReconcileRareLabContributionTransactions();
             bool rareLabCatalystRecovered = this.ReconcileRareLabCatalystTransactions();
-            bool refineryTransactionRecovered = this.ReconcileRefineryTransactions();
+            bool printerTransactionRecovered = this.ReconcileSlimePrinterTransactions();
             bool constructionProgressChanged = this.TryRecordCompletedDaycareConstruction();
             bool repairQuestProgressChanged = this.TryStartMaruRepairQuest();
             this.LogRegistryReconciliation(detachedAnimals, cancelledCycles);
@@ -185,7 +186,7 @@ public sealed class ModEntry : Mod
                 this.Monitor.Log($"Imported the previous mod-folder slime registry from schema {this.stateStore.LoadedSchemaVersion?.ToString() ?? "unknown"} into save schema {SlimeSaveData.CurrentSchemaVersion}. The original legacy file was left untouched.", LogLevel.Info);
             if (this.stateStore.MigratedSaveData)
                 this.Monitor.Log("Migrated the saved Domesticated Slime data to the current schema.", LogLevel.Info);
-            if (needsPersistenceMigration || registeredDomesticatedSlimes > 0 || recoveredHatches > 0 || detachedAnimals > 0 || cancelledCycles > 0 || maturityChanged || rareLabProgressionChanged || eggCryoLabRecordsChanged || repairTransactionRecovered || incubationCancellationRecovered || mutagenicContributionRecovered || rareLabContributionRecovered || rareLabCatalystRecovered || refineryTransactionRecovered || constructionProgressChanged || repairQuestProgressChanged)
+            if (needsPersistenceMigration || registeredDomesticatedSlimes > 0 || recoveredHatches > 0 || detachedAnimals > 0 || cancelledCycles > 0 || maturityChanged || rareLabProgressionChanged || eggCryoLabRecordsChanged || repairTransactionRecovered || incubationCancellationRecovered || mutagenicContributionRecovered || rareLabContributionRecovered || rareLabCatalystRecovered || printerTransactionRecovered || constructionProgressChanged || repairQuestProgressChanged)
             {
                 if (!this.SaveCurrentSaveDataNow())
                     this.Monitor.Log("Imported or reconciled Domesticated Slime state remains in memory but could not yet be written to the current save.", LogLevel.Error);
@@ -196,7 +197,7 @@ public sealed class ModEntry : Mod
                     this.ClearFinalizedMutagenicContributionReceipts();
                     this.ClearFinalizedRareLabContributionReceipts();
                     this.ClearFinalizedRareLabCatalystReceipts();
-                    this.ClearFinalizedRefineryTransactionReceipts();
+                    this.ClearFinalizedSlimePrinterTransactionReceipts();
                 }
             }
         }
@@ -228,20 +229,20 @@ public sealed class ModEntry : Mod
         this.AddShopPriceOption(api, "Slime Fairy Lights Recipe", "Price to learn the reusable Fairy Lights recipe.", () => this.config.SlimeFairyLightsRecipePrice, value => this.config.SlimeFairyLightsRecipePrice = value);
         this.AddShopPriceOption(api, "Slime Ball Pit Recipe", "Price to learn the reusable Ball Pit recipe.", () => this.config.SlimeBallPitRecipePrice, value => this.config.SlimeBallPitRecipePrice = value);
         this.AddShopPriceOption(api, "Slime Washing Machine Recipe", "Price to learn the reusable Washing Machine recipe.", () => this.config.SlimeWashingMachineRecipePrice, value => this.config.SlimeWashingMachineRecipePrice = value);
-        api.AddSectionTitle(this.ModManifest, () => "Gel Refinery");
+        api.AddSectionTitle(this.ModManifest, () => "Slime Printer");
         api.AddParagraph(this.ModManifest, () => "The first recipe is provisional: Broken Glasses and vanilla Slime fuel become Refined Quartz.");
         api.AddNumberOption(this.ModManifest,
-            () => this.config.GelRefinerySlimeFuelCost,
-            value => this.config.GelRefinerySlimeFuelCost = value,
+            () => this.config.SlimePrinterFuelCost,
+            value => this.config.SlimePrinterFuelCost = value,
             () => "Slime fuel per batch",
             () => "At least 10 Slime per batch; this prevents the provisional recipe from producing direct sale-value profit.",
-            GelRefineryRules.MinimumSlimeFuelCost, GelRefineryRules.MaximumSlimeFuelCost, 1);
+            SlimePrinterRules.MinimumSlimeFuelCost, SlimePrinterRules.MaximumSlimeFuelCost, 1);
         api.AddNumberOption(this.ModManifest,
-            () => (float)this.config.GelRefineryDurationDays,
-            value => this.config.GelRefineryDurationDays = (int)MathF.Round(value),
+            () => (float)this.config.SlimePrinterDurationDays,
+            value => this.config.SlimePrinterDurationDays = (int)MathF.Round(value),
             () => "Processing days",
             () => "Whole in-game days per batch (1–28).", 1f, 28f, 1f,
-            value => GelRefineryRules.FormatInGameDays((int)MathF.Round(value)));
+            value => SlimePrinterRules.FormatInGameDays((int)MathF.Round(value)));
         api.AddSectionTitle(this.ModManifest, () => "Mutagenic Pool");
         api.AddParagraph(this.ModManifest, () => "The repaired Pool uses fixed 2-day attempts, a 10% base chance, and saved per-slime pity and Slime contributions. Add 10 Slime during an attempt for +1 percentage point; canceling preserves the current chance.");
         api.AddBoolOption(this.ModManifest,
@@ -302,7 +303,7 @@ public sealed class ModEntry : Mod
         bool mutagenicContributionRecovered = this.ReconcileMutagenicContributionTransactions();
         bool rareLabContributionRecovered = this.ReconcileRareLabContributionTransactions();
         bool rareLabCatalystRecovered = this.ReconcileRareLabCatalystTransactions();
-        bool refineryTransactionRecovered = this.ReconcileRefineryTransactions();
+        bool printerTransactionRecovered = this.ReconcileSlimePrinterTransactions();
         bool rareLabProgressionChanged = this.SynchronizeRareLabProgression();
         bool eggCryoLabRecordsChanged = this.SynchronizeEggCryoLabRecords();
         bool constructionProgressChanged = this.TryRecordCompletedDaycareConstruction();
@@ -319,13 +320,13 @@ public sealed class ModEntry : Mod
             }
         }
 
-        List<RefineryJobRecord> refineryReady = new();
-        foreach (RefineryJobRecord job in this.registry.RefineryJobs)
+        List<SlimePrinterJobRecord> printerReady = new();
+        foreach (SlimePrinterJobRecord job in this.registry.SlimePrinterJobs)
         {
             if (Game1.Date.TotalDays >= job.ReadyOnDay && !job.ReadyNotificationSent)
             {
                 job.ReadyNotificationSent = true;
-                refineryReady.Add(job);
+                printerReady.Add(job);
             }
         }
 
@@ -333,10 +334,10 @@ public sealed class ModEntry : Mod
         maturityChanged |= this.registry.SynchronizeMaturity(GetFarmAnimals(), Game1.Date.TotalDays);
         this.pendingMutagenicNotifications.AddRange(this.registry.ResolveReadyMutagenicAttempts(Game1.Date.TotalDays));
 
-        if (readyToNotify.Count == 0 && refineryReady.Count == 0 && this.pendingMutagenicNotifications.Count == 0)
+        if (readyToNotify.Count == 0 && printerReady.Count == 0 && this.pendingMutagenicNotifications.Count == 0)
         {
             bool needsSave = maturityChanged || rareLabProgressionChanged || eggCryoLabRecordsChanged || repairTransactionRecovered || mutagenicContributionRecovered || rareLabContributionRecovered || rareLabCatalystRecovered
-                || refineryTransactionRecovered || constructionProgressChanged || repairQuestProgressChanged;
+                || printerTransactionRecovered || constructionProgressChanged || repairQuestProgressChanged;
             if (needsSave)
             {
                 if (!this.SaveCurrentSaveDataNow())
@@ -349,7 +350,7 @@ public sealed class ModEntry : Mod
                         this.ClearFinalizedMutagenicContributionReceipts();
                     this.ClearFinalizedRareLabContributionReceipts();
                     this.ClearFinalizedRareLabCatalystReceipts();
-                    this.ClearFinalizedRefineryTransactionReceipts();
+                    this.ClearFinalizedSlimePrinterTransactionReceipts();
                 }
             }
             else if (maturityChanged)
@@ -361,7 +362,7 @@ public sealed class ModEntry : Mod
         {
             foreach (var ready in readyToNotify)
                 ready.Pair.ReadyNotificationSent = false;
-            foreach (RefineryJobRecord job in refineryReady)
+            foreach (SlimePrinterJobRecord job in printerReady)
                 job.ReadyNotificationSent = false;
             this.Monitor.Log("A completed breeding or mutation result could not be saved; notifications will retry after the next save-data write.", LogLevel.Error);
             return;
@@ -372,7 +373,7 @@ public sealed class ModEntry : Mod
             this.ClearFinalizedMutagenicContributionReceipts();
         this.ClearFinalizedRareLabContributionReceipts();
         this.ClearFinalizedRareLabCatalystReceipts();
-        this.ClearFinalizedRefineryTransactionReceipts();
+        this.ClearFinalizedSlimePrinterTransactionReceipts();
 
         foreach (var ready in readyToNotify)
         {
@@ -391,10 +392,10 @@ public sealed class ModEntry : Mod
         }
         this.pendingMutagenicNotifications.Clear();
 
-        foreach (RefineryJobRecord job in refineryReady)
+        foreach (SlimePrinterJobRecord job in printerReady)
         {
-            Game1.addHUDMessage(new HUDMessage("A Gel Refinery batch is ready to collect!", HUDMessage.newQuest_type));
-            this.Monitor.Log($"Gel Refinery batch at {job.MachineKey} is ready: {job.OutputCount} Refined Quartz.", LogLevel.Info);
+            Game1.addHUDMessage(new HUDMessage("A Slime Printer batch is ready to collect!", HUDMessage.newQuest_type));
+            this.Monitor.Log($"Slime Printer batch at {job.MachineKey} is ready: {job.OutputCount} Refined Quartz.", LogLevel.Info);
         }
     }
 
@@ -645,34 +646,34 @@ public sealed class ModEntry : Mod
         return changed;
     }
 
-    private bool ReconcileRefineryTransactions()
+    private bool ReconcileSlimePrinterTransactions()
     {
         if (this.registry is null)
             return false;
 
         bool changed = false;
-        foreach (RefineryTransactionRecord pending in this.registry.PendingRefineryTransactions
+        foreach (SlimePrinterTransactionRecord pending in this.registry.PendingSlimePrinterTransactions
                      .OrderByDescending(transaction => transaction.Sequence).ToArray())
         {
-            string receiptKey = RefineryTransactionReceiptPrefix + pending.Id;
+            string receiptKey = SlimePrinterTransactionReceiptPrefix + pending.Id;
             bool nativeSaveCommitted = Game1.player.modData.ContainsKey(receiptKey);
-            changed |= this.registry.ResolveRefineryTransaction(pending.Id, nativeSaveCommitted);
+            changed |= this.registry.ResolveSlimePrinterTransaction(pending.Id, nativeSaveCommitted);
             if (nativeSaveCommitted)
-                this.refineryTransactionReceiptsToClear.Add(receiptKey);
+                this.slimePrinterTransactionReceiptsToClear.Add(receiptKey);
         }
 
         foreach (string receiptKey in Game1.player.modData.Keys
-                     .Where(key => key.StartsWith(RefineryTransactionReceiptPrefix, StringComparison.Ordinal))
+                     .Where(key => key.StartsWith(SlimePrinterTransactionReceiptPrefix, StringComparison.Ordinal))
                      .ToArray())
         {
-            string transactionId = receiptKey[RefineryTransactionReceiptPrefix.Length..];
-            if (this.registry.PendingRefineryTransactions.Any(transaction => transaction.Id == transactionId))
+            string transactionId = receiptKey[SlimePrinterTransactionReceiptPrefix.Length..];
+            if (this.registry.PendingSlimePrinterTransactions.Any(transaction => transaction.Id == transactionId))
                 continue;
 
-            RefineryTransactionRecord? receipt = null;
+            SlimePrinterTransactionRecord? receipt = null;
             try
             {
-                receipt = System.Text.Json.JsonSerializer.Deserialize<RefineryTransactionRecord>(Game1.player.modData[receiptKey]);
+                receipt = System.Text.Json.JsonSerializer.Deserialize<SlimePrinterTransactionRecord>(Game1.player.modData[receiptKey]);
             }
             catch (System.Text.Json.JsonException)
             {
@@ -680,22 +681,22 @@ public sealed class ModEntry : Mod
             }
 
             if (receipt?.Id == transactionId)
-                changed |= this.registry.ReconcileOrphanRefineryReceipt(receipt);
+                changed |= this.registry.ReconcileOrphanSlimePrinterReceipt(receipt);
             else
-                this.Monitor.Log("Skipped a malformed saved Gel Refinery transaction receipt.", LogLevel.Warn);
+                this.Monitor.Log("Skipped a malformed saved Slime Printer transaction receipt.", LogLevel.Warn);
 
-            this.refineryTransactionReceiptsToClear.Add(receiptKey);
+            this.slimePrinterTransactionReceiptsToClear.Add(receiptKey);
             changed = true;
         }
 
         return changed;
     }
 
-    private void ClearFinalizedRefineryTransactionReceipts()
+    private void ClearFinalizedSlimePrinterTransactionReceipts()
     {
-        foreach (string receiptKey in this.refineryTransactionReceiptsToClear)
+        foreach (string receiptKey in this.slimePrinterTransactionReceiptsToClear)
             Game1.player.modData.Remove(receiptKey);
-        this.refineryTransactionReceiptsToClear.Clear();
+        this.slimePrinterTransactionReceiptsToClear.Clear();
     }
 
     private void ClearFinalizedMutagenicContributionReceipts()
@@ -911,7 +912,7 @@ public sealed class ModEntry : Mod
         this.shadowCloneVisuals.Clear();
         this.mutationVisuals.Clear();
         this.pendingMutagenicNotifications.Clear();
-        this.refineryTransactionReceiptsToClear.Clear();
+        this.slimePrinterTransactionReceiptsToClear.Clear();
         this.rareLabContributionReceiptsToClear.Clear();
         this.rareLabCatalystReceiptsToClear.Clear();
         this.marnieFurnitureRecipesKnownOnShopOpen = null;
@@ -1553,8 +1554,8 @@ public sealed class ModEntry : Mod
         FarmAnimalContent.EditAsset(e);
         FurnitureContent.LoadAssets(e);
         FurnitureContent.EditAsset(e);
-        GelRefineryContent.LoadAssets(e);
-        GelRefineryContent.EditAsset(e);
+        SlimePrinterContent.LoadAssets(e);
+        SlimePrinterContent.EditAsset(e);
         MutagenicPoolContent.LoadAssets(e);
         MutagenicPoolContent.EditAsset(e);
         SlimeDaycareQuestContent.EditAsset(e);
@@ -1673,12 +1674,12 @@ public sealed class ModEntry : Mod
         }
 
         if (Context.IsWorldReady && Game1.activeClickableMenu is null && e.Button.IsActionButton()
-            && Game1.currentLocation.Objects.TryGetValue(e.Cursor.GrabTile, out StardewValley.Object? refinery)
-            && refinery.QualifiedItemId == GelRefineryContent.QualifiedItemId)
+            && Game1.currentLocation.Objects.TryGetValue(e.Cursor.GrabTile, out StardewValley.Object? printer)
+            && SlimePrinterContent.IsSlimePrinter(printer))
         {
             if (!this.stateReady || !Context.IsMainPlayer || Context.IsMultiplayer)
             {
-                this.Monitor.Log("The Gel Refinery requires loaded mod save data in single-player.", LogLevel.Warn);
+                this.Monitor.Log("The Slime Printer requires loaded mod save data in single-player.", LogLevel.Warn);
                 return;
             }
 
@@ -1686,17 +1687,17 @@ public sealed class ModEntry : Mod
                 BuildingContent.IsSlimeDaycare(building.buildingType.Value) && building.GetIndoors() == Game1.currentLocation);
             if (daycare?.GetIndoors() is not StardewValley.AnimalHouse)
             {
-                this.Monitor.Log("The Gel Refinery only works inside the Slime Daycare.", LogLevel.Warn);
+                this.Monitor.Log("The Slime Printer only works inside the Slime Daycare.", LogLevel.Warn);
                 return;
             }
 
             this.Helper.Input.Suppress(e.Button);
-            string machineKey = $"{Game1.currentLocation.NameOrUniqueName}:{(int)refinery.TileLocation.X},{(int)refinery.TileLocation.Y}";
+            string machineKey = $"{Game1.currentLocation.NameOrUniqueName}:{(int)printer.TileLocation.X},{(int)printer.TileLocation.Y}";
             Building activeDaycare = daycare;
-            Game1.activeClickableMenu = new GelRefineryMenu(this.registry!, machineKey, GelRefineryRules.FromConfig(this.config),
+            Game1.activeClickableMenu = new SlimePrinterMenu(this.registry!, machineKey, SlimePrinterRules.FromConfig(this.config),
                 () => BuildingContent.GetUpgradeTier(activeDaycare.buildingType.Value) >= 3,
-                () => this.StartRefineryBatch(machineKey, activeDaycare),
-                () => this.CollectRefineryBatch(machineKey));
+                () => this.StartSlimePrinterBatch(machineKey, activeDaycare),
+                () => this.CollectSlimePrinterBatch(machineKey));
             return;
         }
 
@@ -3014,29 +3015,29 @@ public sealed class ModEntry : Mod
         this.Monitor.Log("Added one Mutagenic Pool. Place it inside the Slime Daycare and use it with vanilla Slime in your inventory.", LogLevel.Info);
     }
 
-    private void OnGiveGelRefineryCommand(string command, string[] args)
+    private void OnGiveSlimePrinterCommand(string command, string[] args)
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before requesting a Gel Refinery.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before requesting a Slime Printer.", LogLevel.Warn);
             return;
         }
 
         string? saveName = Constants.SaveFolderName;
         if (args.Length != 1 || args[0] != saveName)
         {
-            this.Monitor.Log("To give a Gel Refinery to the currently loaded save, use: slime_ranching_give_gel_refinery", LogLevel.Warn);
+            this.Monitor.Log("To give a Slime Printer to the currently loaded save, use: slime_ranching_give_slime_printer", LogLevel.Warn);
             return;
         }
 
-        Item refinery = ItemRegistry.Create(GelRefineryContent.QualifiedItemId);
-        if (!Game1.player.couldInventoryAcceptThisItem(refinery) || !Game1.player.addItemToInventoryBool(refinery))
+        Item printer = ItemRegistry.Create(SlimePrinterContent.QualifiedItemId);
+        if (!Game1.player.couldInventoryAcceptThisItem(printer) || !Game1.player.addItemToInventoryBool(printer))
         {
-            this.Monitor.Log("Make room in your inventory for the Gel Refinery, then try again.", LogLevel.Warn);
+            this.Monitor.Log("Make room in your inventory for the Slime Printer, then try again.", LogLevel.Warn);
             return;
         }
 
-        this.Monitor.Log("Added one Gel Refinery. Place it inside the Slime Daycare; its provisional recipe needs Broken Glasses and vanilla Slime.", LogLevel.Info);
+        this.Monitor.Log("Added one Slime Printer. Place it inside the Slime Daycare; its provisional recipe needs Broken Glasses and vanilla Slime.", LogLevel.Info);
     }
 
     private void OnGiveTunnelCommand(string command, string[] args)
@@ -3377,41 +3378,41 @@ public sealed class ModEntry : Mod
         this.Monitor.Log("Added one Slime Lamp. Place it in the Slime Daycare; nearby eligible Domesticated Slimes can gather around its light.", LogLevel.Info);
     }
 
-    private bool StartRefineryBatch(string machineKey, Building daycare)
+    private bool StartSlimePrinterBatch(string machineKey, Building daycare)
     {
-        GelRefineryRules rules = GelRefineryRules.FromConfig(this.config);
+        SlimePrinterRules rules = SlimePrinterRules.FromConfig(this.config);
         if (BuildingContent.GetUpgradeTier(daycare.buildingType.Value) < 3
-            || this.registry is null || this.registry.GetRefineryJob(machineKey) is not null
+            || this.registry is null || this.registry.GetSlimePrinterJob(machineKey) is not null
             || CountInventoryItem("(O)170") < 1 || CountInventoryItem("(O)766") < rules.FuelCost)
             return false;
 
         SlimeRegistry registry = this.registry;
         List<(int Slot, Item Item, int OldStack)> removed = ConsumeInventoryItems("(O)170", 1)
             .Concat(ConsumeInventoryItems("(O)766", rules.FuelCost)).ToList();
-        RefineryTransactionRecord? transaction = registry.StartRefineryJob(machineKey, Game1.Date.TotalDays, rules.DurationDays, rules.FuelCost);
+        SlimePrinterTransactionRecord? transaction = registry.StartSlimePrinterJob(machineKey, Game1.Date.TotalDays, rules.DurationDays, rules.FuelCost);
         if (transaction is null)
         {
             RestoreInventoryItems(removed);
             return false;
         }
 
-        string receiptKey = RefineryTransactionReceiptPrefix + transaction.Id;
+        string receiptKey = SlimePrinterTransactionReceiptPrefix + transaction.Id;
         Game1.player.modData[receiptKey] = System.Text.Json.JsonSerializer.Serialize(transaction);
         if (this.SaveCurrentSaveDataNow())
             return true;
 
-        registry.ResolveRefineryTransaction(transaction.Id, nativeSaveCommitted: false);
+        registry.ResolveSlimePrinterTransaction(transaction.Id, nativeSaveCommitted: false);
         Game1.player.modData.Remove(receiptKey);
         RestoreInventoryItems(removed);
         if (!this.SaveCurrentSaveDataNow())
-            this.Monitor.Log("Could not persist the Gel Refinery start rollback; inputs and the prior machine state were restored in memory.", LogLevel.Error);
+            this.Monitor.Log("Could not persist the Slime Printer start rollback; inputs and the prior machine state were restored in memory.", LogLevel.Error);
         return false;
     }
 
-    private bool CollectRefineryBatch(string machineKey)
+    private bool CollectSlimePrinterBatch(string machineKey)
     {
         SlimeRegistry? registry = this.registry;
-        RefineryJobRecord? job = registry?.GetRefineryJob(machineKey);
+        SlimePrinterJobRecord? job = registry?.GetSlimePrinterJob(machineKey);
         if (registry is null || job is null || Game1.Date.TotalDays < job.ReadyOnDay)
             return false;
 
@@ -3422,25 +3423,25 @@ public sealed class ModEntry : Mod
         (Item? Item, int Stack)[] inventorySnapshot = Game1.player.Items
             .Select(item => (Item: (Item?)item, Stack: item?.Stack ?? 0))
             .ToArray();
-        RefineryTransactionRecord? transaction = registry.BeginRefineryCollection(machineKey);
+        SlimePrinterTransactionRecord? transaction = registry.BeginSlimePrinterCollection(machineKey);
         if (transaction is null)
             return false;
         if (!Game1.player.addItemToInventoryBool(output))
         {
-            registry.ResolveRefineryTransaction(transaction.Id, nativeSaveCommitted: false);
+            registry.ResolveSlimePrinterTransaction(transaction.Id, nativeSaveCommitted: false);
             return false;
         }
 
-        string receiptKey = RefineryTransactionReceiptPrefix + transaction.Id;
+        string receiptKey = SlimePrinterTransactionReceiptPrefix + transaction.Id;
         Game1.player.modData[receiptKey] = System.Text.Json.JsonSerializer.Serialize(transaction);
         if (this.SaveCurrentSaveDataNow())
             return true;
 
-        registry.ResolveRefineryTransaction(transaction.Id, nativeSaveCommitted: false);
+        registry.ResolveSlimePrinterTransaction(transaction.Id, nativeSaveCommitted: false);
         Game1.player.modData.Remove(receiptKey);
         RestoreInventorySnapshot(inventorySnapshot);
         if (!this.SaveCurrentSaveDataNow())
-            this.Monitor.Log("Could not persist the Gel Refinery collection rollback; the output and ready batch were restored in memory.", LogLevel.Error);
+            this.Monitor.Log("Could not persist the Slime Printer collection rollback; the output and ready batch were restored in memory.", LogLevel.Error);
         return false;
     }
 
@@ -3589,7 +3590,7 @@ public sealed class ModEntry : Mod
             int readyEggs = roomBreedingPairs.Count(pair => pair.OutputEggItemId is not null);
             int activeIncubations = loadedRegistry.Incubations.Count(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal));
             int activeMutations = loadedRegistry.MutagenicAttempts.Count(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal));
-            int activeRefineryBatches = loadedRegistry.RefineryJobs.Count(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal));
+            int activeRefineryBatches = loadedRegistry.SlimePrinterJobs.Count(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal));
             RareLabRecord[] roomRareLabs = isDaycare
                 ? loadedRegistry.RareLabs.Where(lab => lab.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal)).ToArray()
                 : Array.Empty<RareLabRecord>();
@@ -3655,7 +3656,7 @@ public sealed class ModEntry : Mod
                     this.Monitor.Log($"Furniture slot {lockedSlot.SlotId}: saved assignment is locked at the current Daycare tier.", LogLevel.Warn);
             }
             this.Monitor.Log($"Domesticated Slime assignment status: {residentStatuses}.", LogLevel.Info);
-            this.Monitor.Log($"Jobs in this room: {activeCycles} breeder cycle(s), {readyEggs} ready egg(s), {activeIncubations} incubation(s), {activeMutations} Mutagenic Pool attempt(s), {activeRefineryBatches} Gel Refinery batch(es).", LogLevel.Info);
+            this.Monitor.Log($"Jobs in this room: {activeCycles} breeder cycle(s), {readyEggs} ready egg(s), {activeIncubations} incubation(s), {activeMutations} Mutagenic Pool attempt(s), {activeRefineryBatches} Slime Printer batch(es).", LogLevel.Info);
             if (isDaycare)
             {
                 this.Monitor.Log($"Slime Incubators placed in this Daycare: {roomIncubatorMachineKeys.Length}.", LogLevel.Info);
@@ -3791,8 +3792,8 @@ public sealed class ModEntry : Mod
             foreach (MutagenicAttemptRecord job in loadedRegistry.MutagenicAttempts.Where(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal)))
                 this.Monitor.Log($"Mutagenic Pool [{job.MachineKey}]: slime {job.SlimeId}; chance {job.ChanceAtStart:P0}; ready day {job.ReadyOnDay}.", LogLevel.Info);
 
-            foreach (RefineryJobRecord job in loadedRegistry.RefineryJobs.Where(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal)))
-                this.Monitor.Log($"Gel Refinery [{job.MachineKey}]: {job.InputCount} Broken Glasses + {job.SlimeFuelCount} Slime -> {job.OutputCount} Refined Quartz; ready day {job.ReadyOnDay}; notice sent {job.ReadyNotificationSent}.", LogLevel.Info);
+            foreach (SlimePrinterJobRecord job in loadedRegistry.SlimePrinterJobs.Where(job => job.MachineKey.StartsWith(machinePrefix, StringComparison.Ordinal)))
+                this.Monitor.Log($"Slime Printer [{job.MachineKey}]: {job.InputCount} Broken Glasses + {job.SlimeFuelCount} Slime -> {job.OutputCount} Refined Quartz; ready day {job.ReadyOnDay}; notice sent {job.ReadyNotificationSent}.", LogLevel.Info);
             return;
         }
 

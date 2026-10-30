@@ -40,7 +40,7 @@ internal static class IncubatorFootprintPatches
 
                 int footprintWidth = obj.QualifiedItemId switch
                 {
-                    RanchingItemContent.IncubatorQualifiedId or GelRefineryContent.QualifiedItemId
+                    RanchingItemContent.IncubatorQualifiedId or SlimePrinterContent.QualifiedItemId or SlimePrinterContent.LegacyQualifiedItemId
                         or MutagenicPoolContent.QualifiedItemId => 3,
                     RanchingItemContent.BreederQualifiedId => 5,
                     _ => 0
@@ -48,7 +48,7 @@ internal static class IncubatorFootprintPatches
                 int footprintHeight = obj.QualifiedItemId switch
                 {
                     RanchingItemContent.IncubatorQualifiedId or RanchingItemContent.BreederQualifiedId => 2,
-                    GelRefineryContent.QualifiedItemId or MutagenicPoolContent.QualifiedItemId => 2,
+                    SlimePrinterContent.QualifiedItemId or SlimePrinterContent.LegacyQualifiedItemId or MutagenicPoolContent.QualifiedItemId => 2,
                     _ => 0
                 };
                 if (footprintWidth == 0)

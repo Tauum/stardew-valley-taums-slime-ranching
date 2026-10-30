@@ -1,7 +1,7 @@
 namespace taums_slime_ranching.Models;
 
-/// <summary>One external Gel Refinery batch; its output stays reserved until collected.</summary>
-public sealed class RefineryJobRecord
+/// <summary>One external Slime Printer batch; its output stays reserved until collected.</summary>
+public sealed class SlimePrinterJobRecord
 {
     public string Id { get; set; } = string.Empty;
     public string MachineKey { get; set; } = "";

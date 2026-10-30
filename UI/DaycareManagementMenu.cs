@@ -583,8 +583,8 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             ? "CryoLab / Rare Labs: locked until first upgrade"
             : $"CryoLab / Rare Labs: unlocked | { (this.buildingTier >= 3 ? 5 : 1)}% base chance";
         string finalFacilityStatus = this.buildingTier >= 3
-            ? "Second Breeder / Incubator + Refinery: unlocked"
-            : "Second Breeder / Incubator + Refinery: locked";
+            ? "Second Breeder / Incubator + Slime Printer: unlocked"
+            : "Second Breeder / Incubator + Slime Printer: locked";
         string nextUpgradeGuidance = this.buildingTier switch
         {
             0 => "Next Robin upgrade: First | 10,000g + 450 Wood",
@@ -596,7 +596,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         {
             0 => "Unlocks renovations, Egg CryoLab, 1% Rare Lab",
             1 => "No new machine unlock is currently specified",
-            2 => "Unlocks second Breeder/Incubator, 5% Rare Lab, Refinery, cellar",
+            2 => "Unlocks second Breeder/Incubator, 5% Rare Lab, Slime Printer, cellar",
             _ => "All planned upgrade features are unlocked"
         };
         string buildingId = this.daycare.ParentBuilding?.id.Value.ToString("N") ?? string.Empty;
@@ -615,7 +615,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             $"Breeder / incubator fixtures: {this.CountPlaced(RanchingItemContent.BreederQualifiedId)} / {this.CountPlaced(RanchingItemContent.IncubatorQualifiedId)}",
             $"Egg CryoLab tester chests: {this.daycare.Objects.Values.OfType<Chest>().Count(EggCryoLabContent.IsEggCryoLab)}",
             $"Rare Lab records: {this.registry.RareLabs.Count(lab => lab.MachineKey.StartsWith(prefix, StringComparison.Ordinal))}",
-            $"Pool / Gel Refinery fixtures: {this.CountPlaced(MutagenicPoolContent.QualifiedItemId)} / {this.CountPlaced(GelRefineryContent.QualifiedItemId)}",
+            $"Pool / Slime Printer fixtures: {this.CountPlaced(MutagenicPoolContent.QualifiedItemId)} / {this.CountPlaced(SlimePrinterContent.QualifiedItemId) + this.CountPlaced(SlimePrinterContent.LegacyQualifiedItemId)}",
             rareLabStatus,
             finalFacilityStatus
         };
@@ -849,11 +849,11 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         entries.Add(new WikiEntry("RULES", "Furniture activities",
             "Trampoline: compress, bounce, and land, with height scaled to genome size. Cushion: squash and spring back. Slide: hop and glide down. Seesaw: two independently selected slimes sway in opposite phases together. Ball Pit: one slime dips below the rim and pops up. Slime Lamp: nearby independently selected slimes gather around its native light. Tunnel: low hop and glide through the opening. Heated Slime Stone: rest beside the ember. Pond: brief bobbing/swimming motion. Swing: one slime sways on the seat. These activities do not grant happiness, friendship, feeding, or breeding bonuses. Fairy Lights are a room-wide cosmetic display; their final timing and fixed position remain pending. The Washing Machine is decorative and has no interaction or slime effect.", Array.Empty<string>()));
         entries.Add(new WikiEntry("RULES", "Daycare upgrade schedule",
-            "Robin builds and upgrades one Slime Daycare per save. Basic construction costs 10,000g, 350 Wood, 150 Stone, and 50 vanilla Slime; capacity is 10, with one 18-day Breeder cycle and one 7-day Incubator. Upgrade 1 costs 10,000g and 450 Wood, raises capacity to 20, changes the main map to FarmHouse1, unlocks Daycare renovations and the Egg CryoLab, and gives each Incubator a 1% Rare Lab. Upgrade 2 costs 65,000g and 100 Hardwood; capacity remains 20, it uses FarmHouse2, and no additional machine unlock is currently specified. Upgrade 3 costs 100,000g, raises capacity to 30, and adds a second Breeder and Incubator, 5% Rare Labs, the Gel Refinery, and a cellar. Furniture slot progression is three slots at basic tier, seven at upgrades 1 and 2, and fifteen at the final tier. Marnie's recipe unlock tiers follow Daycare construction, the first building upgrade, and the final tier; see the furniture recipes entry for each item's current price. The basic map is FarmHouse; tiers 2 and 3 use FarmHouse2. After construction, Robin can point the player to Maru about the broken Mutagenic Pool; that repair mission appears the next morning and does not require a building upgrade.", Array.Empty<string>()));
+            "Robin builds and upgrades one Slime Daycare per save. Basic construction costs 10,000g, 350 Wood, 150 Stone, and 50 vanilla Slime; capacity is 10, with one 18-day Breeder cycle and one 7-day Incubator. Upgrade 1 costs 10,000g and 450 Wood, raises capacity to 20, changes the main map to FarmHouse1, unlocks Daycare renovations and the Egg CryoLab, and gives each Incubator a 1% Rare Lab. Upgrade 2 costs 65,000g and 100 Hardwood; capacity remains 20, it uses FarmHouse2, and no additional machine unlock is currently specified. Upgrade 3 costs 100,000g, raises capacity to 30, and adds a second Breeder and Incubator, 5% Rare Labs, the Slime Printer, and a cellar. Furniture slot progression is three slots at basic tier, seven at upgrades 1 and 2, and fifteen at the final tier. Marnie's recipe unlock tiers follow Daycare construction, the first building upgrade, and the final tier; see the furniture recipes entry for each item's current price. The basic map is FarmHouse; tiers 2 and 3 use FarmHouse2. After construction, Robin can point the player to Maru about the broken Mutagenic Pool; that repair mission appears the next morning and does not require a building upgrade.", Array.Empty<string>()));
         entries.Add(new WikiEntry("RULES", "Marnie's furniture recipes",
             "Marnie sells reusable learned recipes, not physical furniture. Current recipe prices are listed by unlock tier and item below; GMCM can change each item independently. " + GetFurnitureRecipePriceSummary(config) + ". Current provisional crafting materials (balance pending): " + FurnitureRecipeContent.GetIngredientSummary() + ". Learning a recipe does not give the furniture item. The Washing Machine is decorative for now and has no washing behavior.", Array.Empty<string>()));
-        entries.Add(new WikiEntry("RULES", "Gel Refinery",
-            "At the final Daycare tier, the current prototype converts 1 Broken Glasses and the configured vanilla Slime fuel into 1 Refined Quartz after the configured number of in-game days. New batches require at least 10 Slime to prevent direct sale-value profit. Inputs are consumed when a batch starts; each refinery runs one batch at a time, and finished output stays reserved until collected. Fuel and time settings apply only to new batches. Other conversion recipes are not active.", Array.Empty<string>()));
+        entries.Add(new WikiEntry("RULES", "Slime Printer",
+            "At the final Daycare tier, the current prototype converts 1 Broken Glasses and the configured vanilla Slime fuel into 1 Refined Quartz after the configured number of in-game days. New batches require at least 10 Slime to prevent direct sale-value profit. Inputs are consumed when a batch starts; each Slime Printer runs one batch at a time, and finished output stays reserved until collected. Fuel and time settings apply only to new batches. Other conversion recipes are not active.", Array.Empty<string>()));
         entries.Add(new WikiEntry("RULES", "Fairy Lights",
             "Fairy Lights use one furniture slot, while their cosmetic glow applies throughout the Daycare interior. Their exact fixed position and final light timing remain under review.", Array.Empty<string>()));
         entries.Add(new WikiEntry("LIFE", "Incubation and hatching",
