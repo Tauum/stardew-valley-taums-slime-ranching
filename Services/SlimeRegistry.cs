@@ -1557,24 +1557,27 @@ internal sealed class SlimeRegistry
             }
 
             incubation.EggItemId = NormalizeEggToken(incubation.EggItemId);
+            SlimeEggRecord? egg;
+            bool restoreEggRecord = false;
             if (this.eggs.TryGetValue(incubation.EggItemId, out SlimeEggRecord? migratedEgg))
             {
                 if (incubation.EggGenome is { } savedGenome && savedGenome.Id != migratedEgg.Genome.Id)
                     this.monitor.Log($"Reconciled incubator egg {incubation.EggItemId} to its matching saved egg record; the embedded genome ID did not match.", LogLevel.Warn);
                 incubation.EggGenome = migratedEgg.Genome;
+                egg = migratedEgg;
             }
             else if (incubation.EggGenome is { } snapshot
                 && Guid.TryParseExact(incubation.EggItemId, "N", out Guid eggId)
                 && snapshot.Id == eggId && !string.IsNullOrWhiteSpace(snapshot.PrimarySpecies))
             {
                 snapshot.Size = NormalizeSize(snapshot.Size);
-                this.eggs[incubation.EggItemId] = new SlimeEggRecord
+                egg = new SlimeEggRecord
                 {
                     EggId = incubation.EggItemId,
                     ItemId = SlimeEggContent.GetItemId(snapshot),
-                    Genome = snapshot,
-                    HatchedAnimalId = incubation.HatchAnimalId
+                    Genome = snapshot
                 };
+                restoreEggRecord = true;
             }
             else
             {
@@ -1582,12 +1585,9 @@ internal sealed class SlimeRegistry
                 continue;
             }
 
-            if (this.eggs.TryGetValue(incubation.EggItemId, out SlimeEggRecord? heldRecord))
-                heldRecord.HatchedAnimalId = incubation.HatchAnimalId;
             if (string.IsNullOrWhiteSpace(incubation.MachineKey)
-                || incubation.StartedOnDay < 0 || incubation.ReadyOnDay < incubation.StartedOnDay
-                || !this.eggs.TryGetValue(incubation.EggItemId, out SlimeEggRecord? egg)
-                || incubation.HatchAnimalId != egg.HatchedAnimalId
+                || incubation.StartedOnDay < 0 || incubation.ReadyOnDay <= incubation.StartedOnDay
+                || (!restoreEggRecord && incubation.HatchAnimalId != egg.HatchedAnimalId)
                 || (incubation.RareOffspringProduced
                     && (!incubation.RareOutcomeResolved || incubation.HatchGenome is null
                         || incubation.HatchGenome.Id == Guid.Empty
@@ -1601,6 +1601,10 @@ internal sealed class SlimeRegistry
                 this.monitor.Log("Skipped a malformed or duplicate external Domesticated Slime incubation record.", LogLevel.Warn);
                 continue;
             }
+
+            if (restoreEggRecord)
+                this.eggs.Add(incubation.EggItemId, egg);
+            egg.HatchedAnimalId = incubation.HatchAnimalId;
 
             if (incubation.HatchGenome is not null)
             {
