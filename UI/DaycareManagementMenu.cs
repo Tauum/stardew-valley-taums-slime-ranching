@@ -621,7 +621,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         int unlockedCount = FurnitureSlotCatalog.GetSlotCountAtTier(this.buildingTier);
         b.DrawString(Game1.tinyFont, $"FIXED FURNITURE SLOTS ({unlockedCount}/15 UNLOCKED; {assignedFurnitureSlots} ASSIGNED)",
             new Vector2(slotsPanel.X + 14, slotsPanel.Y + 12), new Color(139, 226, 255));
-        b.DrawString(Game1.tinyFont, "Saved assignments only; room placement and editing are still in development.",
+        b.DrawString(Game1.tinyFont, "Shows saved items and live object/protection state; fixed layout and editing remain in development.",
             new Vector2(slotsPanel.X + 14, slotsPanel.Y + 31), new Color(205, 218, 239));
         int slotStartOffset = 52;
         if (lockedFurnitureAssignments > 0)
@@ -635,12 +635,43 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         int slotY = slotsPanel.Y + slotStartOffset;
         foreach (DaycareFurnitureSlotDefinition slot in unlockedSlots)
         {
-            bool assigned = savedSlots.TryGetValue(slot.SlotId, out DaycareFurnitureSlotRecord? record);
-            string itemName = assigned
-                ? ItemRegistry.Create(record!.FurnitureQualifiedItemId).DisplayName
+            bool assigned = savedSlots.TryGetValue(slot.SlotId, out DaycareFurnitureSlotRecord? record)
+                && record is not null;
+            string itemName = record is not null
+                ? ItemRegistry.Create(record.FurnitureQualifiedItemId).DisplayName
                 : "Empty";
             Color rowColor = assigned ? new Color(234, 240, 255) : new Color(174, 194, 225);
-            b.DrawString(Game1.tinyFont, $"{slot.SlotId}: {itemName}", new Vector2(slotsPanel.X + 18, slotY), rowColor);
+            string installStatus = string.Empty;
+            Color installStatusColor = rowColor;
+            if (record is not null)
+            {
+                installStatus = "MISSING";
+                if (this.daycare.Objects.TryGetValue(new Vector2(record.TileX, record.TileY), out StardewValley.Object? placed))
+                {
+                    if (placed.QualifiedItemId == record.FurnitureQualifiedItemId)
+                    {
+                        installStatus = placed.fragility.Value == StardewValley.Object.fragility_Indestructable
+                            ? "PROTECTED"
+                            : "MATCH";
+                        installStatusColor = new Color(160, 255, 180);
+                    }
+                    else
+                    {
+                        installStatus = "MISMATCH";
+                        installStatusColor = new Color(255, 205, 139);
+                    }
+                }
+                else
+                    installStatusColor = new Color(255, 205, 139);
+            }
+
+            float statusWidth = Game1.tinyFont.MeasureString(installStatus).X;
+            int labelMaxWidth = Math.Max(40, slotsPanel.Width - (int)Math.Ceiling(statusWidth) - 52);
+            string rowLabel = FitTextToWidth($"{slot.SlotId}: {itemName}", labelMaxWidth, Game1.tinyFont);
+            b.DrawString(Game1.tinyFont, rowLabel, new Vector2(slotsPanel.X + 18, slotY), rowColor);
+            if (installStatus.Length > 0)
+                b.DrawString(Game1.tinyFont, installStatus,
+                    new Vector2(slotsPanel.Right - statusWidth - 18, slotY), installStatusColor);
             slotY += rowHeight;
         }
     }
@@ -859,6 +890,18 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             y += lineHeight;
         }
         return (int)y;
+    }
+
+    private static string FitTextToWidth(string text, int maxWidth, SpriteFont font)
+    {
+        if (font.MeasureString(text).X <= maxWidth)
+            return text;
+
+        const string ellipsis = "…";
+        while (text.Length > 0 && font.MeasureString(text + ellipsis).X > maxWidth)
+            text = text[..^1];
+
+        return text.Length > 0 ? text + ellipsis : ellipsis;
     }
 
     private static float DrawScrollableParagraphs(SpriteBatch b, IEnumerable<(string Text, Color Color)> paragraphs,
