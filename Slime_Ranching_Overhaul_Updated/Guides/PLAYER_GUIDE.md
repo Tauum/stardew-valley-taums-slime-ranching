@@ -24,7 +24,26 @@ This guide covers the current early prototype. The Slime Breeder can reserve two
 
 - Test on a copied save. Vanilla Slime Eggs remain unchanged; Domesticated Slime Eggs are created by the domesticated breeding system.
 - Back up `<installed mod folder>/data` before replacing or removing the mod. It contains the external slime registry and first-seen snapshots.
-- Permanent Daycare facilities are not sold by Marnie in the current build. Use the testing commands in each machine section to grant movable facility prototypes; existing placed objects and inventory items are retained for save compatibility. Marnie sells reusable furniture recipes, not the furniture itself. The basic recipes become available after building a Daycare (Trampoline, Slide, Cushion, Seesaw, and Heated Slime Stone at 2,000g each); Pond, Tunnel, Swing, and Lamp unlock at the first upgrade (5,000g each); Fairy Lights, Ball Pit, and Washing Machine unlock at the final upgrade (10,000g each). Prices can be tuned in GMCM. Buy a recipe once, then craft as many copies as you need from the Crafting menu. A purchase shows **A new Slime Daycare furniture recipe has been learned.** The Washing Machine craftable is decorative and has no washing behavior; its provisional recipe costs 100 Wood, 10 Iron Bars, and 20 vanilla Slime. Other ingredients are early balancing values. The read-only Management Desk preview reports 3/7/15 furniture slots by tier and lists furniture in the backpack; placing or editing furniture through the desk is still in development.
+- Permanent Daycare facilities are not sold by Marnie in the current build. Use the testing commands in each machine section to grant movable facility prototypes; existing placed objects and inventory items are retained for save compatibility. Marnie sells reusable furniture recipes, not the furniture itself. The basic recipes become available after building a Daycare (Trampoline, Slide, Cushion, Seesaw, and Heated Slime Stone at 2,000g each); Pond, Tunnel, Swing, and Lamp unlock at the first upgrade (5,000g each); Fairy Lights, Ball Pit, and Washing Machine unlock at the final upgrade (10,000g each). Prices can be tuned in GMCM. Buy a recipe once, then craft as many copies as you need from the Crafting menu. A purchase shows **A new Slime Daycare furniture recipe has been learned.** The read-only Management Desk preview reports 3/7/15 furniture slots by tier and lists furniture in the backpack; placing or editing furniture through the desk is still in development.
+
+Current furniture crafting materials are provisional balance values:
+
+| Recipe | Ingredients |
+|---|---|
+| Trampoline | 50 Wood, 20 Fiber, 5 vanilla Slime |
+| Cushion | 30 Fiber, 5 vanilla Slime |
+| Slide | 50 Wood, 15 Stone |
+| Seesaw | 75 Wood, 2 Iron Bars, 10 Fiber |
+| Heated Slime Stone | 50 Stone, 5 Coal, 5 vanilla Slime |
+| Pond | 75 Stone, 20 vanilla Slime, 10 Fiber |
+| Tunnel | 60 Wood, 30 Fiber, 10 vanilla Slime |
+| Swing | 60 Wood, 20 Fiber, 2 Iron Bars |
+| Lamp | 30 Wood, 2 Iron Bars, 5 Coal |
+| Fairy Lights | 50 Fiber, 20 Sap, 5 Solar Essence |
+| Ball Pit | 50 Wood, 50 Fiber, 20 vanilla Slime |
+| Washing Machine | 100 Wood, 10 Iron Bars, 20 vanilla Slime |
+
+The Washing Machine is decorative and has no washing behavior. The active refinery conversion is documented separately below.
 - Furniture activities are decorative and do not change happiness or breeding outcomes. Domesticated Slimes bounce on Trampolines, squish on Cushions, hop and glide on Slides, sway together on Seesaws, rest beside Heated Slime Stones, bob in Ponds, crawl through Tunnels, sway on Swings, gather by Lamps, dip in Ball Pits, and watch the Fairy Lights glow in the evening.
 - On a disposable save, `slime_ranching_give_washing_machine` grants one Slime Washing Machine for sprite and placement checks. It is a decorative item so far; it has no washing interaction or slime effect. The command automatically uses the loaded save and warns if no save is open.
 - The former Slime Playground, Slime Bed, and Compost Trough prototypes are no longer sold or active. Existing placed objects and inventory items are retained for save compatibility, but do not have interactions.
