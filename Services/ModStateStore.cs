@@ -440,12 +440,30 @@ internal sealed class ModStateStore
         string backupDirectory = Path.Combine(this.modDirectory, "data", "backups");
         Directory.CreateDirectory(backupDirectory);
         string fileStem = $"{saveName}-{DateTime.UtcNow:yyyyMMdd-HHmmss-fff}";
-        string backupPath = Path.Combine(backupDirectory, $"{fileStem}.zip");
-        for (int suffix = 2; File.Exists(backupPath); suffix++)
-            backupPath = Path.Combine(backupDirectory, $"{fileStem}-{suffix}.zip");
-
-        ZipFile.CreateFromDirectory(saveDirectory, backupPath, CompressionLevel.Optimal, includeBaseDirectory: false);
-        return backupPath;
+        string temporaryPath = Path.Combine(backupDirectory, $".{fileStem}-{Guid.NewGuid():N}.tmp");
+        try
+        {
+            ZipFile.CreateFromDirectory(saveDirectory, temporaryPath, CompressionLevel.Optimal, includeBaseDirectory: false);
+            for (int suffix = 1; ; suffix++)
+            {
+                string fileName = suffix == 1 ? $"{fileStem}.zip" : $"{fileStem}-{suffix}.zip";
+                string backupPath = Path.Combine(backupDirectory, fileName);
+                try
+                {
+                    File.Move(temporaryPath, backupPath);
+                    return backupPath;
+                }
+                catch (IOException) when (File.Exists(backupPath))
+                {
+                    // Preserve the earlier backup if another run claimed this timestamped path.
+                }
+            }
+        }
+        finally
+        {
+            if (File.Exists(temporaryPath))
+                File.Delete(temporaryPath);
+        }
     }
 
     public static string GetSaveDirectory(string modDirectory)
