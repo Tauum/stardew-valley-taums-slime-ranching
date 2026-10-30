@@ -60,6 +60,64 @@ internal sealed class SlimeRegistry
     public IReadOnlyCollection<RefineryJobRecord> RefineryJobs => this.refineryJobs.Values;
     public IReadOnlyCollection<RefineryTransactionRecord> PendingRefineryTransactions => this.pendingRefineryTransactions.Values;
 
+    public IReadOnlyList<DaycareFurnitureSlotRecord> GetFurnitureSlots(string daycareBuildingId) =>
+        this.furnitureSlots.Values
+            .Where(slot => slot.DaycareBuildingId == daycareBuildingId)
+            .OrderBy(slot => slot.SlotId, StringComparer.Ordinal)
+            .Select(CloneFurnitureSlot)
+            .ToArray();
+
+    public bool TryGetFurnitureSlot(string daycareBuildingId, string slotId, out DaycareFurnitureSlotRecord? slot)
+    {
+        if (this.furnitureSlots.TryGetValue(GetFurnitureSlotKey(daycareBuildingId, slotId), out DaycareFurnitureSlotRecord? existing))
+        {
+            slot = CloneFurnitureSlot(existing);
+            return true;
+        }
+
+        slot = null;
+        return false;
+    }
+
+    public bool TryAssignFurnitureSlot(DaycareFurnitureSlotRecord? assignment, int buildingTier, out string error)
+    {
+        if (assignment is null || string.IsNullOrWhiteSpace(assignment.DaycareBuildingId)
+            || string.IsNullOrWhiteSpace(assignment.SlotId) || string.IsNullOrWhiteSpace(assignment.FurnitureQualifiedItemId))
+        {
+            error = "Choose a Daycare, slot, and furniture item.";
+            return false;
+        }
+
+        if (buildingTier is < 0 or > 3
+            || !FurnitureSlotCatalog.TryGetSlot(assignment.SlotId, out DaycareFurnitureSlotDefinition slotDefinition)
+            || slotDefinition.RequiredBuildingTier > buildingTier)
+        {
+            error = "That furniture slot is not unlocked at the Daycare's current tier.";
+            return false;
+        }
+
+        if (!FurnitureSlotCatalog.TryGetFurniture(assignment.FurnitureQualifiedItemId, out DaycareFurnitureRecipeListing furniture)
+            || furniture.RequiredBuildingTier > buildingTier)
+        {
+            error = "That furniture is not available at the Daycare's current tier.";
+            return false;
+        }
+
+        if (assignment.TileX < 0 || assignment.TileY < 0)
+        {
+            error = "Furniture slots must use a valid room tile.";
+            return false;
+        }
+
+        string key = GetFurnitureSlotKey(assignment.DaycareBuildingId, assignment.SlotId);
+        this.furnitureSlots[key] = CloneFurnitureSlot(assignment);
+        error = string.Empty;
+        return true;
+    }
+
+    public bool RemoveFurnitureSlot(string daycareBuildingId, string slotId) =>
+        this.furnitureSlots.Remove(GetFurnitureSlotKey(daycareBuildingId, slotId));
+
     public IReadOnlyCollection<long> DomesticatedSlimeFarmAnimalIds => this.farmAnimalRecords.Keys;
     public SlimeResidentStatus GetResidentStatus(long farmAnimalId, string? exceptMachineKey = null)
     {
@@ -1579,7 +1637,10 @@ internal sealed class SlimeRegistry
         {
             if (slot is null || string.IsNullOrWhiteSpace(slot.DaycareBuildingId)
                 || string.IsNullOrWhiteSpace(slot.SlotId)
-                || string.IsNullOrWhiteSpace(slot.FurnitureQualifiedItemId))
+                || string.IsNullOrWhiteSpace(slot.FurnitureQualifiedItemId)
+                || slot.TileX < 0 || slot.TileY < 0
+                || !FurnitureSlotCatalog.TryGetSlot(slot.SlotId, out _)
+                || !FurnitureSlotCatalog.TryGetFurniture(slot.FurnitureQualifiedItemId, out _))
             {
                 this.monitor.Log("Skipped a malformed Slime Daycare furniture-slot record.", LogLevel.Warn);
                 continue;
@@ -1684,6 +1745,15 @@ internal sealed class SlimeRegistry
 
     private static string GetFurnitureSlotKey(string daycareBuildingId, string slotId) =>
         $"{daycareBuildingId}\u001f{slotId}";
+
+    private static DaycareFurnitureSlotRecord CloneFurnitureSlot(DaycareFurnitureSlotRecord slot) => new()
+    {
+        DaycareBuildingId = slot.DaycareBuildingId,
+        SlotId = slot.SlotId,
+        FurnitureQualifiedItemId = slot.FurnitureQualifiedItemId,
+        TileX = slot.TileX,
+        TileY = slot.TileY
+    };
 
     public bool TryAdd(SlimeRecord? record)
     {

@@ -605,7 +605,8 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         int currentCycleDays = this.buildingTier == 0 ? 18 : 14;
         string guidanceText = $"New breeder cycles: {currentCycleDays} days at this tier (14 days from the first upgrade onward). "
             + "First upgrade unlocks the Egg CryoLab and Rare Labs at 1% base chance. Final upgrade adds a second breeder and incubator, "
-            + "raises Rare Lab base chance to 5%, and unlocks the Gel Refinery. Robin handles upgrades; Marnie sells furniture recipes.";
+            + $"raises Rare Lab base chance to 5%, and unlocks the Gel Refinery. Furniture slots: {FurnitureSlotCatalog.GetSlotCountAtTier(this.buildingTier)}/15 unlocked. "
+            + "Robin handles upgrades; Marnie sells furniture recipes. Fixed room positions and editing are still in development.";
         DrawWrappedText(b, guidanceText, new Vector2(guidance.X + 12, guidance.Y + 21), guidance.Width - 24,
             Game1.tinyFont, new Color(230, 239, 255), 14f);
     }

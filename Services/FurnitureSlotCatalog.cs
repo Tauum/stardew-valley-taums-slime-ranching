@@ -32,6 +32,8 @@ internal static class FurnitureSlotCatalog
         new DaycareFurnitureRecipeListing("SlimeFairyLights", FurnitureContent.SlimeFairyLightsQualifiedId, 3, config => config.SlimeFairyLightsRecipePrice),
         new DaycareFurnitureRecipeListing("SlimeBallPit", FurnitureContent.SlimeBallPitQualifiedId, 3, config => config.SlimeBallPitRecipePrice)
     });
+    private static readonly IReadOnlyDictionary<string, DaycareFurnitureRecipeListing> RecipesByItemId =
+        Recipes.ToDictionary(recipe => recipe.QualifiedItemId, StringComparer.Ordinal);
 
     public static IReadOnlyList<DaycareFurnitureSlotDefinition> GetSlotsUnlockedAtTier(int buildingTier) =>
         Slots.Where(slot => slot.RequiredBuildingTier <= buildingTier).ToArray();
@@ -47,6 +49,6 @@ internal static class FurnitureSlotCatalog
 
     public static IReadOnlyList<DaycareFurnitureRecipeListing> GetRecipeListings() => Recipes;
 
-    public static bool IsFurnitureAllowed(string qualifiedItemId) =>
-        Recipes.Any(recipe => recipe.QualifiedItemId == qualifiedItemId);
+    public static bool TryGetFurniture(string qualifiedItemId, out DaycareFurnitureRecipeListing recipe) =>
+        RecipesByItemId.TryGetValue(qualifiedItemId, out recipe!);
 }
