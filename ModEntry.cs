@@ -3196,6 +3196,20 @@ public sealed class ModEntry : Mod
             return;
         }
 
+        Vector2 slotTile = new(tileX, tileY);
+        if (!daycare.isTilePassable(slotTile))
+        {
+            this.Monitor.Log("Choose a passable floor tile inside the Daycare; wall and fixture tiles cannot anchor a furniture slot.", LogLevel.Warn);
+            return;
+        }
+
+        if (daycare.Objects.TryGetValue(slotTile, out StardewValley.Object? tileObject)
+            && !FurnitureSlotCatalog.TryGetFurniture(tileObject.QualifiedItemId, out _))
+        {
+            this.Monitor.Log("That tile is occupied by a non-catalog object. Choose a clear furniture tile.", LogLevel.Warn);
+            return;
+        }
+
         if (!FurnitureSlotCatalog.TryGetFurnitureByCommandKey(args[2], out DaycareFurnitureRecipeListing furniture))
         {
             string keys = string.Join(", ", FurnitureSlotCatalog.GetRecipeListings().Select(FurnitureSlotCatalog.GetCommandKey));
