@@ -763,14 +763,16 @@ public sealed class ModEntry : Mod
         return false;
     }
 
-    private bool AddRareLabGoldCatalyst(string machineKey)
+    private bool AddRareLabCatalyst(string machineKey, string catalystInputKey)
     {
+        RareLabCatalystInput? input = RareLabRules.GetCatalystInput(catalystInputKey);
         if (!this.stateReady || !Context.IsMainPlayer || Context.IsMultiplayer || this.registry is null
-            || CountInventoryItem(RareLabRules.GoldBarQualifiedItemId) < RareLabRules.GoldBarsPerCatalyst)
+            || input is null
+            || CountInventoryItem(input.QualifiedItemId) < input.Amount)
             return false;
 
         string? transactionId = this.registry.BeginRareLabCatalystTransaction(
-            machineKey, RareLabRules.GoldCatalystSpecies, Game1.Date.TotalDays);
+            machineKey, input.Species, Game1.Date.TotalDays);
         if (transactionId is null)
             return false;
         if (!this.SaveCurrentSaveDataNow())
@@ -782,7 +784,7 @@ public sealed class ModEntry : Mod
         (Item? Item, int Stack)[] inventorySnapshot = Game1.player.Items
             .Select(item => (Item: (Item?)item, Stack: item?.Stack ?? 0))
             .ToArray();
-        ConsumeInventoryItems(RareLabRules.GoldBarQualifiedItemId, RareLabRules.GoldBarsPerCatalyst);
+        ConsumeInventoryItems(input.QualifiedItemId, input.Amount);
         bool applied = this.registry.ApplyRareLabCatalystTransaction(transactionId);
         string receiptKey = RareLabCatalystReceiptPrefix + transactionId;
         if (applied)
@@ -1610,7 +1612,7 @@ public sealed class ModEntry : Mod
                 },
                 () => this.RequestIncubationCancellation(key),
                 this.ContributeRareLabSlime,
-                this.AddRareLabGoldCatalyst,
+                this.AddRareLabCatalyst,
                 IncubatorPlacementGeometry.Texture);
             return;
         }

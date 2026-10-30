@@ -314,7 +314,7 @@ internal sealed class SlimeRegistry
     public string? BeginRareLabCatalystTransaction(string machineKey, string catalystSpecies, int currentDay)
     {
         if (string.IsNullOrWhiteSpace(machineKey)
-            || catalystSpecies != RareLabRules.GoldCatalystSpecies
+            || !RareLabRules.IsSupportedCatalystSpecies(catalystSpecies)
             || !this.rareLabs.TryGetValue(machineKey, out RareLabRecord? lab)
             || !lab.IsUnlocked || lab.CatalystSpecies is not null
             || this.pendingRareLabCatalystTransactions.Values.Any(transaction => transaction.MachineKey == machineKey))
@@ -341,7 +341,7 @@ internal sealed class SlimeRegistry
     {
         if (!this.pendingRareLabCatalystTransactions.TryGetValue(transactionId, out RareLabCatalystTransactionRecord? transaction)
             || transaction.CatalystApplied
-            || transaction.CatalystSpecies != RareLabRules.GoldCatalystSpecies
+            || !RareLabRules.IsSupportedCatalystSpecies(transaction.CatalystSpecies)
             || !this.rareLabs.TryGetValue(transaction.MachineKey, out RareLabRecord? lab)
             || !lab.IsUnlocked || lab.CatalystSpecies is not null
             || (this.incubations.TryGetValue(transaction.MachineKey, out IncubationRecord? incubation)
@@ -1557,7 +1557,7 @@ internal sealed class SlimeRegistry
         {
             if (transaction is null || !Guid.TryParseExact(transaction.Id, "N", out _)
                 || string.IsNullOrWhiteSpace(transaction.MachineKey)
-                || transaction.CatalystSpecies != RareLabRules.GoldCatalystSpecies
+                || !RareLabRules.IsSupportedCatalystSpecies(transaction.CatalystSpecies)
                 || transaction.Sequence < 0
                 || !this.rareLabs.ContainsKey(transaction.MachineKey))
             {
