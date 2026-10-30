@@ -1724,6 +1724,8 @@ internal sealed class SlimeRegistry
             if (attempt is null || string.IsNullOrWhiteSpace(attempt.MachineKey)
                 || !this.farmAnimalRecords.ContainsKey(attempt.SlimeId)
                 || !HasValidMutagenicAttemptDates(attempt)
+                || !double.IsFinite(attempt.ChanceAtStart)
+                || !double.IsFinite(attempt.Roll)
                 || attempt.ChanceAtStart is < 0 or > 1 || attempt.Roll is < 0 or >= 1
                 || this.IsReserved(attempt.SlimeId)
                 || this.mutagenicAttempts.ContainsKey(attempt.MachineKey)

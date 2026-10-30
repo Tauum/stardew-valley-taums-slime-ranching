@@ -11,6 +11,10 @@
 
     <ItemGroup>
         <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.4.0" />
+        <Reference Include="Newtonsoft.Json">
+            <HintPath>$(NuGetPackageRoot)pathoschild.stardew.modbuildconfig\4.4.0\build\Newtonsoft.Json.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
     </ItemGroup>
 
     <!-- The junction is a read-only reference tree, never part of the mod build. -->
