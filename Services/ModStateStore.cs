@@ -369,8 +369,25 @@ internal sealed class ModStateStore
         data.PendingRareLabCatalystTransactions ??= new List<RareLabCatalystTransactionRecord>();
         data.PendingRefineryTransactions ??= new List<RefineryTransactionRecord>();
         data.SlimeDaycareQuest ??= new SlimeDaycareQuestRecord();
+        changed |= RemoveNullEntries(data.Slimes);
+        changed |= RemoveNullEntries(data.BreedingPairs);
+        changed |= RemoveNullEntries(data.Eggs);
+        changed |= RemoveNullEntries(data.Incubations);
+        changed |= RemoveNullEntries(data.MutagenicAttempts);
+        changed |= RemoveNullEntries(data.RefineryJobs);
+        changed |= RemoveNullEntries(data.HatchedEggIds);
+        changed |= RemoveNullEntries(data.DestroyedEggIds);
+        changed |= RemoveNullEntries(data.PendingIncubationCancellations);
+        changed |= RemoveNullEntries(data.PendingMutagenicContributions);
+        changed |= RemoveNullEntries(data.RareLabs);
+        changed |= RemoveNullEntries(data.PendingRareLabContributions);
+        changed |= RemoveNullEntries(data.PendingRareLabCatalystTransactions);
+        changed |= RemoveNullEntries(data.PendingRefineryTransactions);
         return changed;
     }
+
+    private static bool RemoveNullEntries<T>(List<T> entries)
+        where T : class => entries.RemoveAll(entry => entry is null) > 0;
 
     private static void NormalizeLegacyCollectionFields(JsonObject root)
     {
@@ -378,6 +395,15 @@ internal sealed class ModStateStore
         {
             if (root[field] is null)
                 root[field] = new JsonArray();
+
+            if (root[field] is JsonArray entries)
+            {
+                for (int index = entries.Count - 1; index >= 0; index--)
+                {
+                    if (entries[index] is null)
+                        entries.RemoveAt(index);
+                }
+            }
         }
     }
 

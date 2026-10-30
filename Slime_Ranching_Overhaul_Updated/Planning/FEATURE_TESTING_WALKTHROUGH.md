@@ -350,6 +350,7 @@ Use only a disposable copied save and a backup copy of `slime-registry-v1.json`.
 9. If a disposable SMAPI save-data fixture is available with `slime-ranching-state` present but its `SchemaVersion` property removed, load it and confirm the mod reports schema 0 as unsupported, `slime_ranching_inspect` reports unavailable data, and saving does not replace the invalid state. On a separate fresh copied save, save normally and confirm the resulting inspection reports schema 24.
 10. On a disposable schema-11 SMAPI save-data fixture, set the `Eggs`, `BreedingPairs`, and `Incubations` collections to null, leaving any other saved records intact. Load it and confirm migration reaches schema 24 without an exception; the three absent collections should behave as empty while populated slime and machine records remain unchanged after save/reload.
 11. On a copied schema-24 SMAPI fixture, set only `Eggs` to null. Load it and confirm the migration log appears and `slime_ranching_inspect` still reports schema 24. Save and reload; confirm the record remains readable and the migration log does not repeat, showing the normalized empty collection was persisted once.
+12. On a disposable schema-11 SMAPI fixture, keep valid breeding-pair and incubation records but add a null entry to each list. Load it and confirm migration completes without a crash, the valid records remain, and the null entries are absent after saving and reloading.
 
 ## Walkthrough state
 
