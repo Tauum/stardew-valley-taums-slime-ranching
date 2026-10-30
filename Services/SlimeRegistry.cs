@@ -136,7 +136,7 @@ internal sealed class SlimeRegistry
 
     public bool RemoveFurnitureSlot(string daycareBuildingId, string slotId) =>
         TryNormalizeDaycareBuildingId(daycareBuildingId, out string normalizedBuildingId)
-        && FurnitureSlotCatalog.TryGetSlot(slotId, out _)
+        && FurnitureSlotCatalog.IsValidSavedSlotId(slotId)
         && this.furnitureSlots.Remove(GetFurnitureSlotKey(normalizedBuildingId, slotId));
 
     public IReadOnlyCollection<long> DomesticatedSlimeFarmAnimalIds => this.farmAnimalRecords.Keys;
@@ -1755,7 +1755,7 @@ internal sealed class SlimeRegistry
                 || string.IsNullOrWhiteSpace(slot.SlotId)
                 || string.IsNullOrWhiteSpace(slot.FurnitureQualifiedItemId)
                 || slot.TileX < 0 || slot.TileY < 0
-                || !FurnitureSlotCatalog.TryGetSlot(slot.SlotId, out _)
+                || !FurnitureSlotCatalog.IsValidSavedSlotId(slot.SlotId)
                 || !FurnitureSlotCatalog.TryGetFurniture(slot.FurnitureQualifiedItemId, out _))
             {
                 this.monitor.Log("Skipped a malformed Slime Daycare furniture-slot record.", LogLevel.Warn);

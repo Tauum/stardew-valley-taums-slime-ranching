@@ -13,7 +13,7 @@ internal sealed record DaycareFurnitureRecipeListing(
 internal static class FurnitureSlotCatalog
 {
     private static readonly IReadOnlyList<DaycareFurnitureSlotDefinition> Slots = Array.AsReadOnly(
-        Enumerable.Range(1, 15)
+        Enumerable.Range(1, 12)
             .Select(index => new DaycareFurnitureSlotDefinition(
                 $"slot-{index:00}",
                 index <= 3 ? 0 : index <= 7 ? 1 : 3))
@@ -40,6 +40,8 @@ internal static class FurnitureSlotCatalog
     public static IReadOnlyList<DaycareFurnitureSlotDefinition> GetSlotsUnlockedAtTier(int buildingTier) =>
         Slots.Where(slot => slot.RequiredBuildingTier <= buildingTier).ToArray();
 
+    public static IReadOnlyList<DaycareFurnitureSlotDefinition> GetAllSlots() => Slots;
+
     public static int GetSlotCountAtTier(int buildingTier) =>
         Slots.Count(slot => slot.RequiredBuildingTier <= buildingTier);
 
@@ -47,6 +49,18 @@ internal static class FurnitureSlotCatalog
     {
         slot = Slots.FirstOrDefault(entry => entry.SlotId == slotId)!;
         return slot is not null;
+    }
+
+    public static bool IsValidSavedSlotId(string? slotId)
+    {
+        if (slotId is null || slotId.Length != 7 || !slotId.StartsWith("slot-", StringComparison.Ordinal))
+            return false;
+
+        if (slotId[5] is < '0' or > '9' || slotId[6] is < '0' or > '9')
+            return false;
+
+        int slotNumber = (slotId[5] - '0') * 10 + slotId[6] - '0';
+        return slotNumber > 0;
     }
 
     public static IReadOnlyList<DaycareFurnitureRecipeListing> GetRecipeListings() => Recipes;
