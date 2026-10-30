@@ -1643,9 +1643,17 @@ internal sealed class SlimeRegistry
             this.incubations.Add(incubation.MachineKey, incubation);
         }
 
-        foreach (BreedingPairRecord pair in this.breedingPairs.Values.Where(pair => pair.OutputEggItemId is not null))
+        foreach (BreedingPairRecord pair in this.breedingPairs.Values
+                     .Where(pair => pair.OutputEggItemId is not null).ToArray())
         {
             string eggId = pair.OutputEggItemId!;
+            if (this.hatchedEggIds.Contains(eggId) || this.destroyedEggIds.Contains(eggId))
+            {
+                this.breedingPairs.Remove(pair.MachineKey);
+                this.monitor.Log($"Released breeder pair '{pair.MachineKey}' because its output egg ID {eggId} is already recorded as hatched or destroyed.", LogLevel.Warn);
+                continue;
+            }
+
             if (this.eggs.TryGetValue(eggId, out SlimeEggRecord? savedEgg))
             {
                 if (pair.OutputEggGenome is { } savedGenome && savedGenome.Id != savedEgg.Genome.Id)
