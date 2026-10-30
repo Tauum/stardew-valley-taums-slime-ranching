@@ -82,7 +82,7 @@ internal sealed class GelRefineryMenu : IClickableMenu
 
             bool started = this.startBatch();
             this.statusMessage = started
-                ? $"Batch started. Sleep for {this.rules.DurationDays} in-game day(s) to finish it."
+                ? $"Batch started. Sleep for {GelRefineryRules.FormatInGameDays(this.rules.DurationDays)} to finish it."
                 : "Bring 1 Broken Glasses and enough vanilla Slime, then try again.";
             Game1.playSound(started ? "smallSelect" : "cancel");
         }
@@ -136,7 +136,7 @@ internal sealed class GelRefineryMenu : IClickableMenu
         {
             bool unlocked = this.canStartBatch();
             bool hasInputs = this.HasBatchInputs();
-            b.DrawString(Game1.tinyFont, $"Prototype time: {this.rules.DurationDays} in-game day(s)",
+            b.DrawString(Game1.tinyFont, $"Prototype time: {GelRefineryRules.FormatInGameDays(this.rules.DurationDays)}",
                 new Vector2(left + 28, top + 342), Color.White);
             DrawProgressBar(b, new Rectangle(left + 260, top + 346, 270, 22), 0f, "Ready");
             DrawButton(b, this.actionButton, !unlocked ? "LOCKED" : hasInputs ? "START BATCH" : "NEED INPUTS",
@@ -154,7 +154,7 @@ internal sealed class GelRefineryMenu : IClickableMenu
                 new Vector2(left + 28, top + 342), Color.White);
             DrawProgressBar(b, new Rectangle(left + 260, top + 346, 270, 22), progress,
                 ready ? "Complete" : $"{elapsed} / {duration} days");
-            b.DrawString(Game1.tinyFont, ready ? "Output reserved until collected." : $"Configured processing time: {duration} day(s)",
+            b.DrawString(Game1.tinyFont, ready ? "Output reserved until collected." : $"Configured processing time: {GelRefineryRules.FormatInGameDays(duration)}",
                 new Vector2(left + 28, top + 370), Color.White);
             bool buttonEnabled = ready;
             DrawButton(b, this.actionButton, buttonEnabled ? "COLLECT OUTPUT" : "PROCESSING",

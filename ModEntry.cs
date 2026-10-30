@@ -229,7 +229,7 @@ public sealed class ModEntry : Mod
             value => this.config.GelRefineryDurationDays = (int)MathF.Round(value),
             () => "Processing days",
             () => "Whole in-game days per batch (1–28).", 1f, 28f, 1f,
-            value => $"{MathF.Round(value):0} day(s)");
+            value => GelRefineryRules.FormatInGameDays((int)MathF.Round(value)));
         api.AddSectionTitle(this.ModManifest, () => "Mutagenic Pool");
         api.AddParagraph(this.ModManifest, () => "The repaired Pool uses fixed 2-day attempts, a 10% base chance, and saved per-slime pity and Slime contributions. Add 10 Slime during an attempt for +1 percentage point; canceling preserves the current chance.");
         api.AddBoolOption(this.ModManifest,

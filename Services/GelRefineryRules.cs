@@ -14,6 +14,10 @@ internal sealed class GelRefineryRules
     public int FuelCost { get; }
     public int DurationDays { get; }
 
+    public static string FormatInGameDays(int days) => days == 1
+        ? "1 in-game day"
+        : $"{days} in-game days";
+
     public static GelRefineryRules FromConfig(ModConfig config) => new(
         Math.Clamp(config.GelRefinerySlimeFuelCost, MinimumSlimeFuelCost, MaximumSlimeFuelCost),
         Math.Clamp(config.GelRefineryDurationDays, 1, 28));
