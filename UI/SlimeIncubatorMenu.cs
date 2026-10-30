@@ -12,8 +12,6 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
 {
     private const int GridColumns = 3;
     private const int VisibleEggs = 6;
-    private const string EggItemPrefix = "(O)Taum.SlimeRanching_Egg_";
-
     private readonly SlimeRegistry registry;
     private readonly string machineKey;
     private readonly Func<int, bool> startIncubation;
@@ -62,7 +60,7 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
             {
                 Item? item = pair.item;
                 if (item is null
-                    || !(item.QualifiedItemId.StartsWith(EggItemPrefix, StringComparison.Ordinal)
+                    || !(item.QualifiedItemId.StartsWith(SlimeEggContent.QualifiedItemIdPrefix, StringComparison.Ordinal)
                         || item.modData.ContainsKey(SlimeEggContent.EggIdModDataKey)))
                     return false;
 

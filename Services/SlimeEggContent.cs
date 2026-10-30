@@ -12,7 +12,8 @@ namespace taums_slime_ranching.Services;
 internal static class SlimeEggContent
 {
     private const string RegistryFileName = "slime-registry-v1.json";
-    private const string LegacyEggItemPrefix = "Taum.SlimeRanching_DomesticatedSlimeEgg_";
+    internal const string ItemIdPrefix = "Taum.SlimeRanching_DomesticatedSlimeEgg_";
+    internal const string QualifiedItemIdPrefix = "(O)" + ItemIdPrefix;
     public const string EggIdModDataKey = "Taum.SlimeRanching/egg-id";
     public const string EggRecordModDataKey = "Taum.SlimeRanching/egg-record";
     private const string EggTexturePrefix = "Mods/Taum.SlimeRanching/Objects/DomesticatedSlimeEgg_";
@@ -43,12 +44,12 @@ internal static class SlimeEggContent
         e.LoadFrom(() => CreateEggIcon(Game1.graphics.GraphicsDevice, tint), AssetLoadPriority.Exclusive);
     }
 
-    public static string GetItemId(SlimeGenome genome) => $"Taum.SlimeRanching_DomesticatedSlimeEgg_{FarmAnimalContent.GetClosestVariantName(genome.VisualColor)}";
+    public static string GetItemId(SlimeGenome genome) => $"{ItemIdPrefix}{FarmAnimalContent.GetClosestVariantName(genome.VisualColor)}";
     public static string GetQualifiedId(SlimeGenome genome) => "(O)" + GetItemId(genome);
-    public static string GetLegacyItemId(Guid genomeId) => $"{LegacyEggItemPrefix}{genomeId:N}";
+    public static string GetLegacyItemId(Guid genomeId) => $"{ItemIdPrefix}{genomeId:N}";
 
     public static bool IsUniqueEggItem(Item item) =>
-        item.ItemId.StartsWith(LegacyEggItemPrefix, StringComparison.Ordinal)
+        item.ItemId.StartsWith(ItemIdPrefix, StringComparison.Ordinal)
         || item.modData.ContainsKey(EggIdModDataKey)
         || item.modData.ContainsKey(EggRecordModDataKey);
 
@@ -62,8 +63,8 @@ internal static class SlimeEggContent
         }
 
         string itemId = item.ItemId;
-        if (itemId.StartsWith(LegacyEggItemPrefix, StringComparison.Ordinal)
-            && Guid.TryParseExact(itemId[LegacyEggItemPrefix.Length..], "N", out Guid legacyGuid)
+        if (itemId.StartsWith(ItemIdPrefix, StringComparison.Ordinal)
+            && Guid.TryParseExact(itemId[ItemIdPrefix.Length..], "N", out Guid legacyGuid)
             && legacyGuid != Guid.Empty)
         {
             eggId = legacyGuid.ToString("N");
@@ -125,7 +126,7 @@ internal static class SlimeEggContent
             var objects = asset.AsDictionary<string, ObjectData>().Data;
             foreach (string color in EggColors)
             {
-                string itemId = $"Taum.SlimeRanching_DomesticatedSlimeEgg_{color}";
+                string itemId = $"{ItemIdPrefix}{color}";
                 objects[itemId] = new ObjectData
                 {
                     Name = DomesticatedSlimeEggName,

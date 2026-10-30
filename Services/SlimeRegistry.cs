@@ -1652,9 +1652,8 @@ internal sealed class SlimeRegistry
 
     private static string NormalizeEggToken(string value)
     {
-        const string legacyPrefix = "Taum.SlimeRanching_Egg_";
-        if (value.StartsWith(legacyPrefix, StringComparison.Ordinal))
-            value = value[legacyPrefix.Length..];
+        if (value.StartsWith(SlimeEggContent.ItemIdPrefix, StringComparison.Ordinal))
+            value = value[SlimeEggContent.ItemIdPrefix.Length..];
         return Guid.TryParseExact(value, "N", out Guid id) ? id.ToString("N") : value;
     }
 

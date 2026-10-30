@@ -2015,7 +2015,7 @@ public sealed class ModEntry : Mod
             {
                 for (int index = 0; index < 2; index++)
                 {
-                    Item malformedEgg = ItemRegistry.Create("(O)Taum.SlimeRanching_Egg_Red");
+                    Item malformedEgg = ItemRegistry.Create($"{SlimeEggContent.QualifiedItemIdPrefix}Red");
                     malformedEgg.modData[SlimeEggContent.EggIdModDataKey] = "not-a-guid";
                     malformedEgg.modData[SlimeEggContent.EggRecordModDataKey] = "{}";
                     if (!Game1.player.addItemToInventoryBool(malformedEgg))
@@ -3458,7 +3458,7 @@ public sealed class ModEntry : Mod
                 {
                     Item? item = Game1.player.Items[slot];
                     if (item is null
-                        || (!item.ItemId.StartsWith("Taum.SlimeRanching_Egg_", StringComparison.Ordinal)
+                        || (!item.ItemId.StartsWith(SlimeEggContent.ItemIdPrefix, StringComparison.Ordinal)
                             && !item.modData.ContainsKey(SlimeEggContent.EggIdModDataKey)
                             && !item.modData.ContainsKey(SlimeEggContent.EggRecordModDataKey)))
                         continue;
