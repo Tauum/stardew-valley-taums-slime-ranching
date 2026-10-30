@@ -155,10 +155,15 @@ internal sealed class ModStateStore
 
         using var stream = File.OpenRead(this.registryPath);
         JsonNode? root = JsonNode.Parse(stream);
-        if (root is JsonObject initialRoot && initialRoot["SchemaVersion"] is JsonValue schemaNode
-            && schemaNode.TryGetValue(out int initialSchemaVersion))
-            this.LoadedSchemaVersion = initialSchemaVersion;
-        if (root is JsonObject rootObject && rootObject["SchemaVersion"]?.GetValue<int>() == 1)
+        if (root is not JsonObject rootObject
+            || rootObject["SchemaVersion"] is not JsonValue schemaNode
+            || !schemaNode.TryGetValue(out int initialSchemaVersion))
+            throw new InvalidDataException($"Legacy slime registry '{this.registryPath}' has no valid schema version.");
+        if (initialSchemaVersion is < 1 or > SlimeSaveData.CurrentSchemaVersion)
+            throw new InvalidDataException($"Legacy slime registry '{this.registryPath}' uses unsupported schema {initialSchemaVersion}; supported schemas are 1 through {SlimeSaveData.CurrentSchemaVersion}.");
+
+        this.LoadedSchemaVersion = initialSchemaVersion;
+        if (rootObject["SchemaVersion"]?.GetValue<int>() == 1)
         {
             rootObject["SchemaVersion"] = 2;
             rootObject["BreedingPairs"] = new JsonArray();
