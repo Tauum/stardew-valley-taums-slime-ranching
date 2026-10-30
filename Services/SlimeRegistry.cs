@@ -1555,6 +1555,7 @@ internal sealed class SlimeRegistry
                 this.monitor.Log("Skipped a malformed or duplicate external slime egg record.", LogLevel.Warn);
         }
 
+        var reservedHatchAnimalIds = new HashSet<long>();
         foreach (IncubationRecord incubation in data?.Incubations ?? Enumerable.Empty<IncubationRecord>())
         {
             if (incubation is null || string.IsNullOrWhiteSpace(incubation.EggItemId))
@@ -1607,6 +1608,13 @@ internal sealed class SlimeRegistry
             {
                 this.monitor.Log("Skipped a malformed or duplicate external Domesticated Slime incubation record.", LogLevel.Warn);
                 continue;
+            }
+
+            if (incubation.HatchAnimalId is long hatchAnimalId
+                && !reservedHatchAnimalIds.Add(hatchAnimalId))
+            {
+                this.monitor.Log($"Cleared duplicate reserved FarmAnimal ID {hatchAnimalId} from incubator '{incubation.MachineKey}'; it will retry with a new ID.", LogLevel.Warn);
+                incubation.HatchAnimalId = null;
             }
 
             if (restoreEggRecord)
