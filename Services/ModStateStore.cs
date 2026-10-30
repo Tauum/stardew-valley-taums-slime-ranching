@@ -11,6 +11,23 @@ internal sealed class ModStateStore
 {
     private const string SaveDataKey = "slime-ranching-state";
     private const string RegistryFileName = "slime-registry-v1.json";
+    private static readonly string[] SaveCollectionFields =
+    {
+        "Slimes",
+        "BreedingPairs",
+        "Eggs",
+        "Incubations",
+        "MutagenicAttempts",
+        "RefineryJobs",
+        "HatchedEggIds",
+        "DestroyedEggIds",
+        "PendingIncubationCancellations",
+        "PendingMutagenicContributions",
+        "RareLabs",
+        "PendingRareLabContributions",
+        "PendingRareLabCatalystTransactions",
+        "PendingRefineryTransactions"
+    };
     private readonly IDataHelper data;
     private readonly string modDirectory;
     private string? registryPath;
@@ -32,6 +49,7 @@ internal sealed class ModStateStore
         SlimeSaveData? saveData = this.data.ReadSaveData<SlimeSaveData>(SaveDataKey);
         if (saveData is not null)
         {
+            NormalizeCollections(saveData);
             this.LoadedSchemaVersion = saveData.SchemaVersion;
             if (saveData.SchemaVersion == 11)
             {
@@ -298,6 +316,7 @@ internal sealed class ModStateStore
             schemaTwentyThree["SlimeDaycareQuest"] ??= new JsonObject();
         }
 
+        NormalizeLegacyCollectionFields(rootObject);
         if (root is JsonObject jsonData && jsonData["Slimes"] is JsonArray slimes)
         {
             foreach (JsonNode? slimeNode in slimes)
@@ -316,6 +335,34 @@ internal sealed class ModStateStore
             ?? throw new InvalidDataException($"Legacy slime registry '{this.registryPath}' is empty or invalid.");
         this.ImportedLegacyData = true;
         return data;
+    }
+
+    private static void NormalizeCollections(SlimeSaveData data)
+    {
+        data.Slimes ??= new List<SlimeRecord>();
+        data.BreedingPairs ??= new List<BreedingPairRecord>();
+        data.Eggs ??= new List<SlimeEggRecord>();
+        data.Incubations ??= new List<IncubationRecord>();
+        data.MutagenicAttempts ??= new List<MutagenicAttemptRecord>();
+        data.RefineryJobs ??= new List<RefineryJobRecord>();
+        data.HatchedEggIds ??= new List<string>();
+        data.DestroyedEggIds ??= new List<string>();
+        data.PendingIncubationCancellations ??= new List<IncubationRecord>();
+        data.PendingMutagenicContributions ??= new List<MutagenicContributionRecord>();
+        data.RareLabs ??= new List<RareLabRecord>();
+        data.PendingRareLabContributions ??= new List<RareLabContributionRecord>();
+        data.PendingRareLabCatalystTransactions ??= new List<RareLabCatalystTransactionRecord>();
+        data.PendingRefineryTransactions ??= new List<RefineryTransactionRecord>();
+        data.SlimeDaycareQuest ??= new SlimeDaycareQuestRecord();
+    }
+
+    private static void NormalizeLegacyCollectionFields(JsonObject root)
+    {
+        foreach (string field in SaveCollectionFields)
+        {
+            if (root[field] is null)
+                root[field] = new JsonArray();
+        }
     }
 
     public void Save(SlimeSaveData data)
