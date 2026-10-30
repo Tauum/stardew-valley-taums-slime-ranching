@@ -26,7 +26,8 @@ internal sealed class ModStateStore
         "RareLabs",
         "PendingRareLabContributions",
         "PendingRareLabCatalystTransactions",
-        "PendingRefineryTransactions"
+        "PendingRefineryTransactions",
+        "FurnitureSlots"
     };
     private readonly IDataHelper data;
     private readonly string modDirectory;
@@ -153,6 +154,12 @@ internal sealed class ModStateStore
             if (saveData.SchemaVersion == 23)
             {
                 saveData.SlimeDaycareQuest ??= new SlimeDaycareQuestRecord();
+                saveData.SchemaVersion = 24;
+                this.MigratedSaveData = true;
+            }
+            if (saveData.SchemaVersion == 24)
+            {
+                saveData.FurnitureSlots ??= new List<DaycareFurnitureSlotRecord>();
                 saveData.SchemaVersion = SlimeSaveData.CurrentSchemaVersion;
                 this.MigratedSaveData = true;
             }
@@ -312,8 +319,14 @@ internal sealed class ModStateStore
 
         if (root is JsonObject schemaTwentyThree && schemaTwentyThree["SchemaVersion"]?.GetValue<int>() == 23)
         {
-            schemaTwentyThree["SchemaVersion"] = SlimeSaveData.CurrentSchemaVersion;
+            schemaTwentyThree["SchemaVersion"] = 24;
             schemaTwentyThree["SlimeDaycareQuest"] ??= new JsonObject();
+        }
+
+        if (root is JsonObject schemaTwentyFour && schemaTwentyFour["SchemaVersion"]?.GetValue<int>() == 24)
+        {
+            schemaTwentyFour["SchemaVersion"] = SlimeSaveData.CurrentSchemaVersion;
+            schemaTwentyFour["FurnitureSlots"] ??= new JsonArray();
         }
 
         NormalizeLegacyCollectionFields(rootObject);
@@ -353,6 +366,7 @@ internal sealed class ModStateStore
             || data.PendingRareLabContributions is null
             || data.PendingRareLabCatalystTransactions is null
             || data.PendingRefineryTransactions is null
+            || data.FurnitureSlots is null
             || data.SlimeDaycareQuest is null;
         data.Slimes ??= new List<SlimeRecord>();
         data.BreedingPairs ??= new List<BreedingPairRecord>();
@@ -368,6 +382,7 @@ internal sealed class ModStateStore
         data.PendingRareLabContributions ??= new List<RareLabContributionRecord>();
         data.PendingRareLabCatalystTransactions ??= new List<RareLabCatalystTransactionRecord>();
         data.PendingRefineryTransactions ??= new List<RefineryTransactionRecord>();
+        data.FurnitureSlots ??= new List<DaycareFurnitureSlotRecord>();
         data.SlimeDaycareQuest ??= new SlimeDaycareQuestRecord();
         changed |= RemoveNullEntries(data.Slimes);
         changed |= RemoveNullEntries(data.BreedingPairs);
@@ -383,6 +398,7 @@ internal sealed class ModStateStore
         changed |= RemoveNullEntries(data.PendingRareLabContributions);
         changed |= RemoveNullEntries(data.PendingRareLabCatalystTransactions);
         changed |= RemoveNullEntries(data.PendingRefineryTransactions);
+        changed |= RemoveNullEntries(data.FurnitureSlots);
         return changed;
     }
 

@@ -29,6 +29,7 @@ internal sealed class SlimeRegistry
     private readonly Dictionary<string, RareLabRecord> rareLabs = new(StringComparer.Ordinal);
     private readonly Dictionary<string, RareLabContributionRecord> pendingRareLabContributions = new(StringComparer.Ordinal);
     private readonly Dictionary<string, RareLabCatalystTransactionRecord> pendingRareLabCatalystTransactions = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, DaycareFurnitureSlotRecord> furnitureSlots = new(StringComparer.Ordinal);
     private readonly Dictionary<string, MutagenicAttemptRecord> mutagenicAttempts = new(StringComparer.Ordinal);
     private readonly Dictionary<string, MutagenicContributionRecord> pendingMutagenicContributions = new(StringComparer.Ordinal);
     private readonly Dictionary<string, RefineryJobRecord> refineryJobs = new(StringComparer.Ordinal);
@@ -51,6 +52,7 @@ internal sealed class SlimeRegistry
     public IReadOnlyCollection<RareLabRecord> RareLabs => this.rareLabs.Values;
     public IReadOnlyCollection<RareLabContributionRecord> PendingRareLabContributions => this.pendingRareLabContributions.Values;
     public IReadOnlyCollection<RareLabCatalystTransactionRecord> PendingRareLabCatalystTransactions => this.pendingRareLabCatalystTransactions.Values;
+    public IReadOnlyCollection<DaycareFurnitureSlotRecord> FurnitureSlots => this.furnitureSlots.Values;
     public IReadOnlyCollection<IncubationRecord> PendingIncubationCancellations => this.pendingIncubationCancellations.Values;
     public IReadOnlyCollection<BreedingPairRecord> BreedingPairs => this.breedingPairs.Values;
     public IReadOnlyCollection<MutagenicAttemptRecord> MutagenicAttempts => this.mutagenicAttempts.Values;
@@ -1352,6 +1354,7 @@ internal sealed class SlimeRegistry
         this.rareLabs.Clear();
         this.pendingRareLabContributions.Clear();
         this.pendingRareLabCatalystTransactions.Clear();
+        this.furnitureSlots.Clear();
         this.mutagenicAttempts.Clear();
         this.pendingMutagenicContributions.Clear();
         this.nextMutagenicContributionSequence = 1;
@@ -1572,6 +1575,21 @@ internal sealed class SlimeRegistry
                 this.nextRareLabCatalystTransactionSequence = transaction.Sequence + 1;
         }
 
+        foreach (DaycareFurnitureSlotRecord slot in data?.FurnitureSlots ?? Enumerable.Empty<DaycareFurnitureSlotRecord>())
+        {
+            if (slot is null || string.IsNullOrWhiteSpace(slot.DaycareBuildingId)
+                || string.IsNullOrWhiteSpace(slot.SlotId)
+                || string.IsNullOrWhiteSpace(slot.FurnitureQualifiedItemId))
+            {
+                this.monitor.Log("Skipped a malformed Slime Daycare furniture-slot record.", LogLevel.Warn);
+                continue;
+            }
+
+            string key = GetFurnitureSlotKey(slot.DaycareBuildingId, slot.SlotId);
+            if (!this.furnitureSlots.TryAdd(key, slot))
+                this.monitor.Log("Skipped a duplicate Slime Daycare furniture-slot record.", LogLevel.Warn);
+        }
+
         foreach (MutagenicAttemptRecord attempt in data?.MutagenicAttempts ?? Enumerable.Empty<MutagenicAttemptRecord>())
         {
             if (attempt is null || string.IsNullOrWhiteSpace(attempt.MachineKey)
@@ -1636,7 +1654,11 @@ internal sealed class SlimeRegistry
         ActiveCompanionFarmAnimalId = this.activeCompanionFarmAnimalId,
         HatchedEggIds = this.hatchedEggIds.OrderBy(id => id, StringComparer.Ordinal).ToList(),
         DestroyedEggIds = this.destroyedEggIds.OrderBy(id => id, StringComparer.Ordinal).ToList(),
-        PendingIncubationCancellations = this.pendingIncubationCancellations.Values.OrderBy(record => record.EggItemId, StringComparer.Ordinal).ToList()
+        PendingIncubationCancellations = this.pendingIncubationCancellations.Values.OrderBy(record => record.EggItemId, StringComparer.Ordinal).ToList(),
+        FurnitureSlots = this.furnitureSlots.Values
+            .OrderBy(record => record.DaycareBuildingId, StringComparer.Ordinal)
+            .ThenBy(record => record.SlotId, StringComparer.Ordinal)
+            .ToList()
     };
 
     public SlimeEggRecord CreateEgg(SlimeGenome genome)
@@ -1659,6 +1681,9 @@ internal sealed class SlimeRegistry
             value = value[SlimeEggContent.ItemIdPrefix.Length..];
         return Guid.TryParseExact(value, "N", out Guid id) ? id.ToString("N") : value;
     }
+
+    private static string GetFurnitureSlotKey(string daycareBuildingId, string slotId) =>
+        $"{daycareBuildingId}\u001f{slotId}";
 
     public bool TryAdd(SlimeRecord? record)
     {
