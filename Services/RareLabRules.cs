@@ -55,7 +55,8 @@ internal static class RareLabRules
         && lab.ContributionPoints is >= 0 and <= MaximumChancePoints
         && (lab.CatalystSpecies is null || (lab.IsUnlocked && IsSupportedCatalystSpecies(lab.CatalystSpecies)))
         && (lab.IsUnlocked
-            ? lab.BaseChancePoints is FirstTierBaseChancePoints or FinalTierBaseChancePoints
+            ? (lab.BaseChancePoints is FirstTierBaseChancePoints or FinalTierBaseChancePoints)
+                && lab.BaseChancePoints + lab.PityPoints + lab.ContributionPoints <= MaximumChancePoints
             : lab.BaseChancePoints == 0 && lab.PityPoints == 0 && lab.ContributionPoints == 0);
 
     public static bool AddContribution(RareLabRecord lab)
