@@ -4,7 +4,7 @@ public sealed class SlimeSaveData
 {
     public const int CurrentSchemaVersion = 24;
 
-    public int SchemaVersion { get; set; } = CurrentSchemaVersion;
+    public int SchemaVersion { get; set; }
     public List<SlimeRecord> Slimes { get; set; } = new();
     public List<BreedingPairRecord> BreedingPairs { get; set; } = new();
     public List<SlimeEggRecord> Eggs { get; set; } = new();

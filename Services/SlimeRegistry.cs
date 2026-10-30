@@ -1622,6 +1622,7 @@ internal sealed class SlimeRegistry
 
     public SlimeSaveData Capture() => new()
     {
+        SchemaVersion = SlimeSaveData.CurrentSchemaVersion,
         BreedingPairs = this.breedingPairs.Values.OrderBy(pair => pair.MachineKey, StringComparer.Ordinal).ToList(),
         Incubations = this.incubations.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList(),
         RareLabs = this.rareLabs.Values.OrderBy(record => record.MachineKey, StringComparer.Ordinal).ToList(),
