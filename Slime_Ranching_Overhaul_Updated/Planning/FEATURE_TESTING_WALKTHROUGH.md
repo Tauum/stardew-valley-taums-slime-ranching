@@ -16,7 +16,7 @@ The separate 2.0 implementation sequence is tracked in `DEVELOPMENT_NOTES_2.0.md
 
 ## 2.0 active test focus — Feature 2: FarmHouse-layout Daycare, upgrades, and renovations
 
-**Status:** Implementation updated; in-game acceptance pending. Taum requested on 2026-10-29 that 2.0 features continue before in-game checks, with these steps collected for a later bulk test pass. The custom generated greybox has been superseded. The Daycare follows the FarmHouse progression (base plus three upgrades), keeps AnimalHouse behavior, adds a separate **Slime Daycare Renovations** choice to Robin's Renovate flow at tier 2, and adds a Daycare-specific cellar at tier 3. Renovation state is saved per Daycare; the crib-removal option is excluded.
+**Status:** Implementation updated; in-game acceptance pending. Taum requested on 2026-10-29 that 2.0 features continue before in-game checks, with these steps collected for a later bulk test pass. The custom generated greybox has been superseded. The Daycare follows the FarmHouse progression (base plus three upgrades), keeps AnimalHouse behavior, adds a separate **Slime Daycare Renovations** choice to Robin's Renovate flow after the first upgrade, and adds a Daycare-specific cellar at the final tier. Renovation state is saved per Daycare; the crib-removal option is excluded.
 
 **Map references:** Compare with Stardew's FarmHouse, FarmHouse1, FarmHouse2, FarmHouse_Cellar, and HomeRenovations. The original room experiments remain in the gallery as historical references; they are not the current Daycare layout.
 
@@ -35,7 +35,7 @@ The separate 2.0 implementation sequence is tracked in `DEVELOPMENT_NOTES_2.0.md
 6. Before buying the second Daycare upgrade, confirm Robin's description says the main floor changes while capacity stays at 20. Buy it and confirm the interior changes to **FarmHouse2**, capacity remains 20, and Daycare renovations and decoration persist.
 7. Before buying the final Daycare upgrade, confirm Robin's description says it adds a cellar and raises capacity to 30. Buy it and confirm it retains **FarmHouse2**, capacity becomes 30, and vanilla cellar stairs appear. Enter the Daycare's own cellar and exit back to the Daycare. Confirm the cellar has no default casks and the farmhouse cellar and its contents remain separate. Recheck wallpaper and flooring in expanded rooms.
 8. Save, return to title, and reload. Verify the Daycare tier, renovations, cellar contents, decorations, capacity, and slimes. Confirm the kitchen machines, fireplace, hay hopper, hay stacks, vanilla egg incubator, and default cellar casks remain absent from the Daycare, while the farmhouse and vanilla Barn/Slime Hutch remain unchanged.
-9. Record any AnimalHouse behavior that differs from farmhouse behavior (for example room transitions, furniture placement, or blocked animal paths). Do not mark Feature 2 accepted until all four maps, renovations, cellar entry/exit, animal behavior, and decoration pass in-game.
+9. Record any AnimalHouse behavior that differs from farmhouse behavior (for example room transitions, furniture placement, or blocked animal paths). Do not mark Feature 2 accepted until all four building states (the three farmhouse maps and Daycare cellar), renovations, cellar entry/exit, animal behavior, and decoration pass in-game.
 
 Reply with any collision, sizing, or warp issues and a screenshot if the room differs from the texture preview. Do not mark Feature 2 complete until the in-game check passes.
 

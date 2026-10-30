@@ -220,7 +220,7 @@ The archive is written under `<installed mod folder>/data/backups/`. It contains
 
 ## 2.0 Daycare interior
 
-The Slime Daycare uses the same interior layout as the farmhouse. Its basic, first-upgrade, and final-upgrade tiers follow the farmhouse's three layouts. It remains an animal house, so domesticated slimes continue to live and roam inside. Dedicated machine rooms will be fitted into this familiar layout as room upgrades are implemented.
+The Slime Daycare remains an animal house, so Domesticated Slimes continue to live and roam inside its farmhouse-style layout. The basic tier uses `FarmHouse`, the first upgrade uses `FarmHouse1`, and the second and final upgrades use `FarmHouse2`; the final tier also adds the Daycare's cellar. Dedicated machine rooms will be fitted into this familiar layout as room upgrades are implemented.
 
 **Decorating the Daycare:** Use normal Stardew **Wallpaper** and indoor **Flooring** items from a shop or catalogue. Select the item and apply it as you would in the farmhouse. Each Daycare saves its own choices when you save the game. Outdoor craftable paths are a separate item type. This support applies to the Daycare; it does not turn other barns into decoratable rooms.
 
