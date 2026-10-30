@@ -1723,7 +1723,7 @@ internal sealed class SlimeRegistry
         {
             if (attempt is null || string.IsNullOrWhiteSpace(attempt.MachineKey)
                 || !this.farmAnimalRecords.ContainsKey(attempt.SlimeId)
-                || attempt.ReadyOnDay < attempt.StartedOnDay
+                || !HasValidMutagenicAttemptDates(attempt)
                 || attempt.ChanceAtStart is < 0 or > 1 || attempt.Roll is < 0 or >= 1
                 || this.IsReserved(attempt.SlimeId)
                 || this.mutagenicAttempts.ContainsKey(attempt.MachineKey)
@@ -1815,6 +1815,11 @@ internal sealed class SlimeRegistry
         pair.CycleReadyOnDay == 0
             ? pair.CycleStartedOnDay == 0
             : pair.CycleStartedOnDay >= 0 && pair.CycleReadyOnDay > pair.CycleStartedOnDay;
+
+    private static bool HasValidMutagenicAttemptDates(MutagenicAttemptRecord attempt) =>
+        attempt.StartedOnDay >= 0
+        && attempt.StartedOnDay <= int.MaxValue - MutagenicPoolRules.DurationDays
+        && attempt.ReadyOnDay == attempt.StartedOnDay + MutagenicPoolRules.DurationDays;
 
     private static string GetFurnitureSlotKey(string daycareBuildingId, string slotId) =>
         $"{daycareBuildingId}\u001f{slotId}";
