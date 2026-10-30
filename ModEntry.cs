@@ -166,7 +166,7 @@ public sealed class ModEntry : Mod
             bool repairQuestProgressChanged = this.TryStartMaruRepairQuest();
             this.LogRegistryReconciliation(detachedAnimals, cancelledCycles);
             if (this.stateStore.ImportedLegacyData)
-                this.Monitor.Log("Imported the previous mod-folder slime registry into this save. The original legacy file was left untouched.", LogLevel.Info);
+                this.Monitor.Log($"Imported the previous mod-folder slime registry from schema {this.stateStore.LoadedSchemaVersion?.ToString() ?? "unknown"} into save schema {SlimeSaveData.CurrentSchemaVersion}. The original legacy file was left untouched.", LogLevel.Info);
             if (this.stateStore.MigratedSaveData)
                 this.Monitor.Log("Migrated the saved Domesticated Slime data to the current schema.", LogLevel.Info);
             if (needsPersistenceMigration || registeredDomesticatedSlimes > 0 || recoveredHatches > 0 || detachedAnimals > 0 || cancelledCycles > 0 || maturityChanged || rareLabProgressionChanged || eggCryoLabRecordsChanged || repairTransactionRecovered || incubationCancellationRecovered || mutagenicContributionRecovered || rareLabContributionRecovered || rareLabCatalystRecovered || refineryTransactionRecovered || constructionProgressChanged || repairQuestProgressChanged)
