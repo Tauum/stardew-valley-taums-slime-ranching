@@ -663,7 +663,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
                 && record is not null;
             string itemName = record is not null
                 ? ItemRegistry.Create(record.FurnitureQualifiedItemId).DisplayName
-                : "Empty";
+                : "EMPTY";
             Color rowColor = assigned ? new Color(234, 240, 255) : new Color(174, 194, 225);
             string installStatus = string.Empty;
             Color installStatusColor = rowColor;
