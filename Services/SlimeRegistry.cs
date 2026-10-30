@@ -1499,7 +1499,7 @@ internal sealed class SlimeRegistry
         {
             if (transaction is null || !Guid.TryParseExact(transaction.Id, "N", out _)
                 || string.IsNullOrWhiteSpace(transaction.MachineKey)
-                || transaction.Sequence < 0
+                || transaction.Sequence <= 0
                 || !double.IsFinite(transaction.PreviousContribution) || transaction.PreviousContribution is < 0 or > 1
                 || !this.farmAnimalRecords.ContainsKey(transaction.SlimeId))
             {
@@ -1661,7 +1661,7 @@ internal sealed class SlimeRegistry
             if (transaction is null || !Guid.TryParseExact(transaction.Id, "N", out _)
                 || string.IsNullOrWhiteSpace(transaction.MachineKey)
                 || !Guid.TryParseExact(eggItemId, "N", out _)
-                || transaction.Sequence < 0
+                || transaction.Sequence <= 0
                 || transaction.PreviousContributionPoints is < 0 or > RareLabRules.MaximumChancePoints
                 || !this.rareLabs.ContainsKey(transaction.MachineKey))
             {
@@ -1680,7 +1680,7 @@ internal sealed class SlimeRegistry
             if (transaction is null || !Guid.TryParseExact(transaction.Id, "N", out _)
                 || string.IsNullOrWhiteSpace(transaction.MachineKey)
                 || !RareLabRules.IsSupportedCatalystSpecies(transaction.CatalystSpecies)
-                || transaction.Sequence < 0
+                || transaction.Sequence <= 0
                 || !this.rareLabs.ContainsKey(transaction.MachineKey))
             {
                 this.monitor.Log("Skipped a malformed Rare Lab catalyst transaction.", LogLevel.Warn);
