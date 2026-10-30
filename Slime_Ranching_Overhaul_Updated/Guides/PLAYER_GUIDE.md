@@ -153,7 +153,7 @@ Place the refinery inside the Slime Daycare and reach the final building tier be
 
 ## Retired furniture prototypes
 
-The old Slime Playground, Slime Bed, and Compost Trough are not part of the active 2.0 catalog. Their item definitions remain only so existing saves can load previously placed objects and stored items. They are inert; the approved furniture recipes and fixed-slot system are still under development.
+The old Slime Playground, Slime Bed, and Compost Trough are not part of the active 2.0 catalog. Their item definitions remain only so existing saves can load previously placed objects and stored items. They are inert. The active furniture recipes and craftable items are implemented; fixed room positions and editing remain in development.
 
 ## Field Guide book
 
@@ -182,7 +182,7 @@ The Registry lists resident Domesticated Slimes and their genome, status, and cu
 - **Egg details:** Hover over a genome-specific Domesticated Slime Egg to view its stored species, color, size, rarity, mutation, generation, parent IDs, and favorite food.
 - **Genetics and slime identity:** The registry model can hold genome data. Domesticated Slime genomes are keyed to native FarmAnimal IDs; this still needs save/reload verification. Existing GreenSlime monsters are only captured in the first-seen snapshot; they aren't changed or adopted.
 - **Food likes:** Favorite food is stored and assigned independently for each offspring, and shown in the breeder. No feeding bonus has been approved; the legacy Compost Trough growth prototype is retired.
-- **Furniture:** The old Playground, Bed, and Compost Trough prototypes are inactive. The approved 2.0 catalog, tier progression, reusable recipes, 3/7/15 fixed slots, and Management Desk edit mode are still under development.
+- **Furniture:** The old Playground, Bed, and Compost Trough prototypes are inactive. All twelve approved recipes and craftable furniture items are implemented, including the tiered Marnie shop and learned notice. The read-only desk preview and slot test commands expose saved assignments, but fixed in-room placement and Management Desk edit mode remain in development.
 - **Mutations:** The Mutagenic Pool now rolls from the approved twelve-trait list with per-slime pity and contribution. All twelve traits have distinct rendered cosmetic accents; old Shadow Clone records are compatibility data. In-game visual checks remain pending.
 - **Production and companions:** Slime-produced goods and custom companion AI are not active gameplay features yet.
 
