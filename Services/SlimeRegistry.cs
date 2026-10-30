@@ -1513,7 +1513,16 @@ internal sealed class SlimeRegistry
 
         foreach (BreedingPairRecord pair in data?.BreedingPairs ?? Enumerable.Empty<BreedingPairRecord>())
         {
-            if (pair is null || string.IsNullOrWhiteSpace(pair.MachineKey)
+            if (pair is null)
+                continue;
+
+            if (pair.OutputEggItemId is null && !HasValidBreedingCycleDates(pair))
+            {
+                this.monitor.Log($"Skipped breeder pair '{pair.MachineKey}' with invalid cycle dates.", LogLevel.Warn);
+                continue;
+            }
+
+            if (string.IsNullOrWhiteSpace(pair.MachineKey)
                 || pair.ParentAId == pair.ParentBId || this.IsReserved(pair.ParentAId, pair.MachineKey)
                 || this.IsReserved(pair.ParentBId, pair.MachineKey))
                 continue;
@@ -1801,6 +1810,11 @@ internal sealed class SlimeRegistry
             value = value[SlimeEggContent.ItemIdPrefix.Length..];
         return Guid.TryParseExact(value, "N", out Guid id) ? id.ToString("N") : value;
     }
+
+    private static bool HasValidBreedingCycleDates(BreedingPairRecord pair) =>
+        pair.CycleReadyOnDay == 0
+            ? pair.CycleStartedOnDay == 0
+            : pair.CycleStartedOnDay >= 0 && pair.CycleReadyOnDay > pair.CycleStartedOnDay;
 
     private static string GetFurnitureSlotKey(string daycareBuildingId, string slotId) =>
         $"{daycareBuildingId}\u001f{slotId}";
