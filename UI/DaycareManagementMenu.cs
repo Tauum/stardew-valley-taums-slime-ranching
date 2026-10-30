@@ -736,6 +736,12 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             "Rare slimes cannot breed. An active Rare Lab catalyst targets Gold with 10 Gold Bars, Void with 1 Void Egg or 20 Void Essence, and Prismatic with 1 Prismatic Shard. The matching species is fixed only after a successful rare roll; failures keep the catalyst and successes consume it. A Chromatic Crystal can focus an offspring on one of the seven pure base identities, but cannot force a hybrid or rare result. Crystals are currently a tester input; normal acquisition and cost are not set.", Array.Empty<string>()));
         entries.Add(new WikiEntry("RULES", "Fixed egg outcomes",
             "The Breeder saves the offspring's non-rarity genome when its cycle completes. The Incubator's Rare Lab resolves rarity once at incubation completion and saves the result before hatching; reloading cannot reroll it. If the Daycare is full, a ready hatch waits safely for room.", Array.Empty<string>()));
+        entries.Add(new WikiEntry("RULES", "Furniture slot progression",
+            "The Daycare furniture catalog defines three fixed slots at the basic tier, seven at tiers 1 and 2, and fifteen at the final tier. Slots belong to the Daycare building and their saved assignments follow that building through upgrades. The current desk preview shows slot counts; fixed room positions and editing are still in development.", Array.Empty<string>()));
+        entries.Add(new WikiEntry("RULES", "Marnie's furniture recipes",
+            "Marnie sells reusable learned recipes, not physical furniture. Trampoline, Cushion, Slide, Seesaw, and Heated Slime Stone recipes cost 2,000g after construction; Pond, Tunnel, Swing, and Lamp cost 5,000g from the first upgrade; Fairy Lights and Ball Pit cost 10,000g at the final tier. Recipe ingredients remain provisional.", Array.Empty<string>()));
+        entries.Add(new WikiEntry("RULES", "Fairy Lights",
+            "Fairy Lights use one furniture slot, while their cosmetic glow applies throughout the Daycare interior. Their exact fixed position and final light timing remain under review.", Array.Empty<string>()));
         entries.Add(new WikiEntry("LIFE", "Incubation and hatching",
             "Each Domesticated Slime Egg has a unique identity and does not stack with other eggs. Incubation takes seven days. An unlocked Rare Lab fixes its result when incubation completes; if the Daycare is full, the ready hatch waits with that same result.", Array.Empty<string>()));
         entries.Add(new WikiEntry("LIFE", "Growing up",
