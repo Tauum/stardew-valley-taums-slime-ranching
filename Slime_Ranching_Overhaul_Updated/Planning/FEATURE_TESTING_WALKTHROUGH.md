@@ -352,6 +352,7 @@ Use only a disposable copied save and a backup copy of `slime-registry-v1.json`.
 11. On a copied schema-24 SMAPI fixture, set only `Eggs` to null. Load it and confirm the migration log appears and `slime_ranching_inspect` still reports schema 24. Save and reload; confirm the record remains readable and the migration log does not repeat, showing the normalized empty collection was persisted once.
 12. On a disposable schema-11 SMAPI fixture, keep valid breeding-pair and incubation records but add a null entry to each list. Load it and confirm migration completes without a crash, the valid records remain, and the null entries are absent after saving and reloading.
 13. On a copied schema-24 fixture, keep one valid slime and incubation record, then add a slime record whose `Genome` is null and an incubation record whose `EggItemId` is null. Load it and confirm the valid records remain available, malformed records are reported as skipped, and no load crash occurs.
+14. On a separate schema-23 external registry fixture, set `SlimeDaycareQuest` to null. Confirm the import log reports source schema 23 and target schema 24, `slime_ranching_quest_status` reports empty progress, and the other valid registry records survive save/reload without duplication.
 
 ## Walkthrough state
 
