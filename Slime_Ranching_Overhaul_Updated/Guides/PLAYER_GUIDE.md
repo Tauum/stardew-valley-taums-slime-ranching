@@ -10,7 +10,7 @@ The basic Daycare uses `FarmHouse`; its first building upgrade changes to `FarmH
 
 All `slime_ranching_*` SMAPI tester commands automatically use the currently loaded save, so leave the save-folder name out of the command. The commands warn and do nothing if no save is loaded. Commands that need other values still show those arguments below.
 
-Inside the Daycare, `slime_ranching_inspect` also reports how many furniture slots are unlocked and assigned, and lists each unlocked slot ID. Empty slots are marked **empty**. For a saved assignment, it lists the expected furniture and tile, whether the placed object matches, and whether Stardew's native tool protection is active. The read-only Management Desk Progression preview also lists recipe furniture carried in your backpack; it does not count items in chests or furniture already placed in the room. The fixed-slot editor is still in development, so a fresh save currently reports zero assigned slots.
+Inside the Daycare, `slime_ranching_inspect` also reports how many furniture slots are unlocked and assigned, and lists each unlocked slot ID. Empty slots are marked **empty**. For a saved assignment, it lists the expected furniture and tile, whether the placed object matches, and whether Stardew's native tool protection is active. The read-only Management Desk Progression preview lists each unlocked slot as **Empty** or by its saved furniture name, and lists recipe furniture carried in your backpack. It does not count items in chests or furniture already placed in the room. The fixed-slot editor is still in development, so a fresh save currently reports zero assigned slots.
 
 ## Daycare wallpaper and flooring
 

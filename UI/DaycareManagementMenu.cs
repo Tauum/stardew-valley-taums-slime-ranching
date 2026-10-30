@@ -565,6 +565,10 @@ internal sealed class DaycareManagementMenu : IClickableMenu
     {
         Rectangle content = new(this.xPositionOnScreen + 32, this.yPositionOnScreen + 146, this.width - 64, 432);
         DrawPanel(b, content, new Color(35, 51, 92), new Color(90, 128, 190));
+        Rectangle overview = new(content.X + 14, content.Y + 14, 416, content.Height - 28);
+        Rectangle slotsPanel = new(content.X + 444, content.Y + 14, content.Width - 458, content.Height - 28);
+        DrawPanel(b, overview, new Color(41, 59, 103), new Color(80, 117, 177));
+        DrawPanel(b, slotsPanel, new Color(41, 59, 103), new Color(80, 117, 177));
         string tierName = this.buildingTier switch
         {
             0 => "Basic Daycare",
@@ -578,41 +582,57 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             ? "CryoLab / Rare Labs: locked until first upgrade"
             : $"CryoLab / Rare Labs: unlocked | { (this.buildingTier >= 3 ? 5 : 1)}% base chance";
         string finalFacilityStatus = this.buildingTier >= 3
-            ? "Second breeder / incubator and Gel Refinery: unlocked"
-            : "Second breeder / incubator and Gel Refinery: locked until final upgrade";
+            ? "Second Breeder / Incubator + Refinery: unlocked"
+            : "Second Breeder / Incubator + Refinery: locked";
         string buildingId = this.daycare.ParentBuilding?.id.Value.ToString("N") ?? string.Empty;
-        int assignedFurnitureSlots = this.registry.GetFurnitureSlots(buildingId).Count;
+        IReadOnlyList<DaycareFurnitureSlotDefinition> unlockedSlots = FurnitureSlotCatalog.GetSlotsUnlockedAtTier(this.buildingTier);
+        Dictionary<string, DaycareFurnitureSlotRecord> savedSlots = this.registry.GetFurnitureSlots(buildingId)
+            .GroupBy(slot => slot.SlotId, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
+        int assignedFurnitureSlots = savedSlots.Count;
         string[] status =
         {
             $"Building tier: {tierName} ({this.buildingTier}/3)",
+            $"New breeder cycle: { (this.buildingTier == 0 ? 18 : 14)} days",
             $"Living residents: {residents}/{this.daycare.animalLimit.Value}",
-            $"Breeder pens currently placed: {this.CountPlaced(RanchingItemContent.BreederQualifiedId)}",
-            $"Incubators currently placed: {this.CountPlaced(RanchingItemContent.IncubatorQualifiedId)}",
+            $"Breeder / incubator fixtures: {this.CountPlaced(RanchingItemContent.BreederQualifiedId)} / {this.CountPlaced(RanchingItemContent.IncubatorQualifiedId)}",
             $"Egg CryoLab tester chests: {this.daycare.Objects.Values.OfType<Chest>().Count(EggCryoLabContent.IsEggCryoLab)}",
             $"Rare Lab records: {this.registry.RareLabs.Count(lab => lab.MachineKey.StartsWith(prefix, StringComparison.Ordinal))}",
-            $"Mutagenic Pool facilities: {this.CountPlaced(MutagenicPoolContent.QualifiedItemId)}",
-            $"Gel Refinery facilities: {this.CountPlaced(GelRefineryContent.QualifiedItemId)}",
+            $"Pool / Gel Refinery fixtures: {this.CountPlaced(MutagenicPoolContent.QualifiedItemId)} / {this.CountPlaced(GelRefineryContent.QualifiedItemId)}",
             rareLabStatus,
             finalFacilityStatus
         };
-        b.DrawString(Game1.smallFont, "CURRENT DAYCARE", new Vector2(content.X + 24, content.Y + 22), new Color(139, 226, 255));
-        int y = content.Y + 64;
+        b.DrawString(Game1.tinyFont, "CURRENT DAYCARE", new Vector2(overview.X + 14, overview.Y + 12), new Color(139, 226, 255));
+        int y = overview.Y + 42;
         foreach (string line in status)
         {
-            b.DrawString(Game1.tinyFont, line, new Vector2(content.X + 30, y), Color.White);
-            y += 26;
+            b.DrawString(Game1.tinyFont, line, new Vector2(overview.X + 16, y), Color.White);
+            y += 25;
         }
 
-        Rectangle guidance = new(content.X + 20, content.Y + 320, content.Width - 40, 92);
-        DrawPanel(b, guidance, new Color(47, 66, 111), new Color(95, 134, 194));
-        b.DrawString(Game1.tinyFont, "PROGRESSION GUIDE", new Vector2(guidance.X + 12, guidance.Y + 5), new Color(139, 226, 255));
-        int currentCycleDays = this.buildingTier == 0 ? 18 : 14;
-        string guidanceText = $"New breeder cycles: {currentCycleDays} days at this tier (14 days from the first upgrade onward). "
-            + "First upgrade unlocks the Egg CryoLab and Rare Labs at 1% base chance. Final upgrade adds a second breeder and incubator, "
-            + $"raises Rare Lab base chance to 5%, and unlocks the Gel Refinery. Furniture slots: {FurnitureSlotCatalog.GetSlotCountAtTier(this.buildingTier)}/15 unlocked, {assignedFurnitureSlots} assigned. "
-            + $"Furniture carried in backpack: {this.furnitureInventorySummary}. Robin handles upgrades; Marnie sells furniture recipes. Fixed room positions and editing are still in development.";
-        DrawWrappedText(b, guidanceText, new Vector2(guidance.X + 12, guidance.Y + 21), guidance.Width - 24,
+        Rectangle inventory = new(overview.X + 10, overview.Bottom - 104, overview.Width - 20, 94);
+        DrawPanel(b, inventory, new Color(47, 66, 111), new Color(95, 134, 194));
+        b.DrawString(Game1.tinyFont, "FURNITURE IN BACKPACK", new Vector2(inventory.X + 10, inventory.Y + 6), new Color(139, 226, 255));
+        DrawWrappedText(b, this.furnitureInventorySummary, new Vector2(inventory.X + 10, inventory.Y + 24), inventory.Width - 20,
             Game1.tinyFont, new Color(230, 239, 255), 14f);
+
+        int unlockedCount = FurnitureSlotCatalog.GetSlotCountAtTier(this.buildingTier);
+        b.DrawString(Game1.tinyFont, $"FIXED FURNITURE SLOTS ({unlockedCount}/15 UNLOCKED; {assignedFurnitureSlots} ASSIGNED)",
+            new Vector2(slotsPanel.X + 14, slotsPanel.Y + 12), new Color(139, 226, 255));
+        b.DrawString(Game1.tinyFont, "Saved assignments only; room placement and editing are still in development.",
+            new Vector2(slotsPanel.X + 14, slotsPanel.Y + 31), new Color(205, 218, 239));
+        int rowHeight = Math.Clamp((slotsPanel.Height - 62) / Math.Max(1, unlockedSlots.Count), 18, 23);
+        int slotY = slotsPanel.Y + 52;
+        foreach (DaycareFurnitureSlotDefinition slot in unlockedSlots)
+        {
+            bool assigned = savedSlots.TryGetValue(slot.SlotId, out DaycareFurnitureSlotRecord? record);
+            string itemName = assigned
+                ? ItemRegistry.Create(record!.FurnitureQualifiedItemId).DisplayName
+                : "Empty";
+            Color rowColor = assigned ? new Color(234, 240, 255) : new Color(174, 194, 225);
+            b.DrawString(Game1.tinyFont, $"{slot.SlotId}: {itemName}", new Vector2(slotsPanel.X + 18, slotY), rowColor);
+            slotY += rowHeight;
+        }
     }
 
     private void DrawWikiSection(SpriteBatch b)
@@ -758,7 +778,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         entries.Add(new WikiEntry("RULES", "Fixed egg outcomes",
             "The Breeder saves the offspring's non-rarity genome when its cycle completes. The Incubator's Rare Lab resolves rarity once at incubation completion and saves the result before hatching; reloading cannot reroll it. If the Daycare is full, a ready hatch waits safely for room.", Array.Empty<string>()));
         entries.Add(new WikiEntry("RULES", "Furniture slot progression",
-            "The Daycare furniture catalog defines three fixed slots at the basic tier, seven at tiers 1 and 2, and fifteen at the final tier. Slots belong to the Daycare building and their saved assignments follow that building through upgrades. The desk preview shows slot counts and furniture carried in your backpack; it does not count chests or installed objects. Fixed room positions and editing are still in development.", Array.Empty<string>()));
+            "The Daycare furniture catalog defines three fixed slots at the basic tier, seven at tiers 1 and 2, and fifteen at the final tier. The Progression preview lists each unlocked slot as empty or with its saved furniture assignment, and separately lists furniture carried in your backpack. It does not count chests or installed objects. Fixed room positions and editing are still in development.", Array.Empty<string>()));
         entries.Add(new WikiEntry("RULES", "Marnie's furniture recipes",
             "Marnie sells reusable learned recipes, not physical furniture. Trampoline, Cushion, Slide, Seesaw, and Heated Slime Stone recipes cost 2,000g after construction; Pond, Tunnel, Swing, and Lamp cost 5,000g from the first upgrade; Fairy Lights, Ball Pit, and Washing Machine cost 10,000g at the final tier. The Washing Machine is decorative for now and has no washing behavior. Recipe ingredients remain provisional.", Array.Empty<string>()));
         entries.Add(new WikiEntry("RULES", "Fairy Lights",
