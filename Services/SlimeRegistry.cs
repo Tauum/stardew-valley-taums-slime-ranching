@@ -1475,6 +1475,12 @@ internal sealed class SlimeRegistry
         {
             if (record?.Genome is { } genome)
             {
+                if (string.IsNullOrWhiteSpace(genome.PrimarySpecies))
+                {
+                    this.monitor.Log("Skipped a malformed Domesticated Slime record without a primary species.", LogLevel.Warn);
+                    continue;
+                }
+
                 genome.Size = NormalizeSize(genome.Size);
                 record.LastCompostFeedDay = Math.Clamp(record.LastCompostFeedDay, -1, Math.Max(0, record.AgeLastUpdatedDay));
             }
