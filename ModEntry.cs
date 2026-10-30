@@ -3617,11 +3617,12 @@ public sealed class ModEntry : Mod
                 this.Monitor.Log($"Daycare living residents: {animalHouse.animalsThatLiveHere.Count}/{animalHouse.animalLimit.Value} capacity.", LogLevel.Info);
                 bool nativeAutoFeed = animalHouse.HasMapPropertyWithValue("AutoFeed");
                 IReadOnlyList<Point> feedingTiles = DaycareFeedingService.GetConfiguredSlots(animalHouse);
+                int activeFeedingTiles = DaycareFeedingService.GetActiveTroughSlotCount(animalHouse);
                 int hayAtTrough = DaycareFeedingService.GetHayCountOnTroughs(animalHouse);
                 string feedingTileCoordinates = feedingTiles.Count == 0
                     ? "none"
                     : string.Join("; ", feedingTiles.Select(tile => $"{tile.X},{tile.Y}"));
-                this.Monitor.Log($"Daycare feeding prototype: native hay auto-feed {(nativeAutoFeed ? "enabled" : "not enabled")}; {feedingTiles.Count}/{animalHouse.animalLimit.Value} trough tile(s); {hayAtTrough} hay ration(s) currently placed.", LogLevel.Info);
+                this.Monitor.Log($"Daycare feeding prototype: native hay auto-feed {(nativeAutoFeed ? "enabled" : "not enabled")}; {feedingTiles.Count}/{animalHouse.animalLimit.Value} reserved slot(s), {activeFeedingTiles}/{animalHouse.animalsThatLiveHere.Count} active ration slot(s) for residents; {hayAtTrough} hay ration(s) currently placed.", LogLevel.Info);
                 this.Monitor.Log($"Daycare Feeding Trough tile coordinates (x,y): {feedingTileCoordinates}.", LogLevel.Info);
                 string buildingId = animalHouse.ParentBuilding?.id.Value.ToString("N") ?? string.Empty;
                 IReadOnlyList<DaycareFurnitureSlotRecord> furnitureSlots = loadedRegistry.GetFurnitureSlots(buildingId);

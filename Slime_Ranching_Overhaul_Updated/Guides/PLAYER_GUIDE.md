@@ -135,7 +135,7 @@ Add an animal ID to inspect one managed Domesticated Slime's genome, favorite fo
 slime_ranching_inspect <Domesticated Slime animal ID>
 ```
 
-The assignment is reported as **Available**, **Selected for breeding**, **Breeding**, **Mutagenic Pool**, **Incubator hatch**, or **Companion**. The no-ID room report also lists whether Daycare hay auto-feed is enabled, its trough tile coordinates, and how many Hay items are sitting in those slots. Friendship, happiness, and fullness are the native animal values. The current Feeding Trough prototype uses Stardew's native hay auto-feeder and draws hay from farm silos; it adds no favorite-food, happiness, or friendship bonus. Water Bowl behavior and the final fixed-amenity art remain in development.
+The assignment is reported as **Available**, **Selected for breeding**, **Breeding**, **Mutagenic Pool**, **Incubator hatch**, or **Companion**. The no-ID room report also lists whether Daycare hay auto-feed is enabled, reserved slot coordinates, the number of active ration slots for living residents, and how many Hay items are sitting in those slots. Friendship, happiness, and fullness are the native animal values. The current Feeding Trough prototype uses Stardew's native hay auto-feeder and draws hay from farm silos, with at most one active ration slot per resident; an empty Daycare activates none. It adds no favorite-food, happiness, or friendship bonus. Water Bowl behavior and the final fixed-amenity art remain in development.
 
 ### Slime Daycare Quest progress diagnostic
 

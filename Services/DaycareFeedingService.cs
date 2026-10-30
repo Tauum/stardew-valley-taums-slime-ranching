@@ -46,6 +46,7 @@ internal static class DaycareFeedingService
             && savedSlots.All(slot => HasValidSlot(house, back, slot)))
         {
             map.Properties["AutoFeed"] = "true";
+            ConfigureActiveTroughSlots(house, back, savedSlots);
             return savedSlots.Count;
         }
 
@@ -61,12 +62,12 @@ internal static class DaycareFeedingService
             if (tile is null)
                 continue;
 
-            // AnimalHouse.feedAllAnimals looks for the vanilla Trough tile property
-            // and then deposits ordinary Hay objects from any farm silo.
-            tile.Properties["Trough"] = "true";
+            // Keep every reserved slot out of normal placement. Only resident-count
+            // slots receive Stardew's native Trough property below.
             tile.Properties[FeedingSlotProperty] = "true";
         }
 
+        ConfigureActiveTroughSlots(house, back, slots);
         map.Properties["AutoFeed"] = "true";
         map.Properties[FeedingLayoutProperty] = SerializeLayout(targetCount, slots);
 
@@ -98,6 +99,13 @@ internal static class DaycareFeedingService
                 .ToArray()
             : Array.Empty<Point>();
 
+    public static int GetActiveTroughSlotCount(AnimalHouse house) =>
+        GetConfiguredSlots(house).Count(slot =>
+        {
+            var back = house.map?.GetLayer("Back");
+            return back?.Tiles[slot.X, slot.Y]?.Properties.ContainsKey("Trough") == true;
+        });
+
     public static int GetHayCountOnTroughs(AnimalHouse house)
     {
         if (house.map is null || !TryReadLayout(house.map, out _, out List<Vector2> slots))
@@ -121,6 +129,7 @@ internal static class DaycareFeedingService
                     || !house.isTilePassable(tile)
                     || house.doesTileHaveProperty(x, y, "Action", "Back") is not null
                     || house.doesTileHaveProperty(x, y, "Warp", "Back") is not null
+                    || house.doesTileHaveProperty(x, y, "Trough", "Back") is not null
                     || house.GetFurnitureAt(tile) is not null
                     || house.terrainFeatures.ContainsKey(tile)
                     || (house.Objects.TryGetValue(tile, out StardewValley.Object? existing)
@@ -145,8 +154,24 @@ internal static class DaycareFeedingService
             && house.GetFurnitureAt(tile) is null
             && !house.terrainFeatures.ContainsKey(tile)
             && (!house.Objects.TryGetValue(tile, out StardewValley.Object? existing)
-                || existing.QualifiedItemId == "(O)178")
-            && house.doesTileHaveProperty(x, y, "Trough", "Back") is not null;
+                || existing.QualifiedItemId == "(O)178");
+    }
+
+    private static void ConfigureActiveTroughSlots(AnimalHouse house, xTile.Layers.Layer back, IReadOnlyList<Vector2> slots)
+    {
+        int activeSlotCount = Math.Min(house.animalsThatLiveHere.Count, slots.Count);
+        for (int index = 0; index < slots.Count; index++)
+        {
+            Vector2 slot = slots[index];
+            var tile = back.Tiles[(int)slot.X, (int)slot.Y];
+            if (tile is null)
+                continue;
+
+            if (index < activeSlotCount)
+                tile.Properties["Trough"] = "true";
+            else
+                tile.Properties.Remove("Trough");
+        }
     }
 
     private static void RemoveOwnedSlots(xTile.Map map, xTile.Layers.Layer back)
