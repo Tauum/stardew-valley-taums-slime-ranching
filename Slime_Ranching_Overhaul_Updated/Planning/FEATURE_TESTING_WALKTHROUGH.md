@@ -12,6 +12,7 @@ The separate 2.0 implementation sequence is tracked in `DEVELOPMENT_NOTES_2.0.md
 1. Load the disposable test save and run `slime_ranching_inspect` and `slime_ranching_quest_status` without a save-folder argument. Confirm both report the loaded save's state.
 2. Return to title and run `slime_ranching_inspect` in the SMAPI console. Confirm it logs `Can't run 'slime_ranching_inspect' without a loaded save. Load a save first.` and does not report or change save data.
 3. While still at title, run `slime_ranching_give_guidebook`. Confirm it logs the matching no-save warning and no item is given. Load the test save again and confirm the command works without a folder argument.
+4. With the test save loaded, run `slime_ranching_spawn_domesticated_slime` without an age. Confirm the usage warning shows the age argument and does not include the save-folder name.
 
 ## 2.0 active test focus — Feature 2: FarmHouse-layout Daycare, upgrades, and renovations
 

@@ -1951,7 +1951,7 @@ public sealed class ModEntry : Mod
         bool malformedMode = args.Skip(1).Any(argument => argument.Equals("malformed", StringComparison.OrdinalIgnoreCase));
         if ((randomMode || malformedMode) && (args.Length != 2 || randomMode && malformedMode))
         {
-            this.Monitor.Log($"Use either 'slime_ranching_give_test_eggs {saveName} random', 'slime_ranching_give_test_eggs {saveName} malformed', or the optional key=value fields, not more than one mode.", LogLevel.Warn);
+            this.Monitor.Log("Use either 'slime_ranching_give_test_eggs random', 'slime_ranching_give_test_eggs malformed', or the optional key=value fields, not more than one mode.", LogLevel.Warn);
             return;
         }
 
@@ -2202,7 +2202,7 @@ public sealed class ModEntry : Mod
         string? saveName = Constants.SaveFolderName;
         if (args.Length != 1 || args[0] != saveName)
         {
-            this.Monitor.Log($"To add color test eggs to the currently loaded save, use: slime_ranching_give_color_eggs {saveName}", LogLevel.Warn);
+            this.Monitor.Log("To add color test eggs to the currently loaded save, use: slime_ranching_give_color_eggs", LogLevel.Warn);
             return;
         }
 
@@ -2255,7 +2255,7 @@ public sealed class ModEntry : Mod
         string? saveName = Constants.SaveFolderName;
         if (args.Length != 1 || args[0] != saveName)
         {
-            this.Monitor.Log($"To give crystals to the currently loaded save, use: slime_ranching_give_crystals {saveName}", LogLevel.Warn);
+            this.Monitor.Log("To give crystals to the currently loaded save, use: slime_ranching_give_crystals", LogLevel.Warn);
             return;
         }
 
@@ -2711,7 +2711,7 @@ public sealed class ModEntry : Mod
         string? saveName = Constants.SaveFolderName;
         if (args.Length != 1 || args[0] != saveName)
         {
-            this.Monitor.Log($"To open the Daycare Management Desk preview for the current save, use: slime_ranching_open_management_desk {saveName}", LogLevel.Warn);
+            this.Monitor.Log("To open the Daycare Management Desk preview for the current save, use: slime_ranching_open_management_desk", LogLevel.Warn);
             return;
         }
 
@@ -2745,7 +2745,7 @@ public sealed class ModEntry : Mod
         string? saveName = Constants.SaveFolderName;
         if (args.Length != 1 || args[0] != saveName)
         {
-            this.Monitor.Log($"To give a guidebook to the currently loaded save, use: slime_ranching_give_guidebook {saveName}", LogLevel.Warn);
+            this.Monitor.Log("To give a guidebook to the currently loaded save, use: slime_ranching_give_guidebook", LogLevel.Warn);
             return;
         }
 
@@ -2770,7 +2770,7 @@ public sealed class ModEntry : Mod
         string? saveName = Constants.SaveFolderName;
         if (args.Length != 1 || args[0] != saveName)
         {
-            this.Monitor.Log($"To give a breeder to the currently loaded save, use: slime_ranching_give_breeder {saveName}", LogLevel.Warn);
+            this.Monitor.Log("To give a breeder to the currently loaded save, use: slime_ranching_give_breeder", LogLevel.Warn);
             return;
         }
 
@@ -2795,7 +2795,7 @@ public sealed class ModEntry : Mod
         string? saveName = Constants.SaveFolderName;
         if (args.Length != 1 || args[0] != saveName)
         {
-            this.Monitor.Log($"To give an incubator to the currently loaded save, use: slime_ranching_give_incubator {saveName}", LogLevel.Warn);
+            this.Monitor.Log("To give an incubator to the currently loaded save, use: slime_ranching_give_incubator", LogLevel.Warn);
             return;
         }
 
@@ -2820,7 +2820,7 @@ public sealed class ModEntry : Mod
         string? saveName = Constants.SaveFolderName;
         if (args.Length != 1 || args[0] != saveName)
         {
-            this.Monitor.Log($"To give an Egg CryoLab tester chest to the currently loaded save, use: slime_ranching_give_cryolab {saveName}", LogLevel.Warn);
+            this.Monitor.Log("To give an Egg CryoLab tester chest to the currently loaded save, use: slime_ranching_give_cryolab", LogLevel.Warn);
             return;
         }
 
@@ -2845,7 +2845,7 @@ public sealed class ModEntry : Mod
         string? saveName = Constants.SaveFolderName;
         if (args.Length != 1 || args[0] != saveName)
         {
-            this.Monitor.Log($"This command deliberately duplicates an egg identity. Use it only on a disposable copy: slime_ranching_duplicate_cryolab_egg {saveName}", LogLevel.Warn);
+            this.Monitor.Log("This command deliberately duplicates an egg identity. Use it only on a disposable copy: slime_ranching_duplicate_cryolab_egg", LogLevel.Warn);
             return;
         }
 
@@ -2892,7 +2892,7 @@ public sealed class ModEntry : Mod
         string? saveName = Constants.SaveFolderName;
         if (args.Length != 1 || args[0] != saveName)
         {
-            this.Monitor.Log($"This command deliberately duplicates an egg identity. Use it only on a disposable copy: slime_ranching_duplicate_inventory_egg {saveName}", LogLevel.Warn);
+            this.Monitor.Log("This command deliberately duplicates an egg identity. Use it only on a disposable copy: slime_ranching_duplicate_inventory_egg", LogLevel.Warn);
             return;
         }
 
@@ -2943,7 +2943,7 @@ public sealed class ModEntry : Mod
         string? saveName = Constants.SaveFolderName;
         if (args.Length != 1 || args[0] != saveName)
         {
-            this.Monitor.Log($"To give a Mutagenic Pool to the currently loaded save, use: slime_ranching_give_mutagenic_pool {saveName}", LogLevel.Warn);
+            this.Monitor.Log("To give a Mutagenic Pool to the currently loaded save, use: slime_ranching_give_mutagenic_pool", LogLevel.Warn);
             return;
         }
 
@@ -2968,7 +2968,7 @@ public sealed class ModEntry : Mod
         string? saveName = Constants.SaveFolderName;
         if (args.Length != 1 || args[0] != saveName)
         {
-            this.Monitor.Log($"To give a Gel Refinery to the currently loaded save, use: slime_ranching_give_gel_refinery {saveName}", LogLevel.Warn);
+            this.Monitor.Log("To give a Gel Refinery to the currently loaded save, use: slime_ranching_give_gel_refinery", LogLevel.Warn);
             return;
         }
 
@@ -2993,7 +2993,7 @@ public sealed class ModEntry : Mod
         string? saveName = Constants.SaveFolderName;
         if (args.Length != 1 || args[0] != saveName)
         {
-            this.Monitor.Log($"To give a Slime Tunnel to the currently loaded save, use: slime_ranching_give_tunnel {saveName}", LogLevel.Warn);
+            this.Monitor.Log("To give a Slime Tunnel to the currently loaded save, use: slime_ranching_give_tunnel", LogLevel.Warn);
             return;
         }
 
@@ -3018,7 +3018,7 @@ public sealed class ModEntry : Mod
         string? saveName = Constants.SaveFolderName;
         if (args.Length != 1 || args[0] != saveName)
         {
-            this.Monitor.Log($"To give a Heated Slime Stone to the currently loaded save, use: slime_ranching_give_heated_stone {saveName}", LogLevel.Warn);
+            this.Monitor.Log("To give a Heated Slime Stone to the currently loaded save, use: slime_ranching_give_heated_stone", LogLevel.Warn);
             return;
         }
 
@@ -3043,7 +3043,7 @@ public sealed class ModEntry : Mod
         string? saveName = Constants.SaveFolderName;
         if (args.Length != 1 || args[0] != saveName)
         {
-            this.Monitor.Log($"To give a Slime Pond to the currently loaded save, use: slime_ranching_give_pond {saveName}", LogLevel.Warn);
+            this.Monitor.Log("To give a Slime Pond to the currently loaded save, use: slime_ranching_give_pond", LogLevel.Warn);
             return;
         }
 
@@ -3068,7 +3068,7 @@ public sealed class ModEntry : Mod
         string? saveName = Constants.SaveFolderName;
         if (args.Length != 1 || args[0] != saveName)
         {
-            this.Monitor.Log($"To give a Slime Swing to the currently loaded save, use: slime_ranching_give_swing {saveName}", LogLevel.Warn);
+            this.Monitor.Log("To give a Slime Swing to the currently loaded save, use: slime_ranching_give_swing", LogLevel.Warn);
             return;
         }
 
@@ -3093,7 +3093,7 @@ public sealed class ModEntry : Mod
         string? saveName = Constants.SaveFolderName;
         if (args.Length != 1 || args[0] != saveName)
         {
-            this.Monitor.Log($"To give Slime Fairy Lights to the currently loaded save, use: slime_ranching_give_fairy_lights {saveName}", LogLevel.Warn);
+            this.Monitor.Log("To give Slime Fairy Lights to the currently loaded save, use: slime_ranching_give_fairy_lights", LogLevel.Warn);
             return;
         }
 
@@ -3118,7 +3118,7 @@ public sealed class ModEntry : Mod
         string? saveName = Constants.SaveFolderName;
         if (args.Length != 1 || args[0] != saveName)
         {
-            this.Monitor.Log($"To give a Slime Seesaw to the currently loaded save, use: slime_ranching_give_seesaw {saveName}", LogLevel.Warn);
+            this.Monitor.Log("To give a Slime Seesaw to the currently loaded save, use: slime_ranching_give_seesaw", LogLevel.Warn);
             return;
         }
 
@@ -3143,7 +3143,7 @@ public sealed class ModEntry : Mod
         string? saveName = Constants.SaveFolderName;
         if (args.Length != 1 || args[0] != saveName)
         {
-            this.Monitor.Log($"To give a Slime Ball Pit to the currently loaded save, use: slime_ranching_give_ball_pit {saveName}", LogLevel.Warn);
+            this.Monitor.Log("To give a Slime Ball Pit to the currently loaded save, use: slime_ranching_give_ball_pit", LogLevel.Warn);
             return;
         }
 
@@ -3168,7 +3168,7 @@ public sealed class ModEntry : Mod
         string? saveName = Constants.SaveFolderName;
         if (args.Length != 1 || args[0] != saveName)
         {
-            this.Monitor.Log($"To give a Slime Lamp to the currently loaded save, use: slime_ranching_give_lamp {saveName}", LogLevel.Warn);
+            this.Monitor.Log("To give a Slime Lamp to the currently loaded save, use: slime_ranching_give_lamp", LogLevel.Warn);
             return;
         }
 
@@ -3625,7 +3625,7 @@ public sealed class ModEntry : Mod
         string? saveName = Constants.SaveFolderName;
         if (args.Length != 1 || args[0] != saveName)
         {
-            this.Monitor.Log($"This test changes quest progress. Use it only on a disposable copy: slime_ranching_test_maru_repair {saveName}", LogLevel.Warn);
+            this.Monitor.Log("This test changes quest progress. Use it only on a disposable copy: slime_ranching_test_maru_repair", LogLevel.Warn);
             return;
         }
 
