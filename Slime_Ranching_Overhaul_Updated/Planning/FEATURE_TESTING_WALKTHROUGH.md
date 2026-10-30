@@ -335,6 +335,16 @@ Refinery/Pool UI and footprints, machine reference styling/pixel art, breeder wo
 
 Readable parent names (including old registered slimes), corrected egg color texture selection and item name, hatch instruction at the top of the tooltip, and hiding an unclaimed incubator hatchling from breeder candidates. Test with a newly bred egg and a ready-but-unclaimed hatchling.
 
+### Feature 16 — Legacy registry schema 22/23 import chain (pending)
+
+Use only a disposable copied save and a backup copy of `slime-registry-v1.json`. This check covers the preserved external-registry import path; the current 2.0 reset still requires a fresh save for normal feature testing. The legacy source file should remain untouched after import.
+
+1. With the game closed, copy a schema-22 external registry fixture into the mod's `data/saves/<save-folder>/` directory for the disposable save. Make sure this save does not already contain the SMAPI `slime-ranching-state` save data, since that takes precedence over the legacy file. Keep a separate copy of the source registry.
+2. Load the disposable save. Run `slime_ranching_inspect` and confirm it reports schema 24. Check the SMAPI log for the legacy registry import message and the normal save-data write; confirm no malformed-data exception appears.
+3. Run `slime_ranching_quest_status` and confirm an absent or null legacy quest record loads as empty progress rather than failing. Compare imported slime, breeding, egg, and incubation records with the fixture where the matching native entities/items are present.
+4. Save, return to title, and reload. Confirm schema 24 remains, imported records do not duplicate, and the quest status is still readable. Compare the original external registry file byte-for-byte with its backup; it must remain unchanged.
+5. Keep this check pending if no compatible schema-22 fixture is available. Do not substitute the main save or delete the legacy file to force the migration.
+
 ## Walkthrough state
 
 - **Current stage:** 6 - Breeder genome details and Chromatic Crystals.
