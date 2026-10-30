@@ -143,6 +143,7 @@ public sealed class ModEntry : Mod
         try
         {
             this.registry!.Load(this.stateStore!.Load(), this.config.LogRegistrySummary);
+            this.RestoreFurnitureSlotProtection();
             bool needsPersistenceMigration = this.stateStore.ImportedLegacyData || this.stateStore.MigratedSaveData;
             int recoveredHatches = this.registry.RecoverPendingHatches(GetFarmAnimals());
             if (recoveredHatches > 0)
@@ -970,6 +971,9 @@ public sealed class ModEntry : Mod
         if (!this.stateReady || !Context.IsMainPlayer)
             return;
 
+        if (FurnitureSlotProtection.Apply(e.Location as AnimalHouse, this.registry!))
+            this.Monitor.Log("Restored Stardew's indestructible flag for furniture assigned to a Slime Daycare slot.", LogLevel.Info);
+
         bool rareLabProgressionChanged = this.SynchronizeRareLabProgression(e.Location as AnimalHouse);
         bool removedBreederPair = false;
         string locationPrefix = e.Location.NameOrUniqueName + ":";
@@ -1184,6 +1188,19 @@ public sealed class ModEntry : Mod
                 this.registry.GetGenomeColor(animal.myID.Value),
                 this.registry.GetGenomeSize(animal.myID.Value),
                 this.registry.GetGenomeIsShiny(animal.myID.Value));
+        }
+    }
+
+    private void RestoreFurnitureSlotProtection()
+    {
+        if (this.registry is null || !Context.IsWorldReady)
+            return;
+
+        foreach (Building building in Game1.getFarm().buildings)
+        {
+            if (building.GetIndoors() is AnimalHouse daycare
+                && FurnitureSlotProtection.Apply(daycare, this.registry))
+                this.Monitor.Log("Restored Stardew's indestructible flag for furniture assigned to a Slime Daycare slot.", LogLevel.Info);
         }
     }
 
