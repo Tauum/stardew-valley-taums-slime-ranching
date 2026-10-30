@@ -586,10 +586,12 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             : "Second Breeder / Incubator + Refinery: locked";
         string buildingId = this.daycare.ParentBuilding?.id.Value.ToString("N") ?? string.Empty;
         IReadOnlyList<DaycareFurnitureSlotDefinition> unlockedSlots = FurnitureSlotCatalog.GetSlotsUnlockedAtTier(this.buildingTier);
+        HashSet<string> unlockedSlotIds = unlockedSlots.Select(slot => slot.SlotId).ToHashSet(StringComparer.Ordinal);
         Dictionary<string, DaycareFurnitureSlotRecord> savedSlots = this.registry.GetFurnitureSlots(buildingId)
             .GroupBy(slot => slot.SlotId, StringComparer.Ordinal)
             .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
-        int assignedFurnitureSlots = savedSlots.Count;
+        int assignedFurnitureSlots = savedSlots.Keys.Count(unlockedSlotIds.Contains);
+        int lockedFurnitureAssignments = savedSlots.Count - assignedFurnitureSlots;
         string[] status =
         {
             $"Building tier: {tierName} ({this.buildingTier}/3)",
@@ -621,8 +623,16 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             new Vector2(slotsPanel.X + 14, slotsPanel.Y + 12), new Color(139, 226, 255));
         b.DrawString(Game1.tinyFont, "Saved assignments only; room placement and editing are still in development.",
             new Vector2(slotsPanel.X + 14, slotsPanel.Y + 31), new Color(205, 218, 239));
-        int rowHeight = Math.Clamp((slotsPanel.Height - 62) / Math.Max(1, unlockedSlots.Count), 18, 23);
-        int slotY = slotsPanel.Y + 52;
+        int slotStartOffset = 52;
+        if (lockedFurnitureAssignments > 0)
+        {
+            b.DrawString(Game1.tinyFont, $"{lockedFurnitureAssignments} saved assignment(s) are locked at this tier.",
+                new Vector2(slotsPanel.X + 14, slotsPanel.Y + 48), new Color(255, 205, 139));
+            slotStartOffset = 68;
+        }
+
+        int rowHeight = Math.Clamp((slotsPanel.Height - slotStartOffset - 12) / Math.Max(1, unlockedSlots.Count), 18, 23);
+        int slotY = slotsPanel.Y + slotStartOffset;
         foreach (DaycareFurnitureSlotDefinition slot in unlockedSlots)
         {
             bool assigned = savedSlots.TryGetValue(slot.SlotId, out DaycareFurnitureSlotRecord? record);
