@@ -627,12 +627,14 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             new Vector2(slotsPanel.X + 14, slotsPanel.Y + 50), new Color(255, 205, 139));
         b.DrawString(Game1.tinyFont, "MATCH: assigned item placed | PROTECTED: matching item is tool-safe",
             new Vector2(slotsPanel.X + 14, slotsPanel.Y + 66), new Color(160, 255, 180));
-        int slotStartOffset = 84;
+        b.DrawString(Game1.tinyFont, "EMPTY: no saved furniture assignment",
+            new Vector2(slotsPanel.X + 14, slotsPanel.Y + 82), new Color(174, 194, 225));
+        int slotStartOffset = 100;
         if (lockedFurnitureAssignments > 0)
         {
             b.DrawString(Game1.tinyFont, $"{lockedFurnitureAssignments} saved assignment(s) are locked at this tier.",
-                new Vector2(slotsPanel.X + 14, slotsPanel.Y + 82), new Color(255, 205, 139));
-            slotStartOffset = 100;
+                new Vector2(slotsPanel.X + 14, slotsPanel.Y + 98), new Color(255, 205, 139));
+            slotStartOffset = 116;
         }
 
         int rowHeight = Math.Clamp((slotsPanel.Height - slotStartOffset - 12) / Math.Max(1, unlockedSlots.Count), 18, 23);
@@ -824,7 +826,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         entries.Add(new WikiEntry("RULES", "Fixed egg outcomes",
             "The Breeder saves the offspring's non-rarity genome when its cycle completes. The Incubator's Rare Lab resolves rarity once at incubation completion and saves the result before hatching; reloading cannot reroll it. If the Daycare is full, a ready hatch waits safely for room.", Array.Empty<string>()));
         entries.Add(new WikiEntry("RULES", "Furniture slot progression",
-            "The Daycare furniture catalog defines three fixed slots at the basic tier, seven at tiers 1 and 2, and fifteen at the final tier. The Progression preview lists each unlocked slot's saved furniture and live tile state: MISSING means no object is at the saved tile, MISMATCH means a different object is there, MATCH means the assigned furniture is placed, and PROTECTED means the matching item has native tool protection. A mismatch row names the expected and installed furniture. The preview separately lists furniture carried in your backpack; it does not count chests or installed objects. Fixed room positions and editing are still in development.", Array.Empty<string>()));
+            "The Daycare furniture catalog defines three fixed slots at the basic tier, seven at tiers 1 and 2, and fifteen at the final tier. EMPTY means no furniture assignment is saved for a slot. For an assigned slot, the Progression preview shows its live tile state: MISSING means no object is at the saved tile, MISMATCH means a different object is there, MATCH means the assigned furniture is placed, and PROTECTED means the matching item has native tool protection. A mismatch row names the expected and installed furniture. The preview separately lists furniture carried in your backpack; it does not count chests or installed objects. Fixed room positions and editing are still in development.", Array.Empty<string>()));
         entries.Add(new WikiEntry("RULES", "Marnie's furniture recipes",
             "Marnie sells reusable learned recipes, not physical furniture. Trampoline, Cushion, Slide, Seesaw, and Heated Slime Stone recipes cost 2,000g after construction; Pond, Tunnel, Swing, and Lamp cost 5,000g from the first upgrade; Fairy Lights, Ball Pit, and Washing Machine cost 10,000g at the final tier. The Washing Machine is decorative for now and has no washing behavior. Recipe ingredients remain provisional.", Array.Empty<string>()));
         entries.Add(new WikiEntry("RULES", "Gel Refinery",
