@@ -184,8 +184,9 @@ public sealed class ModEntry : Mod
                 }
             }
         }
-        catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException or System.Text.Json.JsonException or NotSupportedException)
+        catch (Exception exception) when (exception is InvalidOperationException or IOException or System.IO.InvalidDataException or UnauthorizedAccessException or System.Text.Json.JsonException or NotSupportedException)
         {
+            this.stateReady = false;
             this.Monitor.Log($"Domesticated Slime save data is unavailable for this save: {exception.Message}", LogLevel.Error);
         }
     }
@@ -904,8 +905,10 @@ public sealed class ModEntry : Mod
 
     private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
     {
-        if (Context.IsWorldReady && Context.IsMainPlayer)
+        if (this.stateReady && Context.IsWorldReady && Context.IsMainPlayer)
             this.trampolineInteractions.Update(Game1.currentLocation, Game1.currentGameTime, this.registry);
+        else
+            this.trampolineInteractions.Clear();
 
         this.UpdateMarnieFurnitureRecipeNotifications();
 

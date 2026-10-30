@@ -344,6 +344,8 @@ Use only a disposable copied save and a backup copy of `slime-registry-v1.json`.
 3. Run `slime_ranching_quest_status` and confirm an absent or null legacy quest record loads as empty progress rather than failing. Compare imported slime, breeding, egg, and incubation records with the fixture where the matching native entities/items are present.
 4. Save, return to title, and reload. Confirm schema 24 remains, imported records do not duplicate, and the quest status is still readable. Compare the original external registry file byte-for-byte with its backup; it must remain unchanged.
 5. Keep this check pending if no compatible schema-22 fixture is available. Do not substitute the main save or delete the legacy file to force the migration.
+6. On a second disposable save with no SMAPI `slime-ranching-state`, make a separate fixture copy with `SchemaVersion` set to an unsupported future value such as `999`. Load it and confirm the log reports unsupported schema/unavailable save data. Run `slime_ranching_inspect` and confirm it warns that save data is unavailable. Trigger a normal save, return to title, and reload; confirm the same failure is reported rather than a blank schema-24 state being written, and verify the legacy file is unchanged.
+7. On a third disposable save with no SMAPI `slime-ranching-state`, use an empty `slime-registry-v1.json`. Confirm the invalid-data error is logged without a crash, `slime_ranching_inspect` reports that data is unavailable, and a save/reload does not replace the empty source with a current-schema registry.
 
 ## Walkthrough state
 
