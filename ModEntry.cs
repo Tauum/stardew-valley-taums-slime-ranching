@@ -3466,7 +3466,7 @@ public sealed class ModEntry : Mod
             string? path = this.stateStore!.CreateExternalDataBackup();
             if (path is null)
             {
-                this.Monitor.Log("There is no external mod data folder to back up for this save yet.", LogLevel.Warn);
+                this.Monitor.Log("There is no external mod data to back up for this save yet.", LogLevel.Warn);
                 return;
             }
 

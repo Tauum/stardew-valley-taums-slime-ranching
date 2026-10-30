@@ -242,7 +242,7 @@ To create a timestamped ZIP backup of that save-specific mod data while playing,
 slime_ranching_backup_external_data
 ```
 
-Each run creates a timestamped archive under `<installed mod folder>/data/backups/`, using a suffix if that timestamp already exists. The ZIP is written to a temporary file and published under its `.zip` name only after it is complete. It contains the external registry and first-seen snapshot, not the vanilla Stardew save. Keep making normal game-save backups separately.
+Each run creates a timestamped archive under `<installed mod folder>/data/backups/`, using a suffix if that timestamp already exists. The ZIP is written to a temporary file and published under its `.zip` name only after it is complete. It contains the external registry and first-seen snapshot when present, not the vanilla Stardew save. If this save has no external mod data files yet, the command reports that and creates no empty ZIP. Keep making normal game-save backups separately.
 
 ## 2.0 Daycare interior
 

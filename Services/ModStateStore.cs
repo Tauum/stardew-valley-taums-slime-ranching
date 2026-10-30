@@ -433,7 +433,8 @@ internal sealed class ModStateStore
     public string? CreateExternalDataBackup()
     {
         string saveDirectory = GetSaveDirectory(this.modDirectory);
-        if (!Directory.Exists(saveDirectory))
+        if (!Directory.Exists(saveDirectory)
+            || !Directory.EnumerateFiles(saveDirectory, "*", SearchOption.AllDirectories).Any())
             return null;
 
         string saveName = Constants.SaveFolderName!;
