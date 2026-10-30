@@ -325,7 +325,7 @@ This index is here so future edits can be checked against the source without rel
 
 | Older-note material | 2.0 treatment |
 | --- | --- |
-| Preserve the vanilla Hutch, vanilla slime eggs, and vanilla Egg-Press; keep domesticated Domesticated Slimes separate | Retained under Shared design principles and Technical and save boundaries. |
+| Preserve the vanilla Hutch, vanilla slime eggs, and vanilla Egg-Press; keep Domesticated Slimes separate | Retained under Shared design principles and Technical and save boundaries. |
 | External genome/machine state, native animal identity, save/reload recovery, data backups | Native animal identity and lifecycle safety are retained. The owner approved migrating save-specific state from the installation-folder registry to SMAPI save data plus entity `modData`; follow the migration safeguards above. |
 | Breeder, egg identity, incubation, age/maturity, colors, abilities, shiny, size, rarity, mutations, liked food | Retained in Feature inventory; timers and breeding rules updated by the owner decisions above. |
 | Chromatic Crystals, Gel Refinery, Mutagenic Pool, rare-offspring research lab | Retained as systems; all become facility placements rather than movable machine items. After construction, Robin points the player to Maru to repair the Pool; the mission appears the next morning, and completing it alone activates the Pool. The Rare Lab unlocks at first upgrade, and the Gel Refinery unlocks at final upgrade. Remaining Chromatic Crystal details, recipes, and any unspecified machine costs remain to settle. The Feeding Trough is a single fixed amenity for feeding and baseline happiness/heart progression; the separate legacy Compost Trough is removed. |
