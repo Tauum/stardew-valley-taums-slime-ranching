@@ -1495,6 +1495,7 @@ internal sealed class SlimeRegistry
                 assignedFoodLikes++;
         }
 
+        var seenMutagenicContributionSequences = new HashSet<long>();
         foreach (MutagenicContributionRecord transaction in data?.PendingMutagenicContributions ?? Enumerable.Empty<MutagenicContributionRecord>())
         {
             if (transaction is null || !Guid.TryParseExact(transaction.Id, "N", out _)
@@ -1506,7 +1507,13 @@ internal sealed class SlimeRegistry
                 this.monitor.Log("Skipped a malformed Mutagenic Pool contribution transaction.", LogLevel.Warn);
                 continue;
             }
-            this.pendingMutagenicContributions.TryAdd(transaction.Id, transaction);
+            if (this.pendingMutagenicContributions.ContainsKey(transaction.Id)
+                || !seenMutagenicContributionSequences.Add(transaction.Sequence))
+            {
+                this.monitor.Log("Skipped a duplicate Mutagenic Pool contribution transaction.", LogLevel.Warn);
+                continue;
+            }
+            this.pendingMutagenicContributions.Add(transaction.Id, transaction);
             if (transaction.Sequence >= this.nextMutagenicContributionSequence && transaction.Sequence < long.MaxValue)
                 this.nextMutagenicContributionSequence = transaction.Sequence + 1;
         }
@@ -1657,6 +1664,7 @@ internal sealed class SlimeRegistry
             this.rareLabs.Add(lab.MachineKey, lab);
         }
 
+        var seenRareLabContributionSequences = new HashSet<long>();
         foreach (RareLabContributionRecord transaction in data?.PendingRareLabContributions ?? Enumerable.Empty<RareLabContributionRecord>())
         {
             string eggItemId = string.IsNullOrWhiteSpace(transaction?.EggItemId)
@@ -1673,12 +1681,19 @@ internal sealed class SlimeRegistry
                 continue;
             }
 
+            if (this.pendingRareLabContributions.ContainsKey(transaction.Id)
+                || !seenRareLabContributionSequences.Add(transaction.Sequence))
+            {
+                this.monitor.Log("Skipped a duplicate Rare Lab contribution transaction.", LogLevel.Warn);
+                continue;
+            }
             transaction.EggItemId = eggItemId;
-            this.pendingRareLabContributions.TryAdd(transaction.Id, transaction);
+            this.pendingRareLabContributions.Add(transaction.Id, transaction);
             if (transaction.Sequence >= this.nextRareLabContributionSequence && transaction.Sequence < long.MaxValue)
                 this.nextRareLabContributionSequence = transaction.Sequence + 1;
         }
 
+        var seenRareLabCatalystSequences = new HashSet<long>();
         foreach (RareLabCatalystTransactionRecord transaction in data?.PendingRareLabCatalystTransactions ?? Enumerable.Empty<RareLabCatalystTransactionRecord>())
         {
             if (transaction is null || !Guid.TryParseExact(transaction.Id, "N", out _)
@@ -1691,7 +1706,13 @@ internal sealed class SlimeRegistry
                 continue;
             }
 
-            this.pendingRareLabCatalystTransactions.TryAdd(transaction.Id, transaction);
+            if (this.pendingRareLabCatalystTransactions.ContainsKey(transaction.Id)
+                || !seenRareLabCatalystSequences.Add(transaction.Sequence))
+            {
+                this.monitor.Log("Skipped a duplicate Rare Lab catalyst transaction.", LogLevel.Warn);
+                continue;
+            }
+            this.pendingRareLabCatalystTransactions.Add(transaction.Id, transaction);
             if (transaction.Sequence >= this.nextRareLabCatalystTransactionSequence && transaction.Sequence < long.MaxValue)
                 this.nextRareLabCatalystTransactionSequence = transaction.Sequence + 1;
         }
@@ -1756,10 +1777,12 @@ internal sealed class SlimeRegistry
             this.slimePrinterJobs.Add(job.MachineKey, job);
         }
 
+        var seenSlimePrinterTransactionSequences = new HashSet<long>();
         foreach (SlimePrinterTransactionRecord transaction in data?.PendingSlimePrinterTransactions ?? Enumerable.Empty<SlimePrinterTransactionRecord>())
         {
             if (!IsValidSlimePrinterTransaction(transaction)
-                || this.pendingSlimePrinterTransactions.ContainsKey(transaction.Id))
+                || this.pendingSlimePrinterTransactions.ContainsKey(transaction.Id)
+                || !seenSlimePrinterTransactionSequences.Add(transaction.Sequence))
             {
                 this.monitor.Log("Skipped a malformed or duplicate pending Slime Printer transaction.", LogLevel.Warn);
                 continue;
