@@ -6,7 +6,7 @@ This is a compact tour of the 2.0 mod: what each facility and furniture piece is
 
 The mod adds one constructible Slime Daycare per save to a Stardew farm. The player raises domesticated Domesticated Slimes, chooses when to breed them, incubates their individually identified eggs, researches rare offspring, and decorates a shared living space with enrichment furniture. Robin's upgrades expand that same building with residents, rooms, and facilities. Older saves with multiple Daycares keep them. A read-only Registry, progression view, and Slime Wiki preview exist; the permanent Management Desk fixture and furniture editor are planned.
 
-The current desk preview supports row paging and independent resident/Wiki detail scrolling with the mouse or controller when text exceeds its panel. Its Slime Wiki explains the approved base/hybrid breeding outcomes, rare-slime and Crystal limits, fixed egg results, and the separate seven-day incubation and maturation stages. The in-game Field Guide states that maturation follows incubation; the permanent desk fixture and Furniture Edit Mode remain pending.
+The current desk preview supports row paging and independent resident/Wiki detail scrolling with the mouse or controller when text exceeds its panel. Progression shows the next Robin upgrade cost, or says the Daycare is fully upgraded. Its Slime Wiki explains the approved base/hybrid breeding outcomes, rare-slime and Crystal limits, fixed egg results, and the separate seven-day incubation and maturation stages. The in-game Field Guide states that maturation follows incubation; the permanent desk fixture and Furniture Edit Mode remain pending.
 
 The intended loop is:
 

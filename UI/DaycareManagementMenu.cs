@@ -584,6 +584,13 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         string finalFacilityStatus = this.buildingTier >= 3
             ? "Second Breeder / Incubator + Refinery: unlocked"
             : "Second Breeder / Incubator + Refinery: locked";
+        string nextUpgradeGuidance = this.buildingTier switch
+        {
+            0 => "Next Robin upgrade: First | 10,000g + 450 Wood",
+            1 => "Next Robin upgrade: Second | 65,000g + 100 Hardwood",
+            2 => "Next Robin upgrade: Final | 100,000g",
+            _ => "Daycare fully upgraded"
+        };
         string buildingId = this.daycare.ParentBuilding?.id.Value.ToString("N") ?? string.Empty;
         IReadOnlyList<DaycareFurnitureSlotDefinition> unlockedSlots = FurnitureSlotCatalog.GetSlotsUnlockedAtTier(this.buildingTier);
         HashSet<string> unlockedSlotIds = unlockedSlots.Select(slot => slot.SlotId).ToHashSet(StringComparer.Ordinal);
@@ -611,6 +618,8 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             b.DrawString(Game1.tinyFont, line, new Vector2(overview.X + 16, y), Color.White);
             y += 25;
         }
+        DrawFittedText(b, nextUpgradeGuidance, new Rectangle(overview.X + 16, y, overview.Width - 32, 22),
+            Game1.tinyFont, new Color(255, 223, 151));
 
         Rectangle inventory = new(overview.X + 10, overview.Bottom - 104, overview.Width - 20, 94);
         DrawPanel(b, inventory, new Color(47, 66, 111), new Color(95, 134, 194));
