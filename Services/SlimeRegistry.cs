@@ -60,16 +60,23 @@ internal sealed class SlimeRegistry
     public IReadOnlyCollection<RefineryJobRecord> RefineryJobs => this.refineryJobs.Values;
     public IReadOnlyCollection<RefineryTransactionRecord> PendingRefineryTransactions => this.pendingRefineryTransactions.Values;
 
-    public IReadOnlyList<DaycareFurnitureSlotRecord> GetFurnitureSlots(string daycareBuildingId) =>
-        this.furnitureSlots.Values
-            .Where(slot => slot.DaycareBuildingId == daycareBuildingId)
+    public IReadOnlyList<DaycareFurnitureSlotRecord> GetFurnitureSlots(string daycareBuildingId)
+    {
+        if (!TryNormalizeDaycareBuildingId(daycareBuildingId, out string normalizedBuildingId))
+            return Array.Empty<DaycareFurnitureSlotRecord>();
+
+        return this.furnitureSlots.Values
+            .Where(slot => slot.DaycareBuildingId == normalizedBuildingId)
             .OrderBy(slot => slot.SlotId, StringComparer.Ordinal)
             .Select(CloneFurnitureSlot)
             .ToArray();
+    }
 
     public bool TryGetFurnitureSlot(string daycareBuildingId, string slotId, out DaycareFurnitureSlotRecord? slot)
     {
-        if (this.furnitureSlots.TryGetValue(GetFurnitureSlotKey(daycareBuildingId, slotId), out DaycareFurnitureSlotRecord? existing))
+        if (TryNormalizeDaycareBuildingId(daycareBuildingId, out string normalizedBuildingId)
+            && FurnitureSlotCatalog.TryGetSlot(slotId, out _)
+            && this.furnitureSlots.TryGetValue(GetFurnitureSlotKey(normalizedBuildingId, slotId), out DaycareFurnitureSlotRecord? existing))
         {
             slot = CloneFurnitureSlot(existing);
             return true;
@@ -81,10 +88,10 @@ internal sealed class SlimeRegistry
 
     public bool TryAssignFurnitureSlot(DaycareFurnitureSlotRecord? assignment, int buildingTier, out string error)
     {
-        if (assignment is null || string.IsNullOrWhiteSpace(assignment.DaycareBuildingId)
+        if (assignment is null || !TryNormalizeDaycareBuildingId(assignment.DaycareBuildingId, out string normalizedBuildingId)
             || string.IsNullOrWhiteSpace(assignment.SlotId) || string.IsNullOrWhiteSpace(assignment.FurnitureQualifiedItemId))
         {
-            error = "Choose a Daycare, slot, and furniture item.";
+            error = "Choose a valid Daycare, slot, and furniture item.";
             return false;
         }
 
@@ -110,7 +117,7 @@ internal sealed class SlimeRegistry
         }
 
         if (this.furnitureSlots.Values.Any(existing =>
-                existing.DaycareBuildingId == assignment.DaycareBuildingId
+                existing.DaycareBuildingId == normalizedBuildingId
                 && existing.SlotId != assignment.SlotId
                 && existing.TileX == assignment.TileX
                 && existing.TileY == assignment.TileY))
@@ -119,14 +126,18 @@ internal sealed class SlimeRegistry
             return false;
         }
 
-        string key = GetFurnitureSlotKey(assignment.DaycareBuildingId, assignment.SlotId);
-        this.furnitureSlots[key] = CloneFurnitureSlot(assignment);
+        string key = GetFurnitureSlotKey(normalizedBuildingId, assignment.SlotId);
+        DaycareFurnitureSlotRecord normalizedAssignment = CloneFurnitureSlot(assignment);
+        normalizedAssignment.DaycareBuildingId = normalizedBuildingId;
+        this.furnitureSlots[key] = normalizedAssignment;
         error = string.Empty;
         return true;
     }
 
     public bool RemoveFurnitureSlot(string daycareBuildingId, string slotId) =>
-        this.furnitureSlots.Remove(GetFurnitureSlotKey(daycareBuildingId, slotId));
+        TryNormalizeDaycareBuildingId(daycareBuildingId, out string normalizedBuildingId)
+        && FurnitureSlotCatalog.TryGetSlot(slotId, out _)
+        && this.furnitureSlots.Remove(GetFurnitureSlotKey(normalizedBuildingId, slotId));
 
     public IReadOnlyCollection<long> DomesticatedSlimeFarmAnimalIds => this.farmAnimalRecords.Keys;
     public SlimeResidentStatus GetResidentStatus(long farmAnimalId, string? exceptMachineKey = null)
@@ -1646,7 +1657,7 @@ internal sealed class SlimeRegistry
         var furnitureTiles = new HashSet<string>(StringComparer.Ordinal);
         foreach (DaycareFurnitureSlotRecord slot in data?.FurnitureSlots ?? Enumerable.Empty<DaycareFurnitureSlotRecord>())
         {
-            if (slot is null || string.IsNullOrWhiteSpace(slot.DaycareBuildingId)
+            if (slot is null || !TryNormalizeDaycareBuildingId(slot.DaycareBuildingId, out string normalizedBuildingId)
                 || string.IsNullOrWhiteSpace(slot.SlotId)
                 || string.IsNullOrWhiteSpace(slot.FurnitureQualifiedItemId)
                 || slot.TileX < 0 || slot.TileY < 0
@@ -1657,15 +1668,17 @@ internal sealed class SlimeRegistry
                 continue;
             }
 
-            string key = GetFurnitureSlotKey(slot.DaycareBuildingId, slot.SlotId);
-            string tileKey = GetFurnitureTileKey(slot.DaycareBuildingId, slot.TileX, slot.TileY);
+            string key = GetFurnitureSlotKey(normalizedBuildingId, slot.SlotId);
+            string tileKey = GetFurnitureTileKey(normalizedBuildingId, slot.TileX, slot.TileY);
             if (this.furnitureSlots.ContainsKey(key) || !furnitureTiles.Add(tileKey))
             {
                 this.monitor.Log("Skipped a duplicate Slime Daycare furniture-slot record.", LogLevel.Warn);
                 continue;
             }
 
-            this.furnitureSlots.Add(key, CloneFurnitureSlot(slot));
+            DaycareFurnitureSlotRecord normalizedSlot = CloneFurnitureSlot(slot);
+            normalizedSlot.DaycareBuildingId = normalizedBuildingId;
+            this.furnitureSlots.Add(key, normalizedSlot);
         }
 
         foreach (MutagenicAttemptRecord attempt in data?.MutagenicAttempts ?? Enumerable.Empty<MutagenicAttemptRecord>())
@@ -1765,6 +1778,18 @@ internal sealed class SlimeRegistry
 
     private static string GetFurnitureTileKey(string daycareBuildingId, int tileX, int tileY) =>
         $"{daycareBuildingId}\u001f{tileX},{tileY}";
+
+    private static bool TryNormalizeDaycareBuildingId(string? value, out string normalized)
+    {
+        if (Guid.TryParse(value, out Guid buildingId) && buildingId != Guid.Empty)
+        {
+            normalized = buildingId.ToString("N");
+            return true;
+        }
+
+        normalized = string.Empty;
+        return false;
+    }
 
     private static DaycareFurnitureSlotRecord CloneFurnitureSlot(DaycareFurnitureSlotRecord slot) => new()
     {
