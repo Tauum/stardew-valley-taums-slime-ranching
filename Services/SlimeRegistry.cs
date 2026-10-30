@@ -1391,9 +1391,9 @@ internal sealed class SlimeRegistry
         int assignedFoodLikes = 0;
         foreach (SlimeRecord record in data?.Slimes ?? Enumerable.Empty<SlimeRecord>())
         {
-            if (record is not null)
+            if (record?.Genome is { } genome)
             {
-                record.Genome.Size = NormalizeSize(record.Genome.Size);
+                genome.Size = NormalizeSize(genome.Size);
                 record.LastCompostFeedDay = Math.Clamp(record.LastCompostFeedDay, -1, Math.Max(0, record.AgeLastUpdatedDay));
             }
             bool alreadyLikedFood = FoodLikeCatalog.IsEligible(record?.Genome?.LikedFoodItemId);
@@ -1454,7 +1454,7 @@ internal sealed class SlimeRegistry
 
         foreach (IncubationRecord incubation in data?.Incubations ?? Enumerable.Empty<IncubationRecord>())
         {
-            if (incubation is null)
+            if (incubation is null || string.IsNullOrWhiteSpace(incubation.EggItemId))
             {
                 this.monitor.Log("Skipped a malformed Domesticated Slime incubation record.", LogLevel.Warn);
                 continue;
