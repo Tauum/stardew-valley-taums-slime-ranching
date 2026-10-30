@@ -157,6 +157,8 @@ internal static class BuildingContent
             int removed = RemoveFarmhouseOnlyFixtures(house);
             if (removed > 0)
                 monitor.Log($"Removed farmhouse kitchen appliances, fireplace, hay, vanilla incubator, and cellar casks from the Slime Daycare ({removed} saved items or map tiles).", LogLevel.Info);
+
+            DaycareFeedingService.EnsureConfigured(house, monitor);
         }
     }
 

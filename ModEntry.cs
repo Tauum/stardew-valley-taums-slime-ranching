@@ -932,9 +932,10 @@ public sealed class ModEntry : Mod
         if (!this.stateReady || !Context.IsMainPlayer)
             return;
 
-        if (e.IsMultipleOf(60) && this.DiscardBreederPairsForMissingMachines())
+        if (e.IsMultipleOf(60))
         {
-            if (!this.SaveCurrentSaveDataNow())
+            DaycareFeedingService.EnsureConfiguredForFarm(Game1.getFarm(), this.Monitor);
+            if (this.DiscardBreederPairsForMissingMachines() && !this.SaveCurrentSaveDataNow())
                 this.Monitor.Log("Removed breeder cycles remain cleared in memory, but save data could not be written yet.", LogLevel.Error);
         }
 
@@ -1562,6 +1563,18 @@ public sealed class ModEntry : Mod
 
     private void OnButtonPressed(object? sender, ButtonPressedEventArgs e)
     {
+        if (Context.IsWorldReady && Game1.activeClickableMenu is null && e.Button.IsActionButton()
+            && Game1.currentLocation is AnimalHouse feedingDaycare
+            && BuildingContent.IsSlimeDaycare(feedingDaycare.ParentBuilding?.buildingType.Value)
+            && Game1.player.CurrentItem is StardewValley.Object heldItem
+            && heldItem.bigCraftable.Value
+            && DaycareFeedingService.IsFeedingTroughTile(feedingDaycare, (int)e.Cursor.GrabTile.X, (int)e.Cursor.GrabTile.Y))
+        {
+            this.Helper.Input.Suppress(e.Button);
+            Game1.showRedMessage("This fixed Feeding Trough tile is reserved for Hay.");
+            return;
+        }
+
         if (Context.IsWorldReady && Game1.activeClickableMenu is null && e.Button.IsActionButton()
             && Game1.currentLocation.Objects.TryGetValue(e.Cursor.GrabTile, out StardewValley.Object? legacyFurniture)
             && (legacyFurniture.QualifiedItemId == FurnitureContent.CompostTroughQualifiedId
@@ -3208,6 +3221,12 @@ public sealed class ModEntry : Mod
             return;
         }
 
+        if (DaycareFeedingService.IsFeedingTroughTile(daycare, tileX, tileY))
+        {
+            this.Monitor.Log("That tile belongs to the fixed Daycare Feeding Trough and cannot be assigned to furniture.", LogLevel.Warn);
+            return;
+        }
+
         Vector2 slotTile = new(tileX, tileY);
         if (!daycare.isTilePassable(slotTile))
         {
@@ -3596,6 +3615,14 @@ public sealed class ModEntry : Mod
             if (isDaycare)
             {
                 this.Monitor.Log($"Daycare living residents: {animalHouse.animalsThatLiveHere.Count}/{animalHouse.animalLimit.Value} capacity.", LogLevel.Info);
+                bool nativeAutoFeed = animalHouse.HasMapPropertyWithValue("AutoFeed");
+                IReadOnlyList<Point> feedingTiles = DaycareFeedingService.GetConfiguredSlots(animalHouse);
+                int hayAtTrough = DaycareFeedingService.GetHayCountOnTroughs(animalHouse);
+                string feedingTileCoordinates = feedingTiles.Count == 0
+                    ? "none"
+                    : string.Join("; ", feedingTiles.Select(tile => $"{tile.X},{tile.Y}"));
+                this.Monitor.Log($"Daycare feeding prototype: native hay auto-feed {(nativeAutoFeed ? "enabled" : "not enabled")}; {feedingTiles.Count}/{animalHouse.animalLimit.Value} trough tile(s); {hayAtTrough} hay ration(s) currently placed.", LogLevel.Info);
+                this.Monitor.Log($"Daycare Feeding Trough tile coordinates (x,y): {feedingTileCoordinates}.", LogLevel.Info);
                 string buildingId = animalHouse.ParentBuilding?.id.Value.ToString("N") ?? string.Empty;
                 IReadOnlyList<DaycareFurnitureSlotRecord> furnitureSlots = loadedRegistry.GetFurnitureSlots(buildingId);
                 int tier = BuildingContent.GetUpgradeTier(animalHouse.ParentBuilding?.buildingType.Value);
