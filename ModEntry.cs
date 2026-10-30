@@ -88,6 +88,7 @@ public sealed class ModEntry : Mod
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_duplicate_inventory_egg", "Deliberately duplicate one unused inventory egg ID for hatch-once testing on a disposable save. Usage: slime_ranching_duplicate_inventory_egg.", this.OnDuplicateInventoryEggCommand);
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_mutagenic_pool", "Give one Mutagenic Pool for testing. Usage: slime_ranching_give_mutagenic_pool.", this.OnGiveMutagenicPoolCommand);
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_slime_printer", "Give one Slime Printer for testing. Usage: slime_ranching_give_slime_printer.", this.OnGiveSlimePrinterCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_research_lab", "Give one Research Lab fixture for testing. Place it directly beside an incubator. Usage: slime_ranching_give_research_lab.", this.OnGiveResearchLabCommand);
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_tunnel", "Give one Slime Tunnel for testing. Usage: slime_ranching_give_tunnel.", this.OnGiveTunnelCommand);
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_heated_stone", "Give one Heated Slime Stone for testing. Usage: slime_ranching_give_heated_stone.", this.OnGiveHeatedStoneCommand);
         this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_pond", "Give one Slime Pond for testing. Usage: slime_ranching_give_pond.", this.OnGivePondCommand);
@@ -1537,12 +1538,10 @@ public sealed class ModEntry : Mod
 
     private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
     {
+        MachineArtContent.LoadAssets(e);
         RanchingItemContent.LoadAssets(e);
-        if (e.NameWithoutLocale.IsEquivalentTo("Mods/Taum.SlimeRanching/Machines/SlimeIncubator"))
-            e.LoadFromModFile<Texture2D>("assets/Machines/SlimeIncubator.png", AssetLoadPriority.Medium);
-        else if (e.NameWithoutLocale.IsEquivalentTo("Mods/Taum.SlimeRanching/Machines/SlimeBreeder"))
-            e.LoadFromModFile<Texture2D>("assets/Machines/SlimeBreeder.png", AssetLoadPriority.Medium);
         RanchingItemContent.EditAsset(e);
+        ResearchLabContent.EditAsset(e);
         ChromaticCrystalContent.EditAsset(e);
         ShopContent.EditAsset(e, this.config);
         FurnitureRecipeContent.EditAsset(e);
@@ -1553,9 +1552,7 @@ public sealed class ModEntry : Mod
         FarmAnimalContent.EditAsset(e);
         FurnitureContent.LoadAssets(e);
         FurnitureContent.EditAsset(e);
-        SlimePrinterContent.LoadAssets(e);
         SlimePrinterContent.EditAsset(e);
-        MutagenicPoolContent.LoadAssets(e);
         MutagenicPoolContent.EditAsset(e);
         SlimeDaycareQuestContent.EditAsset(e);
         BuildingContent.EditAsset(e);
@@ -1586,8 +1583,10 @@ public sealed class ModEntry : Mod
         }
 
         if (Context.IsWorldReady && Game1.activeClickableMenu is null && e.Button.IsActionButton()
-            && Game1.currentLocation.Objects.TryGetValue(e.Cursor.GrabTile, out StardewValley.Object? cryoLabObject)
-            && cryoLabObject is Chest cryoLab && EggCryoLabContent.IsEggCryoLab(cryoLab))
+            && MachineArtContent.TryGetMachineAt(Game1.currentLocation, e.Cursor.GrabTile,
+                obj => obj is Chest chest && EggCryoLabContent.IsEggCryoLab(chest),
+                out StardewValley.Object cryoLabObject, out _)
+            && cryoLabObject is Chest cryoLab)
         {
             this.Helper.Input.Suppress(e.Button);
             if (!this.stateReady || !Context.IsMainPlayer || Context.IsMultiplayer || this.registry is null)
@@ -1619,61 +1618,32 @@ public sealed class ModEntry : Mod
             return;
 
         if (Context.IsWorldReady && Game1.activeClickableMenu is null && e.Button.IsActionButton()
-            && this.TryGetIncubatorAt(e.Cursor.GrabTile, out Vector2 incubatorAnchor))
+            && MachineArtContent.TryGetMachineAt(Game1.currentLocation, e.Cursor.GrabTile,
+                IncubatorPlacementGeometry.IsIncubator, out _, out Vector2 incubatorAnchor))
         {
-            if (!this.stateReady)
-            {
-                this.Monitor.Log("The external Domesticated Slime registry is unavailable; the incubator is disabled for this save.", LogLevel.Error);
-                return;
-            }
-
-            StardewValley.Buildings.Building? daycare = Game1.getFarm().buildings.FirstOrDefault(building =>
-                BuildingContent.IsSlimeDaycare(building.buildingType.Value)
-                && building.GetIndoors() == Game1.currentLocation);
-            if (daycare?.GetIndoors() is not StardewValley.AnimalHouse)
-            {
-                this.Monitor.Log("The Slime Incubator only works inside the Slime Daycare.", LogLevel.Warn);
-                return;
-            }
-
-            if (this.SynchronizeRareLabProgression(daycare) && !this.SaveCurrentSaveDataNow())
-                this.Monitor.Log("The incubator's Rare Lab progression changed in memory but could not yet be saved.", LogLevel.Error);
-
-            this.Helper.Input.Suppress(e.Button);
-            string key = $"{Game1.currentLocation.NameOrUniqueName}:{(int)incubatorAnchor.X},{(int)incubatorAnchor.Y}";
-            Game1.activeClickableMenu = new SlimeIncubatorMenu(this.registry!, key,
-                index => this.StartIncubation(key, index),
-                name =>
-                {
-                    IncubationRecord? record = this.registry!.GetIncubation(key);
-                    if (record?.HatchAnimalId is not long animalId)
-                        return false;
-                    FarmAnimal? animal = GetFarmAnimals().FirstOrDefault(candidate => candidate.myID.Value == animalId);
-                    if (animal is null)
-                        return false;
-
-                    string previousName = animal.Name;
-                    animal.Name = string.IsNullOrWhiteSpace(name) ? "Domesticated Slime" : name.Trim();
-                    if (!this.registry.CompleteIncubation(key))
-                    {
-                        animal.Name = previousName;
-                        return false;
-                    }
-                    if (this.SaveCurrentSaveDataNow())
-                        return true;
-                    this.registry.RestoreIncubation(record);
-                    animal.Name = previousName;
-                    return false;
-                },
-                () => this.RequestIncubationCancellation(key),
-                this.ContributeRareLabSlime,
-                this.AddRareLabCatalyst,
-                IncubatorPlacementGeometry.Texture);
+            this.OpenIncubatorMenu(incubatorAnchor, e);
             return;
         }
 
         if (Context.IsWorldReady && Game1.activeClickableMenu is null && e.Button.IsActionButton()
-            && Game1.currentLocation.Objects.TryGetValue(e.Cursor.GrabTile, out StardewValley.Object? printer)
+            && MachineArtContent.TryGetMachineAt(Game1.currentLocation, e.Cursor.GrabTile,
+                ResearchLabContent.IsResearchLab, out _, out Vector2 researchLabAnchor))
+        {
+            this.Helper.Input.Suppress(e.Button);
+            if (!ResearchLabContent.TryGetAdjacentIncubator(Game1.currentLocation, researchLabAnchor,
+                    out Vector2 linkedIncubatorAnchor))
+            {
+                Game1.showRedMessage("Place the Research Lab directly beside exactly one Slime Incubator.");
+                return;
+            }
+
+            this.OpenIncubatorMenu(linkedIncubatorAnchor, e);
+            return;
+        }
+
+        if (Context.IsWorldReady && Game1.activeClickableMenu is null && e.Button.IsActionButton()
+            && MachineArtContent.TryGetMachineAt(Game1.currentLocation, e.Cursor.GrabTile,
+                SlimePrinterContent.IsSlimePrinter, out StardewValley.Object printer, out Vector2 printerAnchor)
             && SlimePrinterContent.IsSlimePrinter(printer))
         {
             if (!this.stateReady || !Context.IsMainPlayer || Context.IsMultiplayer)
@@ -1691,7 +1661,7 @@ public sealed class ModEntry : Mod
             }
 
             this.Helper.Input.Suppress(e.Button);
-            string machineKey = $"{Game1.currentLocation.NameOrUniqueName}:{(int)printer.TileLocation.X},{(int)printer.TileLocation.Y}";
+            string machineKey = $"{Game1.currentLocation.NameOrUniqueName}:{(int)printerAnchor.X},{(int)printerAnchor.Y}";
             Building activeDaycare = daycare;
             Game1.activeClickableMenu = new SlimePrinterMenu(this.registry!, machineKey, SlimePrinterRules.FromConfig(this.config),
                 () => BuildingContent.GetUpgradeTier(activeDaycare.buildingType.Value) >= 3,
@@ -1723,7 +1693,9 @@ public sealed class ModEntry : Mod
         }
 
         if (Context.IsWorldReady && Game1.activeClickableMenu is null && e.Button.IsActionButton()
-            && Game1.currentLocation.Objects.TryGetValue(e.Cursor.GrabTile, out StardewValley.Object? pool)
+            && MachineArtContent.TryGetMachineAt(Game1.currentLocation, e.Cursor.GrabTile,
+                obj => obj.QualifiedItemId == MutagenicPoolContent.QualifiedItemId,
+                out StardewValley.Object pool, out Vector2 poolAnchor)
             && pool.QualifiedItemId == MutagenicPoolContent.QualifiedItemId)
         {
             if (!this.stateReady || !Context.IsMainPlayer || Context.IsMultiplayer)
@@ -1747,7 +1719,7 @@ public sealed class ModEntry : Mod
                 return;
             }
 
-            string machineKey = $"{Game1.currentLocation.NameOrUniqueName}:{(int)pool.TileLocation.X},{(int)pool.TileLocation.Y}";
+            string machineKey = $"{Game1.currentLocation.NameOrUniqueName}:{(int)poolAnchor.X},{(int)poolAnchor.Y}";
             Game1.activeClickableMenu = new MutagenicPoolMenu(this.registry!, machineKey, MutagenicPoolRules.Instance,
                 this.ContributeMutagenicPoolSlime);
             return;
@@ -1763,24 +1735,56 @@ public sealed class ModEntry : Mod
         Game1.activeClickableMenu = new StardewValley.Menus.LetterViewerMenu(GuidebookContent.Text);
     }
 
-    private bool TryGetIncubatorAt(Vector2 clickedTile, out Vector2 anchor)
+    private void OpenIncubatorMenu(Vector2 incubatorAnchor, ButtonPressedEventArgs e)
     {
-        foreach (KeyValuePair<Vector2, StardewValley.Object> pair in Game1.currentLocation.Objects.Pairs)
+        if (!this.stateReady || this.registry is null)
         {
-            if (pair.Value.QualifiedItemId != RanchingItemContent.IncubatorQualifiedId)
-                continue;
-
-            bool insideMachine = clickedTile.X >= pair.Key.X && clickedTile.X < pair.Key.X + IncubatorPlacementGeometry.Width
-                && clickedTile.Y >= pair.Key.Y - 3 && clickedTile.Y < pair.Key.Y + 2;
-            if (!insideMachine)
-                continue;
-
-            anchor = pair.Key;
-            return true;
+            this.Monitor.Log("The external Domesticated Slime registry is unavailable; the incubator is disabled for this save.", LogLevel.Error);
+            return;
         }
 
-        anchor = Vector2.Zero;
-        return false;
+        Building? daycare = Game1.getFarm().buildings.FirstOrDefault(building =>
+            BuildingContent.IsSlimeDaycare(building.buildingType.Value)
+            && building.GetIndoors() == Game1.currentLocation);
+        if (daycare?.GetIndoors() is not AnimalHouse)
+        {
+            this.Monitor.Log("The Slime Incubator only works inside the Slime Daycare.", LogLevel.Warn);
+            return;
+        }
+
+        if (this.SynchronizeRareLabProgression(daycare) && !this.SaveCurrentSaveDataNow())
+            this.Monitor.Log("The incubator's Rare Lab progression changed in memory but could not yet be saved.", LogLevel.Error);
+
+        this.Helper.Input.Suppress(e.Button);
+        string key = $"{Game1.currentLocation.NameOrUniqueName}:{(int)incubatorAnchor.X},{(int)incubatorAnchor.Y}";
+        Game1.activeClickableMenu = new SlimeIncubatorMenu(this.registry, key,
+            index => this.StartIncubation(key, index),
+            name =>
+            {
+                IncubationRecord? record = this.registry.GetIncubation(key);
+                if (record?.HatchAnimalId is not long animalId)
+                    return false;
+                FarmAnimal? animal = GetFarmAnimals().FirstOrDefault(candidate => candidate.myID.Value == animalId);
+                if (animal is null)
+                    return false;
+
+                string previousName = animal.Name;
+                animal.Name = string.IsNullOrWhiteSpace(name) ? "Domesticated Slime" : name.Trim();
+                if (!this.registry.CompleteIncubation(key))
+                {
+                    animal.Name = previousName;
+                    return false;
+                }
+                if (this.SaveCurrentSaveDataNow())
+                    return true;
+                this.registry.RestoreIncubation(record);
+                animal.Name = previousName;
+                return false;
+            },
+            () => this.RequestIncubationCancellation(key),
+            this.ContributeRareLabSlime,
+            this.AddRareLabCatalyst,
+            IncubatorPlacementGeometry.Texture);
     }
 
     private bool SynchronizeEggCryoLabRecords()
@@ -1944,21 +1948,8 @@ public sealed class ModEntry : Mod
 
     private bool TryGetBreederAt(Vector2 clickedTile, out Vector2 anchor)
     {
-        foreach (KeyValuePair<Vector2, StardewValley.Object> pair in Game1.currentLocation.Objects.Pairs)
-        {
-            if (pair.Value.QualifiedItemId != RanchingItemContent.BreederQualifiedId)
-                continue;
-
-            if (clickedTile.X < pair.Key.X || clickedTile.X >= pair.Key.X + 5
-                || clickedTile.Y < pair.Key.Y - 2 || clickedTile.Y >= pair.Key.Y + 2)
-                continue;
-
-            anchor = pair.Key;
-            return true;
-        }
-
-        anchor = Vector2.Zero;
-        return false;
+        return MachineArtContent.TryGetMachineAt(Game1.currentLocation, clickedTile,
+            obj => obj.QualifiedItemId == RanchingItemContent.BreederQualifiedId, out _, out anchor);
     }
 
     private bool DiscardBreederPairsForMissingMachines(GameLocation? onlyLocation = null)
@@ -2864,6 +2855,31 @@ public sealed class ModEntry : Mod
         }
 
         this.Monitor.Log("Added one Slime Incubator. Place it inside the Slime Daycare and use it with a genome-specific Domesticated Slime Egg in your inventory.", LogLevel.Info);
+    }
+
+    private void OnGiveResearchLabCommand(string command, string[] args)
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
+        {
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before requesting a Research Lab.", LogLevel.Warn);
+            return;
+        }
+
+        string? saveName = Constants.SaveFolderName;
+        if (args.Length != 1 || args[0] != saveName)
+        {
+            this.Monitor.Log("To give a Research Lab to the currently loaded save, use: slime_ranching_give_research_lab", LogLevel.Warn);
+            return;
+        }
+
+        Item researchLab = ItemRegistry.Create(ResearchLabContent.QualifiedItemId);
+        if (!Game1.player.couldInventoryAcceptThisItem(researchLab) || !Game1.player.addItemToInventoryBool(researchLab))
+        {
+            this.Monitor.Log("Make room in your inventory for the Research Lab, then try again.", LogLevel.Warn);
+            return;
+        }
+
+        this.Monitor.Log("Added one Research Lab. Place it directly beside a Slime Incubator; clicking either machine opens that incubator's Rare Lab controls.", LogLevel.Info);
     }
 
     private void OnGiveCryoLabCommand(string command, string[] args)

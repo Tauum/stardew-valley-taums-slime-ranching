@@ -1,17 +1,17 @@
-using StardewModdingAPI.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.GameData.BigCraftables;
 
 namespace taums_slime_ranching.Services;
 
-/// <summary>Defines the Slime Breeder and Slime Incubator items.</summary>
+/// <summary>Defines the Slime Breeder and Slime Incubator items and the machine icon sheet.</summary>
 internal static class RanchingItemContent
 {
     private const string BreederItemId = "Taum.SlimeRanching_SlimeBreeder";
     private const string IncubatorItemId = "Taum.SlimeRanching_SlimeIncubator";
-    private const string IconTextureName = "Mods/Taum.SlimeRanching/Machines/ModMachineIcons";
+    public const string IconTextureName = "Mods/Taum.SlimeRanching/Machines/ModMachineIcons";
 
     public const string BreederQualifiedId = "(BC)" + BreederItemId;
     public const string IncubatorQualifiedId = "(BC)" + IncubatorItemId;
@@ -24,70 +24,57 @@ internal static class RanchingItemContent
 
     public static void EditAsset(AssetRequestedEventArgs e)
     {
-        if (e.NameWithoutLocale.IsEquivalentTo("Data/BigCraftables"))
-        {
-            e.Edit(asset =>
-            {
-                var craftables = asset.AsDictionary<string, BigCraftableData>().Data;
-                if (!craftables.ContainsKey(BreederItemId))
-                {
-                    craftables[BreederItemId] = new BigCraftableData
-                    {
-                        Name = "Slime Breeder",
-                        DisplayName = "Slime Breeder",
-                        Description = "Select two Domesticated Slimes for breeding.",
-                        CanBePlacedIndoors = true,
-                        CanBePlacedOutdoors = false,
-                        Texture = IconTextureName,
-                        SpriteIndex = 0
-                    };
-                }
+        if (!e.NameWithoutLocale.IsEquivalentTo("Data/BigCraftables"))
+            return;
 
-                if (!craftables.ContainsKey(IncubatorItemId))
-                {
-                    craftables[IncubatorItemId] = new BigCraftableData
-                    {
-                        Name = "Slime Incubator",
-                        DisplayName = "Slime Incubator",
-                        Description = "Hatches a genome-specific Domesticated Slime Egg inside the Slime Daycare.",
-                        CanBePlacedIndoors = true,
-                        CanBePlacedOutdoors = false,
-                        Texture = IconTextureName,
-                        SpriteIndex = 1
-                    };
-                }
+        e.Edit(asset =>
+        {
+            var craftables = asset.AsDictionary<string, BigCraftableData>().Data;
+            craftables.TryAdd(BreederItemId, new BigCraftableData
+            {
+                Name = "Slime Breeder",
+                DisplayName = "Slime Breeder",
+                Description = "Select two Domesticated Slimes for breeding.",
+                CanBePlacedIndoors = true,
+                CanBePlacedOutdoors = false,
+                Texture = IconTextureName,
+                SpriteIndex = 0
             });
-        }
+
+            craftables.TryAdd(IncubatorItemId, new BigCraftableData
+            {
+                Name = "Slime Incubator",
+                DisplayName = "Slime Incubator",
+                Description = "Hatches a genome-specific Domesticated Slime Egg inside the Slime Daycare.",
+                CanBePlacedIndoors = true,
+                CanBePlacedOutdoors = false,
+                Texture = IconTextureName,
+                SpriteIndex = 1
+            });
+        });
     }
 
     private static Texture2D CreateMachineIcons(GraphicsDevice graphicsDevice)
     {
         const int tileWidth = 16;
         const int tileHeight = 32;
-        const int columns = 2;
+        const int columns = 5;
         var pixels = new Color[tileWidth * columns * tileHeight];
         var texture = new Texture2D(graphicsDevice, tileWidth * columns, tileHeight);
+        string[] machineAssets =
+        {
+            MachineArtContent.BreederTextureName,
+            MachineArtContent.IncubatorTextureName,
+            MachineArtContent.ResearchLabTextureName,
+            MachineArtContent.MutagenicPoolTextureName,
+            MachineArtContent.SlimePrinterTextureName
+        };
 
-        Color outline = new(28, 25, 48);
-        Color steel = new(107, 113, 155);
-        Color highlight = new(178, 193, 225);
-        Color blue = new(45, 173, 230);
-        Color pink = new(237, 92, 187);
-        Color orange = new(248, 159, 65);
-        // Breeder: blue and pink chambers under a heart marker.
-        int breederX = 0;
-        DrawMachineBody(pixels, tileWidth * columns, breederX, outline, steel, highlight);
-        Fill(pixels, tileWidth * columns, breederX + 4, 12, 3, 8, blue);
-        Fill(pixels, tileWidth * columns, breederX + 9, 12, 3, 8, pink);
-        Fill(pixels, tileWidth * columns, breederX + 6, 7, 4, 3, pink);
-        Set(pixels, tileWidth * columns, breederX + 7, 6, pink);
-        Set(pixels, tileWidth * columns, breederX + 9, 6, pink);
-        Fill(pixels, tileWidth * columns, breederX + 6, 10, 4, 1, orange);
-
-        // Incubator: a single glowing violet egg chamber.
-        int incubatorX = tileWidth;
-        Texture2D incubatorArt = Game1.content.Load<Texture2D>("Mods/Taum.SlimeRanching/Machines/SlimeIncubator");
-        DrawMachineArtIcon(pixels, tileWidth * columns, incubatorX, incubatorArt);
+        for (int index = 0; index < machineAssets.Length; index++)
+        {
+            Texture2D machineArt = MachineArtContent.GetTexture(machineAssets[index]);
+            DrawMachineArtIcon(pixels, tileWidth * columns, index * tileWidth, machineArt);
+        }
 
         texture.SetData(pixels);
         return texture;
@@ -132,26 +119,4 @@ internal static class RanchingItemContent
                 sourcePixels[sourceY * source.Width + sourceX];
         }
     }
-
-    private static void DrawMachineBody(Color[] pixels, int sheetWidth, int offsetX, Color outline, Color steel, Color highlight)
-    {
-        Fill(pixels, sheetWidth, offsetX + 3, 9, 10, 17, outline);
-        Fill(pixels, sheetWidth, offsetX + 4, 10, 8, 14, steel);
-        Fill(pixels, sheetWidth, offsetX + 5, 11, 6, 1, highlight);
-        Fill(pixels, sheetWidth, offsetX + 2, 25, 12, 3, outline);
-        Fill(pixels, sheetWidth, offsetX + 4, 28, 8, 2, outline);
-        Fill(pixels, sheetWidth, offsetX + 5, 27, 6, 1, steel);
-        Set(pixels, sheetWidth, offsetX + 4, 30, steel);
-        Set(pixels, sheetWidth, offsetX + 11, 30, steel);
-    }
-
-    private static void Fill(Color[] pixels, int sheetWidth, int x, int y, int width, int height, Color color)
-    {
-        for (int dy = 0; dy < height; dy++)
-        for (int dx = 0; dx < width; dx++)
-            Set(pixels, sheetWidth, x + dx, y + dy, color);
-    }
-
-    private static void Set(Color[] pixels, int sheetWidth, int x, int y, Color color) =>
-        pixels[y * sheetWidth + x] = color;
 }

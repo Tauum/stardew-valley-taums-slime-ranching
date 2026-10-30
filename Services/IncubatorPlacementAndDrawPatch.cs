@@ -3,77 +3,21 @@ using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
-using StardewValley.Objects;
 using StardewValley.Tools;
 
 namespace taums_slime_ranching.Services;
 
-/// <summary>Gives the incubator a three-by-two placement area and depth-sorted custom art.</summary>
+/// <summary>Shares the approved two-by-three incubator dimensions with its menus and tool routing.</summary>
 internal static class IncubatorPlacementGeometry
 {
     public const int TileSize = 64;
-    public const int Width = 3;
-    public const int Height = 2;
-    private const int SpriteWidth = 3 * TileSize;
-    private const int SpriteHeight = 5 * TileSize;
-    private const int AnchorOffsetX = -(Width / 2);
-    private static Texture2D? texture;
-    private static Furniture? placementPreview;
+    public const int Width = 2;
+    public const int Height = 3;
 
-    public static Texture2D Texture => texture ??= Game1.content.Load<Texture2D>("Mods/Taum.SlimeRanching/Machines/SlimeIncubator");
+    public static Texture2D Texture => MachineArtContent.GetTexture(MachineArtContent.IncubatorTextureName);
 
-    public static Vector2 GetCenteredAnchor(int cursorX, int cursorY) =>
-        new((int)Math.Floor(cursorX / (double)TileSize) + AnchorOffsetX,
-            (int)Math.Floor(cursorY / (double)TileSize));
-
-    public static bool IsAreaClear(GameLocation location, Vector2 anchor)
-    {
-        for (int dy = 0; dy < Height; dy++)
-        for (int dx = 0; dx < Width; dx++)
-        {
-            Vector2 tile = anchor + new Vector2(dx, dy);
-            if (!location.isTilePlaceable(tile, true) || location.Objects.ContainsKey(tile)
-                || location.terrainFeatures.ContainsKey(tile))
-                return false;
-        }
-        return true;
-    }
-
-    public static void DrawPlacement(SpriteBatch batch, GameLocation location, Vector2 anchor)
-    {
-        // Nautical Rug is vanilla placeable furniture with a native 3x2 footprint.
-        // Use its normal placement preview, just as the breeder does.
-        placementPreview ??= ItemRegistry.Create<Furniture>("(F)NauticalRug");
-        placementPreview.TileLocation = anchor;
-        placementPreview.drawPlacementBounds(batch, location);
-    }
-
-    public static void DrawWorld(SpriteBatch batch, Vector2 anchor, float alpha)
-    {
-        // The art is three tiles wide and five tiles tall; its collision/placement area is 3x2.
-        Vector2 worldTopLeft = new(anchor.X * TileSize, (anchor.Y + Height) * TileSize - SpriteHeight);
-        Vector2 screenTopLeft = Game1.GlobalToLocal(Game1.viewport, worldTopLeft);
-        Rectangle destination = new((int)screenTopLeft.X, (int)screenTopLeft.Y, SpriteWidth, SpriteHeight);
-        float depth = Math.Clamp(((anchor.Y + Height) * TileSize - 8) / 10000f, 0f, 0.999f);
-        batch.Draw(Texture, destination, new Rectangle(0, 0, Texture.Width, Texture.Height), Color.White * alpha,
-            0f, Vector2.Zero, SpriteEffects.None, depth);
-    }
-
-    public static void DrawGhost(SpriteBatch batch, int x, int y, float alpha)
-    {
-        // x/y are Stardew's live mouse coordinates for the furniture preview. Center the
-        // 3x2 ghost on the same cursor tile as the Nautical Rug placement outline.
-        Vector2 anchor = GetCenteredAnchor(x, y);
-        Vector2 worldTopLeft = new(anchor.X * TileSize, (anchor.Y + Height) * TileSize - SpriteHeight);
-        Vector2 screenTopLeft = Game1.GlobalToLocal(Game1.viewport, worldTopLeft);
-        Rectangle destination = new((int)screenTopLeft.X, (int)screenTopLeft.Y, SpriteWidth, SpriteHeight);
-        float depth = Math.Clamp(((anchor.Y + Height) * TileSize - 8) / 10000f, 0f, 0.999f);
-        batch.Draw(Texture, destination, new Rectangle(0, 0, Texture.Width, Texture.Height), Color.White * alpha,
-            0f, Vector2.Zero, SpriteEffects.None, depth);
-    }
-
-    public static bool IsIncubator(StardewValley.Object obj) => obj.QualifiedItemId == RanchingItemContent.IncubatorQualifiedId;
-    public static bool IsPlacementPreview(Furniture furniture) => ReferenceEquals(furniture, placementPreview);
+    public static bool IsIncubator(StardewValley.Object obj) =>
+        obj.QualifiedItemId == RanchingItemContent.IncubatorQualifiedId;
 }
 
 [HarmonyPatch(typeof(StardewValley.Object), nameof(StardewValley.Object.drawPlacementBounds), new[] { typeof(SpriteBatch), typeof(GameLocation) })]
@@ -84,8 +28,7 @@ internal static class IncubatorPlacementBoundsPatch
         if (!IncubatorPlacementGeometry.IsIncubator(__instance))
             return true;
 
-        Vector2 anchor = __instance.TileLocation + new Vector2(-(IncubatorPlacementGeometry.Width / 2), 0);
-        IncubatorPlacementGeometry.DrawPlacement(spriteBatch, location, anchor);
+        MachineArtContent.DrawPlacementBounds(spriteBatch, location, __instance);
         return false;
     }
 }
@@ -98,15 +41,7 @@ internal static class IncubatorPlacementActionPatch
         if (!IncubatorPlacementGeometry.IsIncubator(__instance))
             return true;
 
-        Vector2 anchor = IncubatorPlacementGeometry.GetCenteredAnchor(x, y);
-        if (!IncubatorPlacementGeometry.IsAreaClear(location, anchor))
-        {
-            __result = false;
-            return false;
-        }
-
-        x += -(IncubatorPlacementGeometry.Width / 2) * IncubatorPlacementGeometry.TileSize;
-        return true;
+        return MachineArtContent.TryPlace(__instance, location, ref x, ref y, ref __result);
     }
 }
 
@@ -125,20 +60,8 @@ internal static class IncubatorDrawPatch
             return true;
 
         SpriteBatch batch = __args.OfType<SpriteBatch>().First();
-        IncubatorPlacementGeometry.DrawWorld(batch, __instance.TileLocation, 1f);
-        return false;
-    }
-}
-
-[HarmonyPatch(typeof(Furniture), nameof(Furniture.draw), new[] { typeof(SpriteBatch), typeof(int), typeof(int), typeof(float) })]
-internal static class IncubatorFurniturePlacementGhostPatch
-{
-    private static bool Prefix(Furniture __instance, SpriteBatch spriteBatch, int x, int y, float alpha)
-    {
-        if (!IncubatorPlacementGeometry.IsPlacementPreview(__instance))
-            return true;
-
-        IncubatorPlacementGeometry.DrawGhost(spriteBatch, x, y, alpha);
+        float alpha = __args.OfType<float>().DefaultIfEmpty(1f).First();
+        MachineArtContent.DrawWorld(batch, __instance, __instance.TileLocation, alpha);
         return false;
     }
 }

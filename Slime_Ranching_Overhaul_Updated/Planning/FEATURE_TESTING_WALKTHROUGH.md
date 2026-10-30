@@ -7,6 +7,19 @@ Status: **Paused** at Stage 6 on 2026-10-28 during the 2.0 design pivot. Resume 
 
 The separate 2.0 implementation sequence is tracked in `DEVELOPMENT_NOTES_2.0.md`. This build intentionally changes the animal type ID, egg IDs/tags, and quest field, so use a fresh save. For every `slime_ranching_*` command below, omit the save-folder argument; commands use the loaded save and warn without one. The older save-migration checks in this walkthrough are superseded by the reset. Feature 2 uses the vanilla FarmHouse maps; test each Daycare tier separately from the paused 1.x Stage 6 below.
 
+## 2.0 bulk-test check - machine artwork and placement footprints
+
+**Status:** The six supplied PNGs are bound to the machine world sprites and inventory icons. Placement previews, click areas, movement collision, and tool removal use the approved footprints. In-game appearance and behavior checks are pending.
+
+1. On a disposable single-player save, enter the Slime Daycare and grant one fixture at a time with `slime_ranching_give_breeder`, `slime_ranching_give_incubator`, `slime_ranching_give_research_lab`, `slime_ranching_give_mutagenic_pool`, `slime_ranching_give_cryolab`, and `slime_ranching_give_slime_printer`. The Research Lab command grants one physical fixture; the other commands retain their current tester behavior.
+2. Place each machine in an open area. Confirm the placement ghost matches its footprint and the sprite shows the supplied art, transparency, and correct machine: Breeder 4x2 tiles, Incubator 2x3, Research Lab 4x3, Mutagenic Pool 4x2, CryoLab 2x3, and Slime Printer 2x3. Also check each BigCraftable's inventory icon uses the corresponding artwork.
+3. Try to place another object across each machine's outer tiles. Confirm invalid previews are red, placement is blocked, and the player cannot walk through the full footprint. Check the tall 2x3 and 4x3 machines as well as the wide 4x2 ones.
+4. Click each machine from different tiles within its footprint. Confirm the Breeder, Incubator, Pool, Printer, and CryoLab open their existing interactions from any covered tile. CryoLab storage must still accept unused Domesticated Slime Eggs and reject ineligible items.
+5. Place the Research Lab edge-to-edge beside exactly one Incubator, then click the Lab from each of its footprint tiles. Confirm it opens that incubator's existing menu and displays the same per-incubator Rare Lab state. Move it away and confirm it reports that it needs to be directly beside exactly one incubator. If testing the final tier, pair each Research Lab with a different incubator and confirm the two Rare Lab records stay separate.
+6. Use an axe or pickaxe on a tile near the far edge of every machine footprint. Confirm one hit targets and removes the machine, then verify the full footprint can be used again. For CryoLab, record whether native Chest removal returns the stored contents and confirm no egg record is duplicated or lost.
+7. Save, return to title, and reload. Confirm every placed machine retains its art, anchor position, and interactions. Confirm CryoLab contents, incubator jobs, and each Rare Lab's chance state are unchanged.
+8. Record screenshots of any art scaling, transparency, depth sorting, placement outline, or hit-area issue. Leave acceptance pending until every fixture passes in-game; no build or in-game verification has been recorded for this implementation yet.
+
 ### Tester command save-selection check
 
 1. Load the disposable test save and run `slime_ranching_inspect` and `slime_ranching_quest_status` without a save-folder argument. Confirm both report the loaded save's state.

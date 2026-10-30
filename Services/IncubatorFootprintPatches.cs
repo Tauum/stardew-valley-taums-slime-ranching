@@ -10,8 +10,8 @@ namespace taums_slime_ranching.Services;
 internal static class IncubatorFootprintPatches
 {
     private const int TileSize = 64;
-    private const int MaximumFootprintWidth = 5;
-    private const int MaximumFootprintHeight = 2;
+    private const int MaximumFootprintWidth = 4;
+    private const int MaximumFootprintHeight = 3;
 
     private static IEnumerable<MethodBase> TargetMethods() => typeof(GameLocation)
         .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
@@ -38,27 +38,11 @@ internal static class IncubatorFootprintPatches
                 if (!__instance.Objects.TryGetValue(new Vector2(tileX, tileY), out StardewValley.Object? obj))
                     continue;
 
-                int footprintWidth = obj.QualifiedItemId switch
-                {
-                    RanchingItemContent.IncubatorQualifiedId or SlimePrinterContent.QualifiedItemId
-                        or MutagenicPoolContent.QualifiedItemId => 3,
-                    RanchingItemContent.BreederQualifiedId => 5,
-                    _ => 0
-                };
-                int footprintHeight = obj.QualifiedItemId switch
-                {
-                    RanchingItemContent.IncubatorQualifiedId or RanchingItemContent.BreederQualifiedId => 2,
-                    SlimePrinterContent.QualifiedItemId or MutagenicPoolContent.QualifiedItemId => 2,
-                    _ => 0
-                };
-                if (footprintWidth == 0)
+                if (!MachineArtContent.TryGetFootprint(obj, out MachineFootprint dimensions))
                     continue;
 
-                int footprintTopY = tileY + (obj.QualifiedItemId == RanchingItemContent.BreederQualifiedId
-                    ? BreederFootprintGeometry.FootprintOffsetY
-                    : 0);
-                Rectangle footprint = new(tileX * TileSize, footprintTopY * TileSize,
-                    footprintWidth * TileSize, footprintHeight * TileSize);
+                Rectangle footprint = new(tileX * TileSize, tileY * TileSize,
+                    dimensions.Width * TileSize, dimensions.Height * TileSize);
                 if (!position.Intersects(footprint))
                     continue;
 
