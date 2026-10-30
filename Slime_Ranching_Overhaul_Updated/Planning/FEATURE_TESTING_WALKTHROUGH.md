@@ -371,6 +371,7 @@ Use only a disposable copied save and a backup copy of `slime-registry-v1.json`.
 13. On a copied schema-24 fixture, keep one valid slime and incubation record, then add a slime record whose `Genome` is null and an incubation record whose `EggItemId` is null. Load it and confirm the valid records remain available, malformed records are reported as skipped, and no load crash occurs.
 14. On a separate schema-23 external registry fixture, set `SlimeDaycareQuest` to null. Confirm the import log reports source schema 23 and target schema 25, `slime_ranching_quest_status` reports empty progress, and the other valid registry records survive save/reload without duplication.
 15. On a schema-24 external registry fixture containing no `FurnitureSlots` field, import it and confirm schema 25 is written with an empty slot collection while all preexisting quest, incubator, and machine state survives reload.
+16. On a separate schema-23 external registry fixture, set `SlimeDaycareQuest.MaruRepairQuestAvailableOnDay` to `-1` and keep `robin_pool_prompt` in `CompletedMilestones`. Import it on a disposable save. Confirm `slime_ranching_quest_status` preserves the milestone and reports a corrected availability day of current day +1; the Maru repair mission should not be in the journal yet. Save and reload, then sleep one night and confirm the mission appears through its normal next-day gate. Other imported records should survive throughout.
 
 ## Walkthrough state
 

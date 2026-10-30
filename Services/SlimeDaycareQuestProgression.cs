@@ -51,7 +51,8 @@ internal static class SlimeDaycareQuestProgression
     public static SlimeDaycareQuestRecord Normalize(SlimeDaycareQuestRecord? record)
     {
         var normalized = new SlimeDaycareQuestRecord();
-        normalized.MaruRepairQuestAvailableOnDay = record?.MaruRepairQuestAvailableOnDay;
+        if (record?.MaruRepairQuestAvailableOnDay is int availableOnDay && availableOnDay >= 0)
+            normalized.MaruRepairQuestAvailableOnDay = availableOnDay;
         if (record?.CompletedMilestones is null)
             return normalized;
 
