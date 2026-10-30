@@ -44,7 +44,7 @@ Current furniture crafting materials are provisional balance values:
 | Washing Machine | 100 Wood, 10 Iron Bars, 20 vanilla Slime |
 
 The Washing Machine is decorative and has no washing behavior. The active refinery conversion is documented separately below.
-The Management Desk Slime Wiki builds its material list from the same recipe definitions used by Crafting, so the in-game reference follows ingredient balance changes automatically.
+The Management Desk Slime Wiki builds its material list from the same recipe definitions used by Crafting, so the in-game reference follows ingredient balance changes automatically. It also shows each recipe's current GMCM price by unlock tier.
 - Furniture activities are decorative and do not change happiness or breeding outcomes. Domesticated Slimes bounce on Trampolines, squish on Cushions, hop and glide on Slides, sway together on Seesaws, rest beside Heated Slime Stones, bob in Ponds, crawl through Tunnels, sway on Swings, gather by Lamps, dip in Ball Pits, and watch the Fairy Lights glow in the evening.
 - On a disposable save, `slime_ranching_give_washing_machine` grants one Slime Washing Machine for sprite and placement checks. It is a decorative item so far; it has no washing interaction or slime effect. The command automatically uses the loaded save and warns if no save is open.
 - The former Slime Playground, Slime Bed, and Compost Trough prototypes are no longer sold or active. Existing placed objects and inventory items are retained for save compatibility, but do not have interactions.

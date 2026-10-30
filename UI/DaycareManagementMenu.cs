@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using StardewValley;
 using StardewValley.Menus;
 using StardewValley.Objects;
+using taums_slime_ranching;
 using taums_slime_ranching.Models;
 using taums_slime_ranching.Services;
 
@@ -29,14 +30,13 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         ["Prospector"] = "May occasionally double ore from mining.",
         ["Healer"] = "May very slowly restore player health and energy."
     };
-    private static readonly IReadOnlyList<WikiEntry> WikiEntries = BuildWikiEntries();
-
     private readonly AnimalHouse daycare;
     private readonly SlimeRegistry registry;
     private readonly int buildingTier;
     private readonly Func<long, string?> getActiveActivitySummary;
     private readonly List<FarmAnimal> residents;
     private readonly string furnitureInventorySummary;
+    private readonly IReadOnlyList<WikiEntry> wikiEntries;
     private Rectangle registryRows;
     private Rectangle registryDetails;
     private Rectangle wikiRows;
@@ -55,7 +55,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
     private float wikiDetailMaxScroll;
 
     public DaycareManagementMenu(AnimalHouse daycare, SlimeRegistry registry, int buildingTier,
-        Func<long, string?> getActiveActivitySummary)
+        Func<long, string?> getActiveActivitySummary, ModConfig config)
         : base(Game1.uiViewport.Width / 2 - 540, Game1.uiViewport.Height / 2 - 330, 1080, 660)
     {
         this.daycare = daycare;
@@ -63,6 +63,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         this.buildingTier = Math.Clamp(buildingTier, 0, 3);
         this.getActiveActivitySummary = getActiveActivitySummary;
         this.furnitureInventorySummary = GetFurnitureInventorySummary();
+        this.wikiEntries = BuildWikiEntries(config);
         this.residents = daycare.animals.Values
             .Where(animal => animal.type.Value == FarmAnimalContent.DomesticatedSlimeTypeId)
             .OrderBy(animal => animal.Name, StringComparer.OrdinalIgnoreCase)
@@ -807,9 +808,9 @@ internal sealed class DaycareManagementMenu : IClickableMenu
     }
 
     private List<WikiEntry> GetVisibleWikiEntries() =>
-        WikiEntries.Where(entry => entry.Category == this.activeWikiCategory).ToList();
+        this.wikiEntries.Where(entry => entry.Category == this.activeWikiCategory).ToList();
 
-    private static List<WikiEntry> BuildWikiEntries()
+    private static List<WikiEntry> BuildWikiEntries(ModConfig config)
     {
         var entries = new List<WikiEntry>();
         foreach (string species in BaseSpecies)
@@ -846,9 +847,9 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         entries.Add(new WikiEntry("RULES", "Furniture slot progression",
             "The Daycare furniture catalog defines three fixed slots at the basic tier, seven at tiers 1 and 2, and fifteen at the final tier. EMPTY means no furniture assignment is saved for a slot. For an assigned slot, the Progression preview shows its live tile state: MISSING means no object is at the saved tile, MISMATCH means a different object is there, MATCH means the assigned furniture is placed, and PROTECTED means the matching item has native tool protection. A mismatch row names the expected and installed furniture. The preview separately lists furniture carried in your backpack; it does not count chests or installed objects. Fixed room positions and editing are still in development.", Array.Empty<string>()));
         entries.Add(new WikiEntry("RULES", "Daycare upgrade schedule",
-            "Robin builds and upgrades one Slime Daycare per save. Basic construction costs 10,000g, 350 Wood, 150 Stone, and 50 vanilla Slime; capacity is 10, with one 18-day Breeder cycle and one 7-day Incubator. Upgrade 1 costs 10,000g and 450 Wood, raises capacity to 20, changes the main map to FarmHouse1, unlocks Daycare renovations and the Egg CryoLab, and gives each Incubator a 1% Rare Lab. Upgrade 2 costs 65,000g and 100 Hardwood; capacity remains 20, it uses FarmHouse2, and no additional machine unlock is currently specified. Upgrade 3 costs 100,000g, raises capacity to 30, and adds a second Breeder and Incubator, 5% Rare Labs, the Gel Refinery, and a cellar. Furniture slot progression is three slots at basic tier, seven at upgrades 1 and 2, and fifteen at the final tier. Marnie's furniture recipe groups unlock after construction at 2,000g each, after upgrade 1 at 5,000g each, and at the final tier at 10,000g each; see the furniture recipes entry for the item list. The basic map is FarmHouse; tiers 2 and 3 use FarmHouse2. After construction, Robin can point the player to Maru about the broken Mutagenic Pool; that repair mission appears the next morning and does not require a building upgrade.", Array.Empty<string>()));
+            "Robin builds and upgrades one Slime Daycare per save. Basic construction costs 10,000g, 350 Wood, 150 Stone, and 50 vanilla Slime; capacity is 10, with one 18-day Breeder cycle and one 7-day Incubator. Upgrade 1 costs 10,000g and 450 Wood, raises capacity to 20, changes the main map to FarmHouse1, unlocks Daycare renovations and the Egg CryoLab, and gives each Incubator a 1% Rare Lab. Upgrade 2 costs 65,000g and 100 Hardwood; capacity remains 20, it uses FarmHouse2, and no additional machine unlock is currently specified. Upgrade 3 costs 100,000g, raises capacity to 30, and adds a second Breeder and Incubator, 5% Rare Labs, the Gel Refinery, and a cellar. Furniture slot progression is three slots at basic tier, seven at upgrades 1 and 2, and fifteen at the final tier. Marnie's recipe unlock tiers follow Daycare construction, the first building upgrade, and the final tier; see the furniture recipes entry for each item's current price. The basic map is FarmHouse; tiers 2 and 3 use FarmHouse2. After construction, Robin can point the player to Maru about the broken Mutagenic Pool; that repair mission appears the next morning and does not require a building upgrade.", Array.Empty<string>()));
         entries.Add(new WikiEntry("RULES", "Marnie's furniture recipes",
-            "Marnie sells reusable learned recipes, not physical furniture. Trampoline, Cushion, Slide, Seesaw, and Heated Slime Stone recipes cost 2,000g after construction; Pond, Tunnel, Swing, and Lamp cost 5,000g from the first upgrade; Fairy Lights, Ball Pit, and Washing Machine cost 10,000g at the final tier. Current provisional crafting materials (balance pending): " + FurnitureRecipeContent.GetIngredientSummary() + ". Learning a recipe does not give the furniture item. The Washing Machine is decorative for now and has no washing behavior.", Array.Empty<string>()));
+            "Marnie sells reusable learned recipes, not physical furniture. Current recipe prices are listed by unlock tier and item below; GMCM can change each item independently. " + GetFurnitureRecipePriceSummary(config) + ". Current provisional crafting materials (balance pending): " + FurnitureRecipeContent.GetIngredientSummary() + ". Learning a recipe does not give the furniture item. The Washing Machine is decorative for now and has no washing behavior.", Array.Empty<string>()));
         entries.Add(new WikiEntry("RULES", "Gel Refinery",
             "At the final Daycare tier, the current prototype converts 1 Broken Glasses and the configured vanilla Slime fuel into 1 Refined Quartz after the configured number of in-game days. New batches require at least 10 Slime to prevent direct sale-value profit. Inputs are consumed when a batch starts; each refinery runs one batch at a time, and finished output stays reserved until collected. Fuel and time settings apply only to new batches. Other conversion recipes are not active.", Array.Empty<string>()));
         entries.Add(new WikiEntry("RULES", "Fairy Lights",
@@ -859,6 +860,24 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             "A Domesticated Slime reaches maturity seven in-game days after hatching. This growth period is separate from the Incubator's seven-day timer, and visual size is a separate trait from age.", Array.Empty<string>()));
         return entries;
     }
+
+    private static string GetFurnitureRecipePriceSummary(ModConfig config) =>
+        string.Join("; ", FurnitureSlotCatalog.GetRecipeListings()
+            .GroupBy(listing => listing.RequiredBuildingTier)
+            .OrderBy(group => group.Key)
+            .Select(group =>
+            {
+                string unlock = group.Key switch
+                {
+                    0 => "After Daycare construction",
+                    1 => "After the first building upgrade",
+                    3 => "At the final building tier",
+                    _ => $"At building tier {group.Key}"
+                };
+                string prices = string.Join(", ", group.Select(listing =>
+                    $"{listing.DisplayName} {Math.Max(0, listing.GetPrice(config)):N0}g"));
+                return $"{unlock}: {prices}";
+            }));
 
     private static void DrawPanel(SpriteBatch b, Rectangle rect, Color fill, Color border)
     {

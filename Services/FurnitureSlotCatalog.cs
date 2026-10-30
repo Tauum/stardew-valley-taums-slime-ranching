@@ -4,6 +4,7 @@ internal sealed record DaycareFurnitureSlotDefinition(string SlotId, int Require
 
 internal sealed record DaycareFurnitureRecipeListing(
     string ShopItemName,
+    string DisplayName,
     string QualifiedItemId,
     int RequiredBuildingTier,
     Func<ModConfig, int> GetPrice);
@@ -20,18 +21,18 @@ internal static class FurnitureSlotCatalog
 
     private static readonly IReadOnlyList<DaycareFurnitureRecipeListing> Recipes = Array.AsReadOnly(new[]
     {
-        new DaycareFurnitureRecipeListing("Trampoline", FurnitureContent.TrampolineQualifiedId, 0, config => config.TrampolineRecipePrice),
-        new DaycareFurnitureRecipeListing("SlimeCushion", FurnitureContent.SlimeCushionQualifiedId, 0, config => config.SlimeCushionRecipePrice),
-        new DaycareFurnitureRecipeListing("SlimeSlide", FurnitureContent.SlimeSlideQualifiedId, 0, config => config.SlimeSlideRecipePrice),
-        new DaycareFurnitureRecipeListing("SlimeSeesaw", FurnitureContent.SlimeSeesawQualifiedId, 0, config => config.SlimeSeesawRecipePrice),
-        new DaycareFurnitureRecipeListing("HeatedSlimeStone", FurnitureContent.HeatedSlimeStoneQualifiedId, 0, config => config.HeatedSlimeStoneRecipePrice),
-        new DaycareFurnitureRecipeListing("SlimeTunnel", FurnitureContent.SlimeTunnelQualifiedId, 1, config => config.SlimeTunnelRecipePrice),
-        new DaycareFurnitureRecipeListing("SlimePond", FurnitureContent.SlimePondQualifiedId, 1, config => config.SlimePondRecipePrice),
-        new DaycareFurnitureRecipeListing("SlimeSwing", FurnitureContent.SlimeSwingQualifiedId, 1, config => config.SlimeSwingRecipePrice),
-        new DaycareFurnitureRecipeListing("SlimeLamp", FurnitureContent.SlimeLampQualifiedId, 1, config => config.SlimeLampRecipePrice),
-        new DaycareFurnitureRecipeListing("SlimeFairyLights", FurnitureContent.SlimeFairyLightsQualifiedId, 3, config => config.SlimeFairyLightsRecipePrice),
-        new DaycareFurnitureRecipeListing("SlimeBallPit", FurnitureContent.SlimeBallPitQualifiedId, 3, config => config.SlimeBallPitRecipePrice),
-        new DaycareFurnitureRecipeListing("SlimeWashingMachine", FurnitureContent.SlimeWashingMachineQualifiedId, 3, config => config.SlimeWashingMachineRecipePrice)
+        new DaycareFurnitureRecipeListing("Trampoline", "Slime Trampoline", FurnitureContent.TrampolineQualifiedId, 0, config => config.TrampolineRecipePrice),
+        new DaycareFurnitureRecipeListing("SlimeCushion", "Slime Cushion", FurnitureContent.SlimeCushionQualifiedId, 0, config => config.SlimeCushionRecipePrice),
+        new DaycareFurnitureRecipeListing("SlimeSlide", "Slime Slide", FurnitureContent.SlimeSlideQualifiedId, 0, config => config.SlimeSlideRecipePrice),
+        new DaycareFurnitureRecipeListing("SlimeSeesaw", "Slime Seesaw", FurnitureContent.SlimeSeesawQualifiedId, 0, config => config.SlimeSeesawRecipePrice),
+        new DaycareFurnitureRecipeListing("HeatedSlimeStone", "Heated Slime Stone", FurnitureContent.HeatedSlimeStoneQualifiedId, 0, config => config.HeatedSlimeStoneRecipePrice),
+        new DaycareFurnitureRecipeListing("SlimeTunnel", "Slime Tunnel", FurnitureContent.SlimeTunnelQualifiedId, 1, config => config.SlimeTunnelRecipePrice),
+        new DaycareFurnitureRecipeListing("SlimePond", "Slime Pond", FurnitureContent.SlimePondQualifiedId, 1, config => config.SlimePondRecipePrice),
+        new DaycareFurnitureRecipeListing("SlimeSwing", "Slime Swing", FurnitureContent.SlimeSwingQualifiedId, 1, config => config.SlimeSwingRecipePrice),
+        new DaycareFurnitureRecipeListing("SlimeLamp", "Slime Lamp", FurnitureContent.SlimeLampQualifiedId, 1, config => config.SlimeLampRecipePrice),
+        new DaycareFurnitureRecipeListing("SlimeFairyLights", "Slime Fairy Lights", FurnitureContent.SlimeFairyLightsQualifiedId, 3, config => config.SlimeFairyLightsRecipePrice),
+        new DaycareFurnitureRecipeListing("SlimeBallPit", "Slime Ball Pit", FurnitureContent.SlimeBallPitQualifiedId, 3, config => config.SlimeBallPitRecipePrice),
+        new DaycareFurnitureRecipeListing("SlimeWashingMachine", "Slime Washing Machine", FurnitureContent.SlimeWashingMachineQualifiedId, 3, config => config.SlimeWashingMachineRecipePrice)
     });
     private static readonly IReadOnlyDictionary<string, DaycareFurnitureRecipeListing> RecipesByItemId =
         Recipes.ToDictionary(recipe => recipe.QualifiedItemId, StringComparer.Ordinal);

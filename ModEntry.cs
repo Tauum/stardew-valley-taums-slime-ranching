@@ -2762,7 +2762,7 @@ public sealed class ModEntry : Mod
 
         int tier = BuildingContent.GetUpgradeTier(daycare.ParentBuilding?.buildingType.Value);
         Game1.activeClickableMenu = new DaycareManagementMenu(daycare, currentRegistry, tier,
-            this.trampolineInteractions.GetActiveActivitySummary);
+            this.trampolineInteractions.GetActiveActivitySummary, this.config);
         this.Monitor.Log("Opened the read-only Daycare Management Desk tester preview.", LogLevel.Info);
     }
 
