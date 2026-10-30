@@ -1524,16 +1524,15 @@ internal sealed class SlimeRegistry
 
         foreach (SlimeEggRecord egg in data?.Eggs ?? Enumerable.Empty<SlimeEggRecord>())
         {
-            if (egg?.Genome is not null)
-                egg.Genome.Size = NormalizeSize(egg.Genome.Size);
-            if (egg?.Genome is not { Id: var id } || id == Guid.Empty)
+            if (egg?.Genome is not { } genome || genome.Id == Guid.Empty || string.IsNullOrWhiteSpace(genome.PrimarySpecies))
             {
                 this.monitor.Log("Skipped a malformed or duplicate external slime egg record.", LogLevel.Warn);
                 continue;
             }
 
-            egg.EggId = id.ToString("N");
-            egg.ItemId = SlimeEggContent.GetItemId(egg.Genome);
+            genome.Size = NormalizeSize(genome.Size);
+            egg.EggId = genome.Id.ToString("N");
+            egg.ItemId = SlimeEggContent.GetItemId(genome);
             if (egg.HatchedAnimalId is not null)
                 this.hatchedEggIds.Add(egg.EggId);
             if (!this.eggs.TryAdd(egg.EggId, egg))
@@ -1549,19 +1548,31 @@ internal sealed class SlimeRegistry
             }
 
             incubation.EggItemId = NormalizeEggToken(incubation.EggItemId);
-            if (incubation.EggGenome is null && this.eggs.TryGetValue(incubation.EggItemId, out SlimeEggRecord? migratedEgg))
-                incubation.EggGenome = migratedEgg.Genome;
-            if (incubation.EggGenome is not null && !this.eggs.ContainsKey(incubation.EggItemId))
+            if (this.eggs.TryGetValue(incubation.EggItemId, out SlimeEggRecord? migratedEgg))
             {
-                var heldEgg = new SlimeEggRecord
+                if (incubation.EggGenome is { } savedGenome && savedGenome.Id != migratedEgg.Genome.Id)
+                    this.monitor.Log($"Reconciled incubator egg {incubation.EggItemId} to its matching saved egg record; the embedded genome ID did not match.", LogLevel.Warn);
+                incubation.EggGenome = migratedEgg.Genome;
+            }
+            else if (incubation.EggGenome is { } snapshot
+                && Guid.TryParseExact(incubation.EggItemId, "N", out Guid eggId)
+                && snapshot.Id == eggId && !string.IsNullOrWhiteSpace(snapshot.PrimarySpecies))
+            {
+                snapshot.Size = NormalizeSize(snapshot.Size);
+                this.eggs[incubation.EggItemId] = new SlimeEggRecord
                 {
                     EggId = incubation.EggItemId,
-                    ItemId = SlimeEggContent.GetItemId(incubation.EggGenome),
-                    Genome = incubation.EggGenome,
+                    ItemId = SlimeEggContent.GetItemId(snapshot),
+                    Genome = snapshot,
                     HatchedAnimalId = incubation.HatchAnimalId
                 };
-                this.eggs[heldEgg.EggId] = heldEgg;
             }
+            else
+            {
+                this.monitor.Log("Skipped a malformed Domesticated Slime incubation record whose genome did not match its egg ID.", LogLevel.Warn);
+                continue;
+            }
+
             if (this.eggs.TryGetValue(incubation.EggItemId, out SlimeEggRecord? heldRecord))
                 heldRecord.HatchedAnimalId = incubation.HatchAnimalId;
             if (string.IsNullOrWhiteSpace(incubation.MachineKey)
