@@ -1460,11 +1460,6 @@ internal sealed class SlimeRegistry
             if (Guid.TryParseExact(normalizedEggId, "N", out _))
                 this.destroyedEggIds.Add(normalizedEggId);
         }
-        foreach (string eggId in this.hatchedEggIds.Intersect(this.destroyedEggIds).ToArray())
-        {
-            this.destroyedEggIds.Remove(eggId);
-            this.monitor.Log($"Resolved conflicting terminal state for egg ID {eggId} as hatched; cleared its destroyed marker.", LogLevel.Warn);
-        }
         foreach (IncubationRecord record in data?.PendingIncubationCancellations ?? Enumerable.Empty<IncubationRecord>())
         {
             if (record is null || string.IsNullOrWhiteSpace(record.EggItemId) || string.IsNullOrWhiteSpace(record.MachineKey))
@@ -1559,6 +1554,13 @@ internal sealed class SlimeRegistry
                 this.hatchedEggIds.Add(egg.EggId);
             if (!this.eggs.TryAdd(egg.EggId, egg))
                 this.monitor.Log("Skipped a malformed or duplicate external slime egg record.", LogLevel.Warn);
+        }
+
+        foreach (string eggId in this.hatchedEggIds.Intersect(this.destroyedEggIds).ToArray())
+        {
+            this.destroyedEggIds.Remove(eggId);
+            this.pendingIncubationCancellations.Remove(eggId);
+            this.monitor.Log($"Resolved conflicting terminal state for egg ID {eggId} as hatched; cleared its destroyed marker and pending cancellation.", LogLevel.Warn);
         }
 
         var reservedHatchAnimalIds = new HashSet<long>();
