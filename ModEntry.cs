@@ -115,6 +115,18 @@ public sealed class ModEntry : Mod
                 return;
             }
 
+            if (Context.IsMultiplayer)
+            {
+                this.Monitor.Log($"Can't run '{command}' in multiplayer. Slime Daycare commands currently support single-player saves only.", LogLevel.Warn);
+                return;
+            }
+
+            if (!Context.IsMainPlayer)
+            {
+                this.Monitor.Log($"Can't run '{command}' because only the main player can run Slime Daycare commands.", LogLevel.Warn);
+                return;
+            }
+
             string? saveFolderName = Constants.SaveFolderName;
             if (string.IsNullOrWhiteSpace(saveFolderName))
             {
