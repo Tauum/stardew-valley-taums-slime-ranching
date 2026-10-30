@@ -161,18 +161,22 @@ internal sealed class GelRefineryMenu : IClickableMenu
                 buttonEnabled ? new Color(45, 176, 106) : new Color(74, 80, 117));
         }
 
-        int examplesX = this.xPositionOnScreen + 620;
-        DrawInset(b, new Rectangle(examplesX, top, 250, 282), new Color(238, 224, 190));
-        DrawInset(b, new Rectangle(examplesX + 6, top + 6, 238, 42), new Color(154, 93, 51));
-        b.DrawString(Game1.smallFont, "EXAMPLE USES", new Vector2(examplesX + 62, top + 17), Color.White);
-        DrawExample(b, examplesX + 18, top + 62, 400, "Strawberry", "Strawberry Jam");
-        DrawExample(b, examplesX + 18, top + 112, 176, "Egg", "Mayonnaise");
-        DrawExample(b, examplesX + 18, top + 162, 184, "Milk", "Cheese");
-        DrawExample(b, examplesX + 18, top + 212, 258, "Blueberry", "Blueberry Wine");
-        DrawInset(b, new Rectangle(examplesX, top + 294, 250, 84), new Color(238, 224, 190));
-        b.DrawString(Game1.smallFont, "NOTES", new Vector2(examplesX + 96, top + 302), Color.White);
-        b.DrawString(Game1.tinyFont, "Reference recipes are not active yet. The prototype uses existing items and Slime fuel.",
-            new Vector2(examplesX + 12, top + 330), Color.White);
+        int rulesX = this.xPositionOnScreen + 620;
+        DrawInset(b, new Rectangle(rulesX, top, 250, 282), new Color(238, 224, 190));
+        DrawInset(b, new Rectangle(rulesX + 6, top + 6, 238, 42), new Color(154, 93, 51));
+        b.DrawString(Game1.smallFont, "BATCH RULES", new Vector2(rulesX + 76, top + 17), Color.White);
+        b.DrawString(Game1.smallFont, "CURRENT RECIPE", new Vector2(rulesX + 18, top + 66), Color.White);
+        b.DrawString(Game1.tinyFont, "The recipe shown on the left is the", new Vector2(rulesX + 18, top + 96), Color.White);
+        b.DrawString(Game1.tinyFont, "only active conversion.", new Vector2(rulesX + 18, top + 116), Color.White);
+        b.DrawString(Game1.smallFont, "BATCH LIFECYCLE", new Vector2(rulesX + 18, top + 152), Color.White);
+        b.DrawString(Game1.tinyFont, "Inputs are consumed when a batch", new Vector2(rulesX + 18, top + 182), Color.White);
+        b.DrawString(Game1.tinyFont, "starts. One batch runs at a time.", new Vector2(rulesX + 18, top + 202), Color.White);
+        b.DrawString(Game1.tinyFont, "Finished output stays reserved here", new Vector2(rulesX + 18, top + 232), Color.White);
+        b.DrawString(Game1.tinyFont, "until you collect it.", new Vector2(rulesX + 18, top + 252), Color.White);
+        DrawInset(b, new Rectangle(rulesX, top + 294, 250, 84), new Color(238, 224, 190));
+        b.DrawString(Game1.smallFont, "CONFIGURATION", new Vector2(rulesX + 58, top + 302), Color.White);
+        b.DrawString(Game1.tinyFont, "New batches use the current GMCM fuel", new Vector2(rulesX + 12, top + 330), Color.White);
+        b.DrawString(Game1.tinyFont, "and processing-time settings.", new Vector2(rulesX + 12, top + 350), Color.White);
 
         DrawButton(b, this.recipesButton, "INPUT / OUTPUT GUIDE", new Color(55, 104, 180));
         if (!string.IsNullOrEmpty(this.statusMessage))
@@ -226,15 +230,6 @@ internal sealed class GelRefineryMenu : IClickableMenu
         b.Draw(Game1.objectSpriteSheet, target, source, Color.White);
     }
 
-    private static void DrawExample(SpriteBatch b, int x, int y, int itemIndex, string input, string output)
-    {
-        DrawObjectIcon(b, itemIndex, new Rectangle(x, y, 38, 38));
-        b.DrawString(Game1.tinyFont, input, new Vector2(x + 42, y + 10), Color.White);
-        b.DrawString(Game1.tinyFont, "→", new Vector2(x + 106, y + 10), Color.White);
-        b.DrawString(Game1.tinyFont, output, new Vector2(x + 130, y + 10), Color.White);
-    }
-
-
     private void DrawRecipesModal(SpriteBatch b)
     {
         Rectangle shade = new(this.xPositionOnScreen, this.yPositionOnScreen, this.width, this.height);
@@ -244,18 +239,19 @@ internal sealed class GelRefineryMenu : IClickableMenu
         int x = this.xPositionOnScreen + (this.width - width) / 2;
         int y = this.yPositionOnScreen + (this.height - height) / 2;
         DrawMachineFrame(b, new Rectangle(x, y, width, height));
-        b.DrawString(Game1.dialogueFont, "REFINERY INPUT / OUTPUT", new Vector2(x + 28, y + 22), Color.White);
+        b.DrawString(Game1.dialogueFont, "CURRENT REFINERY RECIPE", new Vector2(x + 28, y + 22), Color.White);
         b.DrawString(Game1.smallFont, this.canStartBatch() ? "PROTOTYPE RECIPE ENABLED" : "RECIPE UNLOCKS AT FINAL TIER",
             new Vector2(x + 32, y + 78), new Color(92, 220, 255));
         b.DrawString(Game1.smallFont, $"1 Broken Glasses + {this.rules.FuelCost} Slime fuel  →  1 Refined Quartz",
             new Vector2(x + 32, y + 108), Color.White);
-        b.DrawString(Game1.smallFont, "Design examples shown in the reference", new Vector2(x + 32, y + 158), Color.White);
-        b.DrawString(Game1.smallFont, "Strawberry → Strawberry Jam", new Vector2(x + 46, y + 190), Color.White);
-        b.DrawString(Game1.smallFont, "Egg → Mayonnaise", new Vector2(x + 46, y + 220), Color.White);
-        b.DrawString(Game1.smallFont, "Milk → Cheese", new Vector2(x + 46, y + 250), Color.White);
-        b.DrawString(Game1.smallFont, "Blueberry → Blueberry Wine", new Vector2(x + 46, y + 280), Color.White);
-        b.DrawString(Game1.tinyFont, "These four examples are reference-only; the prototype recipe is the only one enabled. Slime fuel amount is configurable.",
-            new Vector2(x + 32, y + 320), Color.White);
+        b.DrawString(Game1.smallFont, "BATCH RULES", new Vector2(x + 32, y + 158), Color.White);
+        b.DrawString(Game1.smallFont, "Inputs are consumed when you start.", new Vector2(x + 46, y + 190), Color.White);
+        b.DrawString(Game1.smallFont, "One batch runs per refinery.", new Vector2(x + 46, y + 220), Color.White);
+        b.DrawString(Game1.smallFont, "Finished output waits until collected.", new Vector2(x + 46, y + 250), Color.White);
+        b.DrawString(Game1.tinyFont, "Fuel and time settings apply to new batches.",
+            new Vector2(x + 32, y + 306), Color.White);
+        b.DrawString(Game1.tinyFont, "Other conversion recipes are not active.",
+            new Vector2(x + 32, y + 324), Color.White);
         b.DrawString(Game1.tinyFont, "Click anywhere to close", new Vector2(x + width - 174, y + height - 24), Color.White);
     }
 
