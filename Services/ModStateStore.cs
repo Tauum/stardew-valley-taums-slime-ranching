@@ -49,7 +49,7 @@ internal sealed class ModStateStore
         SlimeSaveData? saveData = this.data.ReadSaveData<SlimeSaveData>(SaveDataKey);
         if (saveData is not null)
         {
-            NormalizeCollections(saveData);
+            this.MigratedSaveData |= NormalizeCollections(saveData);
             this.LoadedSchemaVersion = saveData.SchemaVersion;
             if (saveData.SchemaVersion == 11)
             {
@@ -337,8 +337,23 @@ internal sealed class ModStateStore
         return data;
     }
 
-    private static void NormalizeCollections(SlimeSaveData data)
+    private static bool NormalizeCollections(SlimeSaveData data)
     {
+        bool changed = data.Slimes is null
+            || data.BreedingPairs is null
+            || data.Eggs is null
+            || data.Incubations is null
+            || data.MutagenicAttempts is null
+            || data.RefineryJobs is null
+            || data.HatchedEggIds is null
+            || data.DestroyedEggIds is null
+            || data.PendingIncubationCancellations is null
+            || data.PendingMutagenicContributions is null
+            || data.RareLabs is null
+            || data.PendingRareLabContributions is null
+            || data.PendingRareLabCatalystTransactions is null
+            || data.PendingRefineryTransactions is null
+            || data.SlimeDaycareQuest is null;
         data.Slimes ??= new List<SlimeRecord>();
         data.BreedingPairs ??= new List<BreedingPairRecord>();
         data.Eggs ??= new List<SlimeEggRecord>();
@@ -354,6 +369,7 @@ internal sealed class ModStateStore
         data.PendingRareLabCatalystTransactions ??= new List<RareLabCatalystTransactionRecord>();
         data.PendingRefineryTransactions ??= new List<RefineryTransactionRecord>();
         data.SlimeDaycareQuest ??= new SlimeDaycareQuestRecord();
+        return changed;
     }
 
     private static void NormalizeLegacyCollectionFields(JsonObject root)
