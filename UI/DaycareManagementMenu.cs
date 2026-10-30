@@ -593,7 +593,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         };
         string nextUpgradeUnlocks = this.buildingTier switch
         {
-            0 => "Unlocks renovations, Egg CryoLab, 1% Rare Lab, Maru Pool mission",
+            0 => "Unlocks renovations, Egg CryoLab, 1% Rare Lab",
             1 => "No new machine unlock is currently specified",
             2 => "Unlocks second Breeder/Incubator, 5% Rare Lab, Refinery, cellar",
             _ => "All planned upgrade features are unlocked"
@@ -845,6 +845,8 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             "The Breeder saves the offspring's non-rarity genome when its cycle completes. The Incubator's Rare Lab resolves rarity once at incubation completion and saves the result before hatching; reloading cannot reroll it. If the Daycare is full, a ready hatch waits safely for room.", Array.Empty<string>()));
         entries.Add(new WikiEntry("RULES", "Furniture slot progression",
             "The Daycare furniture catalog defines three fixed slots at the basic tier, seven at tiers 1 and 2, and fifteen at the final tier. EMPTY means no furniture assignment is saved for a slot. For an assigned slot, the Progression preview shows its live tile state: MISSING means no object is at the saved tile, MISMATCH means a different object is there, MATCH means the assigned furniture is placed, and PROTECTED means the matching item has native tool protection. A mismatch row names the expected and installed furniture. The preview separately lists furniture carried in your backpack; it does not count chests or installed objects. Fixed room positions and editing are still in development.", Array.Empty<string>()));
+        entries.Add(new WikiEntry("RULES", "Daycare upgrade schedule",
+            "Robin builds and upgrades one Slime Daycare per save. Basic construction costs 10,000g, 350 Wood, 150 Stone, and 50 vanilla Slime; capacity is 10, with one 18-day Breeder cycle and one 7-day Incubator. Upgrade 1 costs 10,000g and 450 Wood, raises capacity to 20, changes the main map to FarmHouse1, unlocks Daycare renovations and the Egg CryoLab, and gives each Incubator a 1% Rare Lab. Upgrade 2 costs 65,000g and 100 Hardwood; capacity remains 20, it uses FarmHouse2, and no additional machine unlock is currently specified. Upgrade 3 costs 100,000g, raises capacity to 30, and adds a second Breeder and Incubator, 5% Rare Labs, the Gel Refinery, and a cellar. The basic map is FarmHouse; tiers 2 and 3 use FarmHouse2. After construction, Robin can point the player to Maru about the broken Mutagenic Pool; that repair mission appears the next morning and does not require a building upgrade.", Array.Empty<string>()));
         entries.Add(new WikiEntry("RULES", "Marnie's furniture recipes",
             "Marnie sells reusable learned recipes, not physical furniture. Trampoline, Cushion, Slide, Seesaw, and Heated Slime Stone recipes cost 2,000g after construction; Pond, Tunnel, Swing, and Lamp cost 5,000g from the first upgrade; Fairy Lights, Ball Pit, and Washing Machine cost 10,000g at the final tier. The Washing Machine is decorative for now and has no washing behavior. Recipe ingredients remain provisional.", Array.Empty<string>()));
         entries.Add(new WikiEntry("RULES", "Gel Refinery",

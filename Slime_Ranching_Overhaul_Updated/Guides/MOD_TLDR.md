@@ -25,7 +25,7 @@ The Carpenter menu offers the basic Daycare only until one of its four building 
 | Daycare state | Native resident capacity | Robin's Carpenter price | Facility progression |
 | --- | ---: | --- | --- |
 | Basic | 10 | 10,000g + 350 Wood + 150 Stone + 50 vanilla Slime | One 18-day Breeder cycle, one 7-day Incubator, and a broken Mutagenic Pool. No Egg CryoLab or Rare Lab. |
-| First upgrade | 20 | 10,000g + 450 Wood | New Breeder cycles take 14 days. Unlocks Daycare-specific farmhouse renovation choices, the Egg CryoLab, a Rare Lab per Incubator at 1% base chance, and the Robin-to-Maru Pool repair mission. |
+| First upgrade | 20 | 10,000g + 450 Wood | New Breeder cycles take 14 days. Unlocks Daycare-specific farmhouse renovation choices and the Egg CryoLab; each Incubator has a 1% base Rare Lab. |
 | Second upgrade | 20 | 65,000g + 100 Hardwood | Breeder cycles remain 14 days; no additional machine unlock is currently specified. |
 | Final upgrade | 30 | 100,000g | Adds a second Breeder and Incubator, raises Rare Lab base chance to 5%, unlocks the Gel Refinery, and adds the cellar. |
 
