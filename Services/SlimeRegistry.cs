@@ -15,7 +15,7 @@ internal enum SlimeResidentStatus
     Companion
 }
 
-/// <summary>Ranch Slime records linked to native FarmAnimal entities, plus active facility jobs.</summary>
+/// <summary>Domesticated Slime records linked to native FarmAnimal entities, plus active facility jobs.</summary>
 internal sealed class SlimeRegistry
 {
     private const int BreedingRestDays = 1;
@@ -58,7 +58,7 @@ internal sealed class SlimeRegistry
     public IReadOnlyCollection<RefineryJobRecord> RefineryJobs => this.refineryJobs.Values;
     public IReadOnlyCollection<RefineryTransactionRecord> PendingRefineryTransactions => this.pendingRefineryTransactions.Values;
 
-    public IReadOnlyCollection<long> RanchSlimeFarmAnimalIds => this.farmAnimalRecords.Keys;
+    public IReadOnlyCollection<long> DomesticatedSlimeFarmAnimalIds => this.farmAnimalRecords.Keys;
     public SlimeResidentStatus GetResidentStatus(long farmAnimalId, string? exceptMachineKey = null)
     {
         if (this.activeCompanionFarmAnimalId == farmAnimalId
@@ -154,7 +154,7 @@ internal sealed class SlimeRegistry
         if (this.activeCompanionFarmAnimalId is not null
             || !this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record)
             || !record.AgeClockInitialized
-            || record.AgeDays < FarmAnimalContent.RanchSlimeDaysToMature
+            || record.AgeDays < FarmAnimalContent.DomesticatedSlimeDaysToMature
             || this.IsReserved(farmAnimalId))
             return false;
 
@@ -501,8 +501,8 @@ internal sealed class SlimeRegistry
 
     public int GetMaturityAgeDays(long farmAnimalId, int fallbackAgeDays) =>
         this.farmAnimalRecords.TryGetValue(farmAnimalId, out SlimeRecord? record) && record.AgeClockInitialized
-            ? Math.Clamp(record.AgeDays, 0, FarmAnimalContent.RanchSlimeDaysToMature)
-            : Math.Clamp(fallbackAgeDays, 0, FarmAnimalContent.RanchSlimeDaysToMature);
+            ? Math.Clamp(record.AgeDays, 0, FarmAnimalContent.DomesticatedSlimeDaysToMature)
+            : Math.Clamp(fallbackAgeDays, 0, FarmAnimalContent.DomesticatedSlimeDaysToMature);
 
     /// <summary>Sync the mod-owned age clock and mirror its value into the native animal field Stardew uses for maturity.</summary>
     public bool SynchronizeMaturity(IEnumerable<FarmAnimal> animals, int currentDay)
@@ -510,7 +510,7 @@ internal sealed class SlimeRegistry
         bool changed = false;
         foreach (FarmAnimal animal in animals)
         {
-            if (animal.type.Value != FarmAnimalContent.RanchSlimeTypeId
+            if (animal.type.Value != FarmAnimalContent.DomesticatedSlimeTypeId
                 || !this.farmAnimalRecords.TryGetValue(animal.myID.Value, out SlimeRecord? record))
                 continue;
 
@@ -522,7 +522,7 @@ internal sealed class SlimeRegistry
 
             if (!record.AgeClockInitialized)
             {
-                record.AgeDays = Math.Clamp(animal.age.Value, 0, FarmAnimalContent.RanchSlimeDaysToMature);
+                record.AgeDays = Math.Clamp(animal.age.Value, 0, FarmAnimalContent.DomesticatedSlimeDaysToMature);
                 record.AgeLastUpdatedDay = currentDay;
                 record.AgeClockInitialized = true;
                 changed = true;
@@ -530,12 +530,12 @@ internal sealed class SlimeRegistry
             else if (currentDay > record.AgeLastUpdatedDay)
             {
                 int elapsedDays = currentDay - record.AgeLastUpdatedDay;
-                record.AgeDays = Math.Min(FarmAnimalContent.RanchSlimeDaysToMature, record.AgeDays + elapsedDays);
+                record.AgeDays = Math.Min(FarmAnimalContent.DomesticatedSlimeDaysToMature, record.AgeDays + elapsedDays);
                 record.AgeLastUpdatedDay = currentDay;
                 changed = true;
             }
 
-            int authoritativeAge = Math.Clamp(record.AgeDays, 0, FarmAnimalContent.RanchSlimeDaysToMature);
+            int authoritativeAge = Math.Clamp(record.AgeDays, 0, FarmAnimalContent.DomesticatedSlimeDaysToMature);
             if (animal.age.Value != authoritativeAge)
             {
                 animal.age.Value = authoritativeAge;
@@ -753,7 +753,7 @@ internal sealed class SlimeRegistry
     public int RecoverPendingHatches(IEnumerable<FarmAnimal> animals)
     {
         Dictionary<long, FarmAnimal> animalsById = animals
-            .Where(animal => animal.type.Value == FarmAnimalContent.RanchSlimeTypeId)
+            .Where(animal => animal.type.Value == FarmAnimalContent.DomesticatedSlimeTypeId)
             .GroupBy(animal => animal.myID.Value)
             .ToDictionary(group => group.Key, group => group.First());
         int recovered = 0;
@@ -772,7 +772,7 @@ internal sealed class SlimeRegistry
 
     public bool RegisterIncubationHatch(IncubationRecord incubation, FarmAnimal animal)
     {
-        if (animal.type.Value != FarmAnimalContent.RanchSlimeTypeId
+        if (animal.type.Value != FarmAnimalContent.DomesticatedSlimeTypeId
             || incubation.HatchAnimalId != animal.myID.Value
             || !this.incubations.TryGetValue(incubation.MachineKey, out IncubationRecord? current)
             || !ReferenceEquals(current, incubation)
@@ -905,7 +905,7 @@ internal sealed class SlimeRegistry
     {
         if (string.IsNullOrWhiteSpace(machineKey) || this.mutagenicAttempts.ContainsKey(machineKey)
             || !this.farmAnimalRecords.TryGetValue(slimeId, out SlimeRecord? record)
-            || ageDays < FarmAnimalContent.RanchSlimeDaysToMature
+            || ageDays < FarmAnimalContent.DomesticatedSlimeDaysToMature
             || !string.IsNullOrWhiteSpace(record.Genome.MutationTrait)
             || this.IsReserved(slimeId, machineKey))
             return false;
@@ -1168,12 +1168,12 @@ internal sealed class SlimeRegistry
         this.breedingPairs[pair.MachineKey] = pair;
     }
 
-    public int RegisterRanchSlimes(IEnumerable<FarmAnimal> animals, SlimeGenome? genomeOverride = null)
+    public int RegisterDomesticatedSlimes(IEnumerable<FarmAnimal> animals, SlimeGenome? genomeOverride = null)
     {
         int added = 0;
         foreach (FarmAnimal animal in animals)
         {
-            if (animal.type.Value != FarmAnimalContent.RanchSlimeTypeId)
+            if (animal.type.Value != FarmAnimalContent.DomesticatedSlimeTypeId)
                 continue;
 
             SlimeRecord? entityRecord = ReadEntityRecord(animal);
@@ -1184,7 +1184,7 @@ internal sealed class SlimeRegistry
                     if (this.records.TryGetValue(entityRecord.Genome.Id, out SlimeRecord? duplicate)
                         && duplicate.FarmAnimalId != animal.myID.Value)
                     {
-                        this.monitor.Log($"Ignored Ranch Slime modData for FarmAnimal {animal.myID.Value}: genome ID {entityRecord.Genome.Id:N} is already linked to another animal.", LogLevel.Warn);
+                        this.monitor.Log($"Ignored Domesticated Slime modData for FarmAnimal {animal.myID.Value}: genome ID {entityRecord.Genome.Id:N} is already linked to another animal.", LogLevel.Warn);
                     }
                     else
                     {
@@ -1227,7 +1227,7 @@ internal sealed class SlimeRegistry
                     ? new Models.SlimeGenome
                     {
                         Id = Guid.NewGuid(),
-                        PrimarySpecies = "Ranch Slime",
+                        PrimarySpecies = "Domesticated Slime",
                         VisualColor = "#00FF00"
                     }
                     : genomeOverride
@@ -1244,7 +1244,7 @@ internal sealed class SlimeRegistry
     {
         foreach (FarmAnimal animal in animals)
         {
-            if (animal.type.Value != FarmAnimalContent.RanchSlimeTypeId
+            if (animal.type.Value != FarmAnimalContent.DomesticatedSlimeTypeId
                 || !this.farmAnimalRecords.TryGetValue(animal.myID.Value, out SlimeRecord? record))
                 continue;
 
@@ -1297,10 +1297,10 @@ internal sealed class SlimeRegistry
     }
 
     /// <summary>Detach removed animals while keeping their genome archive; abandon only cycles with no saved egg.</summary>
-    public (int DetachedAnimals, int CancelledCycles) ReconcileRanchSlimes(IEnumerable<FarmAnimal> animals)
+    public (int DetachedAnimals, int CancelledCycles) ReconcileDomesticatedSlimes(IEnumerable<FarmAnimal> animals)
     {
         HashSet<long> liveIds = animals
-            .Where(animal => animal.type.Value == FarmAnimalContent.RanchSlimeTypeId)
+            .Where(animal => animal.type.Value == FarmAnimalContent.DomesticatedSlimeTypeId)
             .Select(animal => animal.myID.Value)
             .ToHashSet();
 
@@ -1454,7 +1454,7 @@ internal sealed class SlimeRegistry
         {
             if (incubation is null)
             {
-                this.monitor.Log("Skipped a malformed Ranch Slime incubation record.", LogLevel.Warn);
+                this.monitor.Log("Skipped a malformed Domesticated Slime incubation record.", LogLevel.Warn);
                 continue;
             }
 
@@ -1488,7 +1488,7 @@ internal sealed class SlimeRegistry
                 || this.incubations.ContainsKey(incubation.MachineKey)
                 || this.incubations.Values.Any(other => other.EggItemId == incubation.EggItemId))
             {
-                this.monitor.Log("Skipped a malformed or duplicate external Ranch Slime incubation record.", LogLevel.Warn);
+                this.monitor.Log("Skipped a malformed or duplicate external Domesticated Slime incubation record.", LogLevel.Warn);
                 continue;
             }
 
@@ -1615,7 +1615,7 @@ internal sealed class SlimeRegistry
         }
 
         if (logSummary)
-            this.monitor.Log($"Loaded {this.records.Count} Ranch Slime record(s); assigned {assignedFoodLikes} missing or invalid food like(s). Existing vanilla GreenSlime monsters are not managed.", LogLevel.Info);
+            this.monitor.Log($"Loaded {this.records.Count} Domesticated Slime record(s); assigned {assignedFoodLikes} missing or invalid food like(s). Existing vanilla GreenSlime monsters are not managed.", LogLevel.Info);
     }
 
     public SlimeSaveData Capture() => new()

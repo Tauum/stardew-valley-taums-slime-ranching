@@ -42,7 +42,7 @@ public sealed class ModEntry : Mod
         DaycareDecorating.Initialize(helper, this.Monitor);
         this.config = helper.ReadConfig<ModConfig>();
         this.registry = new SlimeRegistry(this.Monitor);
-        RanchSlimeShadowScalePatch.SetSizeLookup(id => this.registry?.GetGenomeSize(id));
+        DomesticatedSlimeShadowScalePatch.SetSizeLookup(id => this.registry?.GetGenomeSize(id));
         BreederMovementPatch.SetReservationLookup(id => this.registry?.IsBreedingParentReserved(id) == true);
         BreederParentVisibilityPatch.SetActiveCycleLookup(id => this.registry?.IsInActiveBreedingCycle(id) == true);
         BreederParentVisibilityPatch.SetUnclaimedHatchLookup(id => this.registry?.IsUnclaimedIncubationHatch(id) == true);
@@ -61,39 +61,70 @@ public sealed class ModEntry : Mod
         helper.Events.Display.MenuChanged += this.OnMenuChanged;
         helper.Events.Content.AssetRequested += this.OnAssetRequested;
         helper.Events.Input.ButtonPressed += this.OnButtonPressed;
-        helper.ConsoleCommands.Add("slime_ranching_inspect", "Inspect vanilla slime or Ranch Slime counts in the current Slime Hutch or Slime Daycare.", this.OnInspectCommand);
-        helper.ConsoleCommands.Add("slime_ranching_open_management_desk", "Open a read-only tester preview of the Daycare Management Desk. Usage: slime_ranching_open_management_desk <exact save folder name>.", this.OnOpenManagementDeskCommand);
-        helper.ConsoleCommands.Add("slime_ranching_quest_status", "Report saved Slime Daycare quest milestones for the current save.", this.OnSlimeDaycareQuestStatusCommand);
-        helper.ConsoleCommands.Add("slime_ranching_test_maru_repair", "On a disposable save with a completed Daycare, seed the prerequisites for testing Robin's Maru repair handoff. Usage: slime_ranching_test_maru_repair <exact save folder name>.", this.OnTestMaruRepairCommand);
-        helper.ConsoleCommands.Add("slime_ranching_backup_external_data", "Back up the current save's external mod data. Usage: slime_ranching_backup_external_data <exact save folder name>.", this.OnBackupExternalDataCommand);
-        helper.ConsoleCommands.Add("slime_ranching_spawn_ranch_slime", $"Spawn one Ranch Slime at a chosen age in the Slime Daycare, optionally with randomized genome traits. Usage: slime_ranching_spawn_ranch_slime <exact save folder name> <age days 0-{FarmAnimalContent.RanchSlimeDaysToMature}> [random].", this.OnSpawnRanchSlimeCommand);
-        helper.ConsoleCommands.Add("slime_ranching_set_size", "Set a managed Ranch Slime's test genome size. Usage: slime_ranching_set_size <exact save folder name> <animal ID> <Small|Normal|Large|Giant>.", this.OnSetSlimeSizeCommand);
-        helper.ConsoleCommands.Add("slime_ranching_set_rare_lab", "Set Rare Lab test chance from inside its Daycare when no egg or hatch is pending. Usage: slime_ranching_set_rare_lab <exact save folder name> <incubator number in current Daycare> <pity 0-100> <contribution 0-100>.", this.OnSetRareLabCommand);
-        helper.ConsoleCommands.Add("slime_ranching_set_pool_test_state", "Set a mature Ranch Slime's Mutagenic Pool misses and contribution for testing. Usage: slime_ranching_set_pool_test_state <exact save folder name> <animal ID> <failures 0-90> <contribution 0-90; total <= 90>.", this.OnSetMutagenicPoolTestStateCommand);
-        helper.ConsoleCommands.Add("slime_ranching_set_color", "Set a managed Ranch Slime's test base color. Usage: slime_ranching_set_color <exact save folder name> <animal ID> <Red|Orange|Yellow|Green|Blue|Purple|Pink>.", this.OnSetSlimeColorCommand);
-        helper.ConsoleCommands.Add("slime_ranching_set_shiny", "Set a managed Ranch Slime's test shiny flag. Usage: slime_ranching_set_shiny <exact save folder name> <animal ID> <true|false>.", this.OnSetSlimeShinyCommand);
-        helper.ConsoleCommands.Add("slime_ranching_set_mutation", "Set a managed Ranch Slime's test mutation. Usage: slime_ranching_set_mutation <exact save folder name> <animal ID> <Starry|Spotted|Glowing|Crystalline|Mossy|Bubbly|Mushroom|Blooming|Firefly|Crowned|Cowboy|Smelly|none>.", this.OnSetSlimeMutationCommand);
-        helper.ConsoleCommands.Add("slime_ranching_bind_companion", "Bind one mature Daycare Ranch Slime as the external companion test. Usage: slime_ranching_bind_companion <exact save folder name> <animal ID>.", this.OnBindCompanionCommand);
-        helper.ConsoleCommands.Add("slime_ranching_dismiss_companion", "Dismiss the currently bound Ranch Slime companion. Usage: slime_ranching_dismiss_companion <exact save folder name>.", this.OnDismissCompanionCommand);
-        helper.ConsoleCommands.Add("slime_ranching_give_guidebook", "Give the Slime Ranching Field Guide. Usage: slime_ranching_give_guidebook <exact save folder name>.", this.OnGiveGuidebookCommand);
-        helper.ConsoleCommands.Add("slime_ranching_give_breeder", "Give one Slime Breeder for testing. Usage: slime_ranching_give_breeder <exact save folder name>.", this.OnGiveBreederCommand);
-        helper.ConsoleCommands.Add("slime_ranching_give_incubator", "Give one Slime Incubator for testing. Usage: slime_ranching_give_incubator <exact save folder name>.", this.OnGiveIncubatorCommand);
-        helper.ConsoleCommands.Add("slime_ranching_give_cryolab", "Give one tester Egg CryoLab chest. Usage: slime_ranching_give_cryolab <exact save folder name>.", this.OnGiveCryoLabCommand);
-        helper.ConsoleCommands.Add("slime_ranching_duplicate_cryolab_egg", "Deliberately duplicate a stored egg ID for CryoLab guard testing on a disposable save. Usage: slime_ranching_duplicate_cryolab_egg <exact save folder name>.", this.OnDuplicateCryoLabEggCommand);
-        helper.ConsoleCommands.Add("slime_ranching_duplicate_inventory_egg", "Deliberately duplicate one unused inventory egg ID for hatch-once testing on a disposable save. Usage: slime_ranching_duplicate_inventory_egg <exact save folder name>.", this.OnDuplicateInventoryEggCommand);
-        helper.ConsoleCommands.Add("slime_ranching_give_mutagenic_pool", "Give one Mutagenic Pool for testing. Usage: slime_ranching_give_mutagenic_pool <exact save folder name>.", this.OnGiveMutagenicPoolCommand);
-        helper.ConsoleCommands.Add("slime_ranching_give_gel_refinery", "Give one Gel Refinery for testing. Usage: slime_ranching_give_gel_refinery <exact save folder name>.", this.OnGiveGelRefineryCommand);
-        helper.ConsoleCommands.Add("slime_ranching_give_tunnel", "Give one Slime Tunnel for testing. Usage: slime_ranching_give_tunnel <exact save folder name>.", this.OnGiveTunnelCommand);
-        helper.ConsoleCommands.Add("slime_ranching_give_heated_stone", "Give one Heated Slime Stone for testing. Usage: slime_ranching_give_heated_stone <exact save folder name>.", this.OnGiveHeatedStoneCommand);
-        helper.ConsoleCommands.Add("slime_ranching_give_pond", "Give one Slime Pond for testing. Usage: slime_ranching_give_pond <exact save folder name>.", this.OnGivePondCommand);
-        helper.ConsoleCommands.Add("slime_ranching_give_swing", "Give one Slime Swing for testing. Usage: slime_ranching_give_swing <exact save folder name>.", this.OnGiveSwingCommand);
-        helper.ConsoleCommands.Add("slime_ranching_give_seesaw", "Give one Slime Seesaw for paired activity testing. Usage: slime_ranching_give_seesaw <exact save folder name>.", this.OnGiveSeesawCommand);
-        helper.ConsoleCommands.Add("slime_ranching_give_ball_pit", "Give one Slime Ball Pit for activity testing. Usage: slime_ranching_give_ball_pit <exact save folder name>.", this.OnGiveBallPitCommand);
-        helper.ConsoleCommands.Add("slime_ranching_give_lamp", "Give one Slime Lamp for activity testing. Usage: slime_ranching_give_lamp <exact save folder name>.", this.OnGiveLampCommand);
-        helper.ConsoleCommands.Add("slime_ranching_give_fairy_lights", "Give one set of Slime Fairy Lights for testing. Usage: slime_ranching_give_fairy_lights <exact save folder name>.", this.OnGiveFairyLightsCommand);
-        helper.ConsoleCommands.Add("slime_ranching_give_test_eggs", "Create test eggs, use 'random' for one randomized egg, 'malformed' for two deliberately invalid eggs, or pass key=value metadata for two controlled eggs. Usage: slime_ranching_give_test_eggs <save name> [random|malformed|species=Name ...].", this.OnGiveTestEggsCommand);
-        helper.ConsoleCommands.Add("slime_ranching_give_color_eggs", "Create seven color test eggs. Usage: slime_ranching_give_color_eggs <exact save folder name>.", this.OnGiveColorEggsCommand);
-        helper.ConsoleCommands.Add("slime_ranching_give_crystals", "Give one of each Chromatic Crystal for breeder testing. Usage: slime_ranching_give_crystals <exact save folder name>.", this.OnGiveCrystalsCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_inspect", "Inspect vanilla slime or Domesticated Slime counts in the current Slime Hutch or Slime Daycare.", this.OnInspectCommand, includeSaveFolderName: false);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_open_management_desk", "Open a read-only tester preview of the Daycare Management Desk. Usage: slime_ranching_open_management_desk.", this.OnOpenManagementDeskCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_quest_status", "Report Slime Daycare Quest milestones for the loaded save.", this.OnSlimeDaycareQuestStatusCommand, includeSaveFolderName: false);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_test_maru_repair", "On a disposable save with a completed Daycare, seed the prerequisites for testing Robin's Maru repair handoff. Usage: slime_ranching_test_maru_repair.", this.OnTestMaruRepairCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_backup_external_data", "Back up the current save's external mod data. Usage: slime_ranching_backup_external_data.", this.OnBackupExternalDataCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_spawn_domesticated_slime", $"Spawn one Domesticated Slime at a chosen age in the Slime Daycare, optionally with randomized genome traits. Usage: slime_ranching_spawn_domesticated_slime <age days 0-{FarmAnimalContent.DomesticatedSlimeDaysToMature}> [random].", this.OnSpawnDomesticatedSlimeCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_set_size", "Set a managed Domesticated Slime's test genome size. Usage: slime_ranching_set_size <animal ID> <Small|Normal|Large|Giant>.", this.OnSetSlimeSizeCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_set_rare_lab", "Set Rare Lab test chance from inside its Daycare when no egg or hatch is pending. Usage: slime_ranching_set_rare_lab <incubator number in current Daycare> <pity 0-100> <contribution 0-100>.", this.OnSetRareLabCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_set_pool_test_state", "Set a mature Domesticated Slime's Mutagenic Pool misses and contribution for testing. Usage: slime_ranching_set_pool_test_state <animal ID> <failures 0-90> <contribution 0-90; total <= 90>.", this.OnSetMutagenicPoolTestStateCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_set_color", "Set a managed Domesticated Slime's test base color. Usage: slime_ranching_set_color <animal ID> <Red|Orange|Yellow|Green|Blue|Purple|Pink>.", this.OnSetSlimeColorCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_set_shiny", "Set a managed Domesticated Slime's test shiny flag. Usage: slime_ranching_set_shiny <animal ID> <true|false>.", this.OnSetSlimeShinyCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_set_mutation", "Set a managed Domesticated Slime's test mutation. Usage: slime_ranching_set_mutation <animal ID> <Starry|Spotted|Glowing|Crystalline|Mossy|Bubbly|Mushroom|Blooming|Firefly|Crowned|Cowboy|Smelly|none>.", this.OnSetSlimeMutationCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_bind_companion", "Bind one mature Daycare Domesticated Slime as the external companion test. Usage: slime_ranching_bind_companion <animal ID>.", this.OnBindCompanionCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_dismiss_companion", "Dismiss the currently bound Domesticated Slime companion. Usage: slime_ranching_dismiss_companion.", this.OnDismissCompanionCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_guidebook", "Give the Slime Ranching Field Guide. Usage: slime_ranching_give_guidebook.", this.OnGiveGuidebookCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_breeder", "Give one Slime Breeder for testing. Usage: slime_ranching_give_breeder.", this.OnGiveBreederCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_incubator", "Give one Slime Incubator for testing. Usage: slime_ranching_give_incubator.", this.OnGiveIncubatorCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_cryolab", "Give one tester Egg CryoLab chest. Usage: slime_ranching_give_cryolab.", this.OnGiveCryoLabCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_duplicate_cryolab_egg", "Deliberately duplicate a stored egg ID for CryoLab guard testing on a disposable save. Usage: slime_ranching_duplicate_cryolab_egg.", this.OnDuplicateCryoLabEggCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_duplicate_inventory_egg", "Deliberately duplicate one unused inventory egg ID for hatch-once testing on a disposable save. Usage: slime_ranching_duplicate_inventory_egg.", this.OnDuplicateInventoryEggCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_mutagenic_pool", "Give one Mutagenic Pool for testing. Usage: slime_ranching_give_mutagenic_pool.", this.OnGiveMutagenicPoolCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_gel_refinery", "Give one Gel Refinery for testing. Usage: slime_ranching_give_gel_refinery.", this.OnGiveGelRefineryCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_tunnel", "Give one Slime Tunnel for testing. Usage: slime_ranching_give_tunnel.", this.OnGiveTunnelCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_heated_stone", "Give one Heated Slime Stone for testing. Usage: slime_ranching_give_heated_stone.", this.OnGiveHeatedStoneCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_pond", "Give one Slime Pond for testing. Usage: slime_ranching_give_pond.", this.OnGivePondCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_swing", "Give one Slime Swing for testing. Usage: slime_ranching_give_swing.", this.OnGiveSwingCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_seesaw", "Give one Slime Seesaw for paired activity testing. Usage: slime_ranching_give_seesaw.", this.OnGiveSeesawCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_ball_pit", "Give one Slime Ball Pit for activity testing. Usage: slime_ranching_give_ball_pit.", this.OnGiveBallPitCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_lamp", "Give one Slime Lamp for activity testing. Usage: slime_ranching_give_lamp.", this.OnGiveLampCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_fairy_lights", "Give one set of Slime Fairy Lights for testing. Usage: slime_ranching_give_fairy_lights.", this.OnGiveFairyLightsCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_test_eggs", "Create test eggs, use 'random' for one randomized egg, 'malformed' for two deliberately invalid eggs, or pass key=value metadata for two controlled eggs. Usage: slime_ranching_give_test_eggs [random|malformed|species=Name ...].", this.OnGiveTestEggsCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_color_eggs", "Create seven color test eggs. Usage: slime_ranching_give_color_eggs.", this.OnGiveColorEggsCommand);
+        this.AddSaveAwareConsoleCommand(helper, "slime_ranching_give_crystals", "Give one of each Chromatic Crystal for breeder testing. Usage: slime_ranching_give_crystals.", this.OnGiveCrystalsCommand);
+    }
+
+    private void AddSaveAwareConsoleCommand(IModHelper helper, string name, string description,
+        Action<string, string[]> handler, bool includeSaveFolderName = true)
+    {
+        helper.ConsoleCommands.Add(name, description, (command, args) =>
+        {
+            if (!Context.IsWorldReady || !this.stateReady || this.registry is null)
+            {
+                this.Monitor.Log($"Can't run '{command}' without a loaded save. Load a save first.", LogLevel.Warn);
+                return;
+            }
+
+            string? saveFolderName = Constants.SaveFolderName;
+            if (string.IsNullOrWhiteSpace(saveFolderName))
+            {
+                this.Monitor.Log($"Can't run '{command}' because SMAPI hasn't identified the loaded save.", LogLevel.Warn);
+                return;
+            }
+
+            string[] forwardedArgs = args;
+            if (includeSaveFolderName
+                && (args.Length == 0 || !string.Equals(args[0], saveFolderName, StringComparison.Ordinal)))
+            {
+                forwardedArgs = new string[args.Length + 1];
+                forwardedArgs[0] = saveFolderName;
+                Array.Copy(args, 0, forwardedArgs, 1, args.Length);
+            }
+
+            handler(command, forwardedArgs);
+        });
     }
 
     private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
@@ -110,12 +141,12 @@ public sealed class ModEntry : Mod
             bool needsPersistenceMigration = this.stateStore.ImportedLegacyData || this.stateStore.MigratedSaveData;
             int recoveredHatches = this.registry.RecoverPendingHatches(GetFarmAnimals());
             if (recoveredHatches > 0)
-                this.Monitor.Log($"Recovered {recoveredHatches} saved Ranch Slime hatch(es) from save data.", LogLevel.Info);
-            int registeredRanchSlimes = this.registry.RegisterRanchSlimes(GetFarmAnimals());
-            if (registeredRanchSlimes > 0)
-                this.Monitor.Log($"Registered {registeredRanchSlimes} Ranch Slime farm animal(s) from entity metadata.", LogLevel.Info);
-            (int detachedAnimals, int cancelledCycles) = this.registry.ReconcileRanchSlimes(GetFarmAnimals());
-            this.ApplyRanchSlimeAppearances();
+                this.Monitor.Log($"Recovered {recoveredHatches} saved Domesticated Slime hatch(es) from save data.", LogLevel.Info);
+            int registeredDomesticatedSlimes = this.registry.RegisterDomesticatedSlimes(GetFarmAnimals());
+            if (registeredDomesticatedSlimes > 0)
+                this.Monitor.Log($"Registered {registeredDomesticatedSlimes} Domesticated Slime farm animal(s) from entity metadata.", LogLevel.Info);
+            (int detachedAnimals, int cancelledCycles) = this.registry.ReconcileDomesticatedSlimes(GetFarmAnimals());
+            this.ApplyDomesticatedSlimeAppearances();
             bool maturityChanged = this.registry.SynchronizeMaturity(GetFarmAnimals(), Game1.Date.TotalDays);
             this.stateReady = true;
             bool rareLabProgressionChanged = this.SynchronizeRareLabProgression();
@@ -132,11 +163,11 @@ public sealed class ModEntry : Mod
             if (this.stateStore.ImportedLegacyData)
                 this.Monitor.Log("Imported the previous mod-folder slime registry into this save. The original legacy file was left untouched.", LogLevel.Info);
             if (this.stateStore.MigratedSaveData)
-                this.Monitor.Log("Migrated the saved Ranch Slime data to the current schema.", LogLevel.Info);
-            if (needsPersistenceMigration || registeredRanchSlimes > 0 || recoveredHatches > 0 || detachedAnimals > 0 || cancelledCycles > 0 || maturityChanged || rareLabProgressionChanged || eggCryoLabRecordsChanged || repairTransactionRecovered || incubationCancellationRecovered || mutagenicContributionRecovered || rareLabContributionRecovered || rareLabCatalystRecovered || refineryTransactionRecovered || constructionProgressChanged || repairQuestProgressChanged)
+                this.Monitor.Log("Migrated the saved Domesticated Slime data to the current schema.", LogLevel.Info);
+            if (needsPersistenceMigration || registeredDomesticatedSlimes > 0 || recoveredHatches > 0 || detachedAnimals > 0 || cancelledCycles > 0 || maturityChanged || rareLabProgressionChanged || eggCryoLabRecordsChanged || repairTransactionRecovered || incubationCancellationRecovered || mutagenicContributionRecovered || rareLabContributionRecovered || rareLabCatalystRecovered || refineryTransactionRecovered || constructionProgressChanged || repairQuestProgressChanged)
             {
                 if (!this.SaveCurrentSaveDataNow())
-                    this.Monitor.Log("Imported or reconciled Ranch Slime state remains in memory but could not yet be written to the current save.", LogLevel.Error);
+                    this.Monitor.Log("Imported or reconciled Domesticated Slime state remains in memory but could not yet be written to the current save.", LogLevel.Error);
                 else
                 {
                     if (maturityChanged)
@@ -150,7 +181,7 @@ public sealed class ModEntry : Mod
         }
         catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException or System.Text.Json.JsonException or NotSupportedException)
         {
-            this.Monitor.Log($"Ranch Slime save data is unavailable for this save: {exception.Message}", LogLevel.Error);
+            this.Monitor.Log($"Domesticated Slime save data is unavailable for this save: {exception.Message}", LogLevel.Error);
         }
     }
 
@@ -222,11 +253,11 @@ public sealed class ModEntry : Mod
 
         try
         {
-            int registeredRanchSlimes = this.registry!.RegisterRanchSlimes(GetFarmAnimals());
-            if (registeredRanchSlimes > 0)
-                this.Monitor.Log($"Registered {registeredRanchSlimes} Ranch Slime entity record(s).", LogLevel.Info);
+            int registeredDomesticatedSlimes = this.registry!.RegisterDomesticatedSlimes(GetFarmAnimals());
+            if (registeredDomesticatedSlimes > 0)
+                this.Monitor.Log($"Registered {registeredDomesticatedSlimes} Domesticated Slime entity record(s).", LogLevel.Info);
             this.registry.SynchronizeMaturity(GetFarmAnimals(), Game1.Date.TotalDays);
-            (int detachedAnimals, int cancelledCycles) = this.registry.ReconcileRanchSlimes(GetFarmAnimals());
+            (int detachedAnimals, int cancelledCycles) = this.registry.ReconcileDomesticatedSlimes(GetFarmAnimals());
             this.LogRegistryReconciliation(detachedAnimals, cancelledCycles);
             this.registry.WriteEntityModData(GetFarmAnimals());
             this.SynchronizeRareLabProgression();
@@ -234,7 +265,7 @@ public sealed class ModEntry : Mod
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
-            this.Monitor.Log($"Could not save Ranch Slime data to the current save: {exception.Message}", LogLevel.Error);
+            this.Monitor.Log($"Could not save Domesticated Slime data to the current save: {exception.Message}", LogLevel.Error);
         }
     }
 
@@ -285,7 +316,7 @@ public sealed class ModEntry : Mod
             if (needsSave)
             {
                 if (!this.SaveCurrentSaveDataNow())
-                    this.Monitor.Log("Could not save Ranch Slime or Slime Daycare quest progress; it will retry at the next save.", LogLevel.Error);
+                    this.Monitor.Log("Could not save Domesticated Slime or Slime Daycare quest progress; it will retry at the next save.", LogLevel.Error);
                 else
                 {
                     if (maturityChanged)
@@ -322,17 +353,17 @@ public sealed class ModEntry : Mod
         foreach (var ready in readyToNotify)
         {
             taums_slime_ranching.Models.SlimeEggRecord egg = ready.Egg;
-            Game1.addHUDMessage(new HUDMessage("A Ranch Slime Egg is ready to collect from the Slime Breeder!", HUDMessage.newQuest_type));
-            this.Monitor.Log($"A Ranch Slime Egg (genome {egg.Genome.Id:N}) is ready to collect.", LogLevel.Info);
+            Game1.addHUDMessage(new HUDMessage("A Domesticated Slime Egg is ready to collect from the Slime Breeder!", HUDMessage.newQuest_type));
+            this.Monitor.Log($"A Domesticated Slime Egg (genome {egg.Genome.Id:N}) is ready to collect.", LogLevel.Info);
         }
 
         foreach (var result in this.pendingMutagenicNotifications)
         {
             string message = result.Success
-                ? "A Ranch Slime's mutation has awakened!"
+                ? "A Domesticated Slime's mutation has awakened!"
                 : "The Mutagenic Pool attempt failed safely. That slime's next chance has increased.";
             Game1.addHUDMessage(new HUDMessage(message, result.Success ? HUDMessage.newQuest_type : HUDMessage.error_type));
-            this.Monitor.Log($"Mutagenic Pool attempt for Ranch Slime {result.SlimeId}: {(result.Success ? "success" : "safe failure")} at {result.Chance:P0}.", LogLevel.Info);
+            this.Monitor.Log($"Mutagenic Pool attempt for Domesticated Slime {result.SlimeId}: {(result.Success ? "success" : "safe failure")} at {result.Chance:P0}.", LogLevel.Info);
         }
         this.pendingMutagenicNotifications.Clear();
 
@@ -1129,14 +1160,14 @@ public sealed class ModEntry : Mod
             .Select(group => group.First());
     }
 
-    private void ApplyRanchSlimeAppearances()
+    private void ApplyDomesticatedSlimeAppearances()
     {
         if (this.registry is null)
             return;
 
         foreach (FarmAnimal animal in GetFarmAnimals())
         {
-            if (animal.type.Value != FarmAnimalContent.RanchSlimeTypeId)
+            if (animal.type.Value != FarmAnimalContent.DomesticatedSlimeTypeId)
                 continue;
             FarmAnimalContent.ApplyAppearance(animal,
                 this.registry.GetGenomeColor(animal.myID.Value),
@@ -1203,7 +1234,7 @@ public sealed class ModEntry : Mod
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
-            this.Monitor.Log($"Could not save Ranch Slime data to the current save: {exception.Message}", LogLevel.Error);
+            this.Monitor.Log($"Could not save Domesticated Slime data to the current save: {exception.Message}", LogLevel.Error);
             return false;
         }
     }
@@ -1255,7 +1286,7 @@ public sealed class ModEntry : Mod
 
         Game1.activeClickableMenu = null;
         Game1.currentLocation.createQuestionDialogue(
-            "Cancel incubation? The Ranch Slime Egg will be destroyed, and you will receive one Fried Egg.",
+            "Cancel incubation? The Domesticated Slime Egg will be destroyed, and you will receive one Fried Egg.",
             new[]
             {
                 new StardewValley.Response("confirm", "Destroy egg"),
@@ -1332,7 +1363,7 @@ public sealed class ModEntry : Mod
         int recovered = this.registry.RecoverPendingHatches(GetFarmAnimals());
         if (recovered > 0)
         {
-            this.Monitor.Log($"Confirmed {recovered} previous Ranch Slime hatch(es) against live animal IDs.", LogLevel.Info);
+            this.Monitor.Log($"Confirmed {recovered} previous Domesticated Slime hatch(es) against live animal IDs.", LogLevel.Info);
             if (!this.SaveCurrentSaveDataNow())
                 this.Monitor.Log("The confirmed hatch could not be finalized in save data; its reserved hatch record will be checked again on reload.", LogLevel.Error);
             this.InvalidateEggObjectData();
@@ -1347,7 +1378,7 @@ public sealed class ModEntry : Mod
             if (incubation.HatchAnimalId is long recordedAnimalId)
             {
                 FarmAnimal? recordedAnimal = GetFarmAnimals().FirstOrDefault(animal => animal.myID.Value == recordedAnimalId);
-                if (recordedAnimal?.type.Value == FarmAnimalContent.RanchSlimeTypeId)
+                if (recordedAnimal?.type.Value == FarmAnimalContent.DomesticatedSlimeTypeId)
                 {
                     this.registry.RegisterIncubationHatch(incubation, recordedAnimal);
                     continue;
@@ -1387,7 +1418,7 @@ public sealed class ModEntry : Mod
 
             if (animalHouse.isFull())
             {
-                this.Monitor.Log("A Ranch Slime Egg is ready, but the Slime Daycare is full; hatching will retry after space is available.", LogLevel.Trace);
+                this.Monitor.Log("A Domesticated Slime Egg is ready, but the Slime Daycare is full; hatching will retry after space is available.", LogLevel.Trace);
                 continue;
             }
 
@@ -1398,7 +1429,7 @@ public sealed class ModEntry : Mod
                     || !this.SaveCurrentSaveDataNow())
                 {
                     this.registry.ClearHatchAnimalId(incubation.MachineKey);
-                    this.Monitor.Log("Could not reserve an external native ID for a ready Ranch Slime hatch; it will retry tomorrow.", LogLevel.Error);
+                    this.Monitor.Log("Could not reserve an external native ID for a ready Domesticated Slime hatch; it will retry tomorrow.", LogLevel.Error);
                     continue;
                 }
             }
@@ -1411,7 +1442,7 @@ public sealed class ModEntry : Mod
                 continue;
             }
 
-            var animal = new FarmAnimal(FarmAnimalContent.RanchSlimeTypeId, animalId, Game1.player.UniqueMultiplayerID)
+            var animal = new FarmAnimal(FarmAnimalContent.DomesticatedSlimeTypeId, animalId, Game1.player.UniqueMultiplayerID)
             {
                 Name = (incubation.HatchGenome ?? egg.Genome).PrimarySpecies,
                 home = daycare,
@@ -1423,14 +1454,14 @@ public sealed class ModEntry : Mod
             animalHouse.adoptAnimal(animal);
             if (!this.registry.RegisterIncubationHatch(incubation, animal))
             {
-                this.Monitor.Log($"Hatched Ranch Slime {animalId}, but its genome could not be linked; external hatch recovery will retry on reload.", LogLevel.Error);
+                this.Monitor.Log($"Hatched Domesticated Slime {animalId}, but its genome could not be linked; external hatch recovery will retry on reload.", LogLevel.Error);
                 continue;
             }
 
             if (!this.SaveCurrentSaveDataNow())
                 this.Monitor.Log("The animal hatched, but its updated genome link could not yet be written. The reserved external hatch record will recover it after reload.", LogLevel.Error);
             Game1.addHUDMessage(new HUDMessage($"A {animal.Name} hatched in the Slime Daycare!", HUDMessage.newQuest_type));
-            this.Monitor.Log($"A Ranch Slime hatched from genome egg {egg.Genome.Id:N} (FarmAnimal ID {animalId}).", LogLevel.Info);
+            this.Monitor.Log($"A Domesticated Slime hatched from genome egg {egg.Genome.Id:N} (FarmAnimal ID {animalId}).", LogLevel.Info);
             this.InvalidateEggObjectData();
         }
     }
@@ -1441,7 +1472,7 @@ public sealed class ModEntry : Mod
             return;
 
         this.Monitor.Log(
-            $"Reconciled Ranch Slime save data: detached {detachedAnimals} missing animal link(s) while preserving their genomes; cancelled {cancelledCycles} cycle(s) without a saved egg.",
+            $"Reconciled Domesticated Slime save data: detached {detachedAnimals} missing animal link(s) while preserving their genomes; cancelled {cancelledCycles} cycle(s) without a saved egg.",
             LogLevel.Info);
     }
 
@@ -1535,7 +1566,7 @@ public sealed class ModEntry : Mod
         {
             if (!this.stateReady)
             {
-                this.Monitor.Log("The external Ranch Slime registry is unavailable; the incubator is disabled for this save.", LogLevel.Error);
+                this.Monitor.Log("The external Domesticated Slime registry is unavailable; the incubator is disabled for this save.", LogLevel.Error);
                 return;
             }
 
@@ -1565,7 +1596,7 @@ public sealed class ModEntry : Mod
                         return false;
 
                     string previousName = animal.Name;
-                    animal.Name = string.IsNullOrWhiteSpace(name) ? "Ranch Slime" : name.Trim();
+                    animal.Name = string.IsNullOrWhiteSpace(name) ? "Domesticated Slime" : name.Trim();
                     if (!this.registry.CompleteIncubation(key))
                     {
                         animal.Name = previousName;
@@ -1753,7 +1784,7 @@ public sealed class ModEntry : Mod
             showReceivingMenu: true,
             highlightFunction: InventoryMenu.highlightAllItems,
             behaviorOnItemSelectFunction: (item, who) => this.StoreEggInCryoLab(chest, item, who),
-            message: "Ranch Slime Eggs only · 36 storage slots",
+            message: "Domesticated Slime Eggs only · 36 storage slots",
             behaviorOnItemGrab: (item, who) => this.TakeEggFromCryoLab(chest, item, who),
             snapToBottom: false,
             canBeExitedWithKey: true,
@@ -1786,7 +1817,7 @@ public sealed class ModEntry : Mod
         }
 
         if (!this.SaveCurrentSaveDataNow())
-            this.Monitor.Log("An Egg CryoLab transfer is saved with the native chest; its Ranch Slime Egg record can be rebuilt from item metadata if needed.", LogLevel.Warn);
+            this.Monitor.Log("An Egg CryoLab transfer is saved with the native chest; its Domesticated Slime Egg record can be rebuilt from item metadata if needed.", LogLevel.Warn);
         Game1.playSound("Ship");
         this.OpenEggCryoLabMenu(chest);
     }
@@ -1807,7 +1838,7 @@ public sealed class ModEntry : Mod
     private bool IsEligibleCryoLabEgg(Chest chest, Item item, Farmer who, out string eggId, out string rejectionMessage)
     {
         eggId = string.Empty;
-        rejectionMessage = "The Egg CryoLab accepts unused Ranch Slime Eggs only.";
+        rejectionMessage = "The Egg CryoLab accepts unused Domesticated Slime Eggs only.";
         if (this.registry is null)
             return false;
 
@@ -1818,14 +1849,14 @@ public sealed class ModEntry : Mod
 
         if (!this.registry.RegisterEggItem(egg))
         {
-            rejectionMessage = "This Ranch Slime Egg is invalid, already hatched, or retired.";
+            rejectionMessage = "This Domesticated Slime Egg is invalid, already hatched, or retired.";
             return false;
         }
 
         string candidateEggId = eggId;
         if (!this.registry.CanIncubate(candidateEggId))
         {
-            rejectionMessage = "This Ranch Slime Egg has already been incubated or used.";
+            rejectionMessage = "This Domesticated Slime Egg has already been incubated or used.";
             return false;
         }
 
@@ -1897,7 +1928,7 @@ public sealed class ModEntry : Mod
         if (removed == 0)
             return false;
 
-        this.Monitor.Log($"Cleared {removed} breeder cycle(s) because their machine was removed. Parent Ranch Slimes are free to roam; a replacement breeder starts with no selection.", LogLevel.Info);
+        this.Monitor.Log($"Cleared {removed} breeder cycle(s) because their machine was removed. Parent Domesticated Slimes are free to roam; a replacement breeder starts with no selection.", LogLevel.Info);
         return true;
     }
 
@@ -1905,14 +1936,14 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting test eggs.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before requesting test eggs.", LogLevel.Warn);
             return;
         }
 
         string? saveName = Constants.SaveFolderName;
         if (args.Length < 1 || args[0] != saveName)
         {
-            this.Monitor.Log($"Usage: slime_ranching_give_test_eggs {saveName} [random|malformed|species=Name] [secondary=Name|none] [color=#RRGGBB] [size=Small|Normal|Large|Giant] [rarity=Tier] [shiny=true|false] [food=(O)itemId] [generation=number] [mutation=Starry|Spotted|Glowing|Crystalline|Mossy|Bubbly|Mushroom|Blooming|Firefly|Crowned|Cowboy|Smelly|none].", LogLevel.Warn);
+            this.Monitor.Log("Usage: slime_ranching_give_test_eggs [random|malformed|species=Name] [secondary=Name|none] [color=#RRGGBB] [size=Small|Normal|Large|Giant] [rarity=Tier] [shiny=true|false] [food=(O)itemId] [generation=number] [mutation=Starry|Spotted|Glowing|Crystalline|Mossy|Bubbly|Mushroom|Blooming|Firefly|Crowned|Cowboy|Smelly|none].", LogLevel.Warn);
             return;
         }
 
@@ -1927,7 +1958,7 @@ public sealed class ModEntry : Mod
         Dictionary<string, string> metadata = new(StringComparer.OrdinalIgnoreCase);
         if (!randomMode && !malformedMode && !TryParseTestEggMetadata(args.Skip(1), out metadata, out string? metadataError))
         {
-            this.Monitor.Log($"Invalid test egg metadata: {metadataError} Usage: slime_ranching_give_test_eggs {saveName} [random|malformed|key=value ...].", LogLevel.Warn);
+            this.Monitor.Log($"Invalid test egg metadata: {metadataError} Usage: slime_ranching_give_test_eggs [random|malformed|key=value ...].", LogLevel.Warn);
             return;
         }
 
@@ -1943,18 +1974,18 @@ public sealed class ModEntry : Mod
         if (randomMode)
         {
             eggs = new[] { this.CreateRandomTestEgg() };
-            description = "one genome-specific Ranch Slime Egg with randomized traits";
+            description = "one genome-specific Domesticated Slime Egg with randomized traits";
         }
         else if (malformedMode)
         {
             eggs = Array.Empty<taums_slime_ranching.Models.SlimeEggRecord>();
-            description = "two deliberately malformed Ranch Slime Egg items for non-stacking diagnostics";
+            description = "two deliberately malformed Domesticated Slime Egg items for non-stacking diagnostics";
         }
         else
         {
             Guid mintId = Guid.NewGuid();
             Guid violetId = Guid.NewGuid();
-            string species = NormalizeTestGenomeName(metadata.GetValueOrDefault("species", "Ranch Slime"));
+            string species = NormalizeTestGenomeName(metadata.GetValueOrDefault("species", "Domesticated Slime"));
             string? secondarySpecies = metadata.TryGetValue("secondary", out string? secondary)
                 && !secondary.Equals("none", StringComparison.OrdinalIgnoreCase)
                     ? NormalizeTestGenomeName(secondary)
@@ -1972,7 +2003,7 @@ public sealed class ModEntry : Mod
                 this.CreateTestEgg(mintId, species, secondarySpecies, chosenColor ?? "#65DDBB", chosenSize, chosenRarity, chosenShiny, chosenFood, chosenGeneration, chosenMutation),
                 this.CreateTestEgg(violetId, species, secondarySpecies, chosenColor ?? "#8A2BE2", chosenSize, chosenRarity, chosenShiny, chosenFood, chosenGeneration, chosenMutation)
             };
-            description = $"two distinct genome-specific Ranch Slime Eggs ({species}; {eggs[0].Genome.VisualColor}, {eggs[0].Genome.Size}, {eggs[0].Genome.RarityTier}, shiny={eggs[0].Genome.IsShiny}, generation={eggs[0].Genome.Generation}, mutation={eggs[0].Genome.MutationTrait ?? "none"})";
+            description = $"two distinct genome-specific Domesticated Slime Eggs ({species}; {eggs[0].Genome.VisualColor}, {eggs[0].Genome.Size}, {eggs[0].Genome.RarityTier}, shiny={eggs[0].Genome.IsShiny}, generation={eggs[0].Genome.Generation}, mutation={eggs[0].Genome.MutationTrait ?? "none"})";
         }
 
         try
@@ -2164,7 +2195,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting color test eggs.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before requesting color test eggs.", LogLevel.Warn);
             return;
         }
 
@@ -2189,7 +2220,7 @@ public sealed class ModEntry : Mod
             return this.registry!.CreateEgg(new SlimeGenome
             {
                 Id = genomeId,
-                PrimarySpecies = "Ranch Slime",
+                PrimarySpecies = "Domesticated Slime",
                 VisualColor = color,
                 Generation = 1,
                 RarityTier = "Common",
@@ -2240,11 +2271,11 @@ public sealed class ModEntry : Mod
         this.Monitor.Log("Added one Red, Orange, Yellow, Green, Blue, Purple, and Pink Chromatic Crystal.", LogLevel.Info);
     }
 
-    private void OnSpawnRanchSlimeCommand(string command, string[] args)
+    private void OnSpawnDomesticatedSlimeCommand(string command, string[] args)
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before spawning a Ranch Slime.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before spawning a Domesticated Slime.", LogLevel.Warn);
             return;
         }
 
@@ -2252,9 +2283,9 @@ public sealed class ModEntry : Mod
         bool randomTraits = args.Length == 3 && args[2].Equals("random", StringComparison.OrdinalIgnoreCase);
         if ((args.Length != 2 && !randomTraits) || args[0] != saveName
             || !int.TryParse(args[1], out int ageDays)
-            || ageDays < 0 || ageDays > FarmAnimalContent.RanchSlimeDaysToMature)
+            || ageDays < 0 || ageDays > FarmAnimalContent.DomesticatedSlimeDaysToMature)
         {
-            this.Monitor.Log($"Usage: slime_ranching_spawn_ranch_slime {saveName} <age days 0-{FarmAnimalContent.RanchSlimeDaysToMature}> [random]. Add 'random' to randomize the genome traits while keeping the chosen age.", LogLevel.Warn);
+            this.Monitor.Log($"Usage: slime_ranching_spawn_domesticated_slime <age days 0-{FarmAnimalContent.DomesticatedSlimeDaysToMature}> [random]. Add 'random' to randomize the genome traits while keeping the chosen age.", LogLevel.Warn);
             return;
         }
 
@@ -2268,14 +2299,14 @@ public sealed class ModEntry : Mod
 
         if (animalHouse.isFull())
         {
-            this.Monitor.Log("The Slime Daycare is full; make room before spawning a Ranch Slime.", LogLevel.Warn);
+            this.Monitor.Log("The Slime Daycare is full; make room before spawning a Domesticated Slime.", LogLevel.Warn);
             return;
         }
 
         long animalId = this.Helper.Multiplayer.GetNewID();
-        var animal = new FarmAnimal(FarmAnimalContent.RanchSlimeTypeId, animalId, Game1.player.UniqueMultiplayerID)
+        var animal = new FarmAnimal(FarmAnimalContent.DomesticatedSlimeTypeId, animalId, Game1.player.UniqueMultiplayerID)
         {
-            Name = "Ranch Slime",
+            Name = "Domesticated Slime",
             home = daycare,
             homeInterior = animalHouse
         };
@@ -2283,17 +2314,17 @@ public sealed class ModEntry : Mod
         // Set the requested age after adoption in case AnimalHouse initializes it.
         // Initialize the mod-owned clock now so the breeder sees the chosen age.
         animal.age.Value = ageDays;
-        Models.SlimeGenome? genome = randomTraits ? this.CreateRandomRanchSlimeGenome() : null;
-        this.registry!.RegisterRanchSlimes(new[] { animal }, genome);
+        Models.SlimeGenome? genome = randomTraits ? this.CreateRandomDomesticatedSlimeGenome() : null;
+        this.registry!.RegisterDomesticatedSlimes(new[] { animal }, genome);
         this.registry.SynchronizeMaturity(new[] { animal }, Game1.Date.TotalDays);
 
         if (!this.SaveCurrentSaveDataNow())
-            this.Monitor.Log($"Ranch Slime {animalId} was added, but its entity metadata could not be saved yet.", LogLevel.Error);
+            this.Monitor.Log($"Domesticated Slime {animalId} was added, but its entity metadata could not be saved yet.", LogLevel.Error);
         else
-            this.Monitor.Log($"Added one {ageDays}-day-old Ranch Slime to the Slime Daycare (FarmAnimal ID {animalId}){(randomTraits ? $" with randomized genome traits ({genome!.PrimarySpecies}, {genome.Size}, {genome.RarityTier}, shiny={genome.IsShiny}, generation={genome.Generation}, mutation={genome.MutationTrait ?? "none"})" : "")}. It is {(ageDays >= FarmAnimalContent.RanchSlimeDaysToMature ? "mature and ready to select in the breeder" : "still growing") }.", LogLevel.Info);
+            this.Monitor.Log($"Added one {ageDays}-day-old Domesticated Slime to the Slime Daycare (FarmAnimal ID {animalId}){(randomTraits ? $" with randomized genome traits ({genome!.PrimarySpecies}, {genome.Size}, {genome.RarityTier}, shiny={genome.IsShiny}, generation={genome.Generation}, mutation={genome.MutationTrait ?? "none"})" : "")}. It is {(ageDays >= FarmAnimalContent.DomesticatedSlimeDaysToMature ? "mature and ready to select in the breeder" : "still growing") }.", LogLevel.Info);
     }
 
-    private Models.SlimeGenome CreateRandomRanchSlimeGenome()
+    private Models.SlimeGenome CreateRandomDomesticatedSlimeGenome()
     {
         (string Name, string Hex)[] colors =
         {
@@ -2328,7 +2359,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before changing Rare Lab test values.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before changing Rare Lab test values.", LogLevel.Warn);
             return;
         }
 
@@ -2338,7 +2369,7 @@ public sealed class ModEntry : Mod
             || !int.TryParse(args[2], out int pityPoints)
             || !int.TryParse(args[3], out int contributionPoints))
         {
-            this.Monitor.Log($"Usage: slime_ranching_set_rare_lab {saveName} <incubator number in current Daycare> <pity 0-100> <contribution 0-100>", LogLevel.Warn);
+            this.Monitor.Log("Usage: slime_ranching_set_rare_lab <incubator number in current Daycare> <pity 0-100> <contribution 0-100>", LogLevel.Warn);
             return;
         }
 
@@ -2393,7 +2424,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before setting Mutagenic Pool test values.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before setting Mutagenic Pool test values.", LogLevel.Warn);
             return;
         }
 
@@ -2403,7 +2434,7 @@ public sealed class ModEntry : Mod
             || !int.TryParse(args[2], out int failurePoints)
             || !int.TryParse(args[3], out int contributionPoints))
         {
-            this.Monitor.Log($"Usage: slime_ranching_set_pool_test_state {saveName} <animal ID> <failures 0-90> <contribution 0-90; total <= 90>", LogLevel.Warn);
+            this.Monitor.Log("Usage: slime_ranching_set_pool_test_state <animal ID> <failures 0-90> <contribution 0-90; total <= 90>", LogLevel.Warn);
             return;
         }
 
@@ -2416,18 +2447,18 @@ public sealed class ModEntry : Mod
         SlimeRegistry? loadedRegistry = this.registry;
         if (loadedRegistry is null || !loadedRegistry.TryGetSlimeRecord(animalId, out SlimeRecord slime))
         {
-            this.Monitor.Log("That ID is not a managed Ranch Slime.", LogLevel.Warn);
+            this.Monitor.Log("That ID is not a managed Domesticated Slime.", LogLevel.Warn);
             return;
         }
 
         FarmAnimal? animal = GetFarmAnimals().FirstOrDefault(candidate => candidate.myID.Value == animalId
-            && candidate.type.Value == FarmAnimalContent.RanchSlimeTypeId);
+            && candidate.type.Value == FarmAnimalContent.DomesticatedSlimeTypeId);
         if (animal is null
-            || loadedRegistry.GetMaturityAgeDays(animalId, animal.age.Value) < FarmAnimalContent.RanchSlimeDaysToMature
+            || loadedRegistry.GetMaturityAgeDays(animalId, animal.age.Value) < FarmAnimalContent.DomesticatedSlimeDaysToMature
             || !string.IsNullOrWhiteSpace(slime.Genome.MutationTrait)
             || loadedRegistry.IsReserved(animalId))
         {
-            this.Monitor.Log("Choose a mature, unmutated, unreserved Ranch Slime before setting its Pool test state.", LogLevel.Warn);
+            this.Monitor.Log("Choose a mature, unmutated, unreserved Domesticated Slime before setting its Pool test state.", LogLevel.Warn);
             return;
         }
 
@@ -2444,28 +2475,28 @@ public sealed class ModEntry : Mod
         }
 
         double chance = MutagenicPoolRules.Instance.GetChance(failurePoints, contributionPoints / 100.0);
-        this.Monitor.Log($"Set Ranch Slime {animalId} Pool test state: {failurePoints} failed attempts, {contributionPoints}% contribution, {chance:P0} chance. No attempt was started.", LogLevel.Info);
+        this.Monitor.Log($"Set Domesticated Slime {animalId} Pool test state: {failurePoints} failed attempts, {contributionPoints}% contribution, {chance:P0} chance. No attempt was started.", LogLevel.Info);
     }
 
     private void OnSetSlimeSizeCommand(string command, string[] args)
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before changing a test genome.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before changing a test genome.", LogLevel.Warn);
             return;
         }
 
         string? saveName = Constants.SaveFolderName;
         if (args.Length != 3 || args[0] != saveName || !long.TryParse(args[1], out long animalId))
         {
-            this.Monitor.Log($"Usage: slime_ranching_set_size {saveName} <animal ID> <Small|Normal|Large|Giant>", LogLevel.Warn);
+            this.Monitor.Log("Usage: slime_ranching_set_size <animal ID> <Small|Normal|Large|Giant>", LogLevel.Warn);
             return;
         }
 
         string? oldSize = this.registry!.GetGenomeSize(animalId);
         if (oldSize is null || !this.registry.SetGenomeSize(animalId, args[2]))
         {
-            this.Monitor.Log("That ID is not a managed Ranch Slime, or the requested size is invalid.", LogLevel.Warn);
+            this.Monitor.Log("That ID is not a managed Domesticated Slime, or the requested size is invalid.", LogLevel.Warn);
             return;
         }
 
@@ -2476,7 +2507,7 @@ public sealed class ModEntry : Mod
             if (animalToRestore is not null)
                 FarmAnimalContent.ApplyAppearance(animalToRestore,
                     this.registry.GetGenomeColor(animalId), this.registry.GetGenomeSize(animalId), this.registry.GetGenomeIsShiny(animalId));
-            this.Monitor.Log("Could not save Ranch Slime save data; the original genome size was restored.", LogLevel.Error);
+            this.Monitor.Log("Could not save Domesticated Slime save data; the original genome size was restored.", LogLevel.Error);
             return;
         }
 
@@ -2484,14 +2515,14 @@ public sealed class ModEntry : Mod
         if (animalToUpdate is not null)
             FarmAnimalContent.ApplyAppearance(animalToUpdate,
                 this.registry.GetGenomeColor(animalId), this.registry.GetGenomeSize(animalId), this.registry.GetGenomeIsShiny(animalId));
-        this.Monitor.Log($"Changed Ranch Slime {animalId} genome size from {oldSize} to {this.registry.GetGenomeSize(animalId)}.", LogLevel.Info);
+        this.Monitor.Log($"Changed Domesticated Slime {animalId} genome size from {oldSize} to {this.registry.GetGenomeSize(animalId)}.", LogLevel.Info);
     }
 
     private void OnSetSlimeShinyCommand(string command, string[] args)
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before changing a test genome.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before changing a test genome.", LogLevel.Warn);
             return;
         }
 
@@ -2499,68 +2530,68 @@ public sealed class ModEntry : Mod
         if (args.Length != 3 || args[0] != saveName || !long.TryParse(args[1], out long animalId)
             || !bool.TryParse(args[2], out bool isShiny))
         {
-            this.Monitor.Log($"Usage: slime_ranching_set_shiny {saveName} <animal ID> <true|false>", LogLevel.Warn);
+            this.Monitor.Log("Usage: slime_ranching_set_shiny <animal ID> <true|false>", LogLevel.Warn);
             return;
         }
 
         bool oldValue = this.registry!.GetGenomeIsShiny(animalId);
         if (this.registry.GetGenomeSize(animalId) is null || !this.registry.SetGenomeShiny(animalId, isShiny))
         {
-            this.Monitor.Log("That ID is not a managed Ranch Slime.", LogLevel.Warn);
+            this.Monitor.Log("That ID is not a managed Domesticated Slime.", LogLevel.Warn);
             return;
         }
 
         if (!this.SaveCurrentSaveDataNow())
         {
             this.registry.SetGenomeShiny(animalId, oldValue);
-            this.RefreshRanchSlimeAppearance(animalId);
-            this.Monitor.Log("Could not save Ranch Slime save data; the original shiny flag was restored.", LogLevel.Error);
+            this.RefreshDomesticatedSlimeAppearance(animalId);
+            this.Monitor.Log("Could not save Domesticated Slime save data; the original shiny flag was restored.", LogLevel.Error);
             return;
         }
 
-        this.RefreshRanchSlimeAppearance(animalId);
-        this.Monitor.Log($"Changed Ranch Slime {animalId} shiny flag to {isShiny}.", LogLevel.Info);
+        this.RefreshDomesticatedSlimeAppearance(animalId);
+        this.Monitor.Log($"Changed Domesticated Slime {animalId} shiny flag to {isShiny}.", LogLevel.Info);
     }
 
     private void OnSetSlimeColorCommand(string command, string[] args)
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before changing a test genome.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before changing a test genome.", LogLevel.Warn);
             return;
         }
 
         string? saveName = Constants.SaveFolderName;
         if (args.Length != 3 || args[0] != saveName || !long.TryParse(args[1], out long animalId))
         {
-            this.Monitor.Log($"Usage: slime_ranching_set_color {saveName} <animal ID> <Red|Orange|Yellow|Green|Blue|Purple|Pink>", LogLevel.Warn);
+            this.Monitor.Log("Usage: slime_ranching_set_color <animal ID> <Red|Orange|Yellow|Green|Blue|Purple|Pink>", LogLevel.Warn);
             return;
         }
 
         var oldState = this.registry!.GetGenomeColorState(animalId);
         if (oldState is null || !this.registry.SetGenomeBaseColor(animalId, args[2]))
         {
-            this.Monitor.Log("That ID is not a managed Ranch Slime, or the requested base color is invalid.", LogLevel.Warn);
+            this.Monitor.Log("That ID is not a managed Domesticated Slime, or the requested base color is invalid.", LogLevel.Warn);
             return;
         }
 
         if (!this.SaveCurrentSaveDataNow())
         {
             this.registry.RestoreGenomeColorState(animalId, oldState.Value);
-            this.RefreshRanchSlimeAppearance(animalId);
-            this.Monitor.Log("Could not save Ranch Slime save data; the original species and color were restored.", LogLevel.Error);
+            this.RefreshDomesticatedSlimeAppearance(animalId);
+            this.Monitor.Log("Could not save Domesticated Slime save data; the original species and color were restored.", LogLevel.Error);
             return;
         }
 
-        this.RefreshRanchSlimeAppearance(animalId);
-        this.Monitor.Log($"Changed Ranch Slime {animalId} base color and species to {this.registry.GetGenomeColorState(animalId)?.PrimarySpecies}.", LogLevel.Info);
+        this.RefreshDomesticatedSlimeAppearance(animalId);
+        this.Monitor.Log($"Changed Domesticated Slime {animalId} base color and species to {this.registry.GetGenomeColorState(animalId)?.PrimarySpecies}.", LogLevel.Info);
     }
 
     private void OnSetSlimeMutationCommand(string command, string[] args)
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before changing a test genome.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before changing a test genome.", LogLevel.Warn);
             return;
         }
 
@@ -2573,49 +2604,49 @@ public sealed class ModEntry : Mod
         if (args.Length != 3 || args[0] != saveName || !long.TryParse(args[1], out long animalId)
             || (chosenMutation is null && !args[2].Equals("none", StringComparison.OrdinalIgnoreCase)))
         {
-            this.Monitor.Log($"Usage: slime_ranching_set_mutation {saveName} <animal ID> <Starry|Spotted|Glowing|Crystalline|Mossy|Bubbly|Mushroom|Blooming|Firefly|Crowned|Cowboy|Smelly|none>", LogLevel.Warn);
+            this.Monitor.Log("Usage: slime_ranching_set_mutation <animal ID> <Starry|Spotted|Glowing|Crystalline|Mossy|Bubbly|Mushroom|Blooming|Firefly|Crowned|Cowboy|Smelly|none>", LogLevel.Warn);
             return;
         }
 
         string? oldTrait = this.registry!.GetMutationTrait(animalId);
         if (!this.registry.SetMutationTrait(animalId, chosenMutation))
         {
-            this.Monitor.Log("That ID is not an unreserved managed Ranch Slime, or the requested test mutation is invalid.", LogLevel.Warn);
+            this.Monitor.Log("That ID is not an unreserved managed Domesticated Slime, or the requested test mutation is invalid.", LogLevel.Warn);
             return;
         }
 
         if (!this.SaveCurrentSaveDataNow())
         {
             this.registry.SetMutationTrait(animalId, oldTrait);
-            this.Monitor.Log("Could not save Ranch Slime save data; the original mutation trait was restored.", LogLevel.Error);
+            this.Monitor.Log("Could not save Domesticated Slime save data; the original mutation trait was restored.", LogLevel.Error);
             return;
         }
 
-        this.Monitor.Log($"Changed Ranch Slime {animalId} mutation trait to {this.registry.GetMutationTrait(animalId) ?? "none"}.", LogLevel.Info);
+        this.Monitor.Log($"Changed Domesticated Slime {animalId} mutation trait to {this.registry.GetMutationTrait(animalId) ?? "none"}.", LogLevel.Info);
     }
 
     private void OnBindCompanionCommand(string command, string[] args)
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before binding a companion.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before binding a companion.", LogLevel.Warn);
             return;
         }
 
         string? saveName = Constants.SaveFolderName;
         if (args.Length != 2 || args[0] != saveName || !long.TryParse(args[1], out long animalId))
         {
-            this.Monitor.Log($"Usage: slime_ranching_bind_companion {saveName} <animal ID>", LogLevel.Warn);
+            this.Monitor.Log("Usage: slime_ranching_bind_companion <animal ID>", LogLevel.Warn);
             return;
         }
 
         bool isInDaycare = Game1.getFarm().buildings.Any(building =>
             BuildingContent.IsSlimeDaycare(building.buildingType.Value)
             && building.GetIndoors() is StardewValley.AnimalHouse house
-            && house.animals.Values.Any(animal => animal.myID.Value == animalId && animal.type.Value == FarmAnimalContent.RanchSlimeTypeId));
+            && house.animals.Values.Any(animal => animal.myID.Value == animalId && animal.type.Value == FarmAnimalContent.DomesticatedSlimeTypeId));
         if (!isInDaycare || !this.registry!.BindCompanion(animalId))
         {
-            this.Monitor.Log("Binding failed. Choose one mature managed Ranch Slime in the Daycare that is not assigned to a ranching job; only one companion can be bound.", LogLevel.Warn);
+            this.Monitor.Log("Binding failed. Choose one mature managed Domesticated Slime in the Daycare that is not assigned to a ranching job; only one companion can be bound.", LogLevel.Warn);
             return;
         }
 
@@ -2626,21 +2657,21 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        this.Monitor.Log($"Bound Ranch Slime {animalId} as the companion identity test. It remains in the Daycare; follower movement and the Core item are not implemented yet.", LogLevel.Info);
+        this.Monitor.Log($"Bound Domesticated Slime {animalId} as the companion identity test. It remains in the Daycare; follower movement and the Core item are not implemented yet.", LogLevel.Info);
     }
 
     private void OnDismissCompanionCommand(string command, string[] args)
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before dismissing a companion.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before dismissing a companion.", LogLevel.Warn);
             return;
         }
 
         string? saveName = Constants.SaveFolderName;
         if (args.Length != 1 || args[0] != saveName)
         {
-            this.Monitor.Log($"Usage: slime_ranching_dismiss_companion {saveName}", LogLevel.Warn);
+            this.Monitor.Log("Usage: slime_ranching_dismiss_companion", LogLevel.Warn);
             return;
         }
 
@@ -2657,10 +2688,10 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        this.Monitor.Log($"Dismissed companion Ranch Slime {animalId}. The same animal and genome remain in the Daycare.", LogLevel.Info);
+        this.Monitor.Log($"Dismissed companion Domesticated Slime {animalId}. The same animal and genome remain in the Daycare.", LogLevel.Info);
     }
 
-    private void RefreshRanchSlimeAppearance(long animalId)
+    private void RefreshDomesticatedSlimeAppearance(long animalId)
     {
         FarmAnimal? animal = GetFarmAnimals().FirstOrDefault(candidate => candidate.myID.Value == animalId);
         if (animal is not null && this.registry is not null)
@@ -2673,7 +2704,7 @@ public sealed class ModEntry : Mod
         SlimeRegistry? currentRegistry = this.registry;
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady || currentRegistry is null)
         {
-            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before opening the Daycare Management Desk preview.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before opening the Daycare Management Desk preview.", LogLevel.Warn);
             return;
         }
 
@@ -2707,7 +2738,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting a guidebook.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before requesting a guidebook.", LogLevel.Warn);
             return;
         }
 
@@ -2732,7 +2763,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting a breeder.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before requesting a breeder.", LogLevel.Warn);
             return;
         }
 
@@ -2750,14 +2781,14 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        this.Monitor.Log("Added one Slime Breeder. Place it inside the Slime Daycare and use it to select two Ranch Slimes.", LogLevel.Info);
+        this.Monitor.Log("Added one Slime Breeder. Place it inside the Slime Daycare and use it to select two Domesticated Slimes.", LogLevel.Info);
     }
 
     private void OnGiveIncubatorCommand(string command, string[] args)
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting an incubator.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before requesting an incubator.", LogLevel.Warn);
             return;
         }
 
@@ -2775,14 +2806,14 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        this.Monitor.Log("Added one Slime Incubator. Place it inside the Slime Daycare and use it with a genome-specific Ranch Slime Egg in your inventory.", LogLevel.Info);
+        this.Monitor.Log("Added one Slime Incubator. Place it inside the Slime Daycare and use it with a genome-specific Domesticated Slime Egg in your inventory.", LogLevel.Info);
     }
 
     private void OnGiveCryoLabCommand(string command, string[] args)
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting an Egg CryoLab tester chest.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before requesting an Egg CryoLab tester chest.", LogLevel.Warn);
             return;
         }
 
@@ -2800,7 +2831,7 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        this.Monitor.Log("Added a tester Egg CryoLab chest. Place it in a tier-1-or-higher Slime Daycare; it stores eligible Ranch Slime Eggs without starting incubation.", LogLevel.Info);
+        this.Monitor.Log("Added a tester Egg CryoLab chest. Place it in a tier-1-or-higher Slime Daycare; it stores eligible Domesticated Slime Eggs without starting incubation.", LogLevel.Info);
     }
 
     private void OnDuplicateCryoLabEggCommand(string command, string[] args)
@@ -2836,7 +2867,7 @@ public sealed class ModEntry : Mod
                     && SlimeEggContent.TryGetEggId(existing, out string existingId) && existingId == eggId));
         if (source is null || !SlimeEggContent.TryGetEggId(source, out string sourceEggId))
         {
-            this.Monitor.Log("The current Daycare needs a stored, unused Ranch Slime Egg with no copy already in your inventory.", LogLevel.Warn);
+            this.Monitor.Log("The current Daycare needs a stored, unused Domesticated Slime Egg with no copy already in your inventory.", LogLevel.Warn);
             return;
         }
 
@@ -2868,7 +2899,7 @@ public sealed class ModEntry : Mod
         if (Game1.currentLocation is not AnimalHouse daycare
             || !BuildingContent.IsSlimeDaycare(daycare.ParentBuilding?.buildingType.Value))
         {
-            this.Monitor.Log("Enter the Slime Daycare with one unused Ranch Slime Egg in inventory first.", LogLevel.Warn);
+            this.Monitor.Log("Enter the Slime Daycare with one unused Domesticated Slime Egg in inventory first.", LogLevel.Warn);
             return;
         }
 
@@ -2887,7 +2918,7 @@ public sealed class ModEntry : Mod
                     && SlimeEggContent.TryGetEggId(stored, out string storedEggId) && storedEggId == eggId));
         if (source is null || !SlimeEggContent.TryGetEggId(source, out string sourceEggId))
         {
-            this.Monitor.Log("The Daycare needs exactly one unused Ranch Slime Egg in inventory, with no copy in a Breeder or Egg CryoLab.", LogLevel.Warn);
+            this.Monitor.Log("The Daycare needs exactly one unused Domesticated Slime Egg in inventory, with no copy in a Breeder or Egg CryoLab.", LogLevel.Warn);
             return;
         }
 
@@ -2905,7 +2936,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting a Mutagenic Pool.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before requesting a Mutagenic Pool.", LogLevel.Warn);
             return;
         }
 
@@ -2930,7 +2961,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting a Gel Refinery.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before requesting a Gel Refinery.", LogLevel.Warn);
             return;
         }
 
@@ -2955,7 +2986,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting a Slime Tunnel.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before requesting a Slime Tunnel.", LogLevel.Warn);
             return;
         }
 
@@ -2973,14 +3004,14 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        this.Monitor.Log("Added one Slime Tunnel. Place it in the Slime Daycare for nearby idle Ranch Slimes to crawl through.", LogLevel.Info);
+        this.Monitor.Log("Added one Slime Tunnel. Place it in the Slime Daycare for nearby idle Domesticated Slimes to crawl through.", LogLevel.Info);
     }
 
     private void OnGiveHeatedStoneCommand(string command, string[] args)
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting a Heated Slime Stone.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before requesting a Heated Slime Stone.", LogLevel.Warn);
             return;
         }
 
@@ -2998,14 +3029,14 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        this.Monitor.Log("Added one Heated Slime Stone. Place it in the Slime Daycare for nearby idle Ranch Slimes to rest beside it.", LogLevel.Info);
+        this.Monitor.Log("Added one Heated Slime Stone. Place it in the Slime Daycare for nearby idle Domesticated Slimes to rest beside it.", LogLevel.Info);
     }
 
     private void OnGivePondCommand(string command, string[] args)
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting a Slime Pond.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before requesting a Slime Pond.", LogLevel.Warn);
             return;
         }
 
@@ -3023,14 +3054,14 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        this.Monitor.Log("Added one Slime Pond. Place it in the Slime Daycare for nearby idle Ranch Slimes to bob in the water.", LogLevel.Info);
+        this.Monitor.Log("Added one Slime Pond. Place it in the Slime Daycare for nearby idle Domesticated Slimes to bob in the water.", LogLevel.Info);
     }
 
     private void OnGiveSwingCommand(string command, string[] args)
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting a Slime Swing.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before requesting a Slime Swing.", LogLevel.Warn);
             return;
         }
 
@@ -3048,14 +3079,14 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        this.Monitor.Log("Added one Slime Swing. Place it in the Slime Daycare for nearby idle Ranch Slimes to sway on.", LogLevel.Info);
+        this.Monitor.Log("Added one Slime Swing. Place it in the Slime Daycare for nearby idle Domesticated Slimes to sway on.", LogLevel.Info);
     }
 
     private void OnGiveFairyLightsCommand(string command, string[] args)
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting Slime Fairy Lights.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before requesting Slime Fairy Lights.", LogLevel.Warn);
             return;
         }
 
@@ -3080,7 +3111,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting a Slime Seesaw.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before requesting a Slime Seesaw.", LogLevel.Warn);
             return;
         }
 
@@ -3098,14 +3129,14 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        this.Monitor.Log("Added one Slime Seesaw. Place it in the Slime Daycare; two nearby idle Ranch Slimes can play together.", LogLevel.Info);
+        this.Monitor.Log("Added one Slime Seesaw. Place it in the Slime Daycare; two nearby idle Domesticated Slimes can play together.", LogLevel.Info);
     }
 
     private void OnGiveBallPitCommand(string command, string[] args)
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting a Slime Ball Pit.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before requesting a Slime Ball Pit.", LogLevel.Warn);
             return;
         }
 
@@ -3123,14 +3154,14 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        this.Monitor.Log("Added one Slime Ball Pit. Place it in the Daycare for nearby idle Ranch Slimes to dip into and pop back out.", LogLevel.Info);
+        this.Monitor.Log("Added one Slime Ball Pit. Place it in the Daycare for nearby idle Domesticated Slimes to dip into and pop back out.", LogLevel.Info);
     }
 
     private void OnGiveLampCommand(string command, string[] args)
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before requesting a Slime Lamp.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before requesting a Slime Lamp.", LogLevel.Warn);
             return;
         }
 
@@ -3148,7 +3179,7 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        this.Monitor.Log("Added one Slime Lamp. Place it in the Slime Daycare; nearby eligible Ranch Slimes can gather around its light.", LogLevel.Info);
+        this.Monitor.Log("Added one Slime Lamp. Place it in the Slime Daycare; nearby eligible Domesticated Slimes can gather around its light.", LogLevel.Info);
     }
 
     private bool StartRefineryBatch(string machineKey, Building daycare)
@@ -3255,14 +3286,14 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady)
         {
-            this.Monitor.Log("Load a single-player save with available Ranch Slime save data before creating a backup.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Domesticated Slime save data before creating a backup.", LogLevel.Warn);
             return;
         }
 
         string? saveName = Constants.SaveFolderName;
         if (args.Length != 1 || args[0] != saveName)
         {
-            this.Monitor.Log($"Usage: slime_ranching_backup_external_data {saveName}", LogLevel.Warn);
+            this.Monitor.Log("Usage: slime_ranching_backup_external_data", LogLevel.Warn);
             return;
         }
 
@@ -3293,14 +3324,14 @@ public sealed class ModEntry : Mod
 
         if (!this.stateReady)
         {
-            this.Monitor.Log("Ranch Slime save data is unavailable for this save; see earlier log errors.", LogLevel.Warn);
+            this.Monitor.Log("Domesticated Slime save data is unavailable for this save; see earlier log errors.", LogLevel.Warn);
             return;
         }
 
         SlimeRegistry loadedRegistry = this.registry!;
         if (args.Length > 1 || (args.Length == 1 && !long.TryParse(args[0], out _)))
         {
-            this.Monitor.Log("Usage: slime_ranching_inspect [Ranch Slime animal ID]", LogLevel.Warn);
+            this.Monitor.Log("Usage: slime_ranching_inspect [Domesticated Slime animal ID]", LogLevel.Warn);
             return;
         }
 
@@ -3312,7 +3343,7 @@ public sealed class ModEntry : Mod
             long animalId = long.Parse(args[0]);
             if (!loadedRegistry.TryGetSlimeRecord(animalId, out SlimeRecord record))
             {
-                this.Monitor.Log($"FarmAnimal ID {animalId} has no active Ranch Slime genome record in this save.", LogLevel.Warn);
+                this.Monitor.Log($"FarmAnimal ID {animalId} has no active Domesticated Slime genome record in this save.", LogLevel.Warn);
                 return;
             }
 
@@ -3323,8 +3354,8 @@ public sealed class ModEntry : Mod
             FarmAnimal? resident = GetFarmAnimals().FirstOrDefault(animal => animal.myID.Value == animalId);
             int age = record.AgeClockInitialized ? record.AgeDays : resident?.age.Value ?? 0;
             string residentStatus = SlimeRegistry.GetResidentStatusLabel(loadedRegistry.GetResidentStatus(animalId));
-            this.Monitor.Log($"Ranch Slime {animalId}: genome {genome.Id:N}, {species}, color {genome.VisualColor}, size {genome.Size}, shiny {genome.IsShiny}, rarity {genome.RarityTier}, mutation {mutation}.", LogLevel.Info);
-            this.Monitor.Log($"Generation {genome.Generation}; abilities [{string.Join(", ", genome.AbilityIds)}]; likes {likedFood}; age {age}/{FarmAnimalContent.RanchSlimeDaysToMature} days; friendship {resident?.friendshipTowardFarmer.Value ?? 0}/1000; happiness {resident?.happiness.Value ?? 0}/255; fullness {resident?.fullness.Value ?? 0}/255; Pool pity {loadedRegistry.GetMutagenicPoolFailures(animalId)}, contribution {loadedRegistry.GetMutagenicPoolContribution(animalId):P0}; assignment {residentStatus}.", LogLevel.Info);
+            this.Monitor.Log($"Domesticated Slime {animalId}: genome {genome.Id:N}, {species}, color {genome.VisualColor}, size {genome.Size}, shiny {genome.IsShiny}, rarity {genome.RarityTier}, mutation {mutation}.", LogLevel.Info);
+            this.Monitor.Log($"Generation {genome.Generation}; abilities [{string.Join(", ", genome.AbilityIds)}]; likes {likedFood}; age {age}/{FarmAnimalContent.DomesticatedSlimeDaysToMature} days; friendship {resident?.friendshipTowardFarmer.Value ?? 0}/1000; happiness {resident?.happiness.Value ?? 0}/255; fullness {resident?.fullness.Value ?? 0}/255; Pool pity {loadedRegistry.GetMutagenicPoolFailures(animalId)}, contribution {loadedRegistry.GetMutagenicPoolContribution(animalId):P0}; assignment {residentStatus}.", LogLevel.Info);
             int activitiesToday = record.EnrichmentActivityDay == Game1.Date.TotalDays ? record.EnrichmentActivitiesToday : 0;
             string nextActivityCheck;
             if (record.EnrichmentActivityDay != Game1.Date.TotalDays)
@@ -3345,7 +3376,7 @@ public sealed class ModEntry : Mod
         if (Game1.currentLocation is SlimeHutch hutch)
         {
             int slimeCount = hutch.characters.OfType<GreenSlime>().Count();
-            this.Monitor.Log($"This vanilla Slime Hutch contains {slimeCount} GreenSlime monster(s), all left unchanged. Ranch Slimes live in the separate Slime Daycare; save data contains {loadedRegistry.Count} Ranch Slime record(s).", LogLevel.Info);
+            this.Monitor.Log($"This vanilla Slime Hutch contains {slimeCount} GreenSlime monster(s), all left unchanged. Domesticated Slimes live in the separate Slime Daycare; save data contains {loadedRegistry.Count} Domesticated Slime record(s).", LogLevel.Info);
             return;
         }
 
@@ -3353,7 +3384,7 @@ public sealed class ModEntry : Mod
         {
             bool isDaycare = BuildingContent.IsSlimeDaycare(animalHouse.ParentBuilding?.buildingType.Value);
             FarmAnimal[] residents = animalHouse.animals.Values
-                .Where(animal => animal.type.Value == FarmAnimalContent.RanchSlimeTypeId)
+                .Where(animal => animal.type.Value == FarmAnimalContent.DomesticatedSlimeTypeId)
                 .ToArray();
             string machinePrefix = animalHouse.NameOrUniqueName + ":";
             BreedingPairRecord[] roomBreedingPairs = loadedRegistry.BreedingPairs
@@ -3385,15 +3416,15 @@ public sealed class ModEntry : Mod
                 .Select(status => (Label: SlimeRegistry.GetResidentStatusLabel(status), Count: residents.Count(animal => loadedRegistry.GetResidentStatus(animal.myID.Value) == status)))
                 .Where(status => status.Count > 0)
                 .Select(status => $"{status.Label}: {status.Count}"));
-            this.Monitor.Log($"This animal house contains {residents.Length} Ranch Slime(s), including {mutatedResidents} with mutation traits. Save data contains {loadedRegistry.Count} Ranch Slime record(s).", LogLevel.Info);
+            this.Monitor.Log($"This animal house contains {residents.Length} Domesticated Slime(s), including {mutatedResidents} with mutation traits. Save data contains {loadedRegistry.Count} Domesticated Slime record(s).", LogLevel.Info);
             if (isDaycare)
                 this.Monitor.Log($"Daycare living residents: {animalHouse.animalsThatLiveHere.Count}/{animalHouse.animalLimit.Value} capacity.", LogLevel.Info);
-            this.Monitor.Log($"Ranch Slime assignment status: {residentStatuses}.", LogLevel.Info);
+            this.Monitor.Log($"Domesticated Slime assignment status: {residentStatuses}.", LogLevel.Info);
             this.Monitor.Log($"Jobs in this room: {activeCycles} breeder cycle(s), {readyEggs} ready egg(s), {activeIncubations} incubation(s), {activeMutations} Mutagenic Pool attempt(s), {activeRefineryBatches} Gel Refinery batch(es).", LogLevel.Info);
             if (isDaycare)
             {
                 this.Monitor.Log($"Slime Incubators placed in this Daycare: {roomIncubatorMachineKeys.Length}.", LogLevel.Info);
-                this.Monitor.Log($"Egg CryoLab tester chests: {roomCryoLabs.Length}; stored Ranch Slime Eggs: {roomCryoLabs.Sum(chest => chest.GetItemsForPlayer().Count(item => item is not null))}/36 slots each.", LogLevel.Info);
+                this.Monitor.Log($"Egg CryoLab tester chests: {roomCryoLabs.Length}; stored Domesticated Slime Eggs: {roomCryoLabs.Sum(chest => chest.GetItemsForPlayer().Count(item => item is not null))}/36 slots each.", LogLevel.Info);
                 var storedEggIds = new HashSet<string>(StringComparer.Ordinal);
                 for (int chestIndex = 0; chestIndex < roomCryoLabs.Length; chestIndex++)
                 {
@@ -3438,7 +3469,7 @@ public sealed class ModEntry : Mod
                     if (!SlimeEggContent.TryReadRecord(item, out SlimeEggRecord egg)
                         || !SlimeEggContent.TryGetEggId(item, out string eggId))
                     {
-                        this.Monitor.Log($"Ranch Slime Egg inventory slot {slot + 1}: invalid identity or genome metadata; item ID {item.QualifiedItemId}; {stackStatus}.", LogLevel.Info);
+                        this.Monitor.Log($"Domesticated Slime Egg inventory slot {slot + 1}: invalid identity or genome metadata; item ID {item.QualifiedItemId}; {stackStatus}.", LogLevel.Info);
                         continue;
                     }
 
@@ -3450,10 +3481,10 @@ public sealed class ModEntry : Mod
                     string species = egg.Genome.SecondarySpecies is null
                         ? egg.Genome.PrimarySpecies
                         : $"{egg.Genome.PrimarySpecies} / {egg.Genome.SecondarySpecies}";
-                    this.Monitor.Log($"Ranch Slime Egg inventory slot {slot + 1}: egg ID {eggId}; genome {egg.Genome.Id:N}; {species}; color {egg.Genome.VisualColor}; size {egg.Genome.Size}; rarity {egg.Genome.RarityTier}; {stackStatus}; registry record {(recordMatches ? "matches" : "missing or mismatched")}; incubator eligible {loadedRegistry.CanIncubate(eggId)}; duplicate ID in inventory {duplicate}; also stored in this Daycare's Egg CryoLab {storedInCryoLab}.", LogLevel.Info);
+                    this.Monitor.Log($"Domesticated Slime Egg inventory slot {slot + 1}: egg ID {eggId}; genome {egg.Genome.Id:N}; {species}; color {egg.Genome.VisualColor}; size {egg.Genome.Size}; rarity {egg.Genome.RarityTier}; {stackStatus}; registry record {(recordMatches ? "matches" : "missing or mismatched")}; incubator eligible {loadedRegistry.CanIncubate(eggId)}; duplicate ID in inventory {duplicate}; also stored in this Daycare's Egg CryoLab {storedInCryoLab}.", LogLevel.Info);
                 }
 
-                this.Monitor.Log($"Ranch Slime Eggs in inventory: {inventoryEggCount} slot(s), {inventoryEggStackCount} total stack unit(s); {validInventoryEggCount} item(s) with valid metadata; {inventoryEggIds.Count} distinct valid ID(s).", LogLevel.Info);
+                this.Monitor.Log($"Domesticated Slime Eggs in inventory: {inventoryEggCount} slot(s), {inventoryEggStackCount} total stack unit(s); {validInventoryEggCount} item(s) with valid metadata; {inventoryEggIds.Count} distinct valid ID(s).", LogLevel.Info);
                 this.Monitor.Log($"Rare Labs saved in this Daycare: {roomRareLabs.Length}.", LogLevel.Info);
                 var placedIncubatorKeys = new HashSet<string>(roomIncubatorMachineKeys, StringComparer.Ordinal);
                 for (int index = 0; index < roomIncubators.Length; index++)
@@ -3587,7 +3618,7 @@ public sealed class ModEntry : Mod
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || Context.IsMultiplayer || !this.stateReady || this.registry is null)
         {
-            this.Monitor.Log("Load a single-player save with available Slime Daycare quest data before priming the Maru repair test.", LogLevel.Warn);
+            this.Monitor.Log("Load a single-player save with available Slime Daycare Quest data before priming the Maru repair test.", LogLevel.Warn);
             return;
         }
 

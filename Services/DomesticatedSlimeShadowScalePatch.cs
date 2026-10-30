@@ -5,9 +5,9 @@ using StardewValley;
 
 namespace taums_slime_ranching.Services;
 
-/// <summary>Scales only a Ranch Slime's native ground shadow to match its genome-sized sprite.</summary>
+/// <summary>Scales only a Domesticated Slime's native ground shadow to match its genome-sized sprite.</summary>
 [HarmonyPatch]
-internal static class RanchSlimeShadowDrawContextPatch
+internal static class DomesticatedSlimeShadowDrawContextPatch
 {
     [ThreadStatic]
     private static FarmAnimal? drawingAnimal;
@@ -27,7 +27,7 @@ internal static class RanchSlimeShadowDrawContextPatch
 }
 
 [HarmonyPatch]
-internal static class RanchSlimeShadowScalePatch
+internal static class DomesticatedSlimeShadowScalePatch
 {
     private static Func<long, string?>? getGenomeSize;
 
@@ -43,9 +43,9 @@ internal static class RanchSlimeShadowScalePatch
 
     private static void Prefix(AnimatedSprite __instance, object[] __args)
     {
-        FarmAnimal? animal = RanchSlimeShadowDrawContextPatch.DrawingAnimal;
+        FarmAnimal? animal = DomesticatedSlimeShadowDrawContextPatch.DrawingAnimal;
         if (animal is null
-            || animal.type.Value != FarmAnimalContent.RanchSlimeTypeId
+            || animal.type.Value != FarmAnimalContent.DomesticatedSlimeTypeId
             || !ReferenceEquals(animal.Sprite, __instance)
             || __args.Length < 3
             || __args[2] is not float shadowScale

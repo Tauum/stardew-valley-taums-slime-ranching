@@ -4,7 +4,7 @@ using StardewValley;
 
 namespace taums_slime_ranching.Services;
 
-/// <summary>Draws small animated mutation accents after the native Ranch Slime sprite.</summary>
+/// <summary>Draws small animated mutation accents after the native Domesticated Slime sprite.</summary>
 internal sealed class SlimeMutationVisualService
 {
     private const float SpriteScale = 4f;
@@ -57,7 +57,7 @@ internal sealed class SlimeMutationVisualService
         this.mutatedSlimes.Clear();
         foreach (FarmAnimal animal in house.animals.Values)
         {
-            if (animal.type.Value == FarmAnimalContent.RanchSlimeTypeId
+            if (animal.type.Value == FarmAnimalContent.DomesticatedSlimeTypeId
                 && MutagenicPoolRules.IsApprovedMutation(registry.GetMutationTrait(animal.myID.Value)))
                 this.mutatedSlimes.Add(animal);
         }

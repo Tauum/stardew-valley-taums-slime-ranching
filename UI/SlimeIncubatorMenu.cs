@@ -108,7 +108,7 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
         IncubationRecord? active = this.registry.GetIncubation(this.machineKey);
         if (active?.HatchAnimalId is not null && this.actionButton.Contains(x, y))
         {
-            string suggestedName = this.hatchedAnimal?.Name ?? "Ranch Slime";
+            string suggestedName = this.hatchedAnimal?.Name ?? "Domesticated Slime";
             Game1.activeClickableMenu = new NamingMenu(name =>
             {
                 if (!this.takeHatchedSlime(name))
@@ -233,7 +233,7 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
             int duration = Math.Max(1, active.ReadyOnDay - active.StartedOnDay);
             int elapsed = Math.Clamp(Game1.Date.TotalDays - active.StartedOnDay, 0, duration);
             float progress = (float)elapsed / duration;
-            string eggName = "Ranch Slime Egg";
+            string eggName = "Domesticated Slime Egg";
             if (this.registry.TryGetEgg(active.EggItemId, out SlimeEggRecord egg))
             {
                 SlimeGenome displayGenome = active.HatchGenome ?? egg.Genome;
@@ -295,8 +295,8 @@ internal sealed class SlimeIncubatorMenu : IClickableMenu
                 DrawCentered(b, "No eligible eggs in your inventory.", Game1.smallFont,
                     new Rectangle(emptyState.X, emptyState.Y, emptyState.Width, 48), Color.White);
                 string eggCount = this.ineligibleEggCount == 1
-                    ? "1 Ranch Slime Egg copy is used or unavailable."
-                    : $"{this.ineligibleEggCount} Ranch Slime Egg copies are used or unavailable.";
+                    ? "1 Domesticated Slime Egg copy is used or unavailable."
+                    : $"{this.ineligibleEggCount} Domesticated Slime Egg copies are used or unavailable.";
                 DrawCentered(b, eggCount, Game1.tinyFont,
                     new Rectangle(emptyState.X, emptyState.Y + 48, emptyState.Width, 40), new Color(210, 220, 245));
             }

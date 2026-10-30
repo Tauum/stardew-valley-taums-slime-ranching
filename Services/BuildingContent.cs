@@ -51,7 +51,7 @@ internal static class BuildingContent
             BuildingData daycare = Clone(deluxeBarn, options);
             daycare.Name = "Slime Daycare";
             daycare.NameForGeneralType = "Slime Daycare";
-            daycare.Description = "A safe animal house for friendly Ranch Slimes.";
+            daycare.Description = "A safe animal house for friendly Domesticated Slimes.";
             daycare.BuildingType = "";
             daycare.BuildingToUpgrade = null;
             // A save has one Daycare building which expands through this upgrade
@@ -86,7 +86,7 @@ internal static class BuildingContent
             upgrade1.BuildCondition = "";
             upgrade1.Name = "Slime Daycare - Upgrade 1";
             upgrade1.NameForGeneralType = "Slime Daycare";
-            upgrade1.Description = "Expands the farmhouse-style interior for up to 20 Ranch Slimes.";
+            upgrade1.Description = "Expands the farmhouse-style interior for up to 20 Domesticated Slimes.";
             upgrade1.BuildingToUpgrade = SlimeDaycareBuildingId;
             upgrade1.IndoorMap = "FarmHouse1";
             upgrade1.MaxOccupants = 20;
@@ -112,7 +112,7 @@ internal static class BuildingContent
             upgrade3.BuildCondition = "";
             upgrade3.Name = "Slime Daycare - Cellar";
             upgrade3.NameForGeneralType = "Slime Daycare";
-            upgrade3.Description = "Adds the cellar and raises the Daycare's capacity to 30 Ranch Slimes.";
+            upgrade3.Description = "Adds the cellar and raises the Daycare's capacity to 30 Domesticated Slimes.";
             upgrade3.BuildingToUpgrade = SlimeDaycareUpgrade2Id;
             upgrade3.IndoorMap = "FarmHouse2";
             upgrade3.MaxOccupants = 30;

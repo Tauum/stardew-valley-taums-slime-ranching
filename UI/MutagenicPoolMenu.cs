@@ -7,7 +7,7 @@ using taums_slime_ranching.Services;
 
 namespace taums_slime_ranching.UI;
 
-/// <summary>Assign one mature Ranch Slime to a two-day safe-failure mutation attempt.</summary>
+/// <summary>Assign one mature Domesticated Slime to a two-day safe-failure mutation attempt.</summary>
 internal sealed class MutagenicPoolMenu : IClickableMenu
 {
     private const int SlimeItemId = 766;
@@ -40,7 +40,7 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
             BuildingContent.IsSlimeDaycare(building.buildingType.Value) && building.GetIndoors() is StardewValley.AnimalHouse);
         StardewValley.AnimalHouse? interior = daycare?.GetIndoors() as StardewValley.AnimalHouse;
         this.candidates = (interior?.animals.Values.AsEnumerable() ?? Enumerable.Empty<FarmAnimal>())
-            .Where(animal => animal.type.Value == FarmAnimalContent.RanchSlimeTypeId)
+            .Where(animal => animal.type.Value == FarmAnimalContent.DomesticatedSlimeTypeId)
             .OrderBy(animal => animal.myID.Value)
             .ToList();
         this.selectedSlimePanel = new Rectangle(this.xPositionOnScreen + 56, this.yPositionOnScreen + 166, 270, 76);
@@ -127,7 +127,7 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
             ?? (active is null ? null : this.candidates.FirstOrDefault(animal => animal.myID.Value == active.SlimeId));
         if (selected is null)
         {
-            b.DrawString(Game1.smallFont, this.candidates.Count == 0 ? "No Ranch Slimes" : "Select a slime",
+            b.DrawString(Game1.smallFont, this.candidates.Count == 0 ? "No Domesticated Slimes" : "Select a slime",
                 new Vector2(this.selectedSlimePanel.X + 22, this.selectedSlimePanel.Y + 24), Color.White);
         }
         else
@@ -257,13 +257,13 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
         FarmAnimal[] eligible = this.candidates.Where(animal =>
         {
             int age = this.registry.GetMaturityAgeDays(animal.myID.Value, animal.age.Value);
-            return age >= FarmAnimalContent.RanchSlimeDaysToMature
+            return age >= FarmAnimalContent.DomesticatedSlimeDaysToMature
                 && !this.registry.IsReserved(animal.myID.Value, this.machineKey)
                 && string.IsNullOrWhiteSpace(this.registry.GetMutationTrait(animal.myID.Value));
         }).ToArray();
         if (eligible.Length == 0)
         {
-            this.statusMessage = "No eligible mature Ranch Slime is available.";
+            this.statusMessage = "No eligible mature Domesticated Slime is available.";
             Game1.playSound("cancel");
             return;
         }
@@ -356,7 +356,7 @@ internal sealed class MutagenicPoolMenu : IClickableMenu
         }
         if (this.selectedSlimeId is not long slimeId)
         {
-            this.statusMessage = "Select an eligible mature Ranch Slime first.";
+            this.statusMessage = "Select an eligible mature Domesticated Slime first.";
             return;
         }
         FarmAnimal? animal = this.candidates.FirstOrDefault(candidate => candidate.myID.Value == slimeId);

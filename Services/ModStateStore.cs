@@ -129,6 +129,12 @@ internal sealed class ModStateStore
             if (saveData.SchemaVersion == 22)
             {
                 saveData.PendingRareLabCatalystTransactions ??= new List<RareLabCatalystTransactionRecord>();
+                saveData.SchemaVersion = 23;
+                this.MigratedSaveData = true;
+            }
+            if (saveData.SchemaVersion == 23)
+            {
+                saveData.SlimeDaycareQuest ??= new SlimeDaycareQuestRecord();
                 saveData.SchemaVersion = SlimeSaveData.CurrentSchemaVersion;
                 this.MigratedSaveData = true;
             }

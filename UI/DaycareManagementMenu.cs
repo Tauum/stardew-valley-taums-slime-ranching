@@ -62,7 +62,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         this.buildingTier = Math.Clamp(buildingTier, 0, 3);
         this.getActiveActivitySummary = getActiveActivitySummary;
         this.residents = daycare.animals.Values
-            .Where(animal => animal.type.Value == FarmAnimalContent.RanchSlimeTypeId)
+            .Where(animal => animal.type.Value == FarmAnimalContent.DomesticatedSlimeTypeId)
             .OrderBy(animal => animal.Name, StringComparer.OrdinalIgnoreCase)
             .ThenBy(animal => animal.myID.Value)
             .ToList();
@@ -477,7 +477,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         Rectangle detailPanel = this.registryDetails;
         DrawPanel(b, listPanel, new Color(35, 51, 92), new Color(90, 128, 190));
         DrawPanel(b, detailPanel, new Color(35, 51, 92), new Color(90, 128, 190));
-        b.DrawString(Game1.tinyFont, $"RANCH SLIMES: {this.residents.Count}",
+        b.DrawString(Game1.tinyFont, $"DOMESTICATED SLIMES: {this.residents.Count}",
             new Vector2(listPanel.X + 16, listPanel.Y + 10), new Color(139, 226, 255));
         b.DrawString(Game1.tinyFont, $"LIVING CAPACITY: {this.daycare.animalsThatLiveHere.Count}/{this.daycare.animalLimit.Value}",
             new Vector2(listPanel.X + 16, listPanel.Y + 29), new Color(178, 214, 249));
@@ -493,7 +493,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
                 selected ? new Color(174, 220, 255) : new Color(83, 115, 171));
             string species = this.registry.TryGetSlimeRecord(animal.myID.Value, out SlimeRecord record)
                 ? record.Genome.PrimarySpecies
-                : "Ranch Slime";
+                : "Domesticated Slime";
             DrawFittedText(b, $"{animal.Name} | {species} | ID {animal.myID.Value}",
                 new Rectangle(row.X + 8, row.Y + 3, row.Width - 16, row.Height - 6), Game1.tinyFont, Color.White);
         }
@@ -506,7 +506,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         {
             this.registryDetailScroll = 0;
             this.registryDetailMaxScroll = 0;
-            DrawCentered(b, "No Ranch Slime residents are registered in this Daycare.", Game1.smallFont,
+            DrawCentered(b, "No Domesticated Slime residents are registered in this Daycare.", Game1.smallFont,
                 new Rectangle(detailPanel.X + 24, detailPanel.Y + 48, detailPanel.Width - 48, 100), Color.White);
             return;
         }
@@ -547,7 +547,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             $"Color {genome.VisualColor} | size {genome.Size} | rarity {genome.RarityTier} | shiny {genome.IsShiny}",
             $"Mutation: {genome.MutationTrait ?? "none"}",
             $"Favorite food: {FoodLikeCatalog.GetDisplayName(genome.LikedFoodItemId)}",
-            $"Age: {ageDays}/{FarmAnimalContent.RanchSlimeDaysToMature} days",
+            $"Age: {ageDays}/{FarmAnimalContent.DomesticatedSlimeDaysToMature} days",
             $"Assignment: {SlimeRegistry.GetResidentStatusLabel(this.registry.GetResidentStatus(selectedAnimal.myID.Value))}",
             $"Current activity: {this.getActiveActivitySummary(selectedAnimal.myID.Value) ?? "none"}"
         };
@@ -653,8 +653,8 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         string abilityLabel = entry.Category switch
         {
             "RARE" => "Current base-color ability: none; rare companion direction is planned.",
-            "RULES" => "Approved Ranch Slime breeding reference.",
-            "LIFE" => "Ranch Slime life cycle reference.",
+            "RULES" => "Approved Domesticated Slime breeding reference.",
+            "LIFE" => "Domesticated Slime life cycle reference.",
             _ => $"Current genome ability label: {abilityList}"
         };
         var details = new List<(string Text, Color Color)>
@@ -706,7 +706,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         {
             IReadOnlyList<string> abilities = SlimeAbilityCatalog.GetAbilityNames(species, null, null);
             entries.Add(new WikiEntry("BASE", species,
-                $"Base-color Ranch Slime. Its ability label is {string.Join(" + ", abilities)}.", abilities));
+                $"Base-color Domesticated Slime. Its ability label is {string.Join(" + ", abilities)}.", abilities));
         }
 
         for (int first = 0; first < BaseSpecies.Length; first++)
@@ -734,9 +734,9 @@ internal sealed class DaycareManagementMenu : IClickableMenu
         entries.Add(new WikiEntry("RULES", "Fixed egg outcomes",
             "The Breeder saves the offspring's non-rarity genome when its cycle completes. The Incubator's Rare Lab resolves rarity once at incubation completion and saves the result before hatching; reloading cannot reroll it. If the Daycare is full, a ready hatch waits safely for room.", Array.Empty<string>()));
         entries.Add(new WikiEntry("LIFE", "Incubation and hatching",
-            "Each Ranch Slime Egg has a unique identity and does not stack with other eggs. Incubation takes seven days. An unlocked Rare Lab fixes its result when incubation completes; if the Daycare is full, the ready hatch waits with that same result.", Array.Empty<string>()));
+            "Each Domesticated Slime Egg has a unique identity and does not stack with other eggs. Incubation takes seven days. An unlocked Rare Lab fixes its result when incubation completes; if the Daycare is full, the ready hatch waits with that same result.", Array.Empty<string>()));
         entries.Add(new WikiEntry("LIFE", "Growing up",
-            "A Ranch Slime reaches maturity seven in-game days after hatching. This growth period is separate from the Incubator's seven-day timer, and visual size is a separate trait from age.", Array.Empty<string>()));
+            "A Domesticated Slime reaches maturity seven in-game days after hatching. This growth period is separate from the Incubator's seven-day timer, and visual size is a separate trait from age.", Array.Empty<string>()));
         return entries;
     }
 

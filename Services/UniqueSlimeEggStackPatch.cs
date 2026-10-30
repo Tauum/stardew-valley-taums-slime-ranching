@@ -2,7 +2,7 @@ using HarmonyLib;
 
 namespace taums_slime_ranching.Services;
 
-/// <summary>Vanilla ObjectData has no maximum-stack field, so constrain Ranch Slime Egg items and metadata.</summary>
+/// <summary>Vanilla ObjectData has no maximum-stack field, so constrain Domesticated Slime Egg items and metadata.</summary>
 [HarmonyPatch(typeof(StardewValley.Object), nameof(StardewValley.Object.maximumStackSize))]
 internal static class UniqueSlimeEggStackPatch
 {

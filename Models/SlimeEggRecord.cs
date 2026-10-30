@@ -1,6 +1,6 @@
 namespace taums_slime_ranching.Models;
 
-/// <summary>Genome and hatch state for one unique Ranch Slime Egg entity.</summary>
+/// <summary>Genome and hatch state for one unique Domesticated Slime Egg entity.</summary>
 public sealed class SlimeEggRecord
 {
     /// <summary>Stable per-egg token carried in the item's modData and in any machine job holding it.</summary>

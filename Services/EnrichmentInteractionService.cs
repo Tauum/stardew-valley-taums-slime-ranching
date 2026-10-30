@@ -4,7 +4,7 @@ using StardewValley.Pathfinding;
 
 namespace taums_slime_ranching.Services;
 
-/// <summary>Staggers roaming checks and longer enrichment activities for Ranch Slimes.</summary>
+/// <summary>Staggers roaming checks and longer enrichment activities for Domesticated Slimes.</summary>
 internal sealed class EnrichmentInteractionService
 {
     private const int AssignmentIntervalTicks = 30;
@@ -234,7 +234,7 @@ internal sealed class EnrichmentInteractionService
         var activityCandidates = new List<(FarmAnimal Animal, Models.SlimeRecord Record)>();
         var reachabilityCache = new Dictionary<(long AnimalId, Vector2 Tile), bool>();
         var checkedThisPass = new HashSet<long>();
-        foreach (FarmAnimal animal in house.animals.Values.Where(animal => animal.type.Value == FarmAnimalContent.RanchSlimeTypeId
+        foreach (FarmAnimal animal in house.animals.Values.Where(animal => animal.type.Value == FarmAnimalContent.DomesticatedSlimeTypeId
             && !this.active.ContainsKey(animal.myID.Value)
             && !registry.IsReserved(animal.myID.Value)))
         {

@@ -1,10 +1,8 @@
-using System.Text.Json.Serialization;
-
 namespace taums_slime_ranching.Models;
 
 public sealed class SlimeSaveData
 {
-    public const int CurrentSchemaVersion = 23;
+    public const int CurrentSchemaVersion = 24;
 
     public int SchemaVersion { get; set; } = CurrentSchemaVersion;
     public List<SlimeRecord> Slimes { get; set; } = new();
@@ -13,7 +11,6 @@ public sealed class SlimeSaveData
     public List<IncubationRecord> Incubations { get; set; } = new();
     public List<MutagenicAttemptRecord> MutagenicAttempts { get; set; } = new();
     public List<RefineryJobRecord> RefineryJobs { get; set; } = new();
-    [JsonPropertyName("SanctuaryQuest")]
     public SlimeDaycareQuestRecord SlimeDaycareQuest { get; set; } = new();
     public long? ActiveCompanionFarmAnimalId { get; set; }
     public List<string> HatchedEggIds { get; set; } = new();

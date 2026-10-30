@@ -64,7 +64,7 @@ internal sealed class ShadowCloneVisualService
         this.mutatedSlimes.Clear();
         foreach (FarmAnimal animal in house.animals.Values)
         {
-            if (animal.type.Value == FarmAnimalContent.RanchSlimeTypeId
+            if (animal.type.Value == FarmAnimalContent.DomesticatedSlimeTypeId
                 && HasShadowCloneTrait(registry, animal.myID.Value))
                 this.mutatedSlimes.Add(animal);
         }

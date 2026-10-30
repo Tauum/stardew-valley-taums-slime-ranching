@@ -35,7 +35,7 @@ internal static class RanchingItemContent
                     {
                         Name = "Slime Breeder",
                         DisplayName = "Slime Breeder",
-                        Description = "Select two Ranch Slimes for breeding.",
+                        Description = "Select two Domesticated Slimes for breeding.",
                         CanBePlacedIndoors = true,
                         CanBePlacedOutdoors = false,
                         Texture = IconTextureName,
@@ -49,7 +49,7 @@ internal static class RanchingItemContent
                     {
                         Name = "Slime Incubator",
                         DisplayName = "Slime Incubator",
-                        Description = "Hatches a genome-specific Ranch Slime Egg inside the Slime Daycare.",
+                        Description = "Hatches a genome-specific Domesticated Slime Egg inside the Slime Daycare.",
                         CanBePlacedIndoors = true,
                         CanBePlacedOutdoors = false,
                         Texture = IconTextureName,

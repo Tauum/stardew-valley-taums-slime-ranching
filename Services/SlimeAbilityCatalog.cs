@@ -40,7 +40,7 @@ internal static class SlimeAbilityCatalog
             return;
 
         string? baseColor = BaseAbilities.Keys.FirstOrDefault(color => species.StartsWith(color, StringComparison.OrdinalIgnoreCase));
-        if (baseColor is null && species.Equals("Ranch Slime", StringComparison.OrdinalIgnoreCase))
+        if (baseColor is null && species.Equals("Domesticated Slime", StringComparison.OrdinalIgnoreCase))
             baseColor = FarmAnimalContent.GetClosestVariantName(visualColor);
         if (baseColor is not null && BaseAbilities.TryGetValue(baseColor, out string? ability))
             output.Add(ability);

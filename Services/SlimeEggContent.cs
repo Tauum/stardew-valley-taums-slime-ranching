@@ -12,10 +12,10 @@ namespace taums_slime_ranching.Services;
 internal static class SlimeEggContent
 {
     private const string RegistryFileName = "slime-registry-v1.json";
-    private const string LegacyEggItemPrefix = "Taum.SlimeRanching_Egg_";
+    private const string LegacyEggItemPrefix = "Taum.SlimeRanching_DomesticatedSlimeEgg_";
     public const string EggIdModDataKey = "Taum.SlimeRanching/egg-id";
     public const string EggRecordModDataKey = "Taum.SlimeRanching/egg-record";
-    private const string EggTexturePrefix = "Mods/Taum.SlimeRanching/Objects/RanchSlimeEgg_";
+    private const string EggTexturePrefix = "Mods/Taum.SlimeRanching/Objects/DomesticatedSlimeEgg_";
     internal const string DomesticatedSlimeEggName = "Domesticated Slime Egg";
     private static readonly string[] EggColors = { "Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Pink" };
     private static string? cachedModDirectory;
@@ -43,7 +43,7 @@ internal static class SlimeEggContent
         e.LoadFrom(() => CreateEggIcon(Game1.graphics.GraphicsDevice, tint), AssetLoadPriority.Exclusive);
     }
 
-    public static string GetItemId(SlimeGenome genome) => $"Taum.SlimeRanching_Egg_{FarmAnimalContent.GetClosestVariantName(genome.VisualColor)}";
+    public static string GetItemId(SlimeGenome genome) => $"Taum.SlimeRanching_DomesticatedSlimeEgg_{FarmAnimalContent.GetClosestVariantName(genome.VisualColor)}";
     public static string GetQualifiedId(SlimeGenome genome) => "(O)" + GetItemId(genome);
     public static string GetLegacyItemId(Guid genomeId) => $"{LegacyEggItemPrefix}{genomeId:N}";
 
@@ -125,7 +125,7 @@ internal static class SlimeEggContent
             var objects = asset.AsDictionary<string, ObjectData>().Data;
             foreach (string color in EggColors)
             {
-                string itemId = $"Taum.SlimeRanching_Egg_{color}";
+                string itemId = $"Taum.SlimeRanching_DomesticatedSlimeEgg_{color}";
                 objects[itemId] = new ObjectData
                 {
                     Name = DomesticatedSlimeEggName,
@@ -138,7 +138,7 @@ internal static class SlimeEggContent
                     CanBeGivenAsGift = false,
                     CanBeTrashed = true,
                     ExcludeFromShippingCollection = true,
-                    ContextTags = new List<string> { "taum_ranch_slime_egg", $"taum_ranch_slime_egg_color_{color.ToLowerInvariant()}" }
+                    ContextTags = new List<string> { "taum_domesticated_slime_egg", $"taum_domesticated_slime_egg_color_{color.ToLowerInvariant()}" }
                 };
             }
 
@@ -162,7 +162,7 @@ internal static class SlimeEggContent
                     CanBeGivenAsGift = false,
                     CanBeTrashed = true,
                     ExcludeFromShippingCollection = true,
-                    ContextTags = new List<string> { "taum_ranch_slime_egg", $"taum_genome_{egg.Genome.Id:N}" }
+                    ContextTags = new List<string> { "taum_domesticated_slime_egg", $"taum_genome_{egg.Genome.Id:N}" }
                 };
             }
         });

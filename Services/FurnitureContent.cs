@@ -96,7 +96,7 @@ internal static class FurnitureContent
             {
                 Name = "Slime Trampoline",
                 DisplayName = "Slime Trampoline",
-                Description = "A springy platform that nearby Ranch Slimes can bounce on.",
+                Description = "A springy platform that nearby Domesticated Slimes can bounce on.",
                 CanBePlacedIndoors = true,
                 CanBePlacedOutdoors = false,
                 Fragility = 0,
@@ -107,7 +107,7 @@ internal static class FurnitureContent
             {
                 Name = "Slime Cushion",
                 DisplayName = "Slime Cushion",
-                Description = "A soft spot where Ranch Slimes can settle into a gentle squish and spring back.",
+                Description = "A soft spot where Domesticated Slimes can settle into a gentle squish and spring back.",
                 CanBePlacedIndoors = true,
                 CanBePlacedOutdoors = false,
                 Fragility = 0,
@@ -118,7 +118,7 @@ internal static class FurnitureContent
             {
                 Name = "Slime Playground",
                 DisplayName = "Slime Playground",
-                Description = "A colorful ball pit where two Ranch Slimes can play together.",
+                Description = "A colorful ball pit where two Domesticated Slimes can play together.",
                 CanBePlacedIndoors = true,
                 CanBePlacedOutdoors = false,
                 Fragility = 0,
@@ -129,7 +129,7 @@ internal static class FurnitureContent
             {
                 Name = "Slime Slide",
                 DisplayName = "Slime Slide",
-                Description = "A little slide for Ranch Slimes to climb and glide down.",
+                Description = "A little slide for Domesticated Slimes to climb and glide down.",
                 CanBePlacedIndoors = true,
                 CanBePlacedOutdoors = false,
                 Fragility = 0,
@@ -140,7 +140,7 @@ internal static class FurnitureContent
             {
                 Name = "Slime Bed",
                 DisplayName = "Slime Bed",
-                Description = "A cozy bed where Ranch Slimes can curl up for a rest.",
+                Description = "A cozy bed where Domesticated Slimes can curl up for a rest.",
                 CanBePlacedIndoors = true,
                 CanBePlacedOutdoors = false,
                 Fragility = 0,
@@ -151,7 +151,7 @@ internal static class FurnitureContent
             {
                 Name = "Compost Trough",
                 DisplayName = "Compost Trough",
-                Description = "Feed eligible scraps to a juvenile Ranch Slime to help it grow.",
+                Description = "Feed eligible scraps to a juvenile Domesticated Slime to help it grow.",
                 CanBePlacedIndoors = true,
                 CanBePlacedOutdoors = false,
                 Fragility = 0,
@@ -162,7 +162,7 @@ internal static class FurnitureContent
             {
                 Name = "Slime Tunnel",
                 DisplayName = "Slime Tunnel",
-                Description = "A clear archway that Ranch Slimes can crawl through.",
+                Description = "A clear archway that Domesticated Slimes can crawl through.",
                 CanBePlacedIndoors = true,
                 CanBePlacedOutdoors = false,
                 Fragility = 0,
@@ -173,7 +173,7 @@ internal static class FurnitureContent
             {
                 Name = "Heated Slime Stone",
                 DisplayName = "Heated Slime Stone",
-                Description = "A warm stone where Ranch Slimes can huddle and rest.",
+                Description = "A warm stone where Domesticated Slimes can huddle and rest.",
                 CanBePlacedIndoors = true,
                 CanBePlacedOutdoors = false,
                 Fragility = 0,
@@ -184,7 +184,7 @@ internal static class FurnitureContent
             {
                 Name = "Slime Pond",
                 DisplayName = "Slime Pond",
-                Description = "A little pool where Ranch Slimes can bob and splash.",
+                Description = "A little pool where Domesticated Slimes can bob and splash.",
                 CanBePlacedIndoors = true,
                 CanBePlacedOutdoors = false,
                 Fragility = 0,
@@ -195,7 +195,7 @@ internal static class FurnitureContent
             {
                 Name = "Slime Swing",
                 DisplayName = "Slime Swing",
-                Description = "A little swing for Ranch Slimes to sway on.",
+                Description = "A little swing for Domesticated Slimes to sway on.",
                 CanBePlacedIndoors = true,
                 CanBePlacedOutdoors = false,
                 Fragility = 0,
@@ -206,7 +206,7 @@ internal static class FurnitureContent
             {
                 Name = "Slime Seesaw",
                 DisplayName = "Slime Seesaw",
-                Description = "A balanced beam where two Ranch Slimes can play together.",
+                Description = "A balanced beam where two Domesticated Slimes can play together.",
                 CanBePlacedIndoors = true,
                 CanBePlacedOutdoors = false,
                 Fragility = 0,
@@ -217,7 +217,7 @@ internal static class FurnitureContent
             {
                 Name = "Slime Ball Pit",
                 DisplayName = "Slime Ball Pit",
-                Description = "A colorful pit where Ranch Slimes can dip and pop back out.",
+                Description = "A colorful pit where Domesticated Slimes can dip and pop back out.",
                 CanBePlacedIndoors = true,
                 CanBePlacedOutdoors = false,
                 Fragility = 0,
@@ -228,7 +228,7 @@ internal static class FurnitureContent
             {
                 Name = "Slime Lamp",
                 DisplayName = "Slime Lamp",
-                Description = "A warm lamp where Ranch Slimes can gather around the light.",
+                Description = "A warm lamp where Domesticated Slimes can gather around the light.",
                 CanBePlacedIndoors = true,
                 CanBePlacedOutdoors = false,
                 Fragility = 0,

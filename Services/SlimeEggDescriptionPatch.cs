@@ -3,7 +3,7 @@ using StardewValley;
 
 namespace taums_slime_ranching.Services;
 
-/// <summary>Show the genome attached to this unique Ranch Slime Egg in its normal item tooltip.</summary>
+/// <summary>Show the genome attached to this unique Domesticated Slime Egg in its normal item tooltip.</summary>
 [HarmonyPatch(typeof(StardewValley.Object), nameof(StardewValley.Object.getDescription))]
 internal static class SlimeEggDescriptionPatch
 {

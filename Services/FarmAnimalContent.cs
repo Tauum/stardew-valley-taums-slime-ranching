@@ -8,10 +8,10 @@ namespace taums_slime_ranching.Services;
 
 internal static class FarmAnimalContent
 {
-    public const string RanchSlimeTypeId = "Taum.SlimeRanching_RanchSlime";
-    public const int RanchSlimeDaysToMature = 7;
-    private const string RanchSlimeTexturePrefix = "Mods/Taum.SlimeRanching/Animals/RanchSlime_";
-    private const string RanchSlimeTexture = RanchSlimeTexturePrefix + "Green_Normal";
+    public const string DomesticatedSlimeTypeId = "Taum.SlimeRanching_DomesticatedSlime";
+    public const int DomesticatedSlimeDaysToMature = 7;
+    private const string DomesticatedSlimeTexturePrefix = "Mods/Taum.SlimeRanching/Animals/DomesticatedSlime_";
+    private const string DomesticatedSlimeTexture = DomesticatedSlimeTexturePrefix + "Green_Normal";
     private static Color[]? vanillaSlimePixels;
     private static int vanillaSlimePixelWidth;
 
@@ -29,10 +29,10 @@ internal static class FarmAnimalContent
     public static void LoadAssets(AssetRequestedEventArgs e)
     {
         string requestedName = e.NameWithoutLocale.BaseName;
-        if (!requestedName.StartsWith(RanchSlimeTexturePrefix, StringComparison.Ordinal))
+        if (!requestedName.StartsWith(DomesticatedSlimeTexturePrefix, StringComparison.Ordinal))
             return;
 
-        string[] parts = requestedName[RanchSlimeTexturePrefix.Length..].Split('_');
+        string[] parts = requestedName[DomesticatedSlimeTexturePrefix.Length..].Split('_');
         if (parts.Length is < 2 or > 3 || !TryGetColorVariant(parts[0], out var variant))
             return;
 
@@ -55,7 +55,7 @@ internal static class FarmAnimalContent
 
     public static string GetTextureName(string? visualColor, string? size = null)
     {
-        return RanchSlimeTexturePrefix + GetClosestVariant(visualColor).Name + "_" + GetCanonicalSize(size);
+        return DomesticatedSlimeTexturePrefix + GetClosestVariant(visualColor).Name + "_" + GetCanonicalSize(size);
     }
 
     public static string GetTextureName(string? visualColor, string? size, bool isShiny) =>
@@ -88,20 +88,20 @@ internal static class FarmAnimalContent
         e.Edit(asset =>
         {
             var animals = asset.AsDictionary<string, FarmAnimalData>().Data;
-            if (!animals.ContainsKey(RanchSlimeTypeId))
+            if (!animals.ContainsKey(DomesticatedSlimeTypeId))
             {
-                animals[RanchSlimeTypeId] = new FarmAnimalData
+                animals[DomesticatedSlimeTypeId] = new FarmAnimalData
                 {
-                    DisplayName = "Ranch Slime",
+                    DisplayName = "Domesticated Slime",
                     House = BuildingContent.SlimeDaycareBuildingId,
                     PurchasePrice = 1000,
                     SellPrice = 0,
-                    DaysToMature = RanchSlimeDaysToMature,
+                    DaysToMature = DomesticatedSlimeDaysToMature,
                     CanGetPregnant = false,
                     DaysToProduce = 0,
                     GrassEatAmount = 0,
                     HappinessDrain = 0,
-                    Texture = RanchSlimeTexture,
+                    Texture = DomesticatedSlimeTexture,
                     SpriteWidth = 40,
                     SpriteHeight = 60,
                     UseFlippedRightForLeft = true,

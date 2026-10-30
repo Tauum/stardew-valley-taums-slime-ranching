@@ -7,7 +7,7 @@ using taums_slime_ranching.Services;
 
 namespace taums_slime_ranching.UI;
 
-/// <summary>First breeder slice: choose exactly two Ranch Slimes housed in the Daycare.</summary>
+/// <summary>First breeder slice: choose exactly two Domesticated Slimes housed in the Daycare.</summary>
 internal sealed class SlimeBreederMenu : IClickableMenu
 {
     private const int RowHeight = 48;
@@ -44,7 +44,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
 
         // Stardew moves indoor animals from Farm.animals into AnimalHouse.animals.
         // Match the room's actual resident objects against our external IDs.
-        HashSet<long> registeredIds = registry.RanchSlimeFarmAnimalIds.ToHashSet();
+        HashSet<long> registeredIds = registry.DomesticatedSlimeFarmAnimalIds.ToHashSet();
         this.registeredCount = registeredIds.Count;
         BreedingPairRecord? pair = registry.GetBreedingPair(machineKey);
         if (pair is not null)
@@ -57,7 +57,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
             this.pairReserved = true;
         }
         this.candidates = (interior?.animals.Values.AsEnumerable() ?? Enumerable.Empty<FarmAnimal>())
-            .Where(animal => registeredIds.Contains(animal.myID.Value) || animal.type.Value == FarmAnimalContent.RanchSlimeTypeId)
+            .Where(animal => registeredIds.Contains(animal.myID.Value) || animal.type.Value == FarmAnimalContent.DomesticatedSlimeTypeId)
             .Where(animal => !registry.IsReserved(animal.myID.Value, machineKey))
             .OrderBy(animal => animal.myID.Value)
             .ToList();
@@ -200,14 +200,14 @@ internal sealed class SlimeBreederMenu : IClickableMenu
         long id = this.candidates[index].myID.Value;
         if (!this.registry.TryGetSlimeRecord(id, out SlimeRecord selectedRecord))
         {
-            this.statusMessage = "This Ranch Slime has no saved genome and cannot breed.";
+            this.statusMessage = "This Domesticated Slime has no saved genome and cannot breed.";
             Game1.playSound("cancel");
             return;
         }
 
         if (!BreedingRules.IsBreedable(selectedRecord.Genome))
         {
-            this.statusMessage = "Rare and exceptional Ranch Slimes cannot breed.";
+            this.statusMessage = "Rare and exceptional Domesticated Slimes cannot breed.";
             Game1.playSound("cancel");
             return;
         }
@@ -215,7 +215,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
         int growthDays = this.GetGrowthDaysRemaining(this.candidates[index]);
         if (growthDays > 0)
         {
-            this.statusMessage = $"This young Ranch Slime needs {growthDays} more day(s) to grow before breeding.";
+            this.statusMessage = $"This young Domesticated Slime needs {growthDays} more day(s) to grow before breeding.";
             Game1.playSound("cancel");
             return;
         }
@@ -223,7 +223,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
         int restDays = this.registry.GetBreedingRestDays(id, Game1.Date.TotalDays);
         if (restDays > 0)
         {
-            this.statusMessage = $"This Ranch Slime needs {restDays} more day(s) of rest.";
+            this.statusMessage = $"This Domesticated Slime needs {restDays} more day(s) of rest.";
             Game1.playSound("cancel");
             return;
         }
@@ -297,7 +297,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
     {
         if (this.candidates.Count == 0)
         {
-            b.DrawString(Game1.smallFont, $"No Ranch Slimes found ({this.registeredCount} registered).", new Vector2(this.xPositionOnScreen + 638, this.listTop + 8), Color.White);
+            b.DrawString(Game1.smallFont, $"No Domesticated Slimes found ({this.registeredCount} registered).", new Vector2(this.xPositionOnScreen + 638, this.listTop + 8), Color.White);
             return;
         }
 
@@ -529,7 +529,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
             var species = this.registry.GetGenomeColorState(parent.myID.Value);
             string speciesName = species?.SecondarySpecies is string secondary
                 ? $"{species.Value.PrimarySpecies} / {secondary}"
-                : species?.PrimarySpecies ?? "Ranch Slime";
+                : species?.PrimarySpecies ?? "Domesticated Slime";
             string size = this.registry.GetGenomeSize(parent.myID.Value) ?? "Normal";
             string shiny = this.registry.GetGenomeIsShiny(parent.myID.Value) ? " · Shiny" : "";
             string mutation = this.registry.GetMutationTrait(parent.myID.Value) is string trait ? $" · {trait}" : "";
@@ -665,7 +665,7 @@ internal sealed class SlimeBreederMenu : IClickableMenu
     private int GetVisibleCandidateCount() => Math.Max(1, (this.listBottom - this.listTop) / RowHeight);
 
     private int GetGrowthDaysRemaining(FarmAnimal animal) =>
-        Math.Max(0, FarmAnimalContent.RanchSlimeDaysToMature
+        Math.Max(0, FarmAnimalContent.DomesticatedSlimeDaysToMature
             - this.registry.GetMaturityAgeDays(animal.myID.Value, animal.age.Value));
 
     private string GetCycleStatus(BreedingPairRecord? pair)
