@@ -623,12 +623,16 @@ internal sealed class DaycareManagementMenu : IClickableMenu
             new Vector2(slotsPanel.X + 14, slotsPanel.Y + 12), new Color(139, 226, 255));
         b.DrawString(Game1.tinyFont, "Shows saved items and live object/protection state; fixed layout and editing remain in development.",
             new Vector2(slotsPanel.X + 14, slotsPanel.Y + 31), new Color(205, 218, 239));
-        int slotStartOffset = 52;
+        b.DrawString(Game1.tinyFont, "MISSING: no object at tile | MISMATCH: different object",
+            new Vector2(slotsPanel.X + 14, slotsPanel.Y + 50), new Color(255, 205, 139));
+        b.DrawString(Game1.tinyFont, "MATCH: assigned item placed | PROTECTED: matching item is tool-safe",
+            new Vector2(slotsPanel.X + 14, slotsPanel.Y + 66), new Color(160, 255, 180));
+        int slotStartOffset = 84;
         if (lockedFurnitureAssignments > 0)
         {
             b.DrawString(Game1.tinyFont, $"{lockedFurnitureAssignments} saved assignment(s) are locked at this tier.",
-                new Vector2(slotsPanel.X + 14, slotsPanel.Y + 48), new Color(255, 205, 139));
-            slotStartOffset = 68;
+                new Vector2(slotsPanel.X + 14, slotsPanel.Y + 82), new Color(255, 205, 139));
+            slotStartOffset = 100;
         }
 
         int rowHeight = Math.Clamp((slotsPanel.Height - slotStartOffset - 12) / Math.Max(1, unlockedSlots.Count), 18, 23);
