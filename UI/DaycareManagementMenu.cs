@@ -662,6 +662,7 @@ internal sealed class DaycareManagementMenu : IClickableMenu
                     else
                     {
                         installStatus = "MISMATCH";
+                        itemName = $"{itemName} → {placed.DisplayName}";
                         installStatusColor = new Color(255, 205, 139);
                     }
                 }
