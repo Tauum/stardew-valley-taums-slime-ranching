@@ -930,6 +930,7 @@ internal sealed class SlimeRegistry
             return false;
 
         if (this.incubations.ContainsKey(record.MachineKey)
+            || this.hatchedEggIds.Contains(record.EggItemId)
             || !this.eggs.ContainsKey(record.EggItemId)
             || this.incubations.Values.Any(incubation => incubation.EggItemId == record.EggItemId))
             return false;
@@ -1459,6 +1460,11 @@ internal sealed class SlimeRegistry
             if (Guid.TryParseExact(normalizedEggId, "N", out _))
                 this.destroyedEggIds.Add(normalizedEggId);
         }
+        foreach (string eggId in this.hatchedEggIds.Intersect(this.destroyedEggIds).ToArray())
+        {
+            this.destroyedEggIds.Remove(eggId);
+            this.monitor.Log($"Resolved conflicting terminal state for egg ID {eggId} as hatched; cleared its destroyed marker.", LogLevel.Warn);
+        }
         foreach (IncubationRecord record in data?.PendingIncubationCancellations ?? Enumerable.Empty<IncubationRecord>())
         {
             if (record is null || string.IsNullOrWhiteSpace(record.EggItemId) || string.IsNullOrWhiteSpace(record.MachineKey))
@@ -1565,6 +1571,13 @@ internal sealed class SlimeRegistry
             }
 
             incubation.EggItemId = NormalizeEggToken(incubation.EggItemId);
+            if (this.hatchedEggIds.Contains(incubation.EggItemId)
+                || this.destroyedEggIds.Contains(incubation.EggItemId))
+            {
+                this.monitor.Log($"Skipped an incubation for terminal egg ID {incubation.EggItemId}; it is already recorded as hatched or destroyed.", LogLevel.Warn);
+                continue;
+            }
+
             SlimeEggRecord? egg;
             bool restoreEggRecord = false;
             if (this.eggs.TryGetValue(incubation.EggItemId, out SlimeEggRecord? migratedEgg))
