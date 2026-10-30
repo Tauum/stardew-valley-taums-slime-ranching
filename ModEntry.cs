@@ -3452,8 +3452,17 @@ public sealed class ModEntry : Mod
                 IReadOnlyList<DaycareFurnitureSlotRecord> furnitureSlots = loadedRegistry.GetFurnitureSlots(buildingId);
                 int tier = BuildingContent.GetUpgradeTier(animalHouse.ParentBuilding?.buildingType.Value);
                 this.Monitor.Log($"Daycare furniture slots: {FurnitureSlotCatalog.GetSlotCountAtTier(tier)}/15 unlocked; {furnitureSlots.Count} assigned.", LogLevel.Info);
-                foreach (DaycareFurnitureSlotRecord slot in furnitureSlots)
+                IReadOnlyList<DaycareFurnitureSlotDefinition> unlockedSlots = FurnitureSlotCatalog.GetSlotsUnlockedAtTier(tier);
+                var unlockedSlotIds = unlockedSlots.Select(slot => slot.SlotId).ToHashSet(StringComparer.Ordinal);
+                var assignedById = furnitureSlots.ToDictionary(slot => slot.SlotId, StringComparer.Ordinal);
+                foreach (DaycareFurnitureSlotDefinition definition in unlockedSlots)
                 {
+                    if (!assignedById.TryGetValue(definition.SlotId, out DaycareFurnitureSlotRecord? slot))
+                    {
+                        this.Monitor.Log($"Furniture slot {definition.SlotId}: empty.", LogLevel.Info);
+                        continue;
+                    }
+
                     Vector2 tile = new(slot.TileX, slot.TileY);
                     bool hasObject = animalHouse.Objects.TryGetValue(tile, out StardewValley.Object? placed);
                     bool matches = hasObject && placed!.QualifiedItemId == slot.FurnitureQualifiedItemId;
@@ -3465,6 +3474,9 @@ public sealed class ModEntry : Mod
                             : $"tile occupied by {placed!.QualifiedItemId}";
                     this.Monitor.Log($"Furniture {slot.SlotId}: {slot.FurnitureQualifiedItemId} at tile {slot.TileX},{slot.TileY}; {placementStatus}.", LogLevel.Info);
                 }
+
+                foreach (DaycareFurnitureSlotRecord lockedSlot in furnitureSlots.Where(slot => !unlockedSlotIds.Contains(slot.SlotId)))
+                    this.Monitor.Log($"Furniture slot {lockedSlot.SlotId}: saved assignment is locked at the current Daycare tier.", LogLevel.Warn);
             }
             this.Monitor.Log($"Domesticated Slime assignment status: {residentStatuses}.", LogLevel.Info);
             this.Monitor.Log($"Jobs in this room: {activeCycles} breeder cycle(s), {readyEggs} ready egg(s), {activeIncubations} incubation(s), {activeMutations} Mutagenic Pool attempt(s), {activeRefineryBatches} Gel Refinery batch(es).", LogLevel.Info);
