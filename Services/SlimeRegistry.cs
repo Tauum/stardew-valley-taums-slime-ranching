@@ -693,7 +693,7 @@ internal sealed class SlimeRegistry
             ReadyOnDay = currentDay + durationDays
         };
         this.slimePrinterJobs.Add(machineKey, job);
-        return this.BeginRefineryTransaction(SlimePrinterTransactionKind.Start, job);
+        return this.BeginSlimePrinterTransaction(SlimePrinterTransactionKind.Start, job);
     }
 
     public SlimePrinterTransactionRecord? BeginSlimePrinterCollection(string machineKey)
@@ -701,7 +701,7 @@ internal sealed class SlimeRegistry
         if (!this.slimePrinterJobs.Remove(machineKey, out SlimePrinterJobRecord? job))
             return null;
 
-        return this.BeginRefineryTransaction(SlimePrinterTransactionKind.Collect, job);
+        return this.BeginSlimePrinterTransaction(SlimePrinterTransactionKind.Collect, job);
     }
 
     public bool ResolveSlimePrinterTransaction(string transactionId, bool nativeSaveCommitted)
@@ -734,7 +734,7 @@ internal sealed class SlimeRegistry
         return false;
     }
 
-    private SlimePrinterTransactionRecord BeginRefineryTransaction(SlimePrinterTransactionKind kind, SlimePrinterJobRecord job)
+    private SlimePrinterTransactionRecord BeginSlimePrinterTransaction(SlimePrinterTransactionKind kind, SlimePrinterJobRecord job)
     {
         string id = Guid.NewGuid().ToString("N");
         var transaction = new SlimePrinterTransactionRecord
