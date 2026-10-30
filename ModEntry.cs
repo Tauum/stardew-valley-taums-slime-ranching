@@ -976,7 +976,7 @@ public sealed class ModEntry : Mod
             return;
 
         if (FurnitureSlotProtection.Apply(e.Location as AnimalHouse, this.registry!))
-            this.Monitor.Log("Restored Stardew's indestructible flag for furniture assigned to a Slime Daycare slot.", LogLevel.Info);
+            this.Monitor.Log("Reconciled Stardew's native tool protection for Slime Daycare slot furniture.", LogLevel.Info);
 
         bool rareLabProgressionChanged = this.SynchronizeRareLabProgression(e.Location as AnimalHouse);
         bool removedBreederPair = false;
@@ -1204,7 +1204,7 @@ public sealed class ModEntry : Mod
         {
             if (building.GetIndoors() is AnimalHouse daycare
                 && FurnitureSlotProtection.Apply(daycare, this.registry))
-                this.Monitor.Log("Restored Stardew's indestructible flag for furniture assigned to a Slime Daycare slot.", LogLevel.Info);
+                this.Monitor.Log("Reconciled Stardew's native tool protection for Slime Daycare slot furniture.", LogLevel.Info);
         }
     }
 
@@ -3218,6 +3218,7 @@ public sealed class ModEntry : Mod
             return;
         }
 
+        FurnitureSlotProtection.Apply(daycare, this.registry);
         string displayName = ItemRegistry.Create(furniture.QualifiedItemId).DisplayName;
         this.Monitor.Log($"Saved test assignment {args[1]}: {displayName} at tile ({tileX}, {tileY}). No item was consumed or placed; clear it with slime_ranching_clear_furniture_slot_test {args[1]}.", LogLevel.Info);
     }
@@ -3252,6 +3253,7 @@ public sealed class ModEntry : Mod
             return;
         }
 
+        FurnitureSlotProtection.Apply(daycare, this.registry);
         this.Monitor.Log($"Cleared test furniture-slot assignment {args[1]}. No in-room object was removed.", LogLevel.Info);
     }
 

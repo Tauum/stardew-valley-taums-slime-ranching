@@ -5,7 +5,7 @@ using taums_slime_ranching.Models;
 
 namespace taums_slime_ranching.Services;
 
-/// <summary>Applies Stardew's native indestructible fragility only to furniture recorded in Daycare slots.</summary>
+/// <summary>Reconciles Stardew's native fragility with saved Daycare furniture-slot assignments.</summary>
 internal static class FurnitureSlotProtection
 {
     public static bool Apply(AnimalHouse? daycare, SlimeRegistry registry)
@@ -16,7 +16,7 @@ internal static class FurnitureSlotProtection
 
         string buildingId = building.id.Value.ToString("N");
         int buildingTier = BuildingContent.GetUpgradeTier(building.buildingType.Value);
-        bool changed = false;
+        var protectedSlots = new Dictionary<Vector2, string>();
         foreach (DaycareFurnitureSlotRecord assignment in registry.GetFurnitureSlots(buildingId))
         {
             if (!FurnitureSlotCatalog.TryGetSlot(assignment.SlotId, out DaycareFurnitureSlotDefinition slot)
@@ -25,14 +25,28 @@ internal static class FurnitureSlotProtection
                 || furniture.RequiredBuildingTier > buildingTier)
                 continue;
 
-            Vector2 tile = new(assignment.TileX, assignment.TileY);
-            if (!daycare.Objects.TryGetValue(tile, out StardewValley.Object? placed)
-                || placed.QualifiedItemId != assignment.FurnitureQualifiedItemId
-                || placed.fragility.Value == StardewValley.Object.fragility_Indestructable)
-                continue;
+            protectedSlots[new Vector2(assignment.TileX, assignment.TileY)] = assignment.FurnitureQualifiedItemId;
+        }
 
-            placed.fragility.Value = StardewValley.Object.fragility_Indestructable;
-            changed = true;
+        bool changed = false;
+        foreach (StardewValley.Object placed in daycare.Objects.Values)
+        {
+            bool assignedFurniture = protectedSlots.TryGetValue(placed.TileLocation, out string? expectedItemId)
+                && placed.QualifiedItemId == expectedItemId;
+            if (assignedFurniture && placed.fragility.Value != StardewValley.Object.fragility_Indestructable)
+            {
+                placed.fragility.Value = StardewValley.Object.fragility_Indestructable;
+                changed = true;
+            }
+            else if (!assignedFurniture
+                && placed.fragility.Value == StardewValley.Object.fragility_Indestructable
+                && FurnitureSlotCatalog.TryGetFurniture(placed.QualifiedItemId, out _))
+            {
+                // Every catalog furniture definition uses removable fragility by
+                // default. Restore that value when the saved slot no longer owns it.
+                placed.fragility.Value = StardewValley.Object.fragility_Removable;
+                changed = true;
+            }
         }
 
         return changed;
